@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Applicant Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/brands.min.css" integrity="sha512-DJLNx+VLY4aEiEQFjiawXaiceujj5GA7lIY8CHCIGQCBPfsEG0nGz1edb4Jvw1LR7q031zS5PpPqFuPA8ihlRA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/solid.min.css" integrity="sha512-Hp+WwK4QdKZk9/W0ViDvLunYjFrGJmNDt6sCflZNkjgvNq9mY+0tMbd6tWMiAlcf1OQyqL4gn2rYp7UsfssZPA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/fontawesome.min.css" integrity="sha512-UuQ/zJlbMVAw/UU8vVBhnI4op+/tFOpQZVT+FormmIEhRSCnJWyHiBbEVgM4Uztsht41f3FzVWgLuwzUqOObKw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+</head>
+<body>
+    <div class="p">
+        <div class="nav">
+            <img src="" alt="">
+           <div class="navv">
+                <span style="width:fit-content; display: flex; height: 15px;"> APPLICANT PORTAL</span>
+                <span>
+                    <a href="http://example.com" class="btn-link"><i class="fa-brands fa-buromobelexperte "></i>Dashboard</a>
+                </span>
+                <span>
+                    <a href="http://example.com" class="btn-link"><i class="fa-regular fa-plus"></i> New request</a>
+                </span>
+                <span>
+                    <a href="http://example.com" class="btn-link"><i class="fa-solid fa-search"></i> Track Request</a>
+                </span>
+                <span>
+                    <a href="http://example.com" class="btn-link"><i class="fa-regular fa-clock"></i> Payment History</a>
+                </span>
+           </div>
+        </div>
+
+        <div class="bod">
+            <nav class="navbar ">
+                <div class="container-fluid">
+                    <span class="navbar-text">
+                         Navbar text with an inline element
+                    </span>
+                </div>
+                <button class="notif-btn" type="button" aria-label="Messages">
+                    <span class="notif-btn__icon">🔔</span>
+                    <span class="notif-btn__badge" aria-hidden="true">99+</span>
+                </button>
+            </nav>
+            <section id="banner">
+                <div class="header">
+                    <h1 id="welcome-text">
+                        <i class="fa-solid fa-hand-middle-finger"></i></div> Welcome!
+                    </h1>
+                    Here is your status and information. You can also track your requests and view your payment history.
+
+            </section>
+           <div class="hey">
+                <section id="stats">
+                    <section class="stats-grid">
+                        <!-- Card 1 -->
+                        <a href="users.html" class="stat-card" data-metric="totalUsers">
+                            <div class="stat-card__header">
+                                <span class="stat-card__title">Active Request</span>
+                                <span class="stat-card__icon">👥</span>
+                            </div>
+                            <div class="stat-card__value" id="stat-totalUsers">0</div>
+                            <div class="stat-card__link-text">View users →</div>
+                        </a>
+
+                        <!-- Card 2 -->
+                        <a href="messages.html" class="stat-card" data-metric="totalMessages">
+                            <div class="stat-card__header">
+                                <span class="stat-card__title">Completed request</span>
+                                <i class="fa-solid fa-check" style="font-size:35px; color: rebeccapurple;"></i>
+                            </div>
+                            <div class="stat-card__value" id="stat-totalMessages">0</div>
+                            <div class="stat-card__link-text">View messages →</div>
+                        </a>
+                    </section>
+
+                    <a href="form.html" class="stat-cards" data-metric="totalMessages" style="gap: 30px;">
+                        <i class="fa-regular fa-id-card" style="font-size: 35px;"></i>
+                       <h2>Reissue Birth Certificates</h2>
+                    Start an expedited request for a lost of damaged certficate
+                    <div class="content">
+                        Start application →
+                    </div>
+                    </a>
+                               
+                </section>  
+            <div class="process">
+                            <div class="work">
+                                <div class="span">
+                                    1
+                                </div>
+                                <span class="spam">
+                                    <h4>Select Service</h4>
+                                    Choose the document you need
+                                </span>
+                            </div>
+                            <div class="work">
+                                <div class="span">
+                                    2
+                                </div>
+                                <span class="spam">
+                                    <h4>Verify ID</h4>
+                                    Identity Check
+                                </span>
+                            </div>
+                            <div class="work">
+                                <div class="span">
+                                    3
+                                </div>
+                                <span class="spam">
+                                    <h4>Payment</h4>
+                                Statutory Payment
+                                </span>
+                            </div>
+                            <div class="work">
+                                <div class="span">
+                                    4
+                                </div>
+                                <span class="spam">
+                                    <h4>Delivery</h4>
+                                Obtgain your statutory
+                                </span>
+                            </div>
+                            
+                        </div>         
+
+           </div>
+        </div>
+    </div>               
+
+     <script>
+                        window.addEventListener('DOMContentLoaded', function () {
+                            const name = localStorage.getItem('userName');
+                            const el = document.getElementById('welcome-text');
+
+                            if (name) {
+                            el.textContent = 'Welcome, ' + name + '!';
+                            } else {
+                            el.textContent = 'Welcome!';
+                            }
+                        });
+                    </script>
+      <script>
+    window.addEventListener('DOMContentLoaded', function () {
+      const name = localStorage.getItem('userName');
+      const gender = localStorage.getItem('userGender');
+
+      const welcomeEl = document.getElementById('welcome-text');
+      const infoEl = document.getElementById('user-info');
+
+      if (name) {
+        welcomeEl.textContent = 'Welcome, ' + name + '!';
+      } else {
+        welcomeEl.textContent = 'Welcome!';
+      }
+
+      if (name && gender) {
+        infoEl.textContent = 'Logged in as: ' + name + ' (' + gender + ')';
+      } else if (name) {
+        infoEl.textContent = 'Logged in as: ' + name;
+      } else {
+        infoEl.textContent = 'No user data found.';
+      }
+    });
+
+    document.getElementById('signout-btn').addEventListener('click', function () {
+      localStorage.removeItem('userName');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('userGender');
+      localStorage.removeItem('userPassword');
+      window.location.href = 'signin.html';
+    });
+  </script>
+</body>
+</html>

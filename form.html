@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Identity Verification</title>
+  <link rel="stylesheet" href="form.css" />
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+  />
+</head>
+<body>
+  <div class="form-card">
+    <h1>Identity Verification</h1>
+
+    <form id="verification-form" novalidate>
+      <div class="form-group">
+        <label for="name">Name</label>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          placeholder="Your name"
+          required
+        />
+        <div class="error-msg" id="name-error"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="surname">Surname</label>
+        <input
+          type="text"
+          id="surname"
+          name="surname"
+          placeholder="Your surname"
+          required
+        />
+        <div class="error-msg" id="surname-error"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="dob">Date of Birth</label>
+        <input
+          type="date"
+          id="dob"
+          name="dob"
+          required
+        />
+        <div class="error-msg" id="dob-error"></div>
+      </div>
+
+      <!-- Life selfie -->
+      <div class="form-group file-group">
+        <label>Life Selfie</label>
+
+        <button type="button" class="camera-btn" id="open-selfie-camera">
+          <i class="fa-solid fa-camera"></i>
+          <span class="camera-btn__text">Take selfie</span>
+        </button>
+
+        <div class="error-msg" id="selfie-error"></div>
+
+        <div class="preview">
+          <img id="selfie-preview" alt="Selfie preview" />
+        </div>
+
+        <!-- Hidden file-like input (we’ll set a File from the captured image) -->
+        <input
+          type="file"
+          id="selfie-file"
+          name="selfie"
+          accept="image/*"
+          required
+          class="file-input-hidden"
+        />
+      </div>
+
+      <!-- ID / Passport -->
+      <div class="form-group file-group">
+        <label>ID Card or Passport (photo)</label>
+
+        <button type="button" class="camera-btn" id="open-id-camera">
+          <i class="fa-solid fa-id-card"></i>
+          <span class="camera-btn__text">Take ID photo</span>
+        </button>
+
+        <div class="error-msg" id="id-doc-error"></div>
+
+        <div class="preview">
+          <img id="id-doc-preview" alt="ID document preview" />
+        </div>
+
+        <input
+          type="file"
+          id="id-doc-file"
+          name="id-doc"
+          accept="image/*"
+          required
+          class="file-input-hidden"
+        />
+      </div>
+
+      <button type="submit" class="submit-btn">Submit Verification</button>
+    </form>
+  </div>
+
+  <!-- Camera modal -->
+  <div id="camera-modal" class="camera-modal hidden">
+    <div class="camera-modal__content">
+      <h2 id="camera-modal-title">Take Photo</h2>
+      <video id="camera-video" autoplay playsinline></video>
+      <canvas id="camera-canvas" class="hidden"></canvas>
+      <div class="camera-modal__actions">
+        <button type="button" id="capture-btn" class="camera-action-btn">
+          <i class="fa-solid fa-camera"></i>
+          Capture
+        </button>
+        <button type="button" id="retake-btn" class="camera-action-btn hidden">
+          <i class="fa-solid fa-rotate-right"></i>
+          Retake
+        </button>
+        <button type="button" id="close-camera-btn" class="camera-action-btn secondary">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="verification.js"></script>
+</body>
+</html>

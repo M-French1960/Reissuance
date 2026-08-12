@@ -1,0 +1,105 @@
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      padding: 20px;
+    }
+
+    .form-card {
+      width: 100%;
+      max-width: 380px;
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 28px 24px 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .form-card h1 {
+      font-size: 24px;
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 6px;
+      color: #444;
+    }
+
+    .form-group input[type="text"],
+    .form-group input[type="email"],
+    .form-group input[type="password"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+    }
+
+
+    .error-msg {
+      color: #d93025;
+      font-size: 13px;
+      margin-top: 6px;
+      min-height: 18px;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 11px 14px;
+      border: none;
+      border-radius: 6px;
+      background: #667eea;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.05s;
+    }
+
+    .submit-btn:hover {
+      background: #5468d9;
+    }
+
+    .submit-btn:active {
+      transform: translateY(1px);
+    }
+
+    .link {
+      text-align: center;
+      margin-top: 14px;
+      font-size: 13px;
+      color: #555;
+    }
+
+    .link a {
+      color: #667eea;
+      text-decoration: none;
+    }
+
+    .link a:hover {
+      text-decoration: underline;
+    }
