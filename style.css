@@ -10,7 +10,7 @@
 .nav{
     height:1000px;
     width:200px;
-    background-color:  rgb(225, 194, 235);
+    background-color:  #fdf3ff;
     display: flex;
     flex-direction: column;
     border-right: 1px solid  rgb(91, 15, 177);
@@ -18,7 +18,7 @@
 .navv{
     height:300px;
     width:200px;
-    background-color: rgb(225, 194, 235);
+    background-color: #fdf3ff;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -78,7 +78,7 @@ a {
   display: inline-flex;
   align-items: center;
   padding: 3px 12px;
-  background:  rgb(225, 194, 235);
+  background:  #fdf3ff;
   color: black;
   border: none;
   border-radius: 6px;
@@ -121,7 +121,7 @@ a {
 #banner{
     height: 200px;
     width: 1110px;
-    background-color: rgb(225, 194, 235);
+    background-color: #fdf3ff;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -259,7 +259,7 @@ a {
     height: 50px;
     width: 50px;
     border-radius: 100%;
-    background-color: rgb(225, 194, 235) ;
+    background-color: #fdf3ff ;
     justify-content: center;
     align-items: center;
     display: flex;
