@@ -1,31 +1,38 @@
 .p{
     height:1000px;
     width:1320px;
-    background-color: rgb(255, 255, 255);
+    background: #f4f7fb;
+    color: #1f2937;
     display: flex;
     flex-direction: row;
     font-size: 17px;
     justify-content: space-between;
 }
-.nav{
-    height:1000px;
-    width:200px;
-    background-color:  #fdf3ff;
-    display: flex;
-    flex-direction: column;
-    border-right: 1px solid  rgb(91, 15, 177);
+.sidebar {
+  width: 240px;
+  background: #4a148c;
+  color: white;
+  padding: 25px 15px;
 }
-.navv{
-    height:300px;
-    width:200px;
-    background-color: #fdf3ff;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+.logo {
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 35px;
 }
-a {
-    text-decoration: none;
-    color: black; 
+
+.nav-link {
+  display: block;
+  padding: 14px;
+  margin-bottom: 8px;
+  color: white;
+  text-decoration: none;
+  border-radius: 7px;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  background: #6a1b9a;
 }
 .fa-solid,
 .fa-regular,
@@ -46,22 +53,24 @@ a {
 
 /* Hover: looks more “button-like” */
 .btn-link:hover {
-  background-color: rgb(91, 15, 177);
+  background-color: #6a1b9a;
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
 
 /* Active (while clicked) */
 .btn-link:active {
-  background-color:  rgb(91, 15, 177);
+  background-color:  #6a1b9a;
   transform: translateY(1px);
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 .bod{
-    height:1000px;
-    width:1110px;
-    background-color: rgb(255, 255, 255);
-    display: flex;
-    flex-direction: column;
+  height:1000px;
+  width:1100px;
+  background: #f4f7fb;
+  color: #1f2937;
+  display: flex;
+  flex-direction: column;
+  margin-left:20px;
 }
 .navbar{
     height:30px;
@@ -119,22 +128,13 @@ a {
   pointer-events: none;  /* clicks go through to the button */
 }
 #banner{
-    height: 200px;
-    width: 1110px;
-    background-color: #fdf3ff;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 5px;
+  background: linear-gradient(135deg, #4a148c, #7b1fa2);
+  color: white;
+  padding: 15px;
+  border-radius: 12px;
+  margin-top:15px
 }
 
-.bann{
-    height: 50px;
-    width: 50px;
-    border-radius: 50%;
-    background-color: rgb(91, 15, 177);
-}
 .hey{
    display: flex;
     flex-direction: column;

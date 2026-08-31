@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Officer Dashboard - PHOENIX</title>
+  <link rel="stylesheet" href="officer.css">
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="logo">PHOENIX<br><small style="font-size:12px;font-weight:normal;">Officer Portal</small></div>
+
+      <a href="officer-dashboard.html" class="nav-link active">Dashboard</a>
+      <a href="officer-verification.html" class="nav-link">Requests</a>
+      <a href="#" class="nav-link">Reports</a>
+      <a href="#" class="nav-link">Settings</a>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <h1>Civil Registry Officer</h1>
+        <button class="profile-button" onclick="alert('Profile / Logout')">Officer: A. Mbarga</button>
+      </div>
+
+      <section class="welcome">
+        <h2>Welcome, Officer Mbarga</h2>
+        <p>Review and verify civil-status document reissuance requests from your center.</p>
+      </section>
+
+      <section class="stats">
+        <div class="stat-card">
+          <h3>Pending</h3>
+          <p id="statPending">0</p>
+        </div>
+        <div class="stat-card">
+          <h3>Verified</h3>
+          <p id="statVerified">0</p>
+        </div>
+        <div class="stat-card">
+          <h3>Escalated</h3>
+          <p id="statEscalated">0</p>
+        </div>
+        <div class="stat-card">
+          <h3>Completed</h3>
+          <p id="statCompleted">0</p>
+        </div>
+      </section>
+
+      <section class="filters">
+        <div class="filter-group">
+          <label for="filterStatus">Status</label>
+          <select id="filterStatus">
+            <option value="all">All</option>
+            <option value="pending">Pending</option>
+            <option value="verified">Verified</option>
+            <option value="escalated">Escalated</option>
+            <option value="rejected">Rejected</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="filterCenter">Center</label>
+          <select id="filterCenter">
+            <option value="all">All</option>
+            <option value="yaounde-1">Yaoundé I</option>
+            <option value="yaounde-2">Yaoundé II</option>
+            <option value="yaounde-3">Yaoundé III</option>
+            <option value="yaounde-4">Yaoundé IV</option>
+            <option value="yaounde-5">Yaoundé V</option>
+            <option value="yaounde-6">Yaoundé VI</option>
+            <option value="yaounde-7">Yaoundé VII</option>
+            
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="filterDate">From date</label>
+          <input type="date" id="filterDate">
+        </div>
+      </section>
+
+      <section class="table-card">
+        <div class="table-header">
+          <h2>Reissuance Requests</h2>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Reference</th>
+              <th>Applicant</th>
+              <th>Document</th>
+              <th>Center</th>
+              <th>Status</th>
+              <th>Submitted</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="requestsTableBody">
+            <!-- Filled by JS -->
+          </tbody>
+        </table>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // Sample data (later from Supabase)
+    const requests = [
+      {
+        id: "PHX-00000001",
+        applicantName: "Jean PHENO",
+        documentType: "Birth certificate",
+        center: "yaounde-centre",
+        centerLabel: "Yaoundé Centre",
+        status: "pending",
+        submittedAt: "2026-08-30T10:20:00"
+      },
+      {
+        id: "PHX-00000002",
+        applicantName: "Marie Ngoa",
+        documentType: "Birth certificate",
+        center: "yaounde-2",
+        centerLabel: "Yaoundé II",
+        status: "verified",
+        submittedAt: "2026-08-29T14:05:00"
+      },
+      {
+        id: "PHX-00000003",
+        applicantName: "Paul MOHAMED",
+        documentType: "Birth certificate",
+        center: "douala-centre",
+        centerLabel: "Douala Centre",
+        status: "escalated",
+        submittedAt: "2026-08-28T09:15:00"
+      },
+      {
+        id: "PHX-00000004",
+        applicantName: "Grace Kamga",
+        documentType: "Birth certificate",
+        center: "Yaounde 1",
+        centerLabel: "Yaounde",
+        status: "completed",
+        submittedAt: "2026-08-27T16:40:00"
+      }
+    ];
+
+    function getStatusBadgeClass(status) {
+      switch (status) {
+        case "pending": return "status-pending";
+        case "verified": return "status-verified";
+        case "escalated": return "status-escalated";
+        case "rejected": return "status-rejected";
+        case "completed": return "status-completed";
+        default: return "";
+      }
+    }
+
+    function renderTable(filtered) {
+      const tbody = document.getElementById("requestsTableBody");
+      tbody.innerHTML = "";
+
+      filtered.forEach(function(req) {
+        const tr = document.createElement("tr");
+
+        const statusClass = getStatusBadgeClass(req.status);
+
+        tr.innerHTML =
+          "<td>" + req.id + "</td>" +
+          "<td>" + req.applicantName + "</td>" +
+          "<td>" + req.documentType + "</td>" +
+          "<td>" + req.centerLabel + "</td>" +
+          "<td><span class='status-badge " + statusClass + "'>" + req.status + "</span></td>" +
+          "<td>" + new Date(req.submittedAt).toLocaleString() + "</td>" +
+          "<td><a class='action-link' href='officer-verification.html?id=" + req.id + "'>Verify</a></td>";
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function updateStats() {
+      const stats = {
+        pending: 0,
+        verified: 0,
+        escalated: 0,
+        completed: 0
+      };
+
+      requests.forEach(function(r) {
+        if (stats[r.status] !== undefined) {
+          stats[r.status]++;
+        }
+      });
+
+      document.getElementById("statPending").textContent = stats.pending;
+      document.getElementById("statVerified").textContent = stats.verified;
+      document.getElementById("statEscalated").textContent = stats.escalated;
+      document.getElementById("statCompleted").textContent = stats.completed;
+    }
+
+    function applyFilters() {
+      const status = document.getElementById("filterStatus").value;
+      const center = document.getElementById("filterCenter").value;
+      const fromDate = document.getElementById("filterDate").value;
+
+      let filtered = requests.slice();
+
+      if (status !== "all") {
+        filtered = filtered.filter(function(r) {
+          return r.status === status;
+        });
+      }
+
+      if (center !== "all") {
+        filtered = filtered.filter(function(r) {
+          return r.center === center;
+        });
+      }
+
+      if (fromDate) {
+        const from = new Date(fromDate);
+        filtered = filtered.filter(function(r) {
+          return new Date(r.submittedAt) >= from;
+        });
+      }
+
+      renderTable(filtered);
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      updateStats();
+      renderTable(requests);
+
+      document.getElementById("filterStatus").addEventListener("change", applyFilters);
+      document.getElementById("filterCenter").addEventListener("change", applyFilters);
+      document.getElementById("filterDate").addEventListener("change", applyFilters);
+    });
+  </script>
+</body>
+</html>

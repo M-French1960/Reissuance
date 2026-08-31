@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify Request - PHOENIX</title>
+  <link rel="stylesheet" href="officer.css">
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="logo">PHOENIX<br><small style="font-size:12px;font-weight:normal;">Officer Portal</small></div>
+
+      <a href="officer-dashboard.html" class="nav-link">Dashboard</a>
+      <a href="officer-verification.html" class="nav-link active">Requests</a>
+      <a href="#" class="nav-link">Reports</a>
+      <a href="#" class="nav-link">Settings</a>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <h1>Verify Request</h1>
+        <button class="profile-button" onclick="alert('Profile / Logout')">Officer: A. Mbarga</button>
+      </div>
+
+      <section class="detail-card">
+        <h2 id="requestRef">Request PHX-XXXX</h2>
+        <p>Follow the steps to verify this reissuance request.</p>
+
+        <!-- Step indicator -->
+        <div class="steps" style="margin-bottom:25px;">
+          <div class="step">
+            <div class="step-number">1</div>
+            <h4>Request info</h4>
+            <p>View details</p>
+          </div>
+
+          <div class="step">
+            <div class="step-number">2</div>
+            <h4>Verify ID</h4>
+            <p>Check with police DB</p>
+          </div>
+
+          <div class="step">
+            <div class="step-number">3</div>
+            <h4>Photos</h4>
+            <p>Selfie & ID</p>
+          </div>
+
+          <div class="step">
+            <div class="step-number">4</div>
+            <h4>Civil DB</h4>
+            <p>Search citizen</p>
+          </div>
+
+          <div class="step">
+            <div class="step-number">5</div>
+            <h4>Decision</h4>
+            <p>Accept/Reject/Escalate</p>
+          </div>
+        </div>
+
+        <!-- STEP 1: Request info -->
+        <div id="step1" class="step-content">
+          <h3>Request information</h3>
+
+          <div class="profile-grid">
+            <div class="profile-field">
+              <label>Applicant</label>
+              <span id="applicantName">-</span>
+            </div>
+
+            <div class="profile-field">
+              <label>Date of birth</label>
+              <span id="applicantDob">-</span>
+            </div>
+
+            <div class="profile-field">
+              <label>Place of birth</label>
+              <span id="applicantPlace">-</span>
+            </div>
+
+            <div class="profile-field">
+              <label>National ID</label>
+              <span id="applicantId">-</span>
+            </div>
+
+            <div class="profile-field">
+              <label>Phone</label>
+              <span id="applicantPhone">-</span>
+            </div>
+
+            <div class="profile-field">
+              <label>Email</label>
+              <span id="applicantEmail">-</span>
+            </div>
+
+            <div class="profile-field">
+              <label>Document type</label>
+              <span id="documentType">-</span>
+            </div>
+
+            <div class="profile-field">
+              <label>Center</label>
+              <span id="centerName">-</span>
+            </div>
+
+            <div class="profile-field">
+              <label>Status</label>
+              <span id="requestStatus">-</span>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="primary-button" onclick="goToStep(2)">
+              Verify ID number
+            </button>
+
+            <a href="officer-dashboard.html" class="secondary-button" style="text-decoration:none;display:inline-block;padding:12px 18px;">
+              Back to dashboard
+            </a>
+          </div>
+        </div>
+
+        <!-- STEP 2: Verify ID with police DB (mock) -->
+        <div id="step2" class="step-content" style="display:none;">
+          <h3>Verify ID number with police database</h3>
+          <p style="color:#64748b;margin-bottom:20px;">
+            This step simulates checking the national ID number against the police (e.g. DGSN) database.
+          </p>
+
+          <div class="profile-grid">
+            <div class="profile-field">
+              <label>National ID number</label>
+              <span id="verifyIdNumber">-</span>
+            </div>
+
+            <div class="profile-field">
+              <label>Name on ID</label>
+              <span id="verifyIdName">-</span>
+            </div>
+
+            <div class="profile-field">
+              <label>Result</label>
+              <span id="verifyResult">Not checked</span>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="primary-button" id="checkIdButton" onclick="checkIdWithPolice()">
+              Check ID with police DB
+            </button>
+
+            <button class="secondary-button" onclick="goToStep(1)">
+              Back
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 3: Photos (selfie + ID) -->
+        <div id="step3" class="step-content" style="display:none;">
+          <h3>Applicant photos</h3>
+          <p style="color:#64748b;margin-bottom:20px;">
+            Compare the live selfie and ID image with the applicant’s information.
+          </p>
+
+          <div class="images-grid">
+            <div class="image-card">
+              <h3>Live selfie</h3>
+              <img id="selfieImage" alt="Selfie">
+            </div>
+
+            <div class="image-card">
+              <h3>ID document</h3>
+              <img id="idImage" alt="ID">
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="primary-button" onclick="goToStep(4)">
+              Continue to civil DB search
+            </button>
+
+            <button class="secondary-button" onclick="goToStep(2)">
+              Back
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 4: Search in civil-center DB (mock) -->
+        <div id="step4" class="step-content" style="display:none;">
+          <h3>Search citizen in civil-status center database</h3>
+          <p style="color:#64748b;margin-bottom:20px;">
+            This step simulates searching the civil registry’s internal database for the citizen’s record.
+          </p>
+
+          <div class="filters" style="margin-bottom:20px;">
+            <div class="filter-group">
+              <label for="searchByName">Name</label>
+              <input type="text" id="searchByName" placeholder="e.g. Jean Dupont">
+            </div>
+
+            <div class="filter-group">
+              <label for="searchById">ID number</label>
+              <input type="text" id="searchById" placeholder="e.g. 123456789">
+            </div>
+
+            <div class="filter-group" style="align-self:end;">
+              <button class="primary-button" onclick="searchCivilDb()">
+                Search
+              </button>
+            </div>
+          </div>
+
+          <div id="civilSearchResult" style="display:none;">
+            <div class="detail-card" style="box-shadow:none;border:1px solid #e5e7eb;">
+              <h4 style="color:#4a148c;margin-bottom:10px;">Civil record found</h4>
+
+              <div class="profile-grid">
+                <div class="profile-field">
+                  <label>Full name</label>
+                  <span id="civilName">-</span>
+                </div>
+
+                <div class="profile-field">
+                  <label>Date of birth</label>
+                  <span id="civilDob">-</span>
+                </div>
+
+                <div class="profile-field">
+                  <label>Place of birth</label>
+                  <span id="civilPlace">-</span>
+                </div>
+
+                <div class="profile-field">
+                  <label>ID number</label>
+                  <span id="civilId">-</span>
+                </div>
+
+                <div class="profile-field">
+                  <label>Record status</label>
+                  <span id="civilStatus">-</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="primary-button" onclick="goToStep(5)">
+              Continue to decision
+            </button>
+
+            <button class="secondary-button" onclick="goToStep(3)">
+              Back
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 5: Decision -->
+        <div id="step5" class="step-content" style="display:none;">
+          <h3>Decision</h3>
+          <p style="color:#64748b;margin-bottom:20px;">
+            Choose an action for this request. If you reject or escalate, you must provide a reason.
+          </p>
+
+          <div class="form-group">
+            <label for="decisionAction">Action</label>
+            <select id="decisionAction" onchange="toggleReasonField()">
+              <option value="accepted">Accept request</option>
+              <option value="rejected">Reject request</option>
+              <option value="escalated">Escalate request</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="reasonGroup" style="display:none;">
+            <label for="decisionReason">Reason (required)</label>
+            <textarea id="decisionReason" placeholder="Explain why you are rejecting or escalating this request"></textarea>
+            <div id="reasonError" class="error-message" style="margin-top:8px;">
+              Please enter a reason.
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="decisionNotes">Internal notes (optional)</label>
+            <textarea id="decisionNotes" placeholder="Any additional comments for internal use"></textarea>
+          </div>
+
+          <div class="actions">
+            <button class="primary-button" onclick="submitDecision()">
+              Submit decision
+            </button>
+
+            <button class="secondary-button" onclick="goToStep(4)">
+              Back
+            </button>
+          </div>
+        </div>
+
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // Sample data (later from Supabase)
+    const requests = [
+      {
+        id: "PHX-00000001",
+        applicantName: "Jean Dupont",
+        applicantDob: "15 March 1998",
+        applicantPlace: "Yaoundé, Cameroon",
+        applicantId: "123456789",
+        applicantPhone: "+237 600 000 000",
+        applicantEmail: "jean@example.com",
+        documentType: "Birth certificate",
+        center: "yaounde-centre",
+        centerLabel: "Yaoundé Centre",
+        status: "pending",
+        submittedAt: "2026-08-30T10:20:00",
+        selfieImage: "https://placehold.co/400x500/png?text=Selfie",
+        idImage: "https://placehold.co/500x300/png?text=ID+Card",
+        // Mock police DB match
+        policeMatch: {
+          nameOnId: "Jean Dupont",
+          match: true
+        },
+        // Mock civil DB record
+        civilRecord: {
+          name: "Jean Dupont",
+          dob: "15 March 1998",
+          place: "Yaoundé, Cameroon",
+          idNumber: "123456789",
+          recordStatus: "Active"
+        }
+      },
+      {
+        id: "PHX-00000002",
+        applicantName: "Marie Ngoa",
+        applicantDob: "02 Jan 1995",
+        applicantPlace: "Bafoussam, Cameroon",
+        applicantId: "987654321",
+        applicantPhone: "+237 670 000 000",
+        applicantEmail: "marie@example.com",
+        documentType: "Birth certificate",
+        center: "yaounde-2",
+        centerLabel: "Yaoundé II",
+        status: "verified",
+        submittedAt: "2026-08-29T14:05:00",
+        selfieImage: "https://placehold.co/400x500/png?text=Selfie+2",
+        idImage: "https://placehold.co/500x300/png?text=ID+Card+2",
+        policeMatch: {
+          nameOnId: "Marie Ngoa",
+          match: true
+        },
+        civilRecord: {
+          name: "Marie Ngoa",
+          dob: "02 Jan 1995",
+          place: "Bafoussam, Cameroon",
+          idNumber: "987654321",
+          recordStatus: "Active"
+        }
+      }
+    ];
+
+    let currentRequest = null;
+
+    function loadRequest() {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get("id");
+
+      if (!id) {
+        alert("No request ID specified.");
+        window.location.href = "officer-dashboard.html";
+        return;
+      }
+
+      currentRequest = requests.find(function(r) {
+        return r.id === id;
+      });
+
+      if (!currentRequest) {
+        alert("Request not found.");
+        window.location.href = "officer-dashboard.html";
+        return;
+      }
+
+      // Step 1: fill request info
+      document.getElementById("requestRef").textContent = "Request " + currentRequest.id;
+      document.getElementById("applicantName").textContent = currentRequest.applicantName;
+      document.getElementById("applicantDob").textContent = currentRequest.applicantDob;
+      document.getElementById("applicantPlace").textContent = currentRequest.applicantPlace;
+      document.getElementById("applicantId").textContent = currentRequest.applicantId;
+      document.getElementById("applicantPhone").textContent = currentRequest.applicantPhone;
+      document.getElementById("applicantEmail").textContent = currentRequest.applicantEmail;
+      document.getElementById("documentType").textContent = currentRequest.documentType;
+      document.getElementById("centerName").textContent = currentRequest.centerLabel;
+      document.getElementById("requestStatus").textContent = currentRequest.status;
+
+      // Step 2: ID verification
+      document.getElementById("verifyIdNumber").textContent = currentRequest.applicantId;
+      document.getElementById("verifyIdName").textContent = "-";
+      document.getElementById("verifyResult").textContent = "Not checked";
+
+      // Step 3: images
+      document.getElementById("selfieImage").src = currentRequest.selfieImage;
+      document.getElementById("idImage").src = currentRequest.idImage;
+
+      // Pre-fill search fields for step 4
+      document.getElementById("searchByName").value = currentRequest.applicantName;
+      document.getElementById("searchById").value = currentRequest.applicantId;
+    }
+
+    function goToStep(stepNumber) {
+      // Hide all steps
+      document.querySelectorAll(".step-content").forEach(function(el) {
+        el.style.display = "none";
+      });
+
+      // Show requested step
+      document.getElementById("step" + stepNumber).style.display = "block";
+
+      // Update active step highlight (optional simple version)
+      document.querySelectorAll(".step").forEach(function(el, idx) {
+        el.classList.remove("active");
+        if (idx + 1 === stepNumber) {
+          el.classList.add("active");
+        }
+      });
+    }
+
+    function checkIdWithPolice() {
+      // Mock police DB check
+      const button = document.getElementById("checkIdButton");
+      button.disabled = true;
+      button.textContent = "Checking...";
+
+      setTimeout(function() {
+        const match = currentRequest.policeMatch && currentRequest.policeMatch.match;
+
+        document.getElementById("verifyIdName").textContent =
+          currentRequest.policeMatch ? currentRequest.policeMatch.nameOnId : "-";
+
+        const resultEl = document.getElementById("verifyResult");
+        if (match) {
+          resultEl.textContent = "Match found (police DB)";
+          resultEl.style.color = "#065f46";
+        } else {
+          resultEl.textContent = "No match or uncertain (police DB)";
+          resultEl.style.color = "#b91c1c";
+        }
+
+        button.textContent = "Check ID with police DB";
+        button.disabled = false;
+
+        // Move to photos step after verification
+        setTimeout(function() {
+          goToStep(3);
+        }, 800);
+      }, 1000);
+    }
+
+    function searchCivilDb() {
+      // Mock civil DB search using currentRequest.civilRecord
+      const resultBox = document.getElementById("civilSearchResult");
+
+      if (!currentRequest.civilRecord) {
+        resultBox.style.display = "none";
+        alert("No civil record found for this citizen.");
+        return;
+      }
+
+      const rec = currentRequest.civilRecord;
+
+      document.getElementById("civilName").textContent = rec.name;
+      document.getElementById("civilDob").textContent = rec.dob;
+      document.getElementById("civilPlace").textContent = rec.place;
+      document.getElementById("civilId").textContent = rec.idNumber;
+      document.getElementById("civilStatus").textContent = rec.recordStatus;
+
+      resultBox.style.display = "block";
+    }
+
+    function toggleReasonField() {
+      const action = document.getElementById("decisionAction").value;
+      const reasonGroup = document.getElementById("reasonGroup");
+      const reasonError = document.getElementById("reasonError");
+
+      if (action === "rejected" || action === "escalated") {
+        reasonGroup.style.display = "block";
+      } else {
+        reasonGroup.style.display = "none";
+      }
+
+      reasonError.classList.remove("show");
+    }
+
+    function submitDecision() {
+      const action = document.getElementById("decisionAction").value;
+      const reason = document.getElementById("decisionReason").value.trim();
+      const notes = document.getElementById("decisionNotes").value.trim();
+      const reasonError = document.getElementById("reasonError");
+
+      if ((action === "rejected" || action === "escalated") && !reason) {
+        reasonError.classList.add("show");
+        return;
+      }
+
+      // In a real app, send to Supabase:
+      // - update reissuance_requests.status
+      // - save reason, notes, officer ID, timestamp, etc.
+
+      let message =
+        "Request " + currentRequest.id + " marked as " + action + ".";
+
+      if (reason) {
+        message += "\nReason: " + reason;
+      }
+
+      if (notes) {
+        message += "\nNotes: " + notes;
+      }
+
+      alert(message);
+      window.location.href = "officer-dashboard.html";
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      loadRequest();
+      goToStep(1);
+    });
+  </script>
+</body>
+</html>
