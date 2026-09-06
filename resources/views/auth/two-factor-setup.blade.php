@@ -79,7 +79,7 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('two-factor.recovery-codes') }}" style="margin-top:var(--space-4)">
+            <form method="POST" action="{{ route('two-factor.recovery-codes') }}" class="u-stack-top">
                 @csrf
                 <x-button type="submit" variant="secondary">Générer de nouveaux codes</x-button>
             </form>

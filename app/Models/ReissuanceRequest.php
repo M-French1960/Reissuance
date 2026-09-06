@@ -41,6 +41,7 @@ class ReissuanceRequest extends Model
         'registration_year', 'original_certificate_number',
         'father_name', 'father_nationality', 'mother_name', 'mother_nationality',
         'parents_address', 'consent_given_at', 'supersedes_id',
+        'last_completed_step',
     ];
 
     /**

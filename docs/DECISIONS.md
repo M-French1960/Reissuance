@@ -494,3 +494,65 @@ prouve que le cas heureux n'aurait rien vu.
   le jeton.
 - **Justification :** un test vert qui ne teste rien est pire que pas de test —
   il fait croire qu'une protection est vérifiée.
+
+---
+
+## D-018 — L'envoi des pièces passe par l'application, pas par une URL pré-signée
+
+- **Date :** 2026-09-06
+- **Statut :** décidé, écart assumé au §3.3 du brief
+- **Le §3.3 demandait :** « upload direct depuis le navigateur avec URL
+  pré-signée (ne fais pas transiter les images par le conteneur PHP) ».
+- **Décision :** l'envoi passe par l'application.
+- **Justification :** cette exigence visait l'éphémérité du conteneur Vercel et
+  supposait un stockage objet capable de signer des URL. Depuis **D-011**, le
+  stockage est un disque local : **il n'existe aucune URL à pré-signer**.
+  Maintenir l'exigence n'aurait aucun sens.
+- **Ce qui est conservé de son intention :** l'abstraction `Storage` de Laravel
+  est employée telle quelle. Basculer vers S3 ou Supabase Storage ne demandera
+  qu'un changement de disque en configuration, et c'est alors seulement que
+  l'URL pré-signée redeviendra pertinente.
+- **Ce que cela ne relâche pas :** fichiers hors de `public/`, chemins opaques
+  (UUID, jamais dérivés du nom ni du numéro de pièce), type MIME relu depuis le
+  **contenu** et non depuis l'extension, empreinte SHA-256 vérifiée à chaque
+  lecture, Policy vérifiée avant de servir le premier octet, consultation
+  journalisée.
+
+---
+
+## D-019 — La CSP refusait mes propres styles en ligne, en silence
+
+- **Date :** 2026-09-06
+- **Statut :** corrigé
+- **Le fait :** la CSP posée au jalon 2 comprend `style-src 'self'`, qui refuse
+  tout attribut `style=` en ligne. Or les vues en contenaient quatorze. Ces
+  styles n'étaient **pas appliqués** : les pages s'affichaient mal, sans
+  qu'aucun test ne le signale et sans erreur visible côté serveur.
+- **Comment il a été trouvé :** en exécutant l'application dans un navigateur
+  et en lisant la console, pas par la suite de tests, qui était au vert.
+- **Correction :** les quatorze attributs sont devenus des classes utilitaires
+  dans `app.css`, ce qui satisfait aussi le §8.3 (aucune valeur de présentation
+  en dur dans une vue). Un test refuse désormais tout retour d'un `style=`, et
+  il a été éprouvé avec une violation délibérée.
+- **Ce que cela rappelle :** une suite verte prouve ce qu'elle teste, pas que
+  l'application fonctionne. Ouvrir les écrans reste nécessaire.
+
+---
+
+## D-020 — La compression navigateur, mesurée
+
+- **Date :** 2026-09-06
+- **Statut :** vérifié
+- **Mesures réelles**, dans Chromium, avec le script du projet :
+
+  | Image de test | Avant | Après | Réduction |
+  |---|---:|---:|---:|
+  | Photo réaliste (dégradés, formes) | 277 Ko | **35 Ko** | ÷ 7,9 |
+  | Bruit aléatoire pur, 3000 × 2200 | 8,9 Mo | **552 Ko** | ÷ 16,5 |
+
+  Le second cas est le pire absolu pour JPEG et n'atteint pas la cible de
+  250 Ko : l'échelle de qualité s'arrête à 0,42 et le fichier part tel quel.
+  C'est délibéré — mieux vaut une image un peu lourde que pas d'image. Aucune
+  photographie réelle ne ressemble à du bruit aléatoire.
+- **Repli :** sans JavaScript, le champ « fichier » reste utilisable et le
+  formulaire fonctionne. La compression disparaît, la validation serveur non.

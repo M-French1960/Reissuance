@@ -179,24 +179,24 @@ minimum :
 | # | Implémenté | Où |
 |---|---|---|
 | R1 | ✅ | `AuthorizationTest::r1_…` |
-| R2 | ⏳ jalon 3 | dépend du contrôleur de fichiers |
+| R2 | ✅ | `IdentityDocumentTest::r2_…` et `r2bis_…` |
 | R3 | ✅ | `AuthorizationTest::r3_…` |
 | R4 | ✅ | `AuthorizationTest::r4_…` |
 | R5 | ⏳ jalon 4 | dépend des 5 étapes de vérification |
 | R6 | ✅ | `AuthorizationTest::r6_…`, 4 états couverts |
 | R7 | ✅ | `AuthorizationTest::r7_…` |
 | R8 | ✅ | `AuthorizationTest::r8_…`, **les 7 états** |
-| R9 | ✅ | même test (`viewIdentityDocuments`) |
+| R9 | ✅ | même test, **et** `IdentityDocumentTest::r9_…` sur la route réelle |
 | R10 | ✅ | `AuthorizationTest::r10_…` |
 | R11 | ✅ | `RegistrationTest::le_role_envoye_…`, 3 rôles usurpés |
 | R12 | ✅ | `AuditLogTest`, 3 tests (modèle + SQL direct + droits) |
 | R13 | ✅ | `AuthorizationTest::r13_…` et 2 variantes |
 | R14 | ✅ | `LoginTest`, 3 tests (connexion + session en cours) |
-| R15 | ⏳ jalon 3 | dépend du contrôleur de fichiers |
+| R15 | ✅ | `IdentityDocumentTest::r15_…`, plus le refus qui n'écrit rien |
 
-R2 et R15 portent sur le service des pièces d'identité, qui n'existe pas encore.
-R5 porte sur les 5 étapes de vérification, qui arrivent au jalon 4. Les trois
-sont volontairement laissés en attente plutôt qu'écrits contre du code absent.
+Seul R5 reste en attente : il porte sur les 5 étapes de vérification, qui
+arrivent au jalon 4. Il est volontairement laissé de côté plutôt qu'écrit
+contre du code absent.
 
 R13 est le test le plus important du lot : il vérifie que la barrière tient
 **même en cas d'oubli du développeur**, ce qui est le scénario réel.

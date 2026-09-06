@@ -212,3 +212,84 @@ th { background: var(--color-surface-sunken); font-size: var(--text-xs); text-tr
 .qr-wrap { background: #fff; padding: var(--space-3); border-radius: var(--radius-md); display: inline-block; border: 1px solid var(--color-line); }
 .stat__label { font-size: var(--text-sm); color: var(--color-ink-500); margin: 0; }
 .stat__value { font-size: var(--text-2xl); font-weight: 700; color: var(--color-brand-700); margin: var(--space-1) 0 0; }
+
+/* --- Indicateur d'étapes --------------------------------------------------
+   Mobile-first : la liste s'empile sous 768 px puis passe en ligne. */
+.stepper { margin-bottom: var(--space-5); }
+.stepper__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.stepper__item { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2); border-radius: var(--radius-md); }
+.stepper__marker {
+  flex: 0 0 auto; width: 1.75rem; height: 1.75rem; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: var(--text-sm);
+  background: var(--tone-neutral-bg); color: var(--tone-neutral-fg);
+}
+.stepper__label { font-size: var(--text-sm); }
+.stepper__item--done .stepper__marker { background: var(--tone-success-bg); color: var(--tone-success-fg); }
+.stepper__item--current { background: var(--color-brand-050); }
+.stepper__item--current .stepper__marker { background: var(--color-brand-700); color: #fff; }
+.stepper__item--current .stepper__label { font-weight: 700; color: var(--color-brand-800); }
+
+@media (min-width: 768px) {
+  .stepper__list { flex-direction: row; }
+  .stepper__item { flex: 1; }
+}
+
+/* --- Récapitulatif --------------------------------------------------------- */
+.review { margin: 0 0 var(--space-4); }
+.review__row { display: flex; flex-wrap: wrap; gap: var(--space-2); padding: var(--space-2) 0; border-bottom: 1px solid var(--color-line); }
+.review__row dt { font-weight: 600; color: var(--color-ink-500); flex: 0 0 14rem; font-size: var(--text-sm); }
+.review__row dd { margin: 0; flex: 1 1 12rem; }
+
+.fieldset { border: 0; padding: 0; margin: 0 0 var(--space-4); }
+
+.divider-title { margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--color-line); }
+
+/* --- Capture des pièces ---------------------------------------------------- */
+.capture { border: 1px solid var(--color-line); border-radius: var(--radius-md); padding: var(--space-4); background: var(--color-surface); }
+.capture h3 { margin-bottom: var(--space-2); }
+.capture__preview { display: block; max-width: 100%; max-height: 14rem; border-radius: var(--radius-md); border: 1px solid var(--color-line); margin-bottom: var(--space-3); }
+.capture__state { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+.capture__feedback--success { color: var(--tone-success-fg); font-weight: 600; }
+.capture__feedback--danger { color: var(--tone-danger-fg); font-weight: 600; }
+
+/* --- Frise chronologique : états ------------------------------------------- */
+.timeline__item--fait .timeline__marker { background: var(--tone-success-bg); color: var(--tone-success-fg); }
+.timeline__item--en_cours .timeline__marker { background: var(--color-brand-700); color: #fff; }
+.timeline__item--a_venir .timeline__marker { background: var(--tone-neutral-bg); color: var(--tone-neutral-fg); }
+.timeline__item--arrete .timeline__marker { background: var(--tone-danger-bg); color: var(--tone-danger-fg); }
+.timeline__state { font-size: var(--text-sm); color: var(--color-ink-500); }
+
+/* --- Utilitaires -----------------------------------------------------------
+   Remplacent les attributs style= en ligne, que la CSP stricte du projet
+   refuse (style-src 'self'). Un style en ligne n'etait tout simplement pas
+   applique : la page s'affichait mal, en silence. Constate en exécutant
+   l'application dans un navigateur, pas par les tests. */
+.u-flush { margin: 0; }
+.u-stack-top { margin-top: var(--space-4); }
+.u-note { font-size: var(--text-sm); color: var(--color-ink-500); }
+.u-note--tight { margin: var(--space-1) 0 0; }
+.u-note--loose { margin-top: var(--space-3); }
+.u-row { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.u-row--wide { gap: var(--space-3); align-items: center; }
+.skeleton--60 { width: 60%; height: 1.2rem; margin-bottom: var(--space-2); }
+.skeleton--90 { width: 90%; height: 1.2rem; margin-bottom: var(--space-2); }
+.skeleton--75 { width: 75%; height: 1.2rem; }
+
+/* Lien dans un tableau : cible tactile pleine hauteur de cellule. */
+td a:not(.btn) {
+  display: inline-flex; align-items: center;
+  min-height: var(--tap-target); padding-inline: var(--space-1);
+}
+
+/* Lien isolé dans un paragraphe : il doit rester une cible tactile de 44 px.
+   Les liens en flux de texte (à l'intérieur d'une phrase) en sont exclus :
+   les agrandir casserait l'interligne. */
+.card > p > a:only-child,
+main > p > a:only-child,
+.container > p > a:only-child {
+  display: inline-flex; align-items: center;
+  min-height: var(--tap-target);
+}
+
+.u-return a { display: inline-flex; align-items: center; min-height: var(--tap-target); }

@@ -95,6 +95,48 @@ class SecurityHeadersTest extends TestCase
         $this->assertSame([], $fautes, 'Gestionnaires en ligne trouvés : '.json_encode($fautes));
     }
 
+    /**
+     * La CSP porte aussi sur les styles : `style-src 'self'` refuse tout
+     * attribut style= en ligne. Un style ainsi ecrit n'est pas applique — la
+     * page s'affiche mal, EN SILENCE. Constate en exécutant l'application dans
+     * un navigateur, alors que les tests etaient au vert.
+     */
+    #[Test]
+    public function aucune_vue_ne_contient_de_style_en_ligne(): void
+    {
+        $fautes = [];
+
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator(resource_path('views'), \RecursiveDirectoryIterator::SKIP_DOTS)
+        );
+
+        foreach ($iterator as $file) {
+            if (! str_ends_with($file->getFilename(), '.blade.php')) {
+                continue;
+            }
+
+            $content = file_get_contents($file->getPathname());
+
+            if (preg_match_all('/\sstyle\s*=\s*"/i', $content, $m)) {
+                $fautes[$file->getFilename()] = count($m[0]);
+            }
+        }
+
+        $this->assertSame(
+            [],
+            $fautes,
+            'Styles en ligne trouvés — la CSP les refuse : '.json_encode($fautes)
+        );
+    }
+
+    #[Test]
+    public function la_csp_refuse_aussi_les_styles_en_ligne(): void
+    {
+        $csp = $this->get('/')->headers->get('Content-Security-Policy');
+
+        $this->assertStringContainsString("style-src 'self'", $csp);
+    }
+
     #[Test]
     public function les_cookies_de_session_sont_httponly_et_chiffres(): void
     {

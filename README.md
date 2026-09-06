@@ -33,6 +33,9 @@ php artisan schedule:work
 | Accueil | `/` |
 | Connexion / inscription | `/login`, `/register` |
 | Tableau de bord | `/tableau-de-bord` — aiguille selon le rôle |
+| Profil citoyen | `/mon-espace/profil` |
+| Mes demandes | `/mon-espace/demandes` |
+| Assistant de demande | `/mon-espace/demandes/{id}/etape/{1-4}` |
 | Double authentification | `/double-authentification` |
 | Portail administrateur | `/administration/comptes`, `/administration/journal` |
 | État du service | `/sante` (JSON avec `Accept: application/json`) |
@@ -78,7 +81,7 @@ la décision D-015.
 ## Vérifications
 
 ```bash
-./vendor/bin/phpunit    # 154 tests, sur un vrai PostgreSQL
+./vendor/bin/phpunit    # 182 tests, sur un vrai PostgreSQL
 ./vendor/bin/pint       # formatage
 ```
 

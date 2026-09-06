@@ -9,6 +9,9 @@
     <title>@yield('title', 'PHOENIX') — PHOENIX</title>
     <link rel="stylesheet" href="{{ asset('css/tokens.css') }}">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    {{-- Amelioration progressive : sans ce script, les formulaires
+         fonctionnent toujours, mais sans compression cote navigateur. --}}
+    <script src="{{ asset('js/identity-capture.js') }}" defer></script>
 </head>
 <body>
     <a class="skip-link" href="#contenu">Aller au contenu principal</a>
@@ -33,6 +36,12 @@
                         <a href="{{ route('admin.audit.index') }}"
                            @if (request()->routeIs('admin.audit.*')) aria-current="page" @endif>Journal</a>
                     @endif
+                    @if (auth()->user()->role === \App\Enums\UserRole::Citizen)
+                        <a href="{{ route('citizen.requests.index') }}"
+                           @if (request()->routeIs('citizen.requests.*')) aria-current="page" @endif>Mes demandes</a>
+                        <a href="{{ route('citizen.profile.edit') }}"
+                           @if (request()->routeIs('citizen.profile.*')) aria-current="page" @endif>Mon profil</a>
+                    @endif
                     <a href="{{ route('two-factor.setup') }}">Sécurité</a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
@@ -51,7 +60,7 @@
 
     <footer class="site-footer">
         <div class="container">
-            <p style="margin:0">République du Cameroun — service de réédition d'actes d'état civil</p>
+            <p class="u-flush">République du Cameroun — service de réédition d'actes d'état civil</p>
         </div>
     </footer>
 </body>

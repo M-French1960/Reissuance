@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Citizen\AttachmentController;
+use App\Http\Controllers\Citizen\ProfileController;
+use App\Http\Controllers\Citizen\RequestTrackingController;
+use App\Http\Controllers\Citizen\RequestWizardController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DevUiController;
 use App\Http\Controllers\HealthController;
@@ -29,6 +33,38 @@ Route::middleware(['auth', 'active'])->group(function (): void {
 
     Route::middleware('two-factor')->group(function (): void {
         Route::get('/tableau-de-bord', DashboardController::class)->name('dashboard');
+
+        /*
+         * Parcours citoyen.
+         *
+         * Toutes ces routes sont protegees par la Policy autant que par le
+         * middleware de role : le middleware ferme la route, la Policy protege
+         * la ressource. Un citoyen n'atteint jamais la demande d'un autre.
+         */
+        Route::middleware('role:citizen')->prefix('mon-espace')->name('citizen.')->group(function (): void {
+            Route::get('/profil', [ProfileController::class, 'edit'])->name('profile.edit');
+            Route::patch('/profil', [ProfileController::class, 'update'])->name('profile.update');
+
+            Route::get('/demandes', [RequestTrackingController::class, 'index'])->name('requests.index');
+            Route::post('/demandes/nouvelle', [RequestWizardController::class, 'start'])->name('requests.start');
+            Route::get('/demandes/{reissuanceRequest}/etape/{step}', [RequestWizardController::class, 'show'])
+                ->whereNumber('step')->name('requests.step');
+            Route::post('/demandes/{reissuanceRequest}/etape/{step}', [RequestWizardController::class, 'save'])
+                ->whereNumber('step')->name('requests.save');
+            Route::post('/demandes/{reissuanceRequest}/pieces', [AttachmentController::class, 'store'])
+                ->name('requests.attachments.store');
+            Route::get('/demandes/{reissuanceRequest}', [RequestTrackingController::class, 'show'])->name('requests.show');
+        });
+
+        /*
+         * Service des pieces d'identite.
+         *
+         * Hors du prefixe citoyen : l'officier et le maire doivent aussi
+         * pouvoir consulter les pieces des dossiers de leur perimetre. La
+         * Policy viewIdentityDocuments decide, et exclut l'administrateur.
+         */
+        Route::get('/pieces/{attachment}', [AttachmentController::class, 'show'])
+            ->name('citizen.attachments.show');
 
         /*
          * Portail administrateur.

@@ -19,7 +19,7 @@
             ] as [$tone, $ratio])
                 <div>
                     <span class="badge badge--{{ $tone }}">{{ $tone }}</span>
-                    <p style="font-size:var(--text-sm);color:var(--color-ink-500);margin:var(--space-1) 0 0">
+                    <p class="u-note u-note--tight">
                         {{ $ratio }} — conforme AA
                     </p>
                 </div>
@@ -29,7 +29,7 @@
 
     <x-card title="Badges de statut">
         <p>Les sept états d'une demande, avec le libellé réellement affiché.</p>
-        <div style="display:flex;flex-wrap:wrap;gap:var(--space-2)">
+        <div class="u-row">
             @foreach (\App\Enums\RequestStatus::cases() as $status)
                 <x-status-badge :status="$status" />
             @endforeach
@@ -37,13 +37,13 @@
     </x-card>
 
     <x-card title="Boutons">
-        <div style="display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:center">
+        <div class="u-row u-row--wide">
             <x-button variant="primary" type="button">Action principale</x-button>
             <x-button variant="secondary" type="button">Action secondaire</x-button>
             <x-button variant="danger" type="button">Action destructrice</x-button>
             <x-button variant="primary" type="button" disabled>Désactivé</x-button>
         </div>
-        <p style="margin-top:var(--space-3);font-size:var(--text-sm);color:var(--color-ink-500)">
+        <p class="u-note u-note--loose">
             Hauteur minimale 44 px (cible tactile WCAG 2.5.5). Naviguez au clavier
             pour vérifier le contour de focus, absent de tout le prototype.
         </p>
@@ -76,10 +76,10 @@
     </x-card>
 
     <x-card title="Squelettes de chargement">
-        <p style="font-size:var(--text-sm);color:var(--color-ink-500)">Préférés à une page blanche (§8.5).</p>
-        <div class="skeleton" style="width:60%;height:1.2rem;margin-bottom:var(--space-2)"></div>
-        <div class="skeleton" style="width:90%;height:1.2rem;margin-bottom:var(--space-2)"></div>
-        <div class="skeleton" style="width:75%;height:1.2rem"></div>
+        <p class="u-note">Préférés à une page blanche (§8.5).</p>
+        <div class="skeleton skeleton--60"></div>
+        <div class="skeleton skeleton--90"></div>
+        <div class="skeleton skeleton--75"></div>
     </x-card>
 
     <x-card title="Frise chronologique">
@@ -87,23 +87,23 @@
             <li class="timeline__item timeline__item--done">
                 <span class="timeline__marker" aria-hidden="true">&check;</span>
                 <div><strong>Demande envoyée</strong><br>
-                <span style="color:var(--color-ink-500)">Transmise au centre d'état civil de Yaoundé I</span></div>
+                <span class="u-note">Transmise au centre d'état civil de Yaoundé I</span></div>
             </li>
             <li class="timeline__item">
                 <span class="timeline__marker" aria-hidden="true">2</span>
                 <div><strong>Vérification par l'officier</strong><br>
-                <span style="color:var(--color-ink-500)">En cours</span></div>
+                <span class="u-note">En cours</span></div>
             </li>
             <li class="timeline__item">
                 <span class="timeline__marker" aria-hidden="true">3</span>
                 <div><strong>Signature du maire</strong><br>
-                <span style="color:var(--color-ink-500)">À venir</span></div>
+                <span class="u-note">À venir</span></div>
             </li>
         </ol>
     </x-card>
 
     <x-card title="Tableau">
-        <p style="font-size:var(--text-sm);color:var(--color-ink-500)">
+        <p class="u-note">
             Défile dans son propre conteneur : le corps de page ne défile jamais horizontalement.
         </p>
         <div class="table-wrap">
