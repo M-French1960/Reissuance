@@ -74,7 +74,7 @@ signalés comme tels et ne doivent pas être traités comme tranchés.
 ## D-005 — Hébergement sur les offres gratuites, usage non commercial assumé
 
 - **Date :** 2026-09-05
-- **Statut :** décidé par le commanditaire
+- **Statut :** ⚠️ **CADUQUE depuis le 2026-09-06 — remplacée par D-011.** Conservée pour mémoire : elle redeviendrait applicable en cas de déploiement sur Vercel.
 - **Décision :** Vercel plan Hobby et Supabase offre gratuite. Le commanditaire
   confirme que le projet relève d'un usage non commercial, ce qui le place hors
   du champ de la restriction Vercel citée ci-dessous.
@@ -93,7 +93,7 @@ signalés comme tels et ne doivent pas être traités comme tranchés.
 ## D-006 — Architecture sans traitement asynchrone
 
 - **Date :** 2026-09-05
-- **Statut :** décidé
+- **Statut :** ⚠️ **ANNULÉE le 2026-09-06 par D-011.** En local, un worker de file et un ordonnanceur fonctionnent normalement : l'asynchrone redevient disponible. La contrainte n°1 ci-dessous (« une notification qui échoue ne doit jamais annuler une transition d'état ») est **maintenue** — elle est bonne en soi.
 - **Décision :** aucun mécanisme de file d'attente asynchrone. `QUEUE_CONNECTION`
   reste `sync`. Les notifications partent pendant la requête. Le §3.1 du brief
   (endpoints `/internal/cron/dispatch` et `/internal/queue/drain`, drain par
@@ -122,7 +122,7 @@ signalés comme tels et ne doivent pas être traités comme tranchés.
 ## D-007 — Emploi de l'unique tâche planifiée quotidienne
 
 - **Date :** 2026-09-05
-- **Statut :** décidé
+- **Statut :** ⚠️ **CADUQUE depuis le 2026-09-06 — remplacée par D-011.** Plus de limite d'une exécution par jour, plus de mise en pause Supabase à contourner.
 - **Décision :** la seule exécution quotidienne autorisée sur Hobby est
   affectée, par ordre de priorité, à : (1) maintenir le projet Supabase éveillé,
   (2) rejouer les notifications en échec, (3) l'entretien courant.
@@ -140,7 +140,7 @@ signalés comme tels et ne doivent pas être traités comme tranchés.
 ## D-008 — La compression des images côté client est une contrainte, pas une optimisation
 
 - **Date :** 2026-09-05
-- **Statut :** décidé
+- **Statut :** **RÉVISÉE le 2026-09-06 par D-011.** La compression est **maintenue**, mais sa justification change : ce n'est plus une limite de capacité (le disque local n'est plus plafonné à 1 Go), c'est une exigence de performance sur réseau contraint (§8.5 du brief) et la condition d'un déploiement ultérieur. La cible de 250 Ko/image est conservée.
 - **Décision :** compression et redimensionnement dans le navigateur **avant**
   tout envoi, cible ≤ 250 Ko par image. Politique de rétention et suppression
   effective implémentées dès le jalon 3, pas reportées au jalon 6.
@@ -168,7 +168,7 @@ signalés comme tels et ne doivent pas être traités comme tranchés.
 ## D-009 — Confirmation du mode de connexion : pooler Supavisor en mode session
 
 - **Date :** 2026-09-05
-- **Statut :** recommandation confirmée, **reste à valider par mesure au jalon 1**
+- **Statut :** ⚠️ **SANS OBJET depuis le 2026-09-06 — remplacée par D-011.** En local, connexion directe à PostgreSQL. Conservée : elle redeviendrait la recommandation en cas de bascule vers Supabase.
 - **Décision provisoire :** pooler Supavisor en mode session
   (`aws-<région>.pooler.supabase.com:5432`).
 - **Éléments nouveaux apportés par l'offre gratuite :** l'instance est en **CPU
@@ -257,6 +257,63 @@ Aucune exigence de sécurité n'est allégée. Validation serveur systématique,
 au niveau des données : identiques. L'absence de framework front-end ne rend
 rien plus permissif — elle réduit seulement la surface à auditer.
 
+
+---
+
+## D-011 — Cible d'exécution : installation locale
+
+- **Date :** 2026-09-06
+- **Statut :** décidé par le commanditaire
+- **Décision :** le projet est conçu pour **fonctionner en local**, sur une
+  machine, sans dépendance à un hébergeur. Cela remplace le §3 du brief
+  (contraintes de plateforme Vercel) et le choix Supabase du §2.
+- **Ce que cela remplace :**
+
+  | Élément du brief | Devient |
+  |---|---|
+  | Vercel, runtime conteneur, FrankenPHP | Serveur local (Docker Compose, ou PHP intégré en développement) |
+  | `Dockerfile.vercel`, `Caddyfile`, `vercel.json` | **Non produits** |
+  | PostgreSQL hébergé sur Supabase | **PostgreSQL local**, en connexion directe |
+  | Stockage objet externe (Supabase Storage / Vercel Blob) | **Disque local**, hors racine web, servi uniquement par un contrôleur autorisé |
+  | Endpoints `/internal/cron/*`, drain de file par cron | **Non produits** — `queue:work` et `schedule:run` réels |
+
+- **Ce que cela rétablit, et qui était perdu :**
+  1. **Le traitement asynchrone redevient possible.** D-006 tombe. Les
+     notifications partent par une file réelle, sans bloquer la requête.
+  2. **Un ordonnanceur réel.** Plus de limite d'une exécution par jour.
+  3. **Plus aucun plafond de capacité artificiel.** Ni 1 Go de stockage, ni
+     500 Mo de base, ni 5 Go de trafic, ni mise en pause après une semaine.
+  4. **Plus de clause d'usage commercial** à surveiller.
+  5. `config:cache` redevient utilisable sans piéger `APP_KEY`.
+
+- **Ce que cela ne relâche pas — point de vigilance principal :**
+
+  Le garde-fou n°5 du brief interdit « le stockage d'une pièce d'identité sur le
+  système de fichiers du conteneur ni derrière une URL publique ». Il visait
+  l'éphémérité du conteneur Vercel. En local, la première moitié perd son objet
+  — le disque est persistant — mais **la seconde reste absolue** :
+
+  - les fichiers sont écrits **hors de `public/`**, dans `storage/app/private/`,
+    donc inatteignables par URL directe ;
+  - toute lecture passe par un **contrôleur qui vérifie la Policy avant de
+    servir l'octet**, et **journalise la consultation** (§4.4) ;
+  - les noms de fichiers sont des identifiants opaques, jamais dérivés du nom
+    ou du numéro de pièce du citoyen ;
+  - une empreinte est enregistrée en base pour détecter toute altération.
+
+  L'abstraction Laravel `Storage` est employée telle quelle : basculer plus tard
+  vers S3 ou Supabase Storage ne demandera qu'un changement de disque dans la
+  configuration, sans toucher au code applicatif.
+
+- **Ce qui ne change pas :** D-010 (HTML/CSS écrits à la main, Blade conservé)
+  reste intégralement applicable. Toutes les exigences de sécurité du §4 sont
+  inchangées.
+
+- **Décision de conception liée :** l'accès aux données passe exclusivement par
+  Eloquent avec le pilote `pgsql`. Le code ne contient **aucune dépendance à
+  Supabase**. Passer d'un PostgreSQL local à un PostgreSQL hébergé ne doit
+  demander qu'un changement de chaîne de connexion dans `.env`.
+
 ---
 
 ## Points explicitement **non** tranchés à ce stade
@@ -265,12 +322,12 @@ Ils sont listés ici pour éviter qu'une décision implicite ne s'installe.
 
 | Sujet | Où il sera tranché |
 |---|---|
-| Mode de connexion Supabase — *recommandation arrêtée en D-009, à valider par mesure* | `docs/DATABASE.md` — jalon 1 |
-| Stockage des pièces d'identité (Supabase Storage / Vercel Blob) | `docs/STORAGE.md` — jalon 1 |
+| ~~Mode de connexion Supabase~~ | **Sans objet — tranché en D-011** |
+| ~~Stockage des pièces d'identité~~ | **Tranché en D-011 — disque local, hors racine web** |
 | ~~Version de Livewire et de Tailwind~~ | **Sans objet — tranché en D-010** |
 | Version de Laravel et de PHP (8.3 ou 8.4) | À valider avant le jalon 1 |
 | Zéro JavaScript, ou JavaScript vanille minimal | À confirmer — voir D-010 |
-| ~~Plan Vercel~~ | **Tranché en D-005** |
+| ~~Plan Vercel~~ | **Sans objet — tranché en D-011** |
 | 2FA du citoyen (TOTP / SMS / aucun) | Jalon 2, après confirmation de la faisabilité SMS |
 | Défense en profondeur RLS | Jalon 6, après évaluation du coût |
 | Conservation du genre et des données parentales | Après avis juridique |
