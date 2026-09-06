@@ -327,9 +327,9 @@ Ils sont listés ici pour éviter qu'une décision implicite ne s'installe.
 | ~~Version de Livewire et de Tailwind~~ | **Sans objet — tranché en D-010** |
 | ~~Version de Laravel et de PHP~~ | **Tranché : Laravel 13.30.1, PHP 8.4** |
 | Zéro JavaScript, ou JavaScript vanille minimal | À confirmer — voir D-010 (aucun JS écrit à ce jour) |
-| Pest et Larastan | **Bloqués par le réseau — voir D-012** |
+| Pest et Larastan | **Toujours bloqués par le réseau — voir D-012.** Fortify s'est installé au jalon 2, mais pas ces deux-là. |
 | ~~Plan Vercel~~ | **Sans objet — tranché en D-011** |
-| 2FA du citoyen (TOTP / SMS / aucun) | Jalon 2, après confirmation de la faisabilité SMS |
+| 2FA du citoyen (TOTP / SMS / aucun) | **Toujours ouvert.** Le TOTP fonctionne pour tous les rôles ; il reste facultatif pour le citoyen faute de réponse sur la faisabilité SMS. |
 | Défense en profondeur RLS | Jalon 6, après évaluation du coût |
 | Conservation du genre et des données parentales | Après avis juridique |
 
@@ -360,3 +360,137 @@ Ils sont listés ici pour éviter qu'une décision implicite ne s'installe.
   ensuite l'étape PHPStan niveau 6 à `.github/workflows/ci.yml`.
 - **Alternative écartée :** faire semblant en écrivant des tests de style Pest
   qui ne s'exécutent pas. Un test qui ne tourne pas ne prouve rien.
+
+---
+
+## D-013 — Laravel Fortify pour l'authentification, sans ses extras
+
+- **Date :** 2026-09-06
+- **Statut :** décidé
+- **Décision :** Fortify (v1.39) est la base d'authentification, avec des vues
+  écrites à la main. Fonctionnalités activées : inscription, réinitialisation
+  de mot de passe, changement de mot de passe, 2FA TOTP avec confirmation.
+- **Pourquoi Fortify plutôt que Breeze :** le §4.1 du brief autorise les deux.
+  Breeze installe un échafaudage Tailwind + Vite, incompatible avec D-010.
+  Fortify est sans vues : il fournit les routes et la logique, l'interface
+  reste entièrement la nôtre.
+- **Écartés volontairement :**
+  - **`passkeys`** — activé par défaut dans Fortify 1.39. Le §4.1 impose TOTP
+    pour les rôles officiels ; ajouter une seconde méthode d'authentification
+    avant que la première ne soit éprouvée élargit la surface d'attaque sans
+    besoin établi.
+  - **`updateProfileInformation`** — le profil citoyen a ses propres règles
+    (jalon 3), et un compte officiel ne doit pas pouvoir modifier son propre
+    rattachement.
+  - **`emailVerification`** — à arbitrer au jalon 3 avec le parcours citoyen.
+- **Hachage :** Argon2id (`config/hashing.php`), disponible via `sodium`.
+  Vérifié : les mots de passe produits commencent par `$argon2id$`.
+
+---
+
+## D-014 — Statut « pending » : déblocage du parcours de création de compte
+
+- **Date :** 2026-09-06
+- **Statut :** décidé, correctif d'un blocage constaté
+
+- **Le problème, découvert par les tests :** le parcours de création d'un
+  compte officiel était **impossible à terminer**.
+
+  1. `users_official_2fa_check` interdit un compte officiel **actif** sans 2FA
+     confirmée → le compte devait donc être créé inactif.
+  2. Mais `EnsureAccountIsActive` déconnecte tout compte inactif → son
+     titulaire ne pouvait jamais se connecter.
+  3. Donc il ne pouvait jamais configurer sa 2FA.
+  4. Donc l'administrateur ne pouvait jamais l'activer.
+
+  Aucune de ces quatre règles n'est fausse prise isolément. Leur composition
+  fermait la boucle. C'est exactement le genre de défaut qu'un test de parcours
+  attrape et qu'une relecture de code ne voit pas.
+
+- **Décision :** ajout d'un quatrième statut, `pending`.
+
+  | Statut | Peut se connecter | Accès |
+  |---|---|---|
+  | `pending` | oui | **uniquement** la configuration 2FA et le mot de passe |
+  | `active` | oui | selon son rôle |
+  | `suspended` | non | déconnexion immédiate, session invalidée |
+  | `disabled` | non | idem |
+
+  `EnsureAccountIsActive` confine `pending` à une liste fermée de routes. Le
+  compte ne devient `active` que par une action explicite d'un administrateur,
+  et seulement une fois la 2FA confirmée.
+
+- **Alternative écartée :** assouplir la contrainte 2FA en base. Cela aurait
+  ouvert une fenêtre pendant laquelle un compte officiel actif existe sans
+  second facteur — précisément ce que le §4.1 interdit.
+
+---
+
+## D-015 — La vérification de mots de passe compromis échoue en mode ouvert
+
+- **Date :** 2026-09-06
+- **Statut :** constaté et contourné, **à connaître**
+- **Le fait, vérifié dans le code de Laravel :**
+  `Illuminate\Validation\NotPwnedVerifier::search()` intercepte l'exception
+  réseau, retourne un corps vide, et la règle conclut que le mot de passe n'est
+  pas compromis. **Hors ligne, `uncompromised()` laisse donc passer n'importe
+  quel mot de passe**, sans le moindre avertissement.
+
+  C'est le comportement du framework, pas un défaut de notre code. Mais sur une
+  installation locale sans accès internet — le cas par défaut de ce projet
+  depuis D-011 — cela signifie que la protection annoncée par le §4.1 n'existe
+  pas.
+
+- **Décision :** conserver `uncompromised()` (elle a de la valeur en ligne, et
+  le brief l'exige) **et** ajouter `App\Rules\NotAWeakPassword`, un plancher
+  local qui fonctionne hors ligne : termes du service et du contexte
+  géographique, substitutions courantes (`p@ssw0rd` → `password`), répétitions
+  et suites de caractères.
+- **Ce que ce plancher n'est pas :** une liste de mots de passe compromis. Une
+  vraie liste se compte en centaines de millions et n'a pas sa place dans le
+  dépôt. Il attrape l'évident, rien de plus, et c'est ainsi qu'il faut le lire.
+- **Réglable :** `PHOENIX_CHECK_COMPROMISED_PASSWORDS` désactive l'appel
+  distant quand on sait qu'il est inutile.
+
+---
+
+## D-016 — Deux défauts silencieux rattrapés par les tests
+
+- **Date :** 2026-09-06
+- **Statut :** corrigés, consignés parce qu'ils sont instructifs
+
+**1. La portée globale avait disparu sans erreur.** L'attribut
+`#[ScopedBy(RequestVisibilityScope::class)]` reposait sur deux `use` que le
+formateur a supprimés en les jugeant inutilisés. L'attribut pointait dès lors
+vers des classes inexistantes dans l'espace de noms `App\Models` — et PHP
+n'émet **aucune erreur** dans ce cas : l'attribut est simplement ignoré. Toutes
+les requêtes remontaient l'intégralité des demandes, tous centres confondus.
+
+Rattrapé par le test R13. Corrigé en écrivant les noms pleinement qualifiés
+dans l'attribut, ce qui ne dépend plus d'aucun `use`.
+
+**2. Les Policies n'étaient pas appelées.** Depuis Laravel 11, le contrôleur de
+base n'inclut plus `AuthorizesRequests` : tout appel à `$this->authorize()`
+lève une `Error` à l'exécution. Le portail administrateur ne tenait donc que
+par son middleware de rôle, la couche Policy étant morte.
+
+Ces deux défauts partagent un trait : **ils ne produisaient aucun message.**
+C'est la raison d'être des tests de refus du §4.2 du brief — un test qui ne
+prouve que le cas heureux n'aurait rien vu.
+
+---
+
+## D-017 — Ce que la suite de tests ne peut pas prouver sur la CSRF
+
+- **Date :** 2026-09-06
+- **Statut :** limite acceptée et documentée
+- **Le fait :** `PreventRequestForgery::handle()` appelle `runningUnitTests()`
+  et court-circuite entièrement le contrôle dès que la suite s'exécute. **Il
+  est donc impossible de prouver le rejet d'une requête sans jeton depuis un
+  test HTTP.**
+- **Décision :** ne pas écrire de test qui prétendrait le contraire. Le test
+  vérifie ce qui est réellement vérifiable et ce qui peut réellement casser :
+  que le middleware figure dans le groupe `web`, et que les formulaires portent
+  le jeton.
+- **Justification :** un test vert qui ne teste rien est pire que pas de test —
+  il fait croire qu'une protection est vérifiée.

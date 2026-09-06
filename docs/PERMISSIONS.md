@@ -30,10 +30,28 @@
 
 | Rôle | Créé par | Rattachement | 2FA |
 |---|---|---|---|
-| `citizen` | auto-inscription | — | recommandé, à trancher |
+| `citizen` | auto-inscription | — | facultative — voir `DECISIONS.md` |
 | `officer` | **administrateur uniquement** | un centre d'état civil | **obligatoire** |
 | `mayor` | **administrateur uniquement** | une commune | **obligatoire** |
 | `admin` | amorçage initial, puis administrateur | — | **obligatoire** |
+
+### 2.1 Statuts de compte
+
+Ajouté à l'implémentation (décision D-014) : un quatrième statut était
+nécessaire, sans quoi aucun compte officiel ne pouvait jamais être mis en
+service.
+
+| Statut | Connexion | Périmètre accessible |
+|---|---|---|
+| `pending` | oui | **uniquement** la configuration 2FA et le mot de passe |
+| `active` | oui | selon le rôle |
+| `suspended` | non | déconnexion immédiate, session invalidée |
+| `disabled` | non | idem |
+
+Un compte officiel est créé `pending`. Son titulaire s'y connecte pour poser sa
+2FA — et n'accède à rien d'autre. Un administrateur ne peut l'activer qu'une
+fois cette 2FA confirmée : la contrainte `users_official_2fa_check` le refuse
+en base, et l'interface le dit avant d'échouer.
 
 **Aucun compte officiel ne peut s'auto-inscrire** (§4.1). La route
 d'inscription n'accepte que le rôle `citizen`, et le rôle n'est jamais lu
@@ -155,6 +173,30 @@ minimum :
 | R13 | Requête Eloquent sans `where` explicite sur les demandes, exécutée en tant qu'officier | ne retourne **que** son centre (portée globale) |
 | R14 | Utilisateur désactivé tentant de se connecter | refus, et session existante invalidée |
 | R15 | Officier consultant une pièce d'identité | accès accordé **et** ligne d'audit écrite |
+
+### 4.1 État d'implémentation au jalon 2
+
+| # | Implémenté | Où |
+|---|---|---|
+| R1 | ✅ | `AuthorizationTest::r1_…` |
+| R2 | ⏳ jalon 3 | dépend du contrôleur de fichiers |
+| R3 | ✅ | `AuthorizationTest::r3_…` |
+| R4 | ✅ | `AuthorizationTest::r4_…` |
+| R5 | ⏳ jalon 4 | dépend des 5 étapes de vérification |
+| R6 | ✅ | `AuthorizationTest::r6_…`, 4 états couverts |
+| R7 | ✅ | `AuthorizationTest::r7_…` |
+| R8 | ✅ | `AuthorizationTest::r8_…`, **les 7 états** |
+| R9 | ✅ | même test (`viewIdentityDocuments`) |
+| R10 | ✅ | `AuthorizationTest::r10_…` |
+| R11 | ✅ | `RegistrationTest::le_role_envoye_…`, 3 rôles usurpés |
+| R12 | ✅ | `AuditLogTest`, 3 tests (modèle + SQL direct + droits) |
+| R13 | ✅ | `AuthorizationTest::r13_…` et 2 variantes |
+| R14 | ✅ | `LoginTest`, 3 tests (connexion + session en cours) |
+| R15 | ⏳ jalon 3 | dépend du contrôleur de fichiers |
+
+R2 et R15 portent sur le service des pièces d'identité, qui n'existe pas encore.
+R5 porte sur les 5 étapes de vérification, qui arrivent au jalon 4. Les trois
+sont volontairement laissés en attente plutôt qu'écrits contre du code absent.
 
 R13 est le test le plus important du lot : il vérifie que la barrière tient
 **même en cas d'oubli du développeur**, ce qui est le scénario réel.

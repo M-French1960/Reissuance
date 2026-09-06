@@ -12,11 +12,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Fortify\TwoFactorAuthenticatable;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, TwoFactorAuthenticatable;
 
     protected $fillable = [
         'name', 'email', 'password', 'role', 'status',
@@ -24,7 +25,10 @@ class User extends Authenticatable
         'email_verified_at', 'two_factor_confirmed_at',
     ];
 
-    protected $hidden = ['password', 'remember_token', 'two_factor_secret'];
+    protected $hidden = [
+        'password', 'remember_token',
+        'two_factor_secret', 'two_factor_recovery_codes',
+    ];
 
     protected function casts(): array
     {
@@ -33,6 +37,8 @@ class User extends Authenticatable
             'password' => 'hashed',
             'role' => UserRole::class,
             'two_factor_secret' => 'encrypted',
+            'two_factor_recovery_codes' => 'encrypted',
+            'password_changed_at' => 'datetime',
             'two_factor_confirmed_at' => 'datetime',
             'last_login_at' => 'datetime',
         ];
@@ -61,6 +67,12 @@ class User extends Authenticatable
     public function isActive(): bool
     {
         return $this->status === 'active';
+    }
+
+    /** Compte cree, en attente de configuration par son titulaire. */
+    public function isPending(): bool
+    {
+        return $this->status === 'pending';
     }
 
     public function hasRole(UserRole ...$roles): bool

@@ -21,6 +21,34 @@ return [
     ],
 
     /*
+     * Securite.
+     */
+    'security' => [
+        /*
+         * Verification du mot de passe contre les fuites connues.
+         *
+         * ATTENTION : cette verification interroge api.pwnedpasswords.com et
+         * **echoue en mode ouvert**. Si le service est injoignable — ce qui
+         * est le cas par defaut sur une installation locale hors ligne — tout
+         * mot de passe passe. Le plancher reel est App\Rules\NotAWeakPassword.
+         */
+        'check_compromised_passwords' => env('PHOENIX_CHECK_COMPROMISED_PASSWORDS', true),
+
+        /*
+         * Duree de session, en minutes, pour les roles officiels.
+         * Le 4.1 impose une duree courte pour ces roles.
+         */
+        'official_session_lifetime' => (int) env('PHOENIX_OFFICIAL_SESSION_LIFETIME', 30),
+
+        /*
+         * Verrouillage progressif : tentatives autorisees avant blocage, et
+         * duree de blocage de base en secondes (doublee a chaque palier).
+         */
+        'login_max_attempts' => (int) env('PHOENIX_LOGIN_MAX_ATTEMPTS', 5),
+        'login_lockout_seconds' => (int) env('PHOENIX_LOGIN_LOCKOUT_SECONDS', 60),
+    ],
+
+    /*
      * Cible de compression cote navigateur avant envoi (D-008).
      */
     'uploads' => [

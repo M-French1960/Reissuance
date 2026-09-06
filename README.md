@@ -31,13 +31,32 @@ php artisan schedule:work
 | Page | Chemin |
 |---|---|
 | Accueil | `/` |
+| Connexion / inscription | `/login`, `/register` |
+| Tableau de bord | `/tableau-de-bord` — aiguille selon le rôle |
+| Double authentification | `/double-authentification` |
+| Portail administrateur | `/administration/comptes`, `/administration/journal` |
 | État du service | `/sante` (JSON avec `Accept: application/json`) |
 | Galerie de composants | `/dev/ui` — hors production uniquement |
 | Courriels capturés | http://localhost:8025 |
 
 Les comptes de démonstration sont affichés à la fin de `db:seed`.
 
-## Deux points à connaître avant de toucher au code
+## Mettre en service un compte officiel
+
+Un officier ou un maire ne peut pas s'inscrire lui-même. Le parcours est :
+
+1. Un administrateur crée le compte (`/administration/comptes/nouveau`). Il est
+   créé **`pending`**, sans mot de passe choisi par l'administrateur.
+2. Son titulaire reçoit un lien, définit son mot de passe, se connecte. Il
+   n'accède alors **qu'à** la page de double authentification.
+3. Il configure sa 2FA et la confirme.
+4. L'administrateur peut alors activer le compte, avec un motif obligatoire
+   qui part au journal d'audit.
+
+L'étape 3 n'est pas contournable : la contrainte `users_official_2fa_check`
+refuse en base tout compte officiel actif sans 2FA confirmée.
+
+## Trois points à connaître avant de toucher au code
 
 **L'application ne tourne jamais sous le propriétaire du schéma.** Les
 migrations utilisent `phoenix_owner`, l'application `phoenix_app`, qui n'a ni
@@ -50,10 +69,16 @@ machine.** La première chiffre les numéros de pièce ; les perdre les rend
 illisibles définitivement. La seconde permet la recherche par numéro ; la
 perdre casse la recherche sans perdre de données.
 
+**La vérification des mots de passe compromis ne fonctionne pas hors ligne.**
+La règle `uncompromised()` de Laravel interroge un service distant et, s'il est
+injoignable, **laisse passer** — sans avertissement. Le plancher réel en local
+est `App\Rules\NotAWeakPassword`, qui attrape l'évident et rien de plus. Voir
+la décision D-015.
+
 ## Vérifications
 
 ```bash
-./vendor/bin/phpunit    # 82 tests, sur un vrai PostgreSQL
+./vendor/bin/phpunit    # 154 tests, sur un vrai PostgreSQL
 ./vendor/bin/pint       # formatage
 ```
 

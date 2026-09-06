@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\RequestStatus;
+use App\Models\Scopes\RequestVisibilityScope;
 use Database\Factories\ReissuanceRequestFactory;
+use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,6 +15,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
+/*
+ * Portee globale : nom pleinement qualifie a dessein.
+ *
+ * Un `use` a ete supprime ici par un formateur qui l'a juge inutilise, et
+ * l'attribut a alors pointe vers une classe inexistante — la portee a disparu
+ * SANS AUCUNE ERREUR. Le test R13 l'a rattrape ; le nom complet empeche que
+ * cela se reproduise.
+ */
+#[ScopedBy(RequestVisibilityScope::class)]
 class ReissuanceRequest extends Model
 {
     /** @use HasFactory<ReissuanceRequestFactory> */
