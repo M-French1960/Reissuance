@@ -325,9 +325,38 @@ Ils sont listés ici pour éviter qu'une décision implicite ne s'installe.
 | ~~Mode de connexion Supabase~~ | **Sans objet — tranché en D-011** |
 | ~~Stockage des pièces d'identité~~ | **Tranché en D-011 — disque local, hors racine web** |
 | ~~Version de Livewire et de Tailwind~~ | **Sans objet — tranché en D-010** |
-| Version de Laravel et de PHP (8.3 ou 8.4) | À valider avant le jalon 1 |
-| Zéro JavaScript, ou JavaScript vanille minimal | À confirmer — voir D-010 |
+| ~~Version de Laravel et de PHP~~ | **Tranché : Laravel 13.30.1, PHP 8.4** |
+| Zéro JavaScript, ou JavaScript vanille minimal | À confirmer — voir D-010 (aucun JS écrit à ce jour) |
+| Pest et Larastan | **Bloqués par le réseau — voir D-012** |
 | ~~Plan Vercel~~ | **Sans objet — tranché en D-011** |
 | 2FA du citoyen (TOTP / SMS / aucun) | Jalon 2, après confirmation de la faisabilité SMS |
 | Défense en profondeur RLS | Jalon 6, après évaluation du coût |
 | Conservation du genre et des données parentales | Après avis juridique |
+
+---
+
+## D-012 — Tests avec PHPUnit et sans Larastan au jalon 1
+
+- **Date :** 2026-09-06
+- **Statut :** contrainte d'environnement, **à lever dès que possible**
+- **Décision :** la suite de tests utilise **PHPUnit 12** (fourni par Laravel)
+  au lieu de Pest, et **Larastan n'est pas installé**.
+- **Cause, honnêtement :** l'installation a échoué de façon reproductible dans
+  l'environnement où le jalon a été construit — `Could not authenticate against
+  github.com`, et les téléchargements d'archives GitHub renvoient 403 à travers
+  le relais réseau. Cinq tentatives, en `--prefer-dist` puis `--prefer-source`,
+  avec et sans l'API GitHub. **Ce n'est pas une limite du projet.**
+- **Ce que cela ne change pas :** les tests portent exactement sur la même
+  chose. Pest est une syntaxe posée sur PHPUnit, pas un pouvoir de test
+  supplémentaire. Les 82 tests couvrent les mêmes refus.
+- **À faire sur une machine au réseau libre :**
+
+  ```
+  composer require --dev -W pestphp/pest:^5.0 pestphp/pest-plugin-laravel:^5.0 larastan/larastan:^3.0
+  ```
+
+  Pest 5 exige PHPUnit 13 alors que le squelette Laravel 13 épingle PHPUnit
+  `^12.5.12` : il faut assouplir cette contrainte, d'où le `-W`. Ajouter
+  ensuite l'étape PHPStan niveau 6 à `.github/workflows/ci.yml`.
+- **Alternative écartée :** faire semblant en écrivant des tests de style Pest
+  qui ne s'exécutent pas. Un test qui ne tourne pas ne prouve rien.

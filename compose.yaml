@@ -1,0 +1,33 @@
+# Pile locale PHOENIX (docs/ARCHITECTURE_LOCAL.md).
+# Remplace Dockerfile.vercel / Caddyfile / vercel.json, rendus caducs par D-011.
+
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: phoenix
+      POSTGRES_USER: phoenix_owner
+      POSTGRES_PASSWORD: ${DB_OWNER_PASSWORD:-changez-moi-en-local}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      # Volume nomme : les donnees survivent au redemarrage, ce que
+      # l'hebergement conteneurise ne permettait pas.
+      - phoenix-db:/var/lib/postgresql/data
+      - ./docker/init-roles.sql:/docker-entrypoint-initdb.d/10-roles.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U phoenix_owner -d phoenix"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  mail:
+    # Collecteur local : aucun courriel ne quitte jamais la machine de
+    # developpement. Interface web sur http://localhost:8025
+    image: axllent/mailpit:latest
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
+volumes:
+  phoenix-db:

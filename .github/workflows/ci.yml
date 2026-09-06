@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        # Les barrieres de securite du projet sont des declencheurs et des
+        # revocations de droits PostgreSQL : les tester sur SQLite ne
+        # prouverait rien.
+        image: postgres:17
+        env:
+          POSTGRES_USER: phoenix_owner
+          POSTGRES_PASSWORD: ci_owner_password
+          POSTGRES_DB: phoenix_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U phoenix_owner"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Installer PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_pgsql, mbstring, intl, gd, zip, bcmath
+          coverage: none
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('composer.lock') }}
+
+      - name: Installer les dépendances
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Créer le rôle applicatif
+        env:
+          PGPASSWORD: ci_owner_password
+        run: |
+          psql -h 127.0.0.1 -U phoenix_owner -d phoenix_test \
+            -c "CREATE ROLE phoenix_app LOGIN PASSWORD 'ci_app_password';" \
+            -c "GRANT USAGE ON SCHEMA public TO phoenix_app;"
+
+      - name: Préparer l'environnement
+        run: |
+          cp .env.example .env
+          sed -i 's/^DB_PASSWORD=.*/DB_PASSWORD=ci_app_password/' .env
+          sed -i 's/^DB_OWNER_PASSWORD=.*/DB_OWNER_PASSWORD=ci_owner_password/' .env
+          sed -i 's/^DB_DATABASE=.*/DB_DATABASE=phoenix_test/' .env
+          php artisan key:generate
+          php artisan phoenix:generate-index-key
+
+      - name: Vérifier le formatage
+        run: ./vendor/bin/pint --test
+
+      - name: Lancer les tests
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PASSWORD: ci_app_password
+          DB_OWNER_PASSWORD: ci_owner_password
+        run: ./vendor/bin/phpunit
+
+      - name: Audit des dépendances
+        run: composer audit --no-interaction
+        continue-on-error: true

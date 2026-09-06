@@ -1,0 +1,91 @@
+/* =============================================================================
+   PHOENIX — jetons de design
+   =============================================================================
+   Source unique des valeurs de presentation (8.3 du brief). Aucune vue ne
+   contient de valeur en dur : elles referencent toutes une variable d'ici.
+
+   Sans Tailwind (D-010), le role de tailwind.config.js est tenu par ces
+   proprietes personnalisees CSS.
+
+   Palette derivee du prototype, MAIS les 6 couples de contraste en echec AA
+   releves dans docs/AUDIT_FRONTEND.md 8.3 ne sont pas reportes. Chaque
+   couple texte/fond ci-dessous porte son rapport, mesure et non estime
+   (verifie par test automatise : tests/Feature/DesignTokensTest.php).
+   ========================================================================== */
+
+:root {
+  /* --- Couleur de marque -------------------------------------------------
+     Le violet du prototype, conserve : 11,86:1 sur blanc, excellent. */
+  --color-brand-900: #2e0d57;
+  --color-brand-800: #3a1070;
+  --color-brand-700: #4a148c;  /* teinte principale */
+  --color-brand-600: #5b1ba8;
+  --color-brand-500: #6a1b9a;
+  --color-brand-100: #ede7f6;
+  --color-brand-050: #f7f3fc;
+
+  /* --- Neutres ---------------------------------------------------------- */
+  --color-ink-900: #14161c;   /* texte principal — 18,08:1 sur --surface */
+  --color-ink-700: #33384a;   /* texte courant  — 11,63:1 */
+  --color-ink-500: #545a70;   /* texte secondaire — 6,83:1, remplace #64748b */
+  --color-ink-300: #8b91a6;   /* 3,13:1 — decoratif seul, jamais du texte */
+  --color-line: #d9dce6;
+  --color-surface: #ffffff;
+  --color-surface-sunken: #f4f5f9;
+
+  /* --- Couleurs semantiques par statut de demande ------------------------
+     Reprises des badges de officer.css, qui passaient deja AA, et completees
+     pour les etats que le prototype ne couvrait pas. */
+  --tone-neutral-bg: #eceef4;   --tone-neutral-fg: #3f4457;  /* 8,32:1 */
+  --tone-waiting-bg: #fef3c7;   --tone-waiting-fg: #7c3a06;  /* 7,65:1 */
+  --tone-progress-bg: #e0e7ff;  --tone-progress-fg: #303d8f;  /* 7,78:1 */
+  --tone-attention-bg: #ffe4d5; --tone-attention-fg: #8a3410;  /* 6,71:1 */
+  --tone-success-bg: #d9f5e6;   --tone-success-fg: #0b5137;  /* 8,08:1 */
+  --tone-danger-bg: #fde2e2;    --tone-danger-fg: #98181a;  /* 6,91:1 */
+
+  --color-focus: #1c6fd6;      /* 4,89:1 sur --surface */
+
+  /* --- Typographie -------------------------------------------------------
+     Pile systeme : aucune police distante a telecharger. Sur 3G, une police
+     web coute plus cher que tout le CSS du projet. */
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+  --leading-tight: 1.25;
+  --leading-normal: 1.55;
+
+  /* --- Espacement — echelle de 4 px ------------------------------------- */
+  --space-1: 0.25rem;  --space-2: 0.5rem;   --space-3: 0.75rem;
+  --space-4: 1rem;     --space-5: 1.5rem;   --space-6: 2rem;
+  --space-7: 3rem;     --space-8: 4rem;
+
+  /* --- Rayons et ombres -------------------------------------------------- */
+  --radius-sm: 4px;  --radius-md: 8px;  --radius-lg: 12px;  --radius-pill: 999px;
+  --shadow-sm: 0 1px 2px rgb(20 22 28 / 8%);
+  --shadow-md: 0 4px 12px rgb(20 22 28 / 10%);
+
+  /* --- Cible tactile ----------------------------------------------------
+     44 px minimum (8.4 du brief, WCAG 2.5.5). */
+  --tap-target: 44px;
+
+  --container-max: 72rem;
+}
+
+/* Le prototype n'avait AUCUN style de focus : echec WCAG 2.4.7. Correction
+   globale, une fois, pour tout element focusable. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

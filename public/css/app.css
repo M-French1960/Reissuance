@@ -1,0 +1,165 @@
+/* =============================================================================
+   PHOENIX — feuille applicative
+   Mobile-first sans exception : on concoit a 360 px puis on elargit.
+   Points de rupture : 360 / 768 / 1024 / 1440 (8.1 du brief).
+
+   Le prototype fixait des largeurs absolues jusqu'a 1320 px et ne comportait
+   aucune media query dans 4 fichiers sur 5 : son tableau de bord citoyen
+   mesurait 1354 px de large sur un ecran de 360 (docs/AUDIT_FRONTEND.md 8.2).
+   Rien de tout cela n'est repris.
+   ========================================================================== */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--color-ink-900);
+  background: var(--color-surface-sunken);
+}
+
+h1, h2, h3, h4 { line-height: var(--leading-tight); margin: 0 0 var(--space-3); }
+h1 { font-size: var(--text-2xl); }
+h2 { font-size: var(--text-xl); }
+h3 { font-size: var(--text-lg); }
+p { margin: 0 0 var(--space-4); }
+img { max-width: 100%; height: auto; }
+
+.skip-link {
+  position: absolute; left: var(--space-2); top: -4rem;
+  background: var(--color-brand-700); color: #fff;
+  padding: var(--space-3) var(--space-4); border-radius: var(--radius-md);
+  z-index: 100; transition: top 0.15s;
+}
+.skip-link:focus { top: var(--space-2); }
+
+/* --- Ossature ------------------------------------------------------------ */
+.container { width: 100%; max-width: var(--container-max); margin-inline: auto; padding-inline: var(--space-4); }
+
+.site-header {
+  background: var(--color-brand-700); color: #fff;
+  padding: var(--space-3) 0;
+}
+.site-header .container { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; }
+.brand { display: flex; flex-direction: column; }
+.brand__name { font-weight: 700; letter-spacing: 0.08em; }
+.brand__tag { font-size: var(--text-xs); opacity: 0.9; }
+
+main { padding-block: var(--space-5) var(--space-7); }
+
+.site-footer {
+  border-top: 1px solid var(--color-line);
+  padding-block: var(--space-4);
+  font-size: var(--text-sm); color: var(--color-ink-500);
+  background: var(--color-surface);
+}
+
+/* --- Carte --------------------------------------------------------------- */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+}
+.card + .card { margin-top: var(--space-4); }
+.card__title { margin-bottom: var(--space-2); }
+
+/* --- Boutons -------------------------------------------------------------
+   Hauteur minimale 44 px : cible tactile WCAG 2.5.5. */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+  min-height: var(--tap-target); min-width: var(--tap-target);
+  padding: var(--space-2) var(--space-5);
+  font: inherit; font-weight: 600;
+  border: 1px solid transparent; border-radius: var(--radius-md);
+  cursor: pointer; text-decoration: none;
+}
+.btn--primary { background: var(--color-brand-700); color: #fff; }
+.btn--primary:hover { background: var(--color-brand-800); }
+.btn--secondary { background: var(--color-surface); color: var(--color-brand-700); border-color: var(--color-line); }
+.btn--secondary:hover { background: var(--color-brand-050); }
+.btn--danger { background: var(--tone-danger-fg); color: #fff; }
+.btn[disabled], .btn[aria-disabled="true"] { opacity: 0.55; cursor: not-allowed; }
+.btn--block { width: 100%; }
+
+/* --- Champs de formulaire ------------------------------------------------ */
+.field { margin-bottom: var(--space-4); }
+.field__label { display: block; font-weight: 600; font-size: var(--text-sm); margin-bottom: var(--space-1); }
+.field__hint { display: block; font-size: var(--text-sm); color: var(--color-ink-500); margin-bottom: var(--space-1); }
+.field__control {
+  width: 100%; min-height: var(--tap-target);
+  padding: var(--space-2) var(--space-3);
+  font: inherit; color: var(--color-ink-900);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line); border-radius: var(--radius-md);
+}
+.field__control[aria-invalid="true"] { border-color: var(--tone-danger-fg); border-width: 2px; }
+/* L'erreur porte une icone en plus de la couleur : aucune information ne doit
+   passer par la seule couleur (WCAG 1.4.1). */
+.field__error { display: flex; gap: var(--space-1); font-size: var(--text-sm); color: var(--tone-danger-fg); margin-top: var(--space-1); font-weight: 600; }
+.field__error::before { content: "\26A0"; }
+
+/* --- Badge de statut -----------------------------------------------------
+   Le badge porte toujours un libelle en clair, jamais la valeur technique. */
+.badge {
+  display: inline-block; padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm); font-weight: 600; white-space: nowrap;
+}
+.badge--neutral   { background: var(--tone-neutral-bg);   color: var(--tone-neutral-fg); }
+.badge--waiting   { background: var(--tone-waiting-bg);   color: var(--tone-waiting-fg); }
+.badge--progress  { background: var(--tone-progress-bg);  color: var(--tone-progress-fg); }
+.badge--attention { background: var(--tone-attention-bg); color: var(--tone-attention-fg); }
+.badge--success   { background: var(--tone-success-bg);   color: var(--tone-success-fg); }
+.badge--danger    { background: var(--tone-danger-bg);    color: var(--tone-danger-fg); }
+
+/* --- Alerte -------------------------------------------------------------- */
+.alert { padding: var(--space-4); border-radius: var(--radius-md); border-left: 4px solid; margin-bottom: var(--space-4); }
+.alert--success   { background: var(--tone-success-bg);   border-color: var(--tone-success-fg);   color: var(--tone-success-fg); }
+.alert--danger    { background: var(--tone-danger-bg);    border-color: var(--tone-danger-fg);    color: var(--tone-danger-fg); }
+.alert--attention { background: var(--tone-attention-bg); border-color: var(--tone-attention-fg); color: var(--tone-attention-fg); }
+.alert__title { font-weight: 700; margin-bottom: var(--space-1); }
+/* Aucune impasse : chaque erreur propose l'action suivante (8.1). */
+.alert__action { display: inline-block; margin-top: var(--space-2); font-weight: 600; }
+
+/* --- Etat vide ----------------------------------------------------------- */
+.empty-state { text-align: center; padding: var(--space-7) var(--space-4); color: var(--color-ink-500); }
+.empty-state__title { color: var(--color-ink-900); }
+
+/* --- Squelette de chargement --------------------------------------------- */
+.skeleton { background: var(--color-surface-sunken); border-radius: var(--radius-sm); min-height: 1em; animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+
+/* --- Table : defile dans son propre conteneur, le corps ne defile jamais -- */
+.table-wrap { overflow-x: auto; border: 1px solid var(--color-line); border-radius: var(--radius-lg); background: var(--color-surface); }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: var(--space-3); text-align: left; border-bottom: 1px solid var(--color-line); font-size: var(--text-sm); }
+th { background: var(--color-surface-sunken); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-ink-700); }
+
+/* --- Frise chronologique (suivi citoyen) --------------------------------- */
+.timeline { list-style: none; margin: 0; padding: 0; }
+.timeline__item { display: flex; gap: var(--space-3); padding-bottom: var(--space-4); }
+.timeline__marker { flex: 0 0 auto; width: 1.75rem; height: 1.75rem; border-radius: 50%; background: var(--color-brand-100); color: var(--color-brand-700); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: var(--text-sm); }
+.timeline__item--done .timeline__marker { background: var(--tone-success-bg); color: var(--tone-success-fg); }
+
+/* --- Grille -------------------------------------------------------------- */
+.grid { display: grid; gap: var(--space-4); grid-template-columns: 1fr; }
+
+@media (min-width: 768px) {
+  .grid--2 { grid-template-columns: repeat(2, 1fr); }
+  .grid--3 { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1024px) {
+  .grid--3 { grid-template-columns: repeat(3, 1fr); }
+  .grid--4 { grid-template-columns: repeat(4, 1fr); }
+}
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
