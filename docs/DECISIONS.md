@@ -180,6 +180,83 @@ signalés comme tels et ne doivent pas être traités comme tranchés.
 - **Reste à mesurer avant de figer :** latence réelle depuis le Cameroun,
   comportement des deux modes sous migrations et transactions Eloquent réelles.
 
+
+---
+
+## D-010 — Interfaces en HTML et CSS écrits à la main : ni Tailwind, ni Livewire, ni Alpine
+
+- **Date :** 2026-09-06
+- **Statut :** décidé par le commanditaire
+- **Décision :** la couche de présentation reste du **HTML et du CSS écrits à la
+  main**, dans la continuité du prototype existant. Cela remplace le §2 du brief
+  sur trois points : **pas de Tailwind CSS**, **pas de Livewire**, **pas
+  d'Alpine.js**.
+- **Ce qui est conservé :** Laravel, PostgreSQL/Supabase, et **Blade** comme
+  moteur de gabarits. Blade produit du HTML ordinaire ; il apporte l'héritage de
+  gabarit, les composants de vue et surtout **l'échappement par défaut de
+  `{{ }}`**, qui est une exigence de sécurité (§4.5 du brief) et le correctif
+  direct de la faille d'injection relevée dans l'audit (§6.2). Retirer Blade
+  reviendrait à réintroduire cette faille.
+- **Interprétation retenue, à corriger si elle est fausse :** « HTML/CSS pur »
+  porte sur les **frameworks de présentation**, pas sur le moteur de gabarits ni
+  sur le back-end.
+
+### Conséquences favorables
+
+Ce choix résout ou simplifie plusieurs points laissés ouverts :
+
+1. **La CSP stricte devient atteignable.** Le §4.5 du brief exige une CSP sans
+   `unsafe-inline`, et je signalais qu'Alpine évalue des expressions à
+   l'exécution — tension que je ne pouvais pas promettre de résoudre. Sans
+   Alpine ni Livewire, la question disparaît. La CSP peut être stricte dès le
+   jalon 1, à condition de bannir tout attribut `onclick` en ligne : l'audit en
+   compte 12 dans le prototype, aucun ne sera porté.
+2. **Le budget JavaScript s'effondre.** Le §8.5 fixait < 100 Ko compressé. Sans
+   framework, on vise **moins de 15 Ko**, uniquement du code écrit pour ce
+   projet.
+3. **Aucune étape de construction JavaScript.** Pas de Node dans
+   `Dockerfile.vercel`, image plus petite, construction plus rapide, une
+   dépendance de moins à auditer.
+4. **Les parcours fonctionnent sans JavaScript.** Formulaires HTML classiques,
+   soumission serveur, redirection. Sur terminal modeste en 3G — l'exigence n°3
+   — c'est le mode de fonctionnement le plus robuste qui soit.
+
+### Conséquences à assumer, et comment je les traite
+
+| Point du brief | Ce que Livewire aurait fait | Ce que je fais à la place |
+|---|---|---|
+| §8.3 « tokens définis une fois, jamais de valeur en dur » | `tailwind.config.js` | **Propriétés personnalisées CSS** dans `:root` d'un unique `tokens.css`. L'exigence est tenue à l'identique : une seule source, aucune valeur en dur dans une vue. |
+| §8.3 bibliothèque de composants | Composants Livewire | **Composants Blade sans état** (`<x-button>`, `<x-status-badge>`, `<x-field>`…). La galerie `/dev/ui` reste au programme et garde tout son sens. |
+| §8.1 brouillon auto-sauvegardé | Sauvegarde réactive à la frappe | **Persistance à chaque étape validée** : POST → enregistrement du brouillon → redirection → GET. Plus robuste sur réseau instable qu'une sauvegarde continue, et sans perte en cas de coupure entre deux étapes. |
+| §8.5 états de chargement (`wire:loading`) | Directive dédiée | Désactivation du bouton et indicateur au `submit`, en JavaScript vanille, en amélioration progressive. |
+| §8.2 officier : avancement dans la file sans retour au tableau de bord | Navigation réactive | Liens « suivant » calculés côté serveur, portant le contexte de filtre. |
+
+### Le JavaScript strictement nécessaire
+
+Trois besoins reposent sur des API du navigateur et **ne peuvent pas être
+couverts par du HTML/CSS seul**. Ils seront écrits en JavaScript vanille, sans
+dépendance, et isolés dans des fichiers dédiés :
+
+1. **Capture du selfie et de la pièce d'identité** — `getUserMedia`.
+   C'est le §5.2 du brief (« capture en direct »).
+2. **Compression et redimensionnement des images avant envoi** — `canvas`.
+   **Ce n'est pas négociable** : la décision D-008 établit que sans compression,
+   l'offre gratuite Supabase sature après environ 150 demandes au lieu de 2 100.
+3. **Envoi direct vers le stockage objet** par URL pré-signée — le §3.3 interdit
+   de faire transiter les images par le conteneur PHP.
+
+Si le commanditaire souhaite **zéro JavaScript**, il faut le dire : cela
+impliquerait de renoncer à la capture en direct et à la compression client,
+donc de revoir D-008 et la capacité du service. Je ne le fais pas de ma propre
+initiative.
+
+### Ce que ce choix ne change pas
+
+Aucune exigence de sécurité n'est allégée. Validation serveur systématique,
+échappement Blade, CSRF sur toutes les mutations, Policies et machine à états
+au niveau des données : identiques. L'absence de framework front-end ne rend
+rien plus permissif — elle réduit seulement la surface à auditer.
+
 ---
 
 ## Points explicitement **non** tranchés à ce stade
@@ -190,7 +267,9 @@ Ils sont listés ici pour éviter qu'une décision implicite ne s'installe.
 |---|---|
 | Mode de connexion Supabase — *recommandation arrêtée en D-009, à valider par mesure* | `docs/DATABASE.md` — jalon 1 |
 | Stockage des pièces d'identité (Supabase Storage / Vercel Blob) | `docs/STORAGE.md` — jalon 1 |
-| Version de Livewire (3 ou 4) et de Tailwind (3 ou 4) | À valider avec le commanditaire avant le jalon 1 |
+| ~~Version de Livewire et de Tailwind~~ | **Sans objet — tranché en D-010** |
+| Version de Laravel et de PHP (8.3 ou 8.4) | À valider avant le jalon 1 |
+| Zéro JavaScript, ou JavaScript vanille minimal | À confirmer — voir D-010 |
 | ~~Plan Vercel~~ | **Tranché en D-005** |
 | 2FA du citoyen (TOTP / SMS / aucun) | Jalon 2, après confirmation de la faisabilité SMS |
 | Défense en profondeur RLS | Jalon 6, après évaluation du coût |

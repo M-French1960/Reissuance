@@ -525,8 +525,8 @@ Autres écarts relevés :
 
 ### 8.4 Verdict sur le CSS
 
-**Le CSS existant n'est pas réutilisable comme base d'un design system
-Tailwind.** Motifs :
+**Le CSS existant n'est pas réutilisable comme base d'un design system.**
+Motifs :
 
 1. Zéro token, 56 couleurs concurrentes — l'inverse de l'exigence §8.3.
 2. Deux fichiers sur cinq seulement sont utilisables au-delà de 1 024 px de
@@ -541,7 +541,8 @@ Tailwind.** Motifs :
 - **La sémantique des badges de statut** de `officer.css` (ambre / vert / rouge /
   gris), qui passe déjà AA : elle devient la base des tokens sémantiques.
 - **La grille du portail officier** (`.layout` / `.sidebar` / `.main`,
-  `.profile-grid`, `.images-grid`) : structure saine, à retranscrire en Tailwind.
+  `.profile-grid`, `.images-grid`) : structure saine, à réécrire proprement en
+  CSS moderne (grille, `clamp()`, requêtes de conteneur si utile).
 - **L'ossature du stepper** de `form.css` (cercles + libellés + lignes), à
   reconstruire avec les états accessibles.
 
@@ -596,7 +597,7 @@ mais son libellé traduit (« En attente de signature du maire »).
 | `signin.html` | **À refaire** | Base Fortify/Breeze. Le HTML sert de référence visuelle uniquement. Politique de mot de passe et champs à revoir entièrement. |
 | `Login.html` | **À refaire** | Cassé, mal intitulé, redirige vers une page inexistante. Rien à sauver. |
 | `Applicant Dashboard.html` | **À refaire** | Largeurs fixes 1320 px, deux scripts en conflit, navigation officier sur un écran citoyen, icône obscène, liens morts. La structure « bandeau + cartes + frise en 4 étapes » est une bonne idée à reprendre — le code, non. |
-| `form.html` | **À porter, en profondeur** | **Le seul écran dont le contenu métier a une vraie valeur** : le découpage en 4 étapes et surtout les champs « acte de naissance + parents » sont pertinents et vont au-delà du brief. Le code JS est à jeter (capture morte, aucune validation, aucun gating). Devient 3 composants Livewire (l'étape paiement est retirée jusqu'au jalon 7). |
+| `form.html` | **À porter, en profondeur** | **Le seul écran dont le contenu métier a une vraie valeur** : le découpage en 4 étapes et surtout les champs « acte de naissance + parents » sont pertinents et vont au-delà du brief. Le code JS est à jeter (capture morte, aucune validation, aucun gating). Devient un formulaire multi-étapes rendu côté serveur, une vue par étape (l'étape paiement est retirée jusqu'au jalon 7). |
 | `officer-dashboard.html` | **À porter** | Meilleure qualité du dépôt : responsive, structure de table saine, badges de statut accessibles. À rebrancher sur Eloquent paginé, à filtrer par centre de l'officier côté serveur, et à débarrasser de `innerHTML`. |
 | `officer-verification.html` | **À porter, avec réécriture de la logique** | La maquette des 5 étapes est bonne et sert de référence d'ergonomie. Toute la logique (séquencement, persistance, décision) est à écrire. Les 11 `onclick` en ligne sautent. |
 | Écrans **maire** | **À créer** | Inexistants. |
@@ -612,21 +613,35 @@ créer.**
 Conforme au §1 du brief : le HTML existant sert de **structure de départ et de
 référence visuelle**, jamais de code copié.
 
-1. **Extraire d'abord les tokens** (`tailwind.config`), à partir de la palette
-   réduite du prototype, **avec les contrastes corrigés** — les 6 couples en
-   échec ne sont pas reportés.
-2. **Construire la bibliothèque de composants Blade** et la galerie `/dev/ui`
-   avant de porter le premier écran, afin qu'aucun écran ne réintroduise de
-   valeur en dur.
-3. **Porter écran par écran**, en découpant chaque page en composants :
-   - `form.html` → `RequestWizard` (Livewire) + `StepIndicator` +
-     `IdentityCapture` + `ReviewSummary`
-   - `officer-dashboard.html` → `RequestQueue` (filtres, tri, pagination
-     serveur) + `StatusBadge` + `RequestRow`
-   - `officer-verification.html` → `VerificationWorkflow` + un composant par
-     étape, chacun persistant son résultat dans `verification_steps`
+> **Révisée le 2026-09-06 par la décision D-010** : les interfaces restent en
+> HTML et CSS écrits à la main. Ni Tailwind, ni Livewire, ni Alpine. Blade est
+> conservé comme moteur de gabarits, pour l'héritage de vues et surtout pour
+> l'échappement par défaut de `{{ }}`, qui corrige la faille d'injection du §6.2.
+
+1. **Extraire d'abord les tokens** dans un unique `tokens.css`, sous forme de
+   **propriétés personnalisées CSS** déclarées sur `:root`, à partir de la
+   palette réduite du prototype, **avec les contrastes corrigés** — les 6
+   couples en échec ne sont pas reportés. Aucune valeur en dur dans une vue.
+2. **Construire la bibliothèque de composants Blade sans état**
+   (`<x-button>`, `<x-field>`, `<x-status-badge>`, `<x-request-card>`,
+   `<x-empty-state>`…) et la galerie `/dev/ui` avant de porter le premier
+   écran, afin qu'aucun écran ne réintroduise de valeur en dur.
+3. **Porter écran par écran**, en découpant chaque page en vues et composants :
+   - `form.html` → une vue par étape, chaque étape validée côté serveur et
+     persistée comme brouillon avant redirection vers la suivante
+   - `officer-dashboard.html` → vue de file (filtres, tri, pagination serveur)
+     + composants `<x-status-badge>` et `<x-request-row>`
+   - `officer-verification.html` → une vue par étape de vérification, chacune
+     persistant son résultat dans `verification_steps` avant de passer à la
+     suivante
+   - Les 12 attributs `onclick` en ligne du prototype ne sont **pas** portés :
+     ils sont incompatibles avec la CSP stricte du §4.5, désormais atteignable
 4. **Aucun `<script>` de mock ne survit** au branchement d'un écran. Le
-   `localStorage` disparaît intégralement au profit de la session Laravel.
+   `localStorage` disparaît intégralement au profit de la session Laravel. Le
+   seul JavaScript conservé est du code vanille, sans dépendance, limité aux
+   trois besoins qui reposent sur une API du navigateur : capture photo
+   (`getUserMedia`), compression avant envoi (`canvas` — imposée par D-008) et
+   envoi direct vers le stockage objet par URL pré-signée.
 5. **Supprimer du dépôt** : `brands/`, `regular/`, `solid/` (2 045 fichiers non
    référencés), et recompresser `logo.png` (495 Ko → cible < 30 Ko en WebP/PNG
    optimisé, avec les tailles nécessaires).
