@@ -556,3 +556,62 @@ prouve que le cas heureux n'aurait rien vu.
   photographie réelle ne ressemble à du bruit aléatoire.
 - **Repli :** sans JavaScript, le champ « fichier » reste utilisable et le
   formulaire fonctionne. La compression disparaît, la validation serveur non.
+
+---
+
+## D-021 — Les déclencheurs des adaptateurs factices ignorent la ponctuation
+
+- **Date :** 2026-09-06
+- **Statut :** corrigé
+- **Le fait :** les cas de test des adaptateurs se déclenchent par préfixe du
+  numéro de pièce. Je les avais écrits avec des tirets — `DEMO-DOWN` — alors
+  que le numéro est stocké après passage par `BlindIndex::normalise()`, qui
+  supprime tout ce qui n'est ni lettre ni chiffre. La valeur relue vaut
+  `DEMODOWN` : **aucun déclencheur ne se serait jamais activé.**
+- **Correction :** les préfixes sont écrits sans ponctuation, et l'adaptateur
+  applique la **même** normalisation que le stockage. Un test vérifie que
+  `DEMO-DOWN-1`, `demo down 1`, `DEMO.DOWN.1` et `DemoDown1` déclenchent tous
+  le même cas.
+- **Ce que cela rappelle :** une normalisation appliquée à un endroit doit
+  l'être partout où la valeur est comparée. C'est la raison pour laquelle
+  `BlindIndex::normalise()` est centralisée et testée — mais encore faut-il
+  s'en servir.
+
+---
+
+## D-022 — Étendue de la barrière anti-fraude de l'étape 5
+
+- **Date :** 2026-09-06
+- **Statut :** décidé
+- **Décision :** l'acceptation d'une demande (transition T4) exige que **les 5
+  étapes de vérification aient un résultat enregistré**. Le rejet et
+  l'escalade restent possibles à tout moment.
+- **Pourquoi cette règle n'est pas dans le déclencheur PostgreSQL :** le
+  déclencheur valide un couple `(statut source, statut cible)`. Cette règle-ci
+  porte sur le **contenu** de `verification_steps`, pas sur les statuts. La
+  poser en base demanderait au déclencheur de compter des lignes d'une autre
+  table à chaque mise à jour — coûteux, et fragile si le cycle change.
+  Elle est donc appliquée dans `DecisionController` **et testée** (R5, R5bis).
+- **Asymétrie assumée :** rejeter sans avoir tout vérifié est autorisé. Un
+  dossier manifestement irrecevable — pièce illisible, centre incompétent — ne
+  doit pas obliger l'officier à dérouler cinq étapes pour rien. Le motif reste
+  obligatoire, et il figure au journal.
+- **`provider_unavailable` compte comme un résultat.** Une panne externe ne
+  bloque donc pas l'officier (§9 du brief), mais elle laisse une trace : le
+  journal montre exactement sur quoi la décision reposait.
+
+---
+
+## D-023 — Consultation d'un dossier par un collègue du même centre
+
+- **Date :** 2026-09-06
+- **Statut :** décidé — c'était le point ouvert du §5 de `PERMISSIONS.md`
+- **Décision :** un officier peut **consulter** un dossier de son centre pris
+  en charge par un collègue. La consultation est journalisée. La **décision**
+  reste réservée à l'officier assigné.
+- **Justification :** le cloisonnement total bloquerait le service dès qu'un
+  agent est absent. Le journal rend l'élargissement d'accès contrôlable *a
+  posteriori*, ce qui est le bon compromis entre le §4.2 et la réalité d'un
+  service public.
+- **Visible dans l'interface :** l'écran affiche « Lecture seule » et le nom de
+  l'agent en charge, plutôt que de masquer silencieusement les boutons.

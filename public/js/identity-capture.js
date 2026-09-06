@@ -177,3 +177,71 @@
     init();
   }
 })();
+
+/*
+ * Poste de travail de l'officier.
+ *
+ * Deux commodités, en amélioration progressive : sans JavaScript, l'officier
+ * recopie le motif à la main et navigue par les liens. Rien n'est bloqué.
+ */
+(function () {
+  'use strict';
+
+  function init() {
+    // Motifs de rejet pré-remplis (§8.2 : optimiser pour la répétition).
+    var champ = document.getElementById('reason');
+
+    document.querySelectorAll('.reasons__pick').forEach(function (bouton) {
+      bouton.addEventListener('click', function () {
+        if (!champ) {
+          return;
+        }
+        champ.value = bouton.dataset.reason || '';
+        champ.focus();
+        // Sélectionne la décision « rejeter » : le motif ne sert qu'à cela
+        // ou à une escalade, et l'officier peut encore changer d'avis.
+        var rejet = document.getElementById('d-rejected');
+        if (rejet && !document.querySelector('input[name="decision"]:checked')) {
+          rejet.checked = true;
+        }
+      });
+    });
+
+    // Raccourcis clavier de la file (§8.2). Volontairement peu nombreux, et
+    // inactifs dès qu'un champ a le focus : un agent qui tape un motif ne doit
+    // pas déclencher une navigation.
+    var etapes = document.querySelector('[data-step-nav]');
+
+    if (etapes) {
+      document.addEventListener('keydown', function (e) {
+        var cible = e.target;
+        var dansUnChamp = cible && (
+          cible.tagName === 'INPUT' || cible.tagName === 'TEXTAREA' ||
+          cible.tagName === 'SELECT' || cible.isContentEditable
+        );
+
+        if (dansUnChamp || e.ctrlKey || e.metaKey || e.altKey) {
+          return;
+        }
+
+        var lien = null;
+        if (e.key === 'ArrowRight' || e.key === 'n') {
+          lien = etapes.querySelector('[data-step-next]');
+        } else if (e.key === 'ArrowLeft' || e.key === 'p') {
+          lien = etapes.querySelector('[data-step-prev]');
+        }
+
+        if (lien) {
+          e.preventDefault();
+          window.location.href = lien.href;
+        }
+      });
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();

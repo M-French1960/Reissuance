@@ -36,6 +36,8 @@ php artisan schedule:work
 | Profil citoyen | `/mon-espace/profil` |
 | Mes demandes | `/mon-espace/demandes` |
 | Assistant de demande | `/mon-espace/demandes/{id}/etape/{1-4}` |
+| File de l'officier | `/verification/file` |
+| Vérification en 5 étapes | `/verification/demandes/{id}/etape/{1-5}` |
 | Double authentification | `/double-authentification` |
 | Portail administrateur | `/administration/comptes`, `/administration/journal` |
 | État du service | `/sante` (JSON avec `Accept: application/json`) |
@@ -59,6 +61,25 @@ Un officier ou un maire ne peut pas s'inscrire lui-même. Le parcours est :
 L'étape 3 n'est pas contournable : la contrainte `users_official_2fa_check`
 refuse en base tout compte officiel actif sans 2FA confirmée.
 
+## Exercer les cas dégradés
+
+Les adaptateurs externes sont factices (§9 du brief : aucune API réelle n'est
+documentée). Ils sont **déterministes** et se déclenchent par préfixe du numéro
+de pièce, de sorte que les états dégradés soient testables sans configuration :
+
+| Préfixe | Cas simulé |
+|---|---|
+| `DEMO-NOMATCH` | pièce connue, nom différent |
+| `DEMO-STOLEN` | pièce signalée volée |
+| `DEMO-DOUBT` | nom proche sans être identique |
+| `DEMO-DOWN`, `DEMO-TIMEOUT` | base de la police injoignable |
+
+Pour le registre d'état civil, c'est le **nom** recherché qui déclenche :
+`HOMONYME`, `INTROUVABLE`, `DETRUIT`, `PANNE`.
+
+Le seeder `DemoProviderCasesSeeder` crée une demande par cas. La ponctuation
+n'a pas d'importance : les déclencheurs sont normalisés comme le stockage.
+
 ## Trois points à connaître avant de toucher au code
 
 **L'application ne tourne jamais sous le propriétaire du schéma.** Les
@@ -81,7 +102,7 @@ la décision D-015.
 ## Vérifications
 
 ```bash
-./vendor/bin/phpunit    # 182 tests, sur un vrai PostgreSQL
+./vendor/bin/phpunit    # 220 tests, sur un vrai PostgreSQL
 ./vendor/bin/pint       # formatage
 ```
 

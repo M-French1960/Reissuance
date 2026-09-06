@@ -293,3 +293,42 @@ main > p > a:only-child,
 }
 
 .u-return a { display: inline-flex; align-items: center; min-height: var(--tap-target); }
+
+/* --- Comparaison des photographies (poste de l'officier) -------------------
+   Côte à côte dès qu'il y a la place, empilé sinon. Le zoom passe par
+   l'ouverture de l'image en pleine page : pas de visionneuse à écrire, et
+   le navigateur fournit déjà le zoom tactile. */
+.compare { display: grid; grid-template-columns: 1fr; gap: var(--space-4); margin-bottom: var(--space-4); }
+.compare__pane { margin: 0; }
+.compare__pane figcaption { font-weight: 700; margin-bottom: var(--space-2); }
+.compare__image {
+  width: 100%; max-height: 22rem; object-fit: contain;
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--color-line); border-radius: var(--radius-md);
+}
+@media (min-width: 768px) {
+  .compare { grid-template-columns: 1fr 1fr; }
+}
+
+/* --- Motifs pré-remplis ---------------------------------------------------- */
+.reasons { margin-bottom: var(--space-4); }
+.reasons__list { list-style: none; margin: var(--space-3) 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.reasons__pick { text-align: left; font-weight: 400; font-size: var(--text-sm); width: 100%; }
+
+kbd {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  background: var(--color-surface-sunken); border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm); padding: 0 var(--space-1); font-size: var(--text-sm);
+}
+
+textarea.field__control { min-height: 6rem; resize: vertical; padding: var(--space-2) var(--space-3); }
+
+/* En-tête de colonne triable : la zone cliquable occupe toute la cellule.
+   Sur le poste de l'officier, le tri est une action répétée : elle mérite
+   une cible tactile pleine (§8.2, §8.4). */
+th a {
+  display: flex; align-items: center; gap: var(--space-1);
+  min-height: var(--tap-target);
+  color: var(--color-ink-700); text-decoration: none;
+}
+th a:hover { color: var(--color-brand-700); text-decoration: underline; }

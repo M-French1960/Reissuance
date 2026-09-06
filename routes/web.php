@@ -11,6 +11,9 @@ use App\Http\Controllers\Citizen\RequestWizardController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DevUiController;
 use App\Http\Controllers\HealthController;
+use App\Http\Controllers\Officer\DecisionController;
+use App\Http\Controllers\Officer\QueueController;
+use App\Http\Controllers\Officer\VerificationController;
 use App\Http\Controllers\TwoFactorSetupController;
 use Illuminate\Support\Facades\Route;
 
@@ -54,6 +57,29 @@ Route::middleware(['auth', 'active'])->group(function (): void {
             Route::post('/demandes/{reissuanceRequest}/pieces', [AttachmentController::class, 'store'])
                 ->name('requests.attachments.store');
             Route::get('/demandes/{reissuanceRequest}', [RequestTrackingController::class, 'show'])->name('requests.show');
+        });
+
+        /*
+         * Parcours officier.
+         *
+         * La portee globale restreint deja aux demandes du centre de
+         * l'officier : aucune de ces routes n'a de `where` de securite a
+         * poser, et un oubli ne peut pas faire fuir hors perimetre.
+         */
+        Route::middleware('role:officer')->prefix('verification')->name('officer.')->group(function (): void {
+            Route::get('/file', QueueController::class)->name('queue');
+            Route::post('/demandes/{reissuanceRequest}/prise-en-charge', [VerificationController::class, 'claim'])
+                ->name('verification.claim');
+            Route::get('/demandes/{reissuanceRequest}/etape/{step}', [VerificationController::class, 'show'])
+                ->whereNumber('step')->name('verification.step');
+            Route::post('/demandes/{reissuanceRequest}/etape/{step}/constat', [VerificationController::class, 'acknowledge'])
+                ->whereNumber('step')->name('verification.acknowledge');
+            Route::post('/demandes/{reissuanceRequest}/controle-identite', [VerificationController::class, 'runIdentityCheck'])
+                ->name('verification.identity');
+            Route::post('/demandes/{reissuanceRequest}/recherche-registre', [VerificationController::class, 'runRegistrySearch'])
+                ->name('verification.registry');
+            Route::post('/demandes/{reissuanceRequest}/decision', [DecisionController::class, 'store'])
+                ->name('decision.store');
         });
 
         /*

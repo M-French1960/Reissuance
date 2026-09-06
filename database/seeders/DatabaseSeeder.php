@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             GeographySeeder::class,
             DemoAccountsSeeder::class,
             DemoRequestsSeeder::class,
+            DemoProviderCasesSeeder::class,
         ]);
     }
 }

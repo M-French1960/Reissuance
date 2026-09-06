@@ -182,7 +182,7 @@ minimum :
 | R2 | ✅ | `IdentityDocumentTest::r2_…` et `r2bis_…` |
 | R3 | ✅ | `AuthorizationTest::r3_…` |
 | R4 | ✅ | `AuthorizationTest::r4_…` |
-| R5 | ⏳ jalon 4 | dépend des 5 étapes de vérification |
+| R5 | ✅ | `VerificationWorkflowTest::r5_…` et `r5bis_…` (4 étapes sur 5 ne suffisent pas) |
 | R6 | ✅ | `AuthorizationTest::r6_…`, 4 états couverts |
 | R7 | ✅ | `AuthorizationTest::r7_…` |
 | R8 | ✅ | `AuthorizationTest::r8_…`, **les 7 états** |
@@ -194,9 +194,10 @@ minimum :
 | R14 | ✅ | `LoginTest`, 3 tests (connexion + session en cours) |
 | R15 | ✅ | `IdentityDocumentTest::r15_…`, plus le refus qui n'écrit rien |
 
-Seul R5 reste en attente : il porte sur les 5 étapes de vérification, qui
-arrivent au jalon 4. Il est volontairement laissé de côté plutôt qu'écrit
-contre du code absent.
+**Les 15 tests de refus sont implémentés.** R5 est le dernier arrivé : il
+vérifie qu'une demande ne peut pas être acceptée tant que les 5 étapes de
+vérification n'ont pas toutes un résultat — y compris quand quatre sur cinq
+sont faites.
 
 R13 est le test le plus important du lot : il vérifie que la barrière tient
 **même en cas d'oubli du développeur**, ce qui est le scénario réel.
@@ -207,6 +208,11 @@ R13 est le test le plus important du lot : il vérifie que la barrière tient
 
 ⚠ **Un officier peut-il consulter une demande de son centre prise en charge par
 un collègue ?**
+
+*Tranché à l'implémentation, dans le sens recommandé ci-dessous :* la lecture
+est autorisée et journalisée, la décision reste réservée à l'officier assigné.
+L'écran affiche explicitement « Lecture seule » et le nom de l'agent en charge.
+Vérifié par `VerificationWorkflowTest::un_collegue_ne_peut_pas_decider_…`.
 
 - **Lecture seule autorisée** — utile pour l'entraide et la continuité de
   service, mais élargit l'accès aux pièces d'identité.

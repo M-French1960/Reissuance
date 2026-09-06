@@ -1,0 +1,103 @@
+@extends('officer.verification._layout')
+@section('etape')
+    <x-card title="Récapitulatif des vérifications">
+        <div class="table-wrap">
+            <table>
+                <caption class="visually-hidden">Résultat de chaque étape</caption>
+                <thead><tr><th scope="col">Étape</th><th scope="col">Résultat</th><th scope="col">Enregistré</th></tr></thead>
+                <tbody>
+                    @foreach ($steps as $numero => $libelle)
+                        @php $e = $etapes->get($numero); @endphp
+                        <tr>
+                            <td>{{ $numero }}. {{ $libelle }}</td>
+                            <td>
+                                @if ($e?->result)
+                                    <span class="badge badge--{{ $e->result->tone() }}">{{ $e->result->label() }}</span>
+                                @else
+                                    <span class="badge badge--danger">Non renseignée</span>
+                                @endif
+                            </td>
+                            <td>{{ $e?->completed_at?->translatedFormat('d/m/Y H:i') ?? '—' }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        @unless ($complet)
+            <x-alert variant="danger" title="Vérification incomplète">
+                Vous ne pourrez pas accepter cette demande tant que toutes les
+                étapes n'ont pas de résultat. Il manque :
+                @foreach ($manquantes as $n)
+                    <strong>{{ $n }}. {{ $steps[$n] }}</strong>@if (! $loop->last), @endif
+                @endforeach.
+                <br>Le rejet et l'escalade restent possibles.
+            </x-alert>
+        @endunless
+    </x-card>
+
+    @if ($peutDecider)
+        <x-card title="Votre décision">
+            <form method="POST" action="{{ route('officer.decision.store', $demande) }}">
+                @csrf
+
+                <fieldset class="fieldset">
+                    {{-- Aucune valeur présélectionnée : dans le prototype,
+                         « Accepter » était le choix par défaut du menu et un
+                         clic accidentel valait acceptation. --}}
+                    <legend class="field__label">Décision <span aria-hidden="true">*</span></legend>
+                    @foreach ([
+                        'accepted' => ["Accepter et transmettre au maire", "La demande passera en attente de signature."],
+                        'rejected' => ['Rejeter la demande', 'Décision définitive. Le citoyen devra déposer une nouvelle demande.'],
+                        'escalated' => ['Escalader au maire', "Pour un dossier douteux ou hors de votre compétence."],
+                    ] as $valeur => [$libelle, $aide])
+                        <div class="field--inline">
+                            <input type="radio" id="d-{{ $valeur }}" name="decision" value="{{ $valeur }}"
+                                   class="field__checkbox" required
+                                   @checked(old('decision') === $valeur)
+                                   @if ($valeur === 'accepted' && ! $complet) disabled @endif>
+                            <label for="d-{{ $valeur }}">
+                                {{ $libelle }}
+                                <span class="u-note">— {{ $aide }}</span>
+                                @if ($valeur === 'accepted' && ! $complet)
+                                    <span class="u-note">(indisponible : vérification incomplète)</span>
+                                @endif
+                            </label>
+                        </div>
+                    @endforeach
+                </fieldset>
+
+                <div class="field">
+                    <label class="field__label" for="reason">
+                        Motif <span aria-hidden="true">*</span>
+                        <span class="field__hint">Obligatoire pour un rejet ou une escalade. Il figurera au dossier et au journal d'audit.</span>
+                    </label>
+                    <textarea class="field__control" id="reason" name="reason" rows="4"
+                              @if ($errors->has('reason')) aria-invalid="true" @endif>{{ old('reason') }}</textarea>
+                    @if ($errors->has('reason'))
+                        <p class="field__error">{{ $errors->first('reason') }}</p>
+                    @endif
+                </div>
+
+                {{-- Motifs pré-remplis : on optimise pour la répétition (§8.2). --}}
+                <details class="reasons">
+                    <summary>Motifs fréquents</summary>
+                    <ul class="reasons__list">
+                        @foreach (\App\Http\Controllers\Officer\DecisionController::REJECTION_REASONS as $motif)
+                            <li><button type="button" class="btn btn--secondary reasons__pick" data-reason="{{ $motif }}">{{ $motif }}</button></li>
+                        @endforeach
+                    </ul>
+                    <p class="u-note">Sans JavaScript, recopiez le motif voulu dans le champ ci-dessus.</p>
+                </details>
+
+                <div class="field">
+                    <label class="field__label" for="internal_notes">Notes internes</label>
+                    <span class="field__hint">Facultatives. Non communiquées au citoyen.</span>
+                    <textarea class="field__control" id="internal_notes" name="internal_notes" rows="3">{{ old('internal_notes') }}</textarea>
+                </div>
+
+                <x-button type="submit" variant="primary">Enregistrer ma décision</x-button>
+            </form>
+        </x-card>
+    @endif
+@endsection

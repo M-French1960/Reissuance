@@ -59,7 +59,9 @@ class DemoAccountsSeeder extends Seeder
                 'last_name' => 'DEMO',
                 'birth_date' => '1990-01-15',
                 'birth_place' => 'Yaoundé',
-                // Format volontairement irreel : prefixe DEMO.
+                // Format volontairement irreel : prefixe DEMO. Ce numero-ci
+                // declenche le cas nominal des adaptateurs factices ; les
+                // autres cas sont exerces par DemoRequestsSeeder.
                 'national_id_number' => 'DEMO-000000001',
                 'phone' => '+237600000000',
                 'address' => 'Adresse de démonstration',
