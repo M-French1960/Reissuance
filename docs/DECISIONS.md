@@ -853,3 +853,61 @@ prouve que le cas heureux n'aurait rien vu.
 - **Réversibilité :** c'est un durcissement que j'ai décidé dans le cadre du
   jalon 6. S'il vous paraît trop contraignant, il tient dans une condition du
   contrôleur et deux blocs de vue.
+
+---
+
+## D-032 — Notifications : deux canaux, deux travaux, aucune emprise sur l'état
+
+- **Date :** 2026-09-07
+- **Statut :** appliqué au jalon 6
+- **Ce qui est fait :** un centre de notifications dans l'application (canal
+  `database`) et un courriel (canal `mail`), déclenchés depuis
+  `RequestTransitionService` — **le seul point d'écriture du statut**. Aucun
+  contrôleur ne peut donc oublier de prévenir : tout chemin qui change l'état
+  notifie, y compris ceux qu'on écrira plus tard.
+- **Trois précautions, dans cet ordre :**
+  1. **Après le commit.** Une transition annulée ne notifie personne — vérifié
+     par un test qui provoque une transition refusée.
+  2. **Mise en file.** L'envoi réel a lieu dans le worker.
+  3. **Enveloppée.** Même l'insertion en file est protégée : une base de file
+     indisponible ne doit pas annuler une décision d'officier déjà journalisée
+     et déjà appliquée. C'est ce que D-006 interdit. L'échec est journalisé
+     sans donnée personnelle.
+- **Mesuré, pas supposé.** Avec la file `database` réelle et **aucun serveur
+  de courriel** : deux travaux sont créés, celui du canal `database` réussit,
+  celui du canal `mail` échoue seul et part dans `failed_jobs`, la notification
+  reste lisible dans l'application, et la demande reste dans son nouvel état.
+  Les deux canaux sont des travaux distincts — un serveur de courriel mort ne
+  coûte que le courriel. Reprise : `php artisan queue:retry all`.
+- **Ce que les notifications ne portent pas :** le motif. Rédigé par un agent,
+  il peut mentionner des éléments du dossier. Le demandeur le lit **connecté**,
+  sur la page de sa demande ; il ne part pas par courriel, où il quitterait le
+  système sans contrôle (garde-fou n°6). Un test compare le motif au contenu du
+  courriel et à celui de la ligne de notification.
+- **Qui est prévenu :** le demandeur à chaque changement d'état ; l'officier qui
+  tient le dossier **en plus**, quand le maire le lui retourne — c'est une
+  consigne de travail, pas une information.
+- **Ce que je n'ai pas fait, à dessein :** prévenir tous les officiers d'un
+  centre à chaque dépôt. Leur file est déjà l'outil de travail, et une
+  notification par demande la noierait.
+
+---
+
+## D-033 — Le SMS manque, et c'est un vrai trou
+
+- **Date :** 2026-09-07
+- **Statut :** **ouvert — question posée, non tranchée**
+- **Le fait :** les quatre intégrations prévues sont la police, l'état civil,
+  la signature et le paiement. **Aucun fournisseur de SMS.** Or le §8.1 du brief
+  vise des citoyens à faible littératie numérique sur réseau contraint : pour
+  eux, le SMS est le canal qui arrive vraiment, et le courriel souvent pas.
+- **Ce que cela veut dire concrètement :** un demandeur sans adresse
+  électronique valide n'est prévenu **que** s'il revient se connecter. Le
+  centre de notifications le sert alors correctement, mais il ne le tire pas.
+- **Ce qu'il faudrait décider :** un fournisseur SMS existe-t-il, à quel coût
+  par message, et qui le paie ? C'est une **cinquième intégration**, avec son
+  contrat, son adaptateur factice et son mode dégradé — pas une option de
+  configuration.
+- **En attendant :** rien n'est inventé. `via()` n'ajoute le courriel que si une
+  adresse existe ; le canal applicatif reste le seul dont l'arrivée est
+  garantie, et c'est dit tel quel.

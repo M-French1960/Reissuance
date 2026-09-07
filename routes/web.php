@@ -15,6 +15,7 @@ use App\Http\Controllers\HealthController;
 use App\Http\Controllers\Mayor\DashboardController as MayorDashboardController;
 use App\Http\Controllers\Mayor\DecisionController as MayorDecisionController;
 use App\Http\Controllers\Mayor\ReviewController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Officer\DecisionController;
 use App\Http\Controllers\Officer\QueueController;
 use App\Http\Controllers\Officer\VerificationController;
@@ -103,6 +104,15 @@ Route::middleware('auth')->group(function (): void {
             Route::post('/dossiers/{reissuanceRequest}/rejeter', [MayorDecisionController::class, 'reject'])->name('reject');
             Route::post('/dossiers/{reissuanceRequest}/retourner', [MayorDecisionController::class, 'returnToOfficer'])->name('return');
         });
+
+        /*
+         * Centre de notifications, commun aux quatre roles.
+         *
+         * Aucun identifiant n'est pris dans l'URL : la liste part du modele de
+         * l'utilisateur connecte, il ne peut donc pas lire celles d'un autre.
+         */
+        Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::post('/notifications/lues', [NotificationController::class, 'markAllRead'])->name('notifications.read');
 
         /*
          * Acte signe et preuve de signature.

@@ -9,8 +9,12 @@ use App\Enums\UserRole;
 use App\Models\AuditLog;
 use App\Models\ReissuanceRequest;
 use App\Models\User;
+use App\Notifications\RequestStatusChanged;
 use DomainException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
+use Throwable;
 
 /**
  * Seul point d'ecriture de reissuance_requests.status.
@@ -66,7 +70,7 @@ final class RequestTransitionService
 
         $this->assertAllowed($from, $to, $actor);
 
-        return DB::transaction(function () use ($request, $from, $to, $actor, $reason, $ip) {
+        $request = DB::transaction(function () use ($request, $from, $to, $actor, $reason, $ip) {
             AuditLog::create([
                 'actor_id' => $actor->id,
                 'actor_role' => $actor->role->value,
@@ -83,6 +87,52 @@ final class RequestTransitionService
 
             return $request->refresh();
         });
+
+        $this->notify($request, $from);
+
+        return $request;
+    }
+
+    /**
+     * Previent les interesses, sans jamais mettre la transition en peril.
+     *
+     * Trois precautions, dans cet ordre :
+     *
+     *   1. Apres le commit. Une transition annulee ne notifie personne.
+     *   2. Mise en file. L'envoi reel a lieu dans le worker ; ce qui se passe
+     *      ici n'est qu'une insertion.
+     *   3. Enveloppee. Meme cette insertion ne doit pas remonter : une base de
+     *      file indisponible annulerait une decision d'officier deja
+     *      journalisee et deja appliquee. C'est exactement ce que D-006
+     *      interdit. On journalise l'echec, sans donnee personnelle.
+     */
+    private function notify(ReissuanceRequest $request, RequestStatus $from): void
+    {
+        try {
+            $destinataires = [$request->citizen];
+
+            // Un retour du maire est une consigne de travail : l'officier qui
+            // tient le dossier doit l'apprendre autrement qu'en rafraichissant
+            // sa file.
+            $retourDuMaire = $request->status === RequestStatus::UnderReview
+                && in_array($from, [RequestStatus::AwaitingSignature, RequestStatus::Escalated], true);
+
+            if ($retourDuMaire) {
+                $destinataires[] = $request->assignedOfficer;
+            }
+
+            Notification::send(
+                array_filter($destinataires),
+                RequestStatusChanged::pour($request, $from),
+            );
+        } catch (Throwable $e) {
+            Log::warning('Notification de changement d\'etat non emise.', [
+                'request_id' => $request->id,
+                'from' => $from->value,
+                'to' => $request->status->value,
+                'exception' => $e::class,
+            ]);
+        }
     }
 
     public function assertAllowed(RequestStatus $from, RequestStatus $to, User $actor): void

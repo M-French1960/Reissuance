@@ -91,6 +91,17 @@ php artisan schedule:work
 Ils tournent en continu à côté du serveur web. Le worker traite les
 notifications ; l'ordonnanceur gère la purge de rétention et les relances.
 
+**Sans worker, aucune notification ne part.** La demande avance quand même —
+c'est voulu, D-006 — mais ni le courriel ni la ligne du centre de notifications
+n'apparaissent tant que `queue:work` n'a pas tourné. C'est le premier point à
+regarder si un utilisateur signale qu'il n'est prévenu de rien.
+
+Chaque canal est un travail distinct : un serveur de courriel injoignable fait
+échouer le seul travail du courriel, laisse la notification applicative en
+place, et n'a aucun effet sur l'état de la demande. Vérifié en conditions
+réelles au jalon 6 (D-032). Les travaux échoués se reprennent avec
+`php artisan queue:retry all`.
+
 **La contrainte de D-006 est maintenue** : l'échec d'une notification ne doit
 jamais faire échouer ni annuler une transition d'état. La file rejoue, la
 demande poursuit son cycle.

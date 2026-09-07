@@ -50,6 +50,15 @@
                         <a href="{{ route('citizen.profile.edit') }}"
                            @if (request()->routeIs('citizen.profile.*')) aria-current="page" @endif>Mon profil</a>
                     @endif
+                    @php $nonLues = auth()->user()->unreadNotifications()->count(); @endphp
+                    <a href="{{ route('notifications.index') }}"
+                       @if (request()->routeIs('notifications.*')) aria-current="page" @endif>
+                        Notifications
+                        @if ($nonLues > 0)
+                            <span class="badge badge--progress">{{ $nonLues }}</span>
+                            <span class="visually-hidden">{{ $nonLues > 1 ? 'non lues' : 'non lue' }}</span>
+                        @endif
+                    </a>
                     <a href="{{ route('two-factor.setup') }}">Sécurité</a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
