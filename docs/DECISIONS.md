@@ -942,3 +942,35 @@ prouve que le cas heureux n'aurait rien vu.
   de l'ordre du tiers des problèmes réels. L'essai avec un lecteur d'écran et
   avec des utilisateurs à faible littératie numérique reste à faire, et c'est
   écrit comme tel.
+
+---
+
+## D-035 — Le coût SQL se mesure deux fois, et la compression est une exigence
+
+- **Date :** 2026-09-07
+- **Statut :** appliqué au jalon 6
+- **Ce qui est mesuré :** 515 demandes, 513 comptes, 1 711 entrées d'audit.
+  Temps serveur **27 à 38 ms** sur les sept écrans de liste, jamais croissant
+  avec le volume. CSS **6,4 Ko** compressé pour un budget de 50 Ko ; JS
+  **2,9 Ko** pour 100 Ko. Détail dans `docs/PERFORMANCE.md`.
+- **La méthode qui compte :** un test de N+1 ne vaut rien s'il mesure une seule
+  fois. `QueryBudgetTest` rend chaque écran avec **peu** puis **beaucoup** de
+  lignes et exige le **même** nombre de requêtes. C'est la seule définition
+  utile : non pas « il y a beaucoup de requêtes », mais « il y en a une de plus
+  par ligne ».
+- **Ce que la mesure a corrigé :** la file de l'officier chargeait la relation
+  `citizen` par anticipation alors que la vue ne l'ouvre jamais — une requête
+  par page pour rien. Le nom affiché vient d'une colonne.
+- **Un test vert pour de mauvaises raisons, encore :** mon premier jeu d'essai
+  créait des dossiers non pris en charge. La relation susceptible de coûter une
+  requête par ligne restait nulle, donc jamais interrogée. Corrigé, puis éprouvé
+  en retirant le chargement anticipé : 7 requêtes pour 3 dossiers, 29 pour 30.
+- **La compression n'est pas un réglage de confort :** le balisage est très
+  répétitif et se comprime d'un facteur **24** sur la page des comptes —
+  79,7 Ko bruts contre **3,3 Ko** compressés. Sans `gzip` ou `brotli` sur le
+  serveur web, le §8.3 n'est pas tenu. `php artisan serve` ne compresse pas ;
+  c'est écrit dans `ARCHITECTURE_LOCAL.md` comme point à vérifier au
+  déploiement.
+- **Ce que ces chiffres ne disent pas :** ils sont pris en local, sur cette
+  machine, en mono-utilisateur. Ni un réseau 3G réel, ni un téléphone d'entrée
+  de gamme, ni une montée en charge.

@@ -35,7 +35,13 @@ class QueueController extends Controller
         $direction = $request->input('sens') === 'asc' ? 'asc' : 'desc';
 
         $requests = ReissuanceRequest::query()
-            ->with(['citizen:id,name', 'assignedOfficer:id,name'])
+            // `assignedOfficer` seulement : la vue affiche son nom pour chaque
+            // ligne, et sans ce chargement anticipe la file coute une requete
+            // de plus par dossier — mesure au jalon 6 : 7 requetes pour 3
+            // dossiers, 29 pour 30. La relation `citizen` etait chargee elle
+            // aussi, mais la vue ne l'ouvre jamais : c'etait une requete par
+            // page pour rien. Le nom affiche vient de full_name_at_birth.
+            ->with('assignedOfficer:id,name')
             ->when($request->filled('statut'), fn ($q) => $q->where('status', $request->input('statut')))
             ->when($request->filled('recherche'), function ($q) use ($request): void {
                 $terme = trim((string) $request->input('recherche'));

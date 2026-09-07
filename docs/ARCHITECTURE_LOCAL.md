@@ -226,6 +226,20 @@ jamais restaurée n'est pas une sauvegarde.
 
 ---
 
+## 7 bis. Compression — à vérifier au déploiement
+
+`php artisan serve` **ne compresse rien**. C'est sans conséquence en
+développement et inacceptable en service : mesuré au jalon 6, la page des
+comptes pèse **79,7 Ko** bruts et **3,3 Ko** compressés, soit un facteur 24. Sur
+le réseau contraint visé au §8.3 du brief, c'est la différence entre une page
+instantanée et une page qu'on attend.
+
+À activer sur le serveur web placé devant l'application, pour `text/html`,
+`text/css` et `application/javascript` : `gzip`, ou `brotli` s'il est
+disponible. Voir `docs/PERFORMANCE.md` 4.
+
+---
+
 ## 8. Ce qui n'est pas produit
 
 Par application de D-011, et pour éviter que du code mort ne laisse croire à
