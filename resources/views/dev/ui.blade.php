@@ -106,7 +106,7 @@
         <p class="u-note">
             Défile dans son propre conteneur : le corps de page ne défile jamais horizontalement.
         </p>
-        <div class="table-wrap">
+        <div class="table-wrap" tabindex="0" role="group" aria-label="Exemple de file de demandes">
             <table>
                 <caption class="visually-hidden">Exemple de file de demandes</caption>
                 <thead>

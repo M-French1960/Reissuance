@@ -137,6 +137,9 @@ main { padding-block: var(--space-5) var(--space-7); }
 
 /* --- Table : defile dans son propre conteneur, le corps ne defile jamais -- */
 .table-wrap { overflow-x: auto; border: 1px solid var(--color-line); border-radius: var(--radius-lg); background: var(--color-surface); }
+/* La zone est focalisable (tabindex=0) pour etre defilable au clavier : son
+   focus doit donc se voir, au meme titre que celui d'un lien. */
+.table-wrap:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
 table { width: 100%; border-collapse: collapse; }
 th, td { padding: var(--space-3); text-align: left; border-bottom: 1px solid var(--color-line); font-size: var(--text-sm); }
 th { background: var(--color-surface-sunken); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-ink-700); }
@@ -168,8 +171,12 @@ th { background: var(--color-surface-sunken); font-size: var(--text-xs); text-tr
 .auth-shell { display: flex; justify-content: center; }
 .auth-card { width: 100%; max-width: 30rem; }
 .auth-card__intro { color: var(--color-ink-500); font-size: var(--text-sm); }
-.auth-card__links { margin-top: var(--space-4); font-size: var(--text-sm); text-align: center; }
-.auth-card__links a { color: var(--color-brand-700); }
+.auth-card__links { margin-top: var(--space-4); font-size: var(--text-sm); text-align: center; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-2); }
+/* Ces liens sont des destinations a part entiere, pas des liens dans une
+   phrase : ils portent donc la meme cible tactile qu'un bouton. « Mot de passe
+   oublie ? » mesurait 152x16 px — sous le minimum de 24 px de la WCAG 2.2 AA,
+   et loin des 44 px que le projet s'est donnes. Mesure au jalon 6. */
+.auth-card__links a { color: var(--color-brand-700); display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--space-2); }
 .alert__list { margin: 0; padding-left: var(--space-5); }
 /* Case a cocher a la taille de cible reelle demandee par le brief : 44 px.
    Un pseudo-element ne peut pas etendre la zone d'un input — c'est un element
@@ -312,6 +319,9 @@ main > p > a:only-child,
 
 /* --- Motifs pré-remplis ---------------------------------------------------- */
 .reasons { margin-bottom: var(--space-4); }
+/* Un <summary> est une commande : 43 px mesures au jalon 6, un pixel sous la
+   cible du projet. Le rendre franchement atteignable au doigt. */
+summary { min-height: 44px; display: flex; align-items: center; padding: var(--space-2) 0; cursor: pointer; }
 .reasons__list { list-style: none; margin: var(--space-3) 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
 .reasons__pick { text-align: left; font-weight: 400; font-size: var(--text-sm); width: 100%; }
 

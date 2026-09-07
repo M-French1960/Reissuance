@@ -23,7 +23,7 @@
                 Les dossiers validés par un officier de votre commune apparaîtront ici.
             </x-empty-state>
         @else
-            <div class="table-wrap">
+            <div class="table-wrap" tabindex="0" role="group" aria-label="Dossiers prêts à signer">
                 <table>
                     <caption class="visually-hidden">Dossiers prêts à signer</caption>
                     <thead><tr>
@@ -55,7 +55,7 @@
                 Rien n'appelle votre arbitrage pour l'instant.
             </x-empty-state>
         @else
-            <div class="table-wrap">
+            <div class="table-wrap" tabindex="0" role="group" aria-label="Dossiers escaladés">
                 <table>
                     <caption class="visually-hidden">Dossiers escaladés</caption>
                     <thead><tr>

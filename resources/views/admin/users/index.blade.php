@@ -46,7 +46,7 @@
         @if ($users->isEmpty())
             <x-empty-state title="Aucun compte ne correspond">Modifiez les filtres pour élargir la recherche.</x-empty-state>
         @else
-            <div class="table-wrap">
+            <div class="table-wrap" tabindex="0" role="group" aria-label="Liste des comptes">
                 <table>
                     <caption class="visually-hidden">Liste des comptes</caption>
                     <thead>

@@ -11,7 +11,7 @@
 
     <x-card title="Mes demandes">
         @forelse ($requests as $request)
-            <div class="table-wrap">
+            <div class="table-wrap" tabindex="0" role="group" aria-label="Liste de mes demandes">
                 <table>
                     <caption class="visually-hidden">Liste de mes demandes</caption>
                     <thead>

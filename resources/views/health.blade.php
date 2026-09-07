@@ -4,7 +4,7 @@
 @section('content')
     <h1>État du service</h1>
     <x-card>
-        <div class="table-wrap">
+        <div class="table-wrap" tabindex="0" role="group" aria-label="Vérifications de santé">
             <table>
                 <caption class="visually-hidden">Vérifications de santé</caption>
                 <thead><tr><th scope="col">Vérification</th><th scope="col">État</th><th scope="col">Détail</th></tr></thead>

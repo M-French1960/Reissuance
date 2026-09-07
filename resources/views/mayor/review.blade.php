@@ -18,7 +18,7 @@
 
     {{-- L'essentiel d'abord : ce qui décide, sans défilement (§8.2). --}}
     <x-card title="Résultat de la vérification">
-        <div class="table-wrap">
+        <div class="table-wrap" tabindex="0" role="group" aria-label="Résultat de chaque étape">
             <table>
                 <caption class="visually-hidden">Résultat de chaque étape</caption>
                 <thead><tr><th scope="col">Étape</th><th scope="col">Résultat</th><th scope="col">Par</th></tr></thead>

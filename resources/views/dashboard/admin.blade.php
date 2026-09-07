@@ -11,14 +11,19 @@
     </x-alert>
 
     <x-card title="Comptes par rôle et statut">
-        <div class="table-wrap">
+        <div class="table-wrap" tabindex="0" role="group" aria-label="Répartition des comptes">
             <table>
                 <caption class="visually-hidden">Répartition des comptes</caption>
                 <thead><tr><th scope="col">Rôle</th><th scope="col">Statut</th><th scope="col">Nombre</th></tr></thead>
                 <tbody>
                     @foreach ($accounts as $row)
                         <tr>
-                            <td>{{ \App\Enums\UserRole::from($row->role)->label() }}</td>
+                            {{-- $row est un modele User : `role` et `status`
+                                 sortent deja convertis par les casts du
+                                 modele, meme derriere un selectRaw. Les
+                                 reconvertir levait une TypeError, et cet
+                                 ecran renvoyait 500 depuis le jalon 2. --}}
+                            <td>{{ $row->role->label() }}</td>
                             <td>{{ $row->status }}</td>
                             <td>{{ $row->total }}</td>
                         </tr>

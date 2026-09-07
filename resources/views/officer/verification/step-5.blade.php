@@ -1,7 +1,7 @@
 @extends('officer.verification._layout')
 @section('etape')
     <x-card title="Récapitulatif des vérifications">
-        <div class="table-wrap">
+        <div class="table-wrap" tabindex="0" role="group" aria-label="Résultat de chaque étape">
             <table>
                 <caption class="visually-hidden">Résultat de chaque étape</caption>
                 <thead><tr><th scope="col">Étape</th><th scope="col">Résultat</th><th scope="col">Enregistré</th></tr></thead>

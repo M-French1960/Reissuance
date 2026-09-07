@@ -18,7 +18,7 @@
         @else
             <p><x-button href="{{ route('citizen.requests.start') }}" variant="primary">Faire une nouvelle demande</x-button></p>
 
-            <div class="table-wrap">
+            <div class="table-wrap" tabindex="0" role="group" aria-label="Liste de mes demandes">
                 <table>
                     <caption class="visually-hidden">Liste de mes demandes</caption>
                     <thead>

@@ -26,7 +26,7 @@
         @endif
 
         @if ($actes !== [])
-            <div class="table-wrap">
+            <div class="table-wrap" tabindex="0" role="group" aria-label="Actes trouvés">
                 <table>
                     <caption class="visually-hidden">Actes trouvés</caption>
                     <thead><tr><th scope="col">Numéro d'acte</th><th scope="col">Nom</th><th scope="col">Naissance</th><th scope="col">État</th></tr></thead>

@@ -23,7 +23,7 @@
         @if ($logs->isEmpty())
             <x-empty-state title="Aucune entrée">Aucune action ne correspond à ces filtres.</x-empty-state>
         @else
-            <div class="table-wrap">
+            <div class="table-wrap" tabindex="0" role="group" aria-label="Entrées du journal d'audit">
                 <table>
                     <caption class="visually-hidden">Entrées du journal d'audit</caption>
                     <thead>

@@ -57,7 +57,7 @@
                 apparaissent ici dès leur dépôt.
             </x-empty-state>
         @else
-            <div class="table-wrap">
+            <div class="table-wrap" tabindex="0" role="group" aria-label="Demandes du centre">
                 <table>
                     <caption class="visually-hidden">Demandes du centre</caption>
                     <thead>

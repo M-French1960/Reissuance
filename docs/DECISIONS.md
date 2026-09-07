@@ -911,3 +911,34 @@ prouve que le cas heureux n'aurait rien vu.
 - **En attendant :** rien n'est inventé. `via()` n'ajoute le courriel que si une
   adresse existe ; le canal applicatif reste le seul dont l'arrivée est
   garantie, et c'est dit tel quel.
+
+---
+
+## D-034 — L'audit d'accessibilité se refait au navigateur, à chaque jalon
+
+- **Date :** 2026-09-07
+- **Statut :** appliqué au jalon 6
+- **Ce qui est mesuré :** 17 écrans, dans Chromium à 390 × 844 px, avec
+  `axe-core` 4.10.2 sur les jeux `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`,
+  plus le parcours au clavier, le débordement horizontal et la taille de
+  **chaque** cible tactile. Résultat après correction : **0 violation, 0
+  débordement, 0 cible sous 44 px**. Détail dans `docs/ACCESSIBILITE.md`.
+- **Ce que l'audit a trouvé :** le tableau de bord de l'administrateur
+  renvoyait **500 depuis le jalon 2** ; les treize tableaux larges n'étaient pas
+  défilables au clavier ; trois cibles tactiles étaient trop petites, dont une
+  sous le minimum de 24 px de la WCAG 2.2 AA.
+- **Pourquoi les tests ne l'avaient pas vu :** `ViewCompilationTest` prouve que
+  les vues **compilent**. Rendre une vue est autre chose. `ScreensRenderTest`
+  ouvre désormais chaque écran de chaque rôle, sur une base peuplée.
+- **Reproduire l'audit :**
+  ```
+  php artisan serve --port=8231
+  npm install playwright axe-core        # hors du dépôt
+  node a11y.mjs                          # script d'audit, docs/ACCESSIBILITE.md 1
+  ```
+  Les scripts vivent hors du dépôt : ils dépendent de comptes de démonstration
+  et d'un serveur local, pas du code livré.
+- **Ce que cela ne prouve pas :** la conformité. Un outil automatique détecte
+  de l'ordre du tiers des problèmes réels. L'essai avec un lecteur d'écran et
+  avec des utilisateurs à faible littératie numérique reste à faire, et c'est
+  écrit comme tel.
