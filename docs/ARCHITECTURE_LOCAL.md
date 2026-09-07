@@ -221,8 +221,12 @@ Une sauvegarde de la base **sans** le répertoire de stockage produit un systèm
 cohérent en apparence dont toutes les pièces d'identité manquent. Les deux se
 sauvegardent ensemble.
 
-Procédure de restauration à écrire et **à tester** au jalon 6. Une sauvegarde
-jamais restaurée n'est pas une sauvegarde.
+**Fait au jalon 6.** La procédure est écrite, outillée et **exécutée** :
+`scripts/sauvegarde.sh`, `scripts/restauration.sh`, et
+`php artisan phoenix:verifier-restauration` qui vérifie que la base restaurée
+est *exploitable* — clés valides, stockage présent et intact, déclencheur d'état
+en place — et pas seulement peuplée. Les quatre modes de défaillance ont été
+provoqués pour vérifier qu'ils sont détectés. Voir `docs/SAUVEGARDE.md`.
 
 ---
 

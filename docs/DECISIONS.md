@@ -974,3 +974,33 @@ prouve que le cas heureux n'aurait rien vu.
 - **Ce que ces chiffres ne disent pas :** ils sont pris en local, sur cette
   machine, en mono-utilisateur. Ni un réseau 3G réel, ni un téléphone d'entrée
   de gamme, ni une montée en charge.
+
+---
+
+## D-036 — Une restauration se vérifie autrement qu'en comptant des lignes
+
+- **Date :** 2026-09-07
+- **Statut :** appliqué au jalon 6 — procédure **exécutée**, pas seulement écrite
+- **Ce qui existe :** `scripts/sauvegarde.sh`, `scripts/restauration.sh` et la
+  commande `php artisan phoenix:verifier-restauration`. Détail dans
+  `docs/SAUVEGARDE.md`.
+- **Le point de la commande de vérification :** une base restaurée peut rendre
+  le bon nombre de lignes et rester inexploitable. Sans `APP_KEY`, les numéros
+  de pièce sont illisibles. **Sans la clé d'index aveugle, la recherche par
+  numéro ne lève aucune erreur : elle rend zéro résultat** — un officier en
+  conclurait que la pièce est inconnue. Sans le stockage privé, chaque acte
+  signé désigne un fichier absent.
+- **Exécuté :** 515 demandes, 513 comptes, 1 715 entrées de journal, 1 acte
+  signé, 1 pièce jointe restaurés dans une base d'essai. Inventaire identique,
+  cinq contrôles au vert.
+- **Éprouvé en provoquant chaque défaillance :** mauvaise `APP_KEY`, mauvaise
+  clé d'index, stockage non restauré, fichier d'acte altéré d'un seul octet.
+  Les quatre sont détectés, avec un message qui nomme la cause.
+- **Ce que le script refuse de faire :** écraser la base en service sans une
+  variable d'environnement explicite, et créer une base — `phoenix_owner` n'a
+  pas `CREATEDB`, et c'est voulu ; le script indique la commande à faire
+  exécuter par un administrateur.
+- **Ce que je ne décide pas :** la périodicité des sauvegardes, leur lieu de
+  conservation et leur durée de rétention. Les archives contiennent des données
+  d'identité **et** les clés de déchiffrement : ce sont des décisions de
+  service, liées au bloc B de `COMPLIANCE_OPEN_QUESTIONS.md`.
