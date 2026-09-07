@@ -198,6 +198,14 @@ enregistré, ce qui débloque la situation sans masquer le fait que la
 vérification n'a pas abouti. L'officier reste responsable de sa décision, et le journal montre
 exactement sur quoi elle reposait.
 
+**Ce qu'une panne — ou un refus — ne permet plus :** accepter en silence. Dès
+qu'une des quatre vérifications rend autre chose qu'une correspondance
+(`no_match`, `inconclusive`, `provider_unavailable`), **le motif devient
+obligatoire pour toute décision, acceptation comprise**, et l'écran du maire
+affiche la réserve avant qu'il ne signe. Le pouvoir de décision de l'officier
+est intact ; ce qui disparaît, c'est la possibilité de l'exercer sans le dire.
+Voir D-031.
+
 ---
 
 ## 7. Synthèse des questions à poser

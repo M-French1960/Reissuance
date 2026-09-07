@@ -33,6 +33,19 @@
             </table>
         </div>
 
+        @if ($reservations !== [])
+            <x-alert variant="attention" title="Une vérification n'a pas abouti">
+                <ul class="reasons__list">
+                    @foreach ($reservations as $numero => $resultat)
+                        <li><strong>{{ $numero }}. {{ $steps[$numero] }}</strong> — {{ $resultat->label() }}</li>
+                    @endforeach
+                </ul>
+                Vous pouvez malgré tout accepter la demande : la décision vous
+                appartient. Le motif devient alors <strong>obligatoire</strong>,
+                il figurera au dossier et le maire le lira avant de signer.
+            </x-alert>
+        @endif
+
         @unless ($complet)
             <x-alert variant="danger" title="Vérification incomplète">
                 Vous ne pourrez pas accepter cette demande tant que les quatre
@@ -79,7 +92,14 @@
                 <div class="field">
                     <label class="field__label" for="reason">
                         Motif <span aria-hidden="true">*</span>
-                        <span class="field__hint">Obligatoire pour un rejet ou une escalade. Il figurera au dossier et au journal d'audit.</span>
+                        <span class="field__hint">
+                            @if ($reservations !== [])
+                                Obligatoire ici : une vérification n'a pas abouti à une correspondance.
+                            @else
+                                Obligatoire pour un rejet ou une escalade.
+                            @endif
+                            Il figurera au dossier et au journal d'audit.
+                        </span>
                     </label>
                     <textarea class="field__control" id="reason" name="reason" rows="4"
                               @if ($errors->has('reason')) aria-invalid="true" @endif>{{ old('reason') }}</textarea>

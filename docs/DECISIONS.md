@@ -823,3 +823,33 @@ prouve que le cas heureux n'aurait rien vu.
   depuis le noyau, et échoue bien quand on retire la correction.
 - **La leçon :** un filtre posé sur « toutes les routes » ne couvre que les
   routes qu'on a écrites. Les paquets en ajoutent.
+
+---
+
+## D-031 — Une acceptation sous réserve exige un motif
+
+- **Date :** 2026-09-07
+- **Statut :** appliqué au jalon 6 — **durcissement, réversible sur demande**
+- **Le fait constaté :** un test du jalon 6 a établi qu'un `no_match` de la
+  base de la police n'empêchait pas l'acceptation, et que rien, au moment de la
+  décision, ne distinguait cette acceptation d'une acceptation ordinaire :
+  aucun avertissement, aucun motif exigé. C'est pourtant le chemin exact d'une
+  fraude à la pièce volée — le cas `DEMOSTOLEN` de l'adaptateur factice.
+- **Ce que je n'ai pas fait, et pourquoi :** interdire l'acceptation. Le §6
+  d'`INTEGRATIONS.md` pose que l'officier reste responsable de son jugement, et
+  une non-correspondance a des causes légitimes — une faute de frappe dans un
+  numéro, un service qui répond mal, un registre lacunaire. Interdire ferait
+  décider la machine à la place de l'agent, et pousserait à saisir de faux
+  résultats pour débloquer un dossier.
+- **Ce que je fais :** dès qu'une des quatre vérifications rend autre chose
+  qu'une correspondance, **le motif devient obligatoire pour toute décision,
+  acceptation comprise**. L'écran de l'officier annonce la réserve avant la
+  saisie ; l'écran du maire l'affiche avant la signature, avec le motif.
+- **Ce que cela change dans la machine à états :** rien. Aucune transition
+  n'est ajoutée, aucune n'est retirée. Une seule condition est ajoutée, et elle
+  ne fait que **restreindre** ce qui peut se produire en silence.
+- **Coût pour l'agent :** nul dans le cas nominal — une acceptation sans
+  réserve ne réclame toujours aucun motif, conformément au §8.2 du brief.
+- **Réversibilité :** c'est un durcissement que j'ai décidé dans le cadre du
+  jalon 6. S'il vous paraît trop contraignant, il tient dans une condition du
+  contrôleur et deux blocs de vue.

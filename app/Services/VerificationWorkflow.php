@@ -70,6 +70,35 @@ final class VerificationWorkflow
         return $this->missingSteps($request) === [];
     }
 
+    /**
+     * Les vérifications qui n'ont PAS abouti à une correspondance.
+     *
+     * Une acceptation malgré l'une d'elles reste possible — l'officier est
+     * responsable de son jugement (docs/INTEGRATIONS.md 6) — mais elle ne doit
+     * pas ressembler à une acceptation ordinaire : c'est le chemin exact d'une
+     * fraude à la pièce volée. Voir D-031.
+     *
+     * @return array<int, VerificationResult> indexée par numéro d'étape
+     */
+    public function reservations(ReissuanceRequest $request): array
+    {
+        $reserves = [];
+
+        foreach ($this->steps($request) as $numero => $etape) {
+            if (! in_array($numero, self::VERIFICATION_STEPS, true)) {
+                continue;
+            }
+
+            if ($etape->result !== null && $etape->result !== VerificationResult::Match) {
+                $reserves[$numero] = $etape->result;
+            }
+        }
+
+        ksort($reserves);
+
+        return $reserves;
+    }
+
     /** @return list<int> vérifications restant à renseigner */
     public function missingSteps(ReissuanceRequest $request): array
     {

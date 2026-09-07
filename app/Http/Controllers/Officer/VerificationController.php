@@ -63,6 +63,7 @@ class VerificationController extends Controller
             'etapes' => $this->workflow->steps($reissuanceRequest),
             'manquantes' => $this->workflow->missingSteps($reissuanceRequest),
             'complet' => $this->workflow->isComplete($reissuanceRequest),
+            'reservations' => $this->workflow->reservations($reissuanceRequest),
             'peutDecider' => $request->user()->can('decide', $reissuanceRequest),
         ]);
     }

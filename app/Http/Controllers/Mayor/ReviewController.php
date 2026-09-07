@@ -35,6 +35,7 @@ class ReviewController extends Controller
             'steps' => VerificationWorkflow::STEPS,
             'complet' => $this->workflow->isComplete($reissuanceRequest),
             'manquantes' => $this->workflow->missingSteps($reissuanceRequest),
+            'reservations' => $this->workflow->reservations($reissuanceRequest),
             'estEscaladee' => $reissuanceRequest->status === RequestStatus::Escalated,
         ]);
     }

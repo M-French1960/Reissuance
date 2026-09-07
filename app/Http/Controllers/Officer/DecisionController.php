@@ -55,16 +55,28 @@ class DecisionController extends Controller
     {
         $this->authorize('decide', $reissuanceRequest);
 
+        // Une acceptation malgré une vérification qui n'a pas abouti exige un
+        // motif, au même titre qu'un rejet. L'officier garde son pouvoir de
+        // décision ; il ne peut simplement plus l'exercer en silence (D-031).
+        $reservations = $this->workflow->reservations($reissuanceRequest);
+
+        $motifExige = $reservations !== []
+            ? ['required', 'string', 'min:10', 'max:1000']
+            : ['required_unless:decision,accepted', 'nullable', 'string', 'min:10', 'max:1000'];
+
         $validated = $request->validate([
             'decision' => ['required', Rule::in(['accepted', 'rejected', 'escalated'])],
             // Motif obligatoire dès que la décision n'est pas une acceptation.
             // La contrainte request_decisions_reason_required_check l'impose
             // aussi en base : ce contrôle rend seulement le message utilisable.
-            'reason' => ['required_unless:decision,accepted', 'nullable', 'string', 'min:10', 'max:1000'],
+            'reason' => $motifExige,
             'internal_notes' => ['nullable', 'string', 'max:1000'],
         ], [
             'decision.required' => 'Choisissez une décision.',
             'reason.required_unless' => 'Un motif est obligatoire pour rejeter ou escalader une demande. Il sera visible dans le dossier.',
+            'reason.required' => $reservations !== []
+                ? "Une vérification n'a pas abouti à une correspondance. Quelle que soit votre décision, un motif est obligatoire : il figurera au dossier et sera lu par le maire."
+                : 'Un motif est obligatoire pour rejeter ou escalader une demande. Il sera visible dans le dossier.',
             'reason.min' => 'Le motif doit être suffisamment explicite : au moins 10 caractères.',
         ]);
 

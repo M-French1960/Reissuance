@@ -23,10 +23,13 @@
                 <caption class="visually-hidden">Résultat de chaque étape</caption>
                 <thead><tr><th scope="col">Étape</th><th scope="col">Résultat</th><th scope="col">Par</th></tr></thead>
                 <tbody>
-                    @foreach ($steps as $numero => $libelle)
+                    {{-- Les quatre vérifications. La cinquième étape est la
+                         décision de l'officier, reprise plus bas dans le
+                         récapitulatif des décisions (D-027). --}}
+                    @foreach (\App\Services\VerificationWorkflow::VERIFICATION_STEPS as $numero)
                         @php $e = $etapes->get($numero); @endphp
                         <tr>
-                            <td>{{ $numero }}. {{ $libelle }}</td>
+                            <td>{{ $numero }}. {{ $steps[$numero] }}</td>
                             <td>
                                 @if ($e?->result)
                                     <span class="badge badge--{{ $e->result->tone() }}">{{ $e->result->label() }}</span>
@@ -40,6 +43,17 @@
                 </tbody>
             </table>
         </div>
+
+        @if ($reservations !== [])
+            <x-alert variant="attention" title="L'officier a accepté malgré une réserve">
+                <ul class="alert__list">
+                    @foreach ($reservations as $numero => $resultat)
+                        <li><strong>{{ $numero }}. {{ $steps[$numero] }}</strong> — {{ $resultat->label() }}</li>
+                    @endforeach
+                </ul>
+                Lisez le motif que l'officier a dû fournir avant de signer.
+            </x-alert>
+        @endif
 
         @unless ($complet)
             <x-alert variant="danger" title="Vérification incomplète">
