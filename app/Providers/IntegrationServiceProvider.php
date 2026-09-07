@@ -6,8 +6,11 @@ namespace App\Providers;
 
 use App\Contracts\CivilRegistryProvider;
 use App\Contracts\IdentityLookupProvider;
+use App\Contracts\SignatureProvider;
 use App\Integrations\Fake\FakeCivilRegistryProvider;
 use App\Integrations\Fake\FakeIdentityLookupProvider;
+use App\Integrations\Fake\FakeSignatureProvider;
+use App\Integrations\Real\AccreditedSignatureProvider;
 use App\Integrations\Real\NationalCivilRegistryProvider;
 use App\Integrations\Real\PoliceIdentityLookupProvider;
 use Illuminate\Support\ServiceProvider;
@@ -33,6 +36,13 @@ class IntegrationServiceProvider extends ServiceProvider
             'registry',
             FakeCivilRegistryProvider::class,
             NationalCivilRegistryProvider::class,
+        );
+
+        $this->bindProvider(
+            SignatureProvider::class,
+            'signature',
+            FakeSignatureProvider::class,
+            AccreditedSignatureProvider::class,
         );
     }
 

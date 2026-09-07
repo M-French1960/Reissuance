@@ -36,7 +36,7 @@ class RequestTrackingController extends Controller
         $this->authorize('view', $reissuanceRequest);
 
         return view('citizen.requests.show', [
-            'demande' => $reissuanceRequest->load('center.commune', 'attachments'),
+            'demande' => $reissuanceRequest->load('center.commune', 'attachments', 'signature.mayor'),
             'etapes' => $this->timeline($reissuanceRequest),
         ]);
     }

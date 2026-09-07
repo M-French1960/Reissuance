@@ -615,3 +615,83 @@ prouve que le cas heureux n'aurait rien vu.
   service public.
 - **Visible dans l'interface :** l'écran affiche « Lecture seule » et le nom de
   l'agent en charge, plutôt que de masquer silencieusement les boutons.
+
+---
+
+## D-024 — Générateur PDF écrit à la main, faute de pouvoir installer dompdf
+
+- **Date :** 2026-09-07
+- **Statut :** décidé sous contrainte, **à remplacer**
+- **Décision :** `App\Support\Pdf\PdfDocument` produit les actes. C'est un
+  générateur PDF minimal, texte seulement.
+- **Cause :** `composer require dompdf/dompdf` échoue depuis l'environnement de
+  construction, comme Pest et Larastan avant lui (voir D-012). Ce n'est pas une
+  limite du projet.
+- **Ce qu'il fait :** pages A4, Helvetica et Helvetica-Bold, filets, encodage
+  WinAnsi (donc les accents français), échappement des caractères réservés,
+  découpe des paragraphes, pagination automatique.
+- **Ce qu'il ne fait pas :** images, tableaux, couleurs, polices embarquées,
+  compression, retour à la ligne typographique. Il n'y a **aucune raison de
+  l'étendre** : dès que le réseau le permet,
+
+  ```
+  composer require dompdf/dompdf
+  ```
+
+  et un gabarit Blade le remplacent avantageusement. Le seul point d'attention
+  au remplacement : la mention obligatoire de D-025 doit rester la première
+  chose écrite.
+- **Vérification :** la sortie est relue par **pdftotext**, un outil
+  indépendant, dans `ActDocumentTest`. Je ne me contente pas de supposer que
+  le PDF est valide — l'alignement des libellés et les accents sont contrôlés.
+
+---
+
+## D-025 — Tout acte de démonstration porte la mention en clair
+
+- **Date :** 2026-09-07
+- **Statut :** décidé — **exigence de sécurité, pas précaution de développement**
+- **Décision :** tant que l'adaptateur de signature est factice, chaque acte
+  produit porte, **en toute première ligne**, la mention
+  `DOCUMENT DE DEMONSTRATION - SANS VALEUR JURIDIQUE`, suivie de
+  « Ce document ne peut etre presente a aucune administration. » Elle est
+  répétée en fin de document et sur la preuve de signature.
+- **Où elle est apposée :** dans `DocumentBuilder`, **pas** dans l'adaptateur
+  de signature. Un document doit la porter même si quelqu'un contourne
+  l'adaptateur.
+- **Pourquoi :** la question A1 de `COMPLIANCE_OPEN_QUESTIONS.md` est ouverte —
+  on ignore si un acte d'état civil signé électroniquement a valeur légale au
+  Cameroun. Un document produit ici ne doit pouvoir être confondu avec un acte
+  authentique par personne, y compris par un agent de bonne foi.
+- **Vérifié :** un test relit le PDF avec pdftotext et exige que la mention
+  soit la **première ligne non vide** du document.
+- **Levée :** la mention ne disparaîtra que le jour où un prestataire agréé
+  sera branché **et** la question A1 tranchée. Les deux, pas l'un des deux.
+
+---
+
+## D-026 — `@disabled` sur une balise de composant casse Blade
+
+- **Date :** 2026-09-07
+- **Statut :** corrigé, et l'écran cassé était en production depuis le jalon 3
+- **Le fait :** `<x-button @disabled(! $complet)>` **ne compile pas**. Le
+  compilateur de balises de composants ne traite pas les directives présentes
+  dans la liste d'attributs, et produit du PHP déséquilibré. Le symptôme est
+  une `ParseError` sur un `endif` situé des dizaines de lignes plus loin, ce
+  qui n'oriente vers rien.
+
+  Vérifié par réduction : `<button @disabled(...)>` (HTML) compile ;
+  `<x-button @disabled(...)>` (composant) échoue.
+
+- **Ce que cela a coûté :** deux vues étaient concernées, dont **l'écran
+  d'envoi de la demande citoyenne**, cassé depuis le jalon 3. Aucun test ne le
+  **rendait** : ils postaient directement vers la route. J'ai annoncé ce jalon
+  comme fonctionnel alors que sa dernière page renvoyait une erreur 500.
+- **Correction :** `x-button` accepte désormais une propriété `disabled`, et
+  `@disabled` est appliqué à l'intérieur du composant, sur un `<button>` HTML,
+  où il fonctionne.
+- **Prévention :** deux tests. L'un compile **chacune des 45 vues** du projet.
+  L'autre refuse toute directive dans une balise de composant, et a été éprouvé
+  avec une violation délibérée.
+- **La leçon, encore :** une suite verte prouve ce qu'elle teste. Poster vers
+  une route ne rend pas la page.

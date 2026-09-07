@@ -18,7 +18,7 @@ Quatre contrats dans `app/Contracts/`, chacun avec deux implémentations :
 |---|---|---|
 | `IdentityLookupProvider` | `FakeIdentityLookupProvider` | `PoliceIdentityLookupProvider` |
 | `CivilRegistryProvider` | `FakeCivilRegistryProvider` | `NationalCivilRegistryProvider` |
-| `SignatureProvider` | `FakeSignatureProvider` | *(prestataire non identifié)* |
+| `SignatureProvider` | `FakeSignatureProvider` | `AccreditedSignatureProvider` *(squelette)* |
 | `PaymentProvider` | `FakePaymentProvider` | *(prestataire non identifié)* |
 
 **Le squelette réel lève une exception explicite** tant qu'il n'est pas
@@ -143,11 +143,17 @@ une preuve vérifiable.
    du certificat — l'acte reste-t-il vérifiable ?
 7. Un horodatage qualifié est-il requis ?
 
-**Ce que je fais en attendant :** `FakeSignatureProvider` produit un PDF et une
-preuve **explicitement marquée comme non valable juridiquement**, en clair sur
-le document lui-même. Aucun document produit par l'adaptateur factice ne doit
-pouvoir être confondu avec un acte authentique. C'est une exigence de sécurité,
-pas une précaution de développement.
+**Ce que je fais en attendant — implémenté au jalon 5 :**
+`FakeSignatureProvider` scelle l'empreinte du document par HMAC et déclare
+`legallyBinding: false`. `DocumentBuilder` appose la mention
+`DOCUMENT DE DEMONSTRATION - SANS VALEUR JURIDIQUE` en **première ligne** de
+l'acte, la répète en fin de document et sur la preuve.
+
+La mention est apposée par le constructeur du document et **non** par
+l'adaptateur : elle doit figurer même si quelqu'un contourne celui-ci. Un test
+relit le PDF avec `pdftotext` et exige qu'elle soit la première ligne non vide.
+
+Voir D-025.
 
 `document_signatures.document_hash` (SHA-256) est enregistré dès maintenant :
 il ne dépend d'aucun prestataire et servira quel que soit le choix final.

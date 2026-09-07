@@ -16,6 +16,7 @@ class DocumentSignature extends Model
 
     protected $fillable = [
         'request_id', 'mayor_id', 'document_hash',
+        'document_path', 'proof_path', 'legally_binding',
         'provider', 'signature_payload', 'signed_at',
     ];
 
@@ -23,6 +24,7 @@ class DocumentSignature extends Model
     {
         return [
             'signature_payload' => 'array',
+            'legally_binding' => 'boolean',
             'signed_at' => 'datetime',
         ];
     }

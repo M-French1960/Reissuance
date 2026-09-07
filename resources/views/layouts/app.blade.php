@@ -36,6 +36,14 @@
                         <a href="{{ route('admin.audit.index') }}"
                            @if (request()->routeIs('admin.audit.*')) aria-current="page" @endif>Journal</a>
                     @endif
+                    @if (auth()->user()->role === \App\Enums\UserRole::Officer)
+                        <a href="{{ route('officer.queue') }}"
+                           @if (request()->routeIs('officer.*')) aria-current="page" @endif>File de traitement</a>
+                    @endif
+                    @if (auth()->user()->role === \App\Enums\UserRole::Mayor)
+                        <a href="{{ route('mayor.dashboard') }}"
+                           @if (request()->routeIs('mayor.*')) aria-current="page" @endif>Signatures</a>
+                    @endif
                     @if (auth()->user()->role === \App\Enums\UserRole::Citizen)
                         <a href="{{ route('citizen.requests.index') }}"
                            @if (request()->routeIs('citizen.requests.*')) aria-current="page" @endif>Mes demandes</a>

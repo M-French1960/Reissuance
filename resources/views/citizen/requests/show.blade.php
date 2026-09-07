@@ -57,6 +57,27 @@
         <p class="field__hint">Vous serez averti à chaque changement d'étape.</p>
     </x-card>
 
+    @if ($demande->signature)
+        <x-card title="Mon acte">
+            <p>Votre acte a été signé le
+            {{ $demande->signature->signed_at?->translatedFormat('d F Y') }}
+            par {{ $demande->signature->mayor?->name }}.</p>
+
+            @unless ($demande->signature->legally_binding)
+                <x-alert variant="attention" title="Document de démonstration">
+                    Ce document porte la mention « sans valeur juridique » et ne
+                    peut être présenté à aucune administration. La plateforme
+                    fonctionne avec un prestataire de signature factice.
+                </x-alert>
+            @endunless
+
+            <div class="row-actions">
+                <x-button href="{{ route('acts.document', $demande->signature) }}" variant="primary">Télécharger mon acte</x-button>
+                <x-button href="{{ route('acts.proof', $demande->signature) }}" variant="secondary">Preuve de signature</x-button>
+            </div>
+        </x-card>
+    @endif
+
     <x-card title="Mes pièces">
         <div class="grid grid--2">
             @forelse ($demande->attachments as $piece)

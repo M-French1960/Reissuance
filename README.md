@@ -38,6 +38,8 @@ php artisan schedule:work
 | Assistant de demande | `/mon-espace/demandes/{id}/etape/{1-4}` |
 | File de l'officier | `/verification/file` |
 | Vérification en 5 étapes | `/verification/demandes/{id}/etape/{1-5}` |
+| Files du maire | `/signature/tableau-de-bord` |
+| Revue d'un dossier | `/signature/dossiers/{id}` |
 | Double authentification | `/double-authentification` |
 | Portail administrateur | `/administration/comptes`, `/administration/journal` |
 | État du service | `/sante` (JSON avec `Accept: application/json`) |
@@ -80,6 +82,25 @@ Pour le registre d'état civil, c'est le **nom** recherché qui déclenche :
 Le seeder `DemoProviderCasesSeeder` crée une demande par cas. La ponctuation
 n'a pas d'importance : les déclencheurs sont normalisés comme le stockage.
 
+## Les actes produits n'ont aucune valeur juridique
+
+Le prestataire de signature configuré est un **adaptateur factice**. Chaque
+acte délivré porte, en première ligne :
+
+```
+DOCUMENT DE DEMONSTRATION - SANS VALEUR JURIDIQUE
+Ce document ne peut etre presente a aucune administration.
+```
+
+Cette mention ne disparaîtra que le jour où un prestataire agréé sera branché
+**et** la valeur légale d'un acte d'état civil signé électroniquement au
+Cameroun confirmée. Voir le bloc A de `docs/COMPLIANCE_OPEN_QUESTIONS.md` et la
+décision D-025.
+
+Le PDF est produit par un générateur écrit à la main (D-024), faute d'avoir pu
+installer dompdf depuis l'environnement de construction. Il gère du texte et
+rien d'autre ; `composer require dompdf/dompdf` doit le remplacer.
+
 ## Trois points à connaître avant de toucher au code
 
 **L'application ne tourne jamais sous le propriétaire du schéma.** Les
@@ -102,7 +123,7 @@ la décision D-015.
 ## Vérifications
 
 ```bash
-./vendor/bin/phpunit    # 220 tests, sur un vrai PostgreSQL
+./vendor/bin/phpunit    # 286 tests, sur un vrai PostgreSQL
 ./vendor/bin/pint       # formatage
 ```
 

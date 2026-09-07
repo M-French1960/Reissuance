@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Database\Seeders;
 
 use App\Enums\RequestStatus;
+use App\Enums\VerificationResult;
 use App\Models\CivilStatusCenter;
 use App\Models\ReissuanceRequest;
 use App\Models\User;
 use App\Services\RequestTransitionService;
+use App\Services\VerificationWorkflow;
 use Illuminate\Database\Seeder;
 
 /**
@@ -91,6 +93,17 @@ class DemoRequestsSeeder extends Seeder
             }
 
             foreach ($steps as [$to, $actor, $reason]) {
+                // Le maire ne peut signer qu'un dossier dont les 5 etapes ont
+                // un resultat (4.3 du brief) : le jeu de demonstration doit
+                // donc les renseigner, comme le ferait un vrai officier.
+                if ($to === RequestStatus::AwaitingSignature) {
+                    $workflow = app(VerificationWorkflow::class);
+                    foreach ([1, 2, 3, 4, 5] as $etape) {
+                        $workflow->record($request, $etape, $officer, VerificationResult::Match);
+                    }
+                    $request->refresh();
+                }
+
                 $transitions->transition($request, $to, $actor, $reason);
             }
 

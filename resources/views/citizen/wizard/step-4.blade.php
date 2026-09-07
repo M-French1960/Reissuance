@@ -63,7 +63,7 @@
 
             <div class="actions">
                 <x-button href="{{ route('citizen.requests.step', ['reissuanceRequest' => $draft, 'step' => 3]) }}" variant="secondary">Retour</x-button>
-                <x-button type="submit" variant="primary" @disabled(! $complet)>Envoyer ma demande</x-button>
+                <x-button type="submit" variant="primary" :disabled="! $complet">Envoyer ma demande</x-button>
             </div>
         </form>
     </x-card>

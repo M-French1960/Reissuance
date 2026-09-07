@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\ActDocumentController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Citizen\AttachmentController;
@@ -11,6 +12,9 @@ use App\Http\Controllers\Citizen\RequestWizardController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DevUiController;
 use App\Http\Controllers\HealthController;
+use App\Http\Controllers\Mayor\DashboardController as MayorDashboardController;
+use App\Http\Controllers\Mayor\DecisionController as MayorDecisionController;
+use App\Http\Controllers\Mayor\ReviewController;
 use App\Http\Controllers\Officer\DecisionController;
 use App\Http\Controllers\Officer\QueueController;
 use App\Http\Controllers\Officer\VerificationController;
@@ -81,6 +85,30 @@ Route::middleware(['auth', 'active'])->group(function (): void {
             Route::post('/demandes/{reissuanceRequest}/decision', [DecisionController::class, 'store'])
                 ->name('decision.store');
         });
+
+        /*
+         * Parcours maire.
+         *
+         * La portee globale restreint deja a sa commune ET aux deux etats ou
+         * il a competence : une demande de sa commune en pending ou
+         * under_review lui reste invisible (4.2 du brief).
+         */
+        Route::middleware('role:mayor')->prefix('signature')->name('mayor.')->group(function (): void {
+            Route::get('/tableau-de-bord', MayorDashboardController::class)->name('dashboard');
+            Route::get('/dossiers/{reissuanceRequest}', ReviewController::class)->name('review');
+            Route::post('/dossiers/{reissuanceRequest}/signer', [MayorDecisionController::class, 'sign'])->name('sign');
+            Route::post('/dossiers/{reissuanceRequest}/rejeter', [MayorDecisionController::class, 'reject'])->name('reject');
+            Route::post('/dossiers/{reissuanceRequest}/retourner', [MayorDecisionController::class, 'returnToOfficer'])->name('return');
+        });
+
+        /*
+         * Acte signe et preuve de signature.
+         *
+         * Hors du prefixe maire : le citoyen telecharge son acte, l'officier
+         * et le maire le consultent dans leur perimetre. La Policy decide.
+         */
+        Route::get('/actes/{signature}', [ActDocumentController::class, 'document'])->name('acts.document');
+        Route::get('/actes/{signature}/preuve', [ActDocumentController::class, 'proof'])->name('acts.proof');
 
         /*
          * Service des pieces d'identite.
