@@ -760,3 +760,66 @@ prouve que le cas heureux n'aurait rien vu.
   contrainte `request_decisions_reason_required_check` l'impose en base, et
   toute décision est journalisée. La divergence est signalée ici et dans
   `STATE_MACHINE.md` plutôt que masquée par un alignement silencieux.
+
+---
+
+## D-029 — Le disque « local » de Laravel publiait une route sur le stockage privé
+
+- **Date :** 2026-09-07
+- **Statut :** corrigé
+- **Le fait :** `config/filesystems.php` définit, dans le squelette Laravel, un
+  disque `local` enraciné sur `storage_path('app/private')` **avec
+  `'serve' => true`**. Cette clé publie une route `GET /storage/{path}` sur ce
+  répertoire — celui-là même où vivent les pièces d'identité et les actes
+  signés. C'est le répertoire que le garde-fou n°5 interdit d'exposer.
+- **Ce qui ne fuyait pas :** la route exige une signature d'URL, parce que la
+  clé `visibility` est absente du bloc et que Laravel retombe alors sur
+  `private`. Vérifié en conditions réelles : `GET /storage/acts/…/acte.pdf`
+  sans session répond **403**. Rien n'a fuité.
+- **Ce qui était quand même faux, et c'est le point :** avec une URL signée, la
+  route sert le fichier **sans consulter la Policy et sans écrire la ligne
+  d'audit**. Elle contourne exactement le contrôleur écrit pour cela. Et le
+  seul rempart restant était l'absence d'une clé — celle que porte le bloc
+  `public` situé six lignes plus bas, d'où un copier-coller suffirait à
+  ouvrir l'ensemble.
+- **Correction :** le disque `local` est réenraciné sur `storage/app/local` et
+  n'est plus servi. Rien dans l'application ne l'utilise — vérifié. Le repli du
+  disque par défaut passe de `local` à `private` : une variable
+  d'environnement absente ne doit pas ouvrir un accès.
+- **Prévention :** `Security\ExposedRoutesTest` vérifie la **configuration**,
+  pas des URL : aucun disque servi ne peut couvrir le stockage privé, aucune
+  route `GET` hors liste blanche n'est joignable sans session. Éprouvé en
+  réintroduisant délibérément le défaut : les deux tests le rattrapent, par
+  deux chemins indépendants.
+- **La leçon :** un défaut de configuration hérité d'un squelette ne se voit
+  dans aucune revue de code applicatif. Il faut le chercher dans la table de
+  routage.
+
+---
+
+## D-030 — Le filtre de compte actif manquait sur les routes de Fortify
+
+- **Date :** 2026-09-07
+- **Statut :** corrigé
+- **Le fait :** `EnsureAccountIsActive` était posé sur le groupe de routes
+  applicatives déclaré dans `routes/web.php`. Or Fortify enregistre ses propres
+  routes authentifiées, qui n'y sont pas. **Un agent suspendu y gardait la
+  main** : lecture de sa clé secrète 2FA, de son QR code et régénération de ses
+  codes de secours, jusqu'à sa déconnexion. Constaté, pas déduit — trois routes
+  répondaient encore `200` à un compte passé en `suspended`.
+- **Pourquoi R14 ne l'a pas vu :** les tests de R14 vérifiaient la connexion et
+  une session en cours **sur les routes applicatives**. Aucun ne sortait de ce
+  périmètre.
+- **Correction :** le filtre est posé sur le groupe `web` entier, dans
+  `bootstrap/app.php`. Il est sans effet sur un visiteur anonyme et précède
+  `auth`, l'utilisateur de session lui suffisant. Il est **retiré** du groupe
+  de `routes/web.php` : l'y laisser le ferait s'exécuter deux fois et
+  journaliser deux fois la révocation d'une session.
+- **Prévention :** `Security\AccountLifecycleTest` teste quatre routes de
+  Fortify **et** exige, structurellement, que *toute* route authentifiée porte
+  le filtre. Ce second test a lui-même dû être corrigé : il lisait les groupes
+  de middleware depuis le routeur, qui ne les connaît qu'une fois le noyau HTTP
+  démarré — il passait donc au vert en ne regardant rien. Il les lit désormais
+  depuis le noyau, et échoue bien quand on retire la correction.
+- **La leçon :** un filtre posé sur « toutes les routes » ne couvre que les
+  routes qu'on a écrites. Les paquets en ajoutent.

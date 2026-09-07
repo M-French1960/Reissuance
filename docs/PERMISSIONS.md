@@ -173,8 +173,12 @@ minimum :
 | R13 | Requête Eloquent sans `where` explicite sur les demandes, exécutée en tant qu'officier | ne retourne **que** son centre (portée globale) |
 | R14 | Utilisateur désactivé tentant de se connecter | refus, et session existante invalidée |
 | R15 | Officier consultant une pièce d'identité | accès accordé **et** ligne d'audit écrite |
+| R16 | Requête `GET` quelconque sans session | seules les routes de la liste blanche répondent |
+| R17 | Disque servi par URL enraciné sur le stockage privé | aucun, vérifié sur la configuration |
+| R18 | Champs surnuméraires postés sur un formulaire | ignorés : ni propriétaire, ni état, ni rôle, ni valeur juridique ne changent |
+| R19 | Compte suspendu sur une route enregistrée par Fortify | accès refusé, comme sur les routes applicatives |
 
-### 4.1 État d'implémentation au jalon 2
+### 4.1 État d'implémentation (mis à jour au jalon 6)
 
 | # | Implémenté | Où |
 |---|---|---|
@@ -182,7 +186,7 @@ minimum :
 | R2 | ✅ | `IdentityDocumentTest::r2_…` et `r2bis_…` |
 | R3 | ✅ | `AuthorizationTest::r3_…` |
 | R4 | ✅ | `AuthorizationTest::r4_…` |
-| R5 | ✅ | `VerificationWorkflowTest::r5_…` et `r5bis_…` (4 étapes sur 5 ne suffisent pas) |
+| R5 | ✅ | `VerificationWorkflowTest::r5_…` et `r5bis_…` (3 vérifications sur 4 ne suffisent pas — D-027) |
 | R6 | ✅ | `AuthorizationTest::r6_…`, 4 états couverts |
 | R7 | ✅ | `AuthorizationTest::r7_…` |
 | R8 | ✅ | `AuthorizationTest::r8_…`, **les 7 états** |
@@ -193,6 +197,10 @@ minimum :
 | R13 | ✅ | `AuthorizationTest::r13_…` et 2 variantes |
 | R14 | ✅ | `LoginTest`, 3 tests (connexion + session en cours) |
 | R15 | ✅ | `IdentityDocumentTest::r15_…`, plus le refus qui n'écrit rien |
+| R16 | ✅ | `Security\ExposedRoutesTest`, lit la table de routage — pas une liste d'URL |
+| R17 | ✅ | `Security\ExposedRoutesTest`, 4 angles ; **a révélé un défaut réel** (D-029) |
+| R18 | ✅ | `Security\MassAssignmentTest`, 6 formulaires |
+| R19 | ✅ | `Security\AccountLifecycleTest` ; **a révélé un défaut réel** (D-030) |
 
 **Les 15 tests de refus sont implémentés.** R5 est le dernier arrivé : il
 vérifie qu'une demande ne peut pas être acceptée tant que les 5 étapes de

@@ -31,9 +31,12 @@ Route::get('/sante', HealthController::class)->name('health');
  *   active    — le compte n'est ni suspendu ni desactive (R14)
  *   two-factor— les roles officiels ont une 2FA confirmee (4.1)
  *
- * Les routes d'authentification elles-memes sont enregistrees par Fortify.
+ * `active` n'est PAS repete ici : il est pose sur le groupe `web` entier dans
+ * bootstrap/app.php, pour couvrir aussi les routes que Fortify enregistre
+ * lui-meme, qui lui echappaient. Le repeter le ferait s'executer deux fois et
+ * journaliser deux fois la revocation d'une session.
  */
-Route::middleware(['auth', 'active'])->group(function (): void {
+Route::middleware('auth')->group(function (): void {
     // Accessible SANS le filtre two-factor : c'est ici qu'on la configure.
     Route::get('/double-authentification', TwoFactorSetupController::class)
         ->name('two-factor.setup');

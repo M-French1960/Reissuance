@@ -15,7 +15,9 @@ return [
     |
     */
 
-    'default' => env('FILESYSTEM_DISK', 'local'),
+    // Repli sur le disque prive, jamais sur un disque servi par URL : une
+    // variable d'environnement absente ne doit pas ouvrir un acces.
+    'default' => env('FILESYSTEM_DISK', 'private'),
 
     /*
     |--------------------------------------------------------------------------
@@ -43,10 +45,25 @@ return [
             'report' => false,
         ],
 
+        /*
+         * Disque « local » du squelette Laravel, neutralise.
+         *
+         * Par defaut il est enracine dans storage/app/private AVEC
+         * 'serve' => true, ce qui publie une route GET /storage/{path} sur le
+         * repertoire meme ou vivent les pieces d'identite et les actes signes.
+         * Cette route est protegee par une signature d'URL, mais elle sert le
+         * fichier SANS consulter la Policy et SANS journaliser la lecture :
+         * elle contourne exactement le controleur ecrit pour cela, et le seul
+         * rempart restant serait l'absence de la cle 'visibility' juste
+         * au-dessus du bloc 'public' qui, lui, la porte.
+         *
+         * On le reenracine ailleurs et on ne le sert pas. Rien dans
+         * l'application ne l'utilise (garde-fou n5).
+         */
         'local' => [
             'driver' => 'local',
-            'root' => storage_path('app/private'),
-            'serve' => true,
+            'root' => storage_path('app/local'),
+            'serve' => false,
             'throw' => false,
             'report' => false,
         ],
