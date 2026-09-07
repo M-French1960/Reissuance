@@ -330,7 +330,7 @@ Ils sont listés ici pour éviter qu'une décision implicite ne s'installe.
 | Pest et Larastan | **Toujours bloqués par le réseau — voir D-012.** Fortify s'est installé au jalon 2, mais pas ces deux-là. |
 | ~~Plan Vercel~~ | **Sans objet — tranché en D-011** |
 | 2FA du citoyen (TOTP / SMS / aucun) | **Toujours ouvert.** Le TOTP fonctionne pour tous les rôles ; il reste facultatif pour le citoyen faute de réponse sur la faisabilité SMS. |
-| Défense en profondeur RLS | Jalon 6, après évaluation du coût |
+| Défense en profondeur RLS | **Évalué au jalon 6 — voir D-037 et `docs/RLS.md`. Recommandé, décision d'adoption ouverte.** |
 | Conservation du genre et des données parentales | Après avis juridique |
 
 ---
@@ -1004,3 +1004,33 @@ prouve que le cas heureux n'aurait rien vu.
   conservation et leur durée de rétention. Les archives contiennent des données
   d'identité **et** les clés de déchiffrement : ce sont des décisions de
   service, liées au bloc B de `COMPLIANCE_OPEN_QUESTIONS.md`.
+
+---
+
+## D-037 — RLS : évalué en le construisant, recommandé, non adopté dans ce jalon
+
+- **Date :** 2026-09-07
+- **Statut :** **évaluation livrée — décision d'adoption à prendre par vous**
+- **Ce qui a été fait :** le prototype a été construit, appliqué à une copie de
+  la base et mesuré. Il est conservé dans `docs/prototypes/rls/`, en `.txt`
+  pour qu'il ne s'exécute ni en migration ni en test. Analyse complète dans
+  `docs/RLS.md`.
+- **La protection est démontrée, pas supposée :** avec la portée globale
+  entièrement contournée, un officier du centre A voit **2 demandes sur 2** sans
+  politique et **1 sur 2** avec. Une écriture hors périmètre affecte 0 ligne.
+  C'est exactement le défaut de D-013, où la portée globale avait disparu sans
+  bruit parce que Pint avait retiré les `use`.
+- **Le coût en performance est nul :** +0,2 ms de planification sur 515
+  demandes, exécution dans le bruit de mesure.
+- **Le coût réel est ailleurs :** politique naïve, **157 tests sur 340 en
+  échec**. Politique affinée avec un contexte `system`, **340 sur 340** — mais
+  ce second chiffre ne prouve rien, car les tests passent alors **en
+  contournant** la politique. Des tests qui posent un vrai contexte restent à
+  écrire.
+- **Pourquoi je n'adopte pas maintenant :** avec un mutualiseur de connexions en
+  mode transaction, une variable de session qui survit à la transaction devient
+  une fuite **entre utilisateurs**. Mal posée, la politique **créerait** la
+  fuite qu'elle doit empêcher. Cette question d'exploitation doit être tranchée
+  avant, pas après.
+- **Recommandation :** adopter, dans un jalon court et dédié, dont le contenu
+  est la liste de `docs/RLS.md` §5 et le critère d'acceptation le test du §3.1.

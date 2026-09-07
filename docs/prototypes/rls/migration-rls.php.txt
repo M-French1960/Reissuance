@@ -1,0 +1,79 @@
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Support\Facades\DB;
+
+/** PROTOTYPE — mesure du coût au jalon 6, non destiné à être conservé tel quel. */
+return new class extends Migration
+{
+    public function up(): void
+    {
+        DB::statement(<<<'SQL'
+            CREATE OR REPLACE FUNCTION phoenix_ctx(cle text)
+            RETURNS text LANGUAGE sql STABLE AS $$
+              SELECT nullif(current_setting('phoenix.' || cle, true), '');
+            $$;
+        SQL);
+
+        DB::statement('ALTER TABLE reissuance_requests ENABLE ROW LEVEL SECURITY');
+
+        // Lecture : la transcription de RequestVisibilityScope.
+        DB::statement(<<<'SQL'
+            CREATE POLICY phoenix_request_read ON reissuance_requests
+            FOR SELECT USING (
+              CASE phoenix_ctx('role')
+                WHEN 'citizen' THEN user_id = phoenix_ctx('user_id')::bigint
+                WHEN 'officer' THEN civil_status_center_id = phoenix_ctx('center_id')::bigint
+                                    AND status <> 'draft'
+                WHEN 'mayor'   THEN commune_id = phoenix_ctx('commune_id')::bigint
+                                    AND status IN ('awaiting_signature', 'escalated')
+                WHEN 'admin'   THEN false
+                -- Travaux de fond : file d'attente, commandes, semences. Sans
+                -- ce cas, le worker ne verrait rien et les notifications ne
+                -- partiraient jamais.
+                WHEN 'system'  THEN true
+                ELSE false
+              END
+            );
+        SQL);
+
+        // Ecriture : un citoyen ne cree une demande que pour lui-meme.
+        DB::statement(<<<'SQL'
+            CREATE POLICY phoenix_request_write ON reissuance_requests
+            FOR INSERT WITH CHECK (
+              CASE phoenix_ctx('role')
+                WHEN 'citizen' THEN user_id = phoenix_ctx('user_id')::bigint
+                WHEN 'system'  THEN true
+                ELSE false
+              END
+            );
+        SQL);
+
+        // Mise a jour : l'officier et le maire font avancer les dossiers de
+        // leur perimetre ; le statut cible reste garde par le declencheur.
+        DB::statement(<<<'SQL'
+            CREATE POLICY phoenix_request_update ON reissuance_requests
+            FOR UPDATE USING (
+              CASE phoenix_ctx('role')
+                WHEN 'citizen' THEN user_id = phoenix_ctx('user_id')::bigint
+                WHEN 'officer' THEN civil_status_center_id = phoenix_ctx('center_id')::bigint
+                WHEN 'mayor'   THEN commune_id = phoenix_ctx('commune_id')::bigint
+                WHEN 'system'  THEN true
+                ELSE false
+              END
+            );
+        SQL);
+
+    }
+
+    public function down(): void
+    {
+        DB::statement('DROP POLICY IF EXISTS phoenix_request_read ON reissuance_requests');
+        DB::statement('DROP POLICY IF EXISTS phoenix_request_write ON reissuance_requests');
+        DB::statement('DROP POLICY IF EXISTS phoenix_request_update ON reissuance_requests');
+        DB::statement('ALTER TABLE reissuance_requests DISABLE ROW LEVEL SECURITY');
+        DB::statement('DROP FUNCTION IF EXISTS phoenix_ctx(text)');
+    }
+};

@@ -1,0 +1,65 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Feature;
+
+use App\Enums\RequestStatus;
+use App\Models\CivilStatusCenter;
+use App\Models\ReissuanceRequest;
+use App\Models\User;
+use App\Services\RequestTransitionService;
+use Illuminate\Support\Facades\DB;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
+
+/** PROTOTYPE : la politique rattrape-t-elle une portee globale disparue ? */
+class RlsProofTest extends TestCase
+{
+    private function poserLeContexte(User $u): void
+    {
+        DB::statement("SELECT set_config('phoenix.role', ?, false)", [$u->role->value]);
+        DB::statement("SELECT set_config('phoenix.user_id', ?, false)", [(string) $u->id]);
+        DB::statement("SELECT set_config('phoenix.center_id', ?, false)", [(string) ($u->civil_status_center_id ?? 0)]);
+        DB::statement("SELECT set_config('phoenix.commune_id', ?, false)", [(string) ($u->commune_id ?? 0)]);
+    }
+
+    #[Test]
+    public function sans_portee_globale_la_base_restreint_quand_meme(): void
+    {
+        $centreA = CivilStatusCenter::factory()->create();
+        $centreB = CivilStatusCenter::factory()->create();
+        $officierA = User::factory()->officer($centreA)->create();
+
+        foreach ([$centreA, $centreB] as $i => $centre) {
+            $citoyen = User::factory()->citizen()->create();
+            $d = ReissuanceRequest::withoutGlobalScopes()->create([
+                'reference' => ReissuanceRequest::generateReference(),
+                'user_id' => $citoyen->id,
+                'civil_status_center_id' => $centre->id,
+                'commune_id' => $centre->commune_id,
+                'reason' => 'lost',
+                'full_name_at_birth' => 'Personne DE TEST',
+                'date_of_birth' => '1990-01-15', 'place_of_birth' => 'Yaoundé',
+                'registration_year' => 1990,
+                'father_name' => 'P', 'father_nationality' => 'C',
+                'mother_name' => 'M', 'mother_nationality' => 'C',
+                'parents_address' => 'A',
+            ]);
+            $d->forceFill(['submitted_at' => now()])->save();
+            app(RequestTransitionService::class)->transition($d, RequestStatus::Pending, $citoyen);
+        }
+
+        // On simule EXACTEMENT le defaut deja survenu : la portee globale a
+        // disparu sans bruit, et la requete n'a aucun `where` de securite.
+        $this->poserLeContexte($officierA);
+
+        $sansPortee = ReissuanceRequest::withoutGlobalScopes()->count();
+
+        $this->assertSame(
+            1,
+            $sansPortee,
+            "Sans la portee globale, l'officier du centre A voit {$sansPortee} demande(s) : la base ne l'a pas restreint."
+        );
+    }
+}
