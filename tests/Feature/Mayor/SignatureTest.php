@@ -208,7 +208,7 @@ class SignatureTest extends TestCase
         // Et le nouveau cycle repart vide.
         $workflow = app(VerificationWorkflow::class);
         $this->assertFalse($workflow->isComplete($this->demande));
-        $this->assertSame([1, 2, 3, 4, 5], $workflow->missingSteps($this->demande));
+        $this->assertSame([1, 2, 3, 4], $workflow->missingSteps($this->demande));
     }
 
     #[Test]

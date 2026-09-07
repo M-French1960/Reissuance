@@ -53,8 +53,8 @@ unique : l'implémentation la reproduit, elle ne l'interprète pas.
 | T1 | *(néant)* | citoyen | créer | `draft` | — | profil citoyen complet |
 | T2 | `draft` | citoyen (auteur) | envoyer | `pending` | — | **toutes** les pièces présentes et tous les champs requis validés côté serveur |
 | T3 | `pending` | officier | prendre en charge | `under_review` | — | l'officier est rattaché au **centre** de la demande ; la demande n'est prise par personne d'autre |
-| T4 | `under_review` | officier (celui qui a pris en charge) | accepter | `awaiting_signature` | facultatif | **les 5 étapes de vérification ont un résultat enregistré** |
-| T5 | `under_review` | officier (celui qui a pris en charge) | rejeter | `rejected` | **obligatoire** | les 5 étapes ont un résultat enregistré |
+| T4 | `under_review` | officier (celui qui a pris en charge) | accepter | `awaiting_signature` | facultatif | **les 4 vérifications ont un résultat enregistré** (la 5e étape est la décision elle-même — D-027) |
+| T5 | `under_review` | officier (celui qui a pris en charge) | rejeter | `rejected` | **obligatoire** | ⚠ **divergence ouverte** : cette ligne exige les vérifications, le code ne les exige que pour T4 — voir D-028 |
 | T6 | `under_review` | officier (celui qui a pris en charge) | escalader | `escalated` | **obligatoire** | — |
 | T7 | `awaiting_signature` | maire | signer | `signed` | — | le maire est rattaché à la **commune** de la demande ; une signature est produite et son empreinte enregistrée |
 | T8 | `awaiting_signature` | maire | retourner à l'officier | `under_review` | **obligatoire** | ⚠ **À TRANCHER** — voir §3.1 |
@@ -68,7 +68,7 @@ unique : l'implémentation la reproduit, elle ne l'interprète pas.
 - **Aucun chemin ne mène à `signed` sans un maire habilité de la commune.**
   Seules T7 et T9 produisent `signed`.
 - **Aucun chemin ne mène à `awaiting_signature` sans un officier habilité du
-  centre ayant renseigné les 5 étapes.** Seule T4 y mène.
+  centre ayant renseigné les 4 vérifications.** Seule T4 y mène.
 - **`pending` ne peut pas devenir `awaiting_signature` directement.** Le passage
   par `under_review` est obligatoire.
 - **`signed` et `rejected` n'ont aucune transition sortante.** Toute reprise
@@ -118,7 +118,7 @@ transition d'état — voir `docs/PERMISSIONS.md`.
 
 ### 3.3 ⚠ Que deviennent les vérifications après un retour ?
 
-Quand une demande revient en `under_review`, les 5 étapes déjà renseignées
+Quand une demande revient en `under_review`, les étapes déjà renseignées
 sont-elles conservées ou remises à zéro ?
 
 Je recommande : **conservées et horodatées, jamais écrasées**. Une nouvelle
@@ -230,8 +230,8 @@ Le §7 demande des tests exhaustifs. Concrètement, pour 7 états × 4 rôles
 3. **Refus par rattachement** : un officier du centre A ne peut pas prendre en
    charge une demande du centre B, même avec le bon rôle et le bon état. Idem
    pour un maire hors de sa commune.
-4. **Refus par étapes manquantes** : T4 échoue tant que les 5 étapes n'ont pas
-   de résultat.
+4. **Refus par étapes manquantes** : T4 échoue tant que les 4 vérifications
+   n'ont pas de résultat.
 5. **Refus de motif manquant** : T5, T6, T8, T9, T10, T11 échouent sans motif.
 6. **Terminalité** : aucune sortie de `signed` ni de `rejected`, testée
    depuis le service **et** en SQL direct pour vérifier le déclencheur.

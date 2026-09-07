@@ -695,3 +695,68 @@ prouve que le cas heureux n'aurait rien vu.
   avec une violation délibérée.
 - **La leçon, encore :** une suite verte prouve ce qu'elle teste. Poster vers
   une route ne rend pas la page.
+
+---
+
+## D-027 — La cinquième étape est la décision, pas son propre préalable
+
+- **Date :** 2026-09-07
+- **Statut :** corrigé, et le parcours officier était bloqué depuis le jalon 4
+- **Le fait :** `VerificationWorkflow::isComplete()` exigeait un résultat
+  enregistré pour les **cinq** étapes avant d'autoriser l'acceptation (T4). Or
+  la cinquième étape s'appelle « Décision » et **aucun chemin HTTP ne
+  l'enregistre** : `acknowledge` n'accepte que les étapes 1 et 3, l'étape 2
+  vient de la base de la police, l'étape 4 du registre. La cinquième ne pouvait
+  donc naître que de la décision elle-même, qu'elle bloquait.
+
+  Conséquence : **aucune demande ne pouvait quitter `under_review` par
+  l'interface.** Le bouton « Accepter » était rendu `disabled` en permanence,
+  et le contrôleur aurait refusé de toute façon. Le parcours complet du service
+  était interrompu depuis le jalon 4.
+
+- **Pourquoi aucun test ne l'a vu :** tous les tests qui avaient besoin d'une
+  demande acceptée appelaient `VerificationWorkflow::record()` **directement**,
+  pour les cinq étapes. C'est légitime pour tester une règle — mais aucun test
+  ne parcourait le chemin réel, et le chemin réel n'existait pas. Le test
+  `r5bis_quatre_etapes_sur_cinq_ne_suffisent_pas` **passait au vert en
+  constatant précisément le blocage**, qu'il prenait pour la règle.
+
+- **Correction :** `VerificationWorkflow::VERIFICATION_STEPS` vaut `[1, 2, 3, 4]`.
+  Ce sont ces quatre-là qui doivent porter un résultat avant une acceptation.
+  La cinquième étape reste le cinquième **écran** — celui de la décision — et
+  la décision est enregistrée dans `request_decisions`, pas dans
+  `verification_steps`.
+
+- **Ce que cela ne desserre pas :** la barrière anti-fraude est intacte. Aucune
+  acceptation n'est possible sans que les quatre vérifications aient un
+  résultat enregistré, nominatif et horodaté. L'ensemble des états atteignables
+  ne s'élargit que du seul chemin que le brief prévoit.
+
+- **Prévention :** `tests/Feature/EndToEnd/CompleteJourneyTest.php` parcourt le
+  brouillon jusqu'à l'acte signé **par les routes seulement**, sans appeler un
+  seul service applicatif, et affiche chaque écran avant de le poster. C'est ce
+  test qui a révélé le blocage, à la première exécution.
+
+- **La leçon :** un test qui met en place son état par les services teste une
+  règle, pas un chemin. Il faut au moins un test qui ne connaisse que les URL.
+
+---
+
+## D-028 — Divergence à trancher sur la condition de T5
+
+- **Date :** 2026-09-07
+- **Statut :** **ouvert — signalé, non tranché de ma propre autorité**
+- **Le fait :** `docs/STATE_MACHINE.md` donne à T5 (rejet par l'officier) la
+  même condition qu'à T4 : « les 5 étapes ont un résultat enregistré ». Le code
+  ne l'applique pas : il n'exige les vérifications que pour une **acceptation**.
+  Un rejet ou une escalade ne demandent qu'un motif d'au moins dix caractères.
+- **Pourquoi je ne tranche pas seul :** les deux lectures se défendent. Exiger
+  les quatre vérifications avant un rejet garantit qu'aucun dossier n'est
+  écarté sans avoir été instruit — mais impose quatre contrôles inutiles pour
+  un motif comme « la demande relève d'un autre centre d'état civil », ce qui
+  contredit le §8.2 du brief. Ne pas les exiger rend le rejet plus rapide que
+  l'acceptation, ce qui est un déséquilibre à assumer explicitement.
+- **En attendant :** le code reste tel quel, le motif est obligatoire, la
+  contrainte `request_decisions_reason_required_check` l'impose en base, et
+  toute décision est journalisée. La divergence est signalée ici et dans
+  `STATE_MACHINE.md` plutôt que masquée par un alignement silencieux.

@@ -30,6 +30,7 @@ use Illuminate\Support\Facades\DB;
  */
 final class VerificationWorkflow
 {
+    /** Les cinq écrans du poste de vérification. */
     public const STEPS = [
         1 => 'Informations de la demande',
         2 => "Vérification de la pièce d'identité",
@@ -37,6 +38,17 @@ final class VerificationWorkflow
         4 => "Recherche dans le registre d'état civil",
         5 => 'Décision',
     ];
+
+    /**
+     * Les étapes qui doivent porter un résultat avant toute acceptation.
+     *
+     * La cinquième, « Décision », n'en fait PAS partie : elle est la décision
+     * elle-même, enregistrée dans request_decisions. L'exiger comme préalable
+     * à la décision rendait l'acceptation inatteignable — voir D-027.
+     *
+     * @var list<int>
+     */
+    public const VERIFICATION_STEPS = [1, 2, 3, 4];
 
     public function __construct(
         private readonly IdentityLookupProvider $identity,
@@ -52,24 +64,20 @@ final class VerificationWorkflow
             ->keyBy('step');
     }
 
-    /** Les 5 étapes ont-elles toutes un résultat ? Condition de la transition T4. */
+    /** Les 4 vérifications ont-elles toutes un résultat ? Condition de T4. */
     public function isComplete(ReissuanceRequest $request): bool
     {
-        $done = $this->steps($request)->filter(
-            fn (VerificationStep $s): bool => $s->result !== null
-        );
-
-        return $done->keys()->sort()->values()->all() === [1, 2, 3, 4, 5];
+        return $this->missingSteps($request) === [];
     }
 
-    /** @return list<int> étapes restant à renseigner */
+    /** @return list<int> vérifications restant à renseigner */
     public function missingSteps(ReissuanceRequest $request): array
     {
         $done = $this->steps($request)
             ->filter(fn (VerificationStep $s): bool => $s->result !== null)
             ->keys()->all();
 
-        return array_values(array_diff([1, 2, 3, 4, 5], $done));
+        return array_values(array_diff(self::VERIFICATION_STEPS, $done));
     }
 
     /**

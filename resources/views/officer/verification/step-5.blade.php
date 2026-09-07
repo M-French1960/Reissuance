@@ -6,10 +6,14 @@
                 <caption class="visually-hidden">Résultat de chaque étape</caption>
                 <thead><tr><th scope="col">Étape</th><th scope="col">Résultat</th><th scope="col">Enregistré</th></tr></thead>
                 <tbody>
-                    @foreach ($steps as $numero => $libelle)
+                    {{-- Les quatre vérifications. La cinquième étape est la
+                         décision ci-dessous : elle n'a pas de résultat à
+                         renseigner ici, et l'exiger rendait l'acceptation
+                         inatteignable (D-027). --}}
+                    @foreach (\App\Services\VerificationWorkflow::VERIFICATION_STEPS as $numero)
                         @php $e = $etapes->get($numero); @endphp
                         <tr>
-                            <td>{{ $numero }}. {{ $libelle }}</td>
+                            <td>{{ $numero }}. {{ $steps[$numero] }}</td>
                             <td>
                                 @if ($e?->result)
                                     <span class="badge badge--{{ $e->result->tone() }}">{{ $e->result->label() }}</span>
@@ -20,14 +24,19 @@
                             <td>{{ $e?->completed_at?->translatedFormat('d/m/Y H:i') ?? '—' }}</td>
                         </tr>
                     @endforeach
+                    <tr>
+                        <td>5. {{ $steps[5] }}</td>
+                        <td><span class="badge badge--neutral">En cours</span></td>
+                        <td>—</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
 
         @unless ($complet)
             <x-alert variant="danger" title="Vérification incomplète">
-                Vous ne pourrez pas accepter cette demande tant que toutes les
-                étapes n'ont pas de résultat. Il manque :
+                Vous ne pourrez pas accepter cette demande tant que les quatre
+                vérifications n'ont pas de résultat. Il manque :
                 @foreach ($manquantes as $n)
                     <strong>{{ $n }}. {{ $steps[$n] }}</strong>@if (! $loop->last), @endif
                 @endforeach.

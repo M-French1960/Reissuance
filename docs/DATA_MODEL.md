@@ -142,8 +142,11 @@ du nom ou du numéro de pièce), `mime_type`, `size_bytes`, `checksum_sha256`,
 
 ### 2.4 Traçabilité du travail — entités absentes du brief, déduites des parcours
 
-**`verification_steps`** — les 5 étapes du §5.3, persistées **séparément** pour
-qu'une vérification interrompue soit reprenable.
+**`verification_steps`** — les vérifications du §5.3, persistées
+**séparément** pour qu'une vérification interrompue soit reprenable. En
+pratique la table ne porte que les **quatre** premières étapes : la cinquième
+est la décision de l'officier, qui vit dans `request_decisions` (D-027). La
+colonne accepte toujours `5`, la contrainte n'a pas été resserrée.
 
 `id`, `request_id`, `cycle` (entier, incrémenté à chaque retour du maire —
 voir `STATE_MACHINE.md` §3.3), `step` (1..5), `officer_id`, `result`

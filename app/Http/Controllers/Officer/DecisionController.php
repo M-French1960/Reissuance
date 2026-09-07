@@ -74,6 +74,10 @@ class DecisionController extends Controller
         // vérification n'a pas été menée. Le déclencheur PostgreSQL ne peut
         // pas connaître cette règle — elle porte sur les étapes, pas sur le
         // couple de statuts — donc elle est vérifiée ici ET testée (R5).
+        //
+        // Ce sont les QUATRE vérifications qui sont exigées : la cinquième
+        // étape est cette décision même, et l'exiger comme son propre
+        // préalable rendait l'acceptation inatteignable (D-027).
         if ($decision === DecisionType::Accepted && ! $this->workflow->isComplete($reissuanceRequest)) {
             $manquantes = $this->workflow->missingSteps($reissuanceRequest);
             $libelles = array_map(
@@ -82,7 +86,7 @@ class DecisionController extends Controller
             );
 
             return back()->withErrors([
-                'decision' => "Vous ne pouvez pas accepter cette demande tant que toutes les étapes n'ont pas de résultat. Il manque : ".implode(' — ', $libelles),
+                'decision' => "Vous ne pouvez pas accepter cette demande tant que les quatre vérifications n'ont pas de résultat. Il manque : ".implode(' — ', $libelles),
             ])->withInput();
         }
 

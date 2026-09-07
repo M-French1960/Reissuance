@@ -33,6 +33,9 @@ class ProfileController extends Controller
             $profile->fill($data);
             $profile->completed_at = now();
             $user->profile()->save($profile);
+            // Sans cela, la relation reste au null charge deux lignes plus
+            // haut : la suite de la requete croirait le profil incomplet.
+            $user->setRelation('profile', $profile);
 
             AuditLog::create([
                 'actor_id' => $user->id,

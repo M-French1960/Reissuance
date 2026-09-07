@@ -190,12 +190,12 @@ s'applique plus.
 | Service indisponible | `unavailable` enregistré dans l'étape | Message explicite, bouton « Réessayer », possibilité de poursuivre les autres étapes |
 | Délai dépassé | idem `unavailable` | idem |
 | Réponse malformée | `inconclusive`, réponse brute conservée | Invitation à relancer, puis à escalader |
-| Panne prolongée | Aucune acceptation possible sans les 5 étapes (T4) | La demande reste en `under_review` ; l'escalade au maire (T6) reste ouverte |
+| Panne prolongée | Aucune acceptation possible sans les 4 vérifications (T4) | La demande reste en `under_review` ; l'escalade au maire (T6) reste ouverte |
 
 **Ce qu'aucune panne ne permet :** contourner une étape. T4 exige un résultat
-enregistré pour les 5 étapes — `unavailable` **est** un résultat enregistré, ce
-qui débloque la situation sans masquer le fait que la vérification n'a pas
-abouti. L'officier reste responsable de sa décision, et le journal montre
+enregistré pour les 4 vérifications (D-027) — `unavailable` **est** un résultat
+enregistré, ce qui débloque la situation sans masquer le fait que la
+vérification n'a pas abouti. L'officier reste responsable de sa décision, et le journal montre
 exactement sur quoi elle reposait.
 
 ---

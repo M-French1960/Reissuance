@@ -95,7 +95,7 @@ class VerificationWorkflowTest extends TestCase
      * dont la vérification n'a pas été menée.
      */
     #[Test]
-    public function r5_accepter_sans_les_cinq_etapes_est_refuse(): void
+    public function r5_accepter_sans_les_verifications_est_refuse(): void
     {
         $this->prendEnCharge();
 
@@ -107,14 +107,20 @@ class VerificationWorkflowTest extends TestCase
         $this->assertSame(0, $this->demande->decisions()->count());
     }
 
-    /** Même avec quatre étapes sur cinq : toujours refusé. */
+    /**
+     * Meme avec trois verifications sur quatre : toujours refuse.
+     *
+     * La quatrieme manquante est toujours une VRAIE verification, jamais la
+     * cinquieme etape : celle-ci est la decision elle-meme et ne peut pas
+     * etre son propre prealable (D-027).
+     */
     #[Test]
-    public function r5bis_quatre_etapes_sur_cinq_ne_suffisent_pas(): void
+    public function r5bis_trois_verifications_sur_quatre_ne_suffisent_pas(): void
     {
         $this->prendEnCharge();
         $workflow = app(VerificationWorkflow::class);
 
-        foreach ([1, 2, 3, 4] as $etape) {
+        foreach ([1, 2, 3] as $etape) {
             $workflow->record($this->demande, $etape, $this->officier, VerificationResult::Match);
         }
 
@@ -123,6 +129,7 @@ class VerificationWorkflowTest extends TestCase
             ->assertSessionHasErrors('decision');
 
         $this->assertSame(RequestStatus::UnderReview, $this->demande->refresh()->status);
+        $this->assertSame([4], $workflow->missingSteps($this->demande));
     }
 
     #[Test]
@@ -270,6 +277,6 @@ class VerificationWorkflowTest extends TestCase
         // Nouvelle session : le résultat est toujours là.
         $etapes = app(VerificationWorkflow::class)->steps($this->demande->refresh());
         $this->assertSame(VerificationResult::Match, $etapes->get(1)?->result);
-        $this->assertSame([2, 3, 4, 5], app(VerificationWorkflow::class)->missingSteps($this->demande));
+        $this->assertSame([2, 3, 4], app(VerificationWorkflow::class)->missingSteps($this->demande));
     }
 }
