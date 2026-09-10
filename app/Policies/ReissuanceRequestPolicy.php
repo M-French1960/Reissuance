@@ -76,6 +76,29 @@ class ReissuanceRequestPolicy
             && $request->assigned_officer_id === null;
     }
 
+    /**
+     * Ecrire dans le fil du dossier — « Contact Officer ».
+     *
+     * Le demandeur, l'officier du centre et le maire de la commune. PAS
+     * l'administrateur : le 4.2 lui interdit le contenu des dossiers, et un
+     * echange sur un dossier EST du contenu de dossier.
+     *
+     * Pas non plus sur un brouillon : il n'y a personne en face.
+     */
+    public function message(User $user, ReissuanceRequest $request): bool
+    {
+        if ($request->status === RequestStatus::Draft) {
+            return false;
+        }
+
+        return match ($user->role) {
+            UserRole::Citizen => $request->user_id === $user->id,
+            UserRole::Officer => $request->civil_status_center_id === $user->civil_status_center_id,
+            UserRole::Mayor => $request->commune_id === $user->commune_id,
+            UserRole::Admin => false,
+        };
+    }
+
     public function submit(User $user, ReissuanceRequest $request): bool
     {
         return $this->update($user, $request);

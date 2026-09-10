@@ -126,6 +126,8 @@
             </div>
         </x-card>
     @else
+    <x-message-thread :demande="$demande" :messages="$messages" />
+
         <x-card title="Votre décision">
             @if ($estEscaladee)
                 <p>Ce dossier a été escaladé par l'officier. Trois issues vous sont ouvertes.</p>

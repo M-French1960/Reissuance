@@ -93,6 +93,10 @@
         </div>
     </x-card>
 
+    @if ($demande->status !== \App\Enums\RequestStatus::Draft)
+        <x-message-thread :demande="$demande" :messages="$messages" />
+    @endif
+
     @can('cancel', $demande)
         <x-card title="Annuler ma demande">
             <p>

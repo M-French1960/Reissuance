@@ -8,7 +8,7 @@ use App\Contracts\SignatureProvider;
 use App\Enums\RequestStatus;
 use App\Enums\VerificationResult;
 use App\Integrations\Fake\FakeSignatureProvider;
-use App\Integrations\Real\AccreditedSignatureProvider;
+use App\Integrations\Real\DocusignSignatureProvider;
 use App\Models\CivilStatusCenter;
 use App\Models\DocumentSignature;
 use App\Models\ReissuanceRequest;
@@ -291,7 +291,7 @@ class SignatureTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessageMatches("/n'est pas implémenté/");
 
-        (new AccreditedSignatureProvider)->sign('%PDF-1.4', []);
+        (new DocusignSignatureProvider)->sign('%PDF-1.4', []);
     }
 
     #[Test]

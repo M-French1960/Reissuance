@@ -112,6 +112,12 @@ class ReissuanceRequest extends Model
         return $this->hasMany(FacialComparison::class, 'request_id');
     }
 
+    /** Fil d'echanges sur ce dossier — « Contact Officer ». */
+    public function messages(): HasMany
+    {
+        return $this->hasMany(RequestMessage::class, 'request_id');
+    }
+
     public function decisions(): HasMany
     {
         return $this->hasMany(RequestDecision::class, 'request_id');

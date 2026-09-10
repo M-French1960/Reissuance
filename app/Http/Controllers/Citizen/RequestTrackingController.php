@@ -38,6 +38,7 @@ class RequestTrackingController extends Controller
         return view('citizen.requests.show', [
             'demande' => $reissuanceRequest->load('center.commune', 'attachments', 'signature.mayor'),
             'etapes' => $this->timeline($reissuanceRequest),
+            'messages' => $reissuanceRequest->messages()->with('author:id,name')->oldest()->get(),
         ]);
     }
 

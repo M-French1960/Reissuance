@@ -58,6 +58,8 @@
         @endunless
     </x-card>
 
+    <x-message-thread :demande="$demande" :messages="$messages" />
+
     @if ($peutDecider)
         <x-card title="Votre décision">
             <form method="POST" action="{{ route('officer.decision.store', $demande) }}">

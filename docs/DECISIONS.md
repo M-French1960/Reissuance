@@ -1269,3 +1269,59 @@ prouve que le cas heureux n'aurait rien vu.
 - **Un piège écarté au passage :** la DGSN publie des frais pour la CNI. Ce
   n'est **pas** le tarif d'une réédition d'acte d'état civil, qui reste inconnu.
   Aucun montant n'est repris de l'un pour l'autre.
+
+---
+
+## D-047 — « Contact Officer » : un fil attaché au dossier, pas une messagerie
+
+- **Date :** 2026-09-10
+- **Statut :** appliqué
+- **Décision :** le canal entre le demandeur et l'administration est un fil de
+  messages **attaché à une demande**. On n'écrit pas à un agent, on écrit **au
+  sujet d'un dossier**.
+- **Pourquoi ce choix plutôt qu'une messagerie entre personnes :** n'importe
+  quel officier du centre peut reprendre la conversation si celui qui suivait
+  le dossier est absent — vérifié par un test. Une messagerie nominative aurait
+  fait dépendre le service de la présence d'une personne.
+- **L'administrateur en est exclu, et ce n'est pas un oubli.** Le §4.2 lui
+  interdit le contenu des dossiers, et un échange sur un dossier **est** du
+  contenu de dossier : lui ouvrir le fil rouvrirait par la fenêtre ce que la
+  portée globale ferme. Refusé par la Policy **et** par une contrainte
+  `CHECK` en base, qui rejette un message dont l'auteur est administrateur même
+  en SQL direct.
+- **Pas de pièces jointes.** Un canal de messages qui accepte des fichiers
+  devient une seconde voie de dépôt de pièces d'identité, hors du contrôle de
+  `IdentityDocumentStore`. Si le demandeur doit fournir une pièce, cela passe
+  par le dossier.
+- **Le journal dit qu'un message a été envoyé, jamais son contenu.** Un échange
+  sur un dossier d'état civil contient des données personnelles (garde-fou
+  n°6). Un test compare le texte du message au contenu de la ligne d'audit.
+- **Ce que le test a révélé sur la portée globale :** le maire ne peut pas
+  écrire sur une demande `pending`, non pas parce que la Policy le refuse, mais
+  parce que sa portée globale l'empêche de la voir — la liaison de modèle échoue
+  avant, et il obtient 404. La Policy reste écrite en termes de commune, comme
+  seconde barrière si la portée changeait un jour.
+
+---
+
+## D-048 — Docusign nommé ne répond pas à la question A1
+
+- **Date :** 2026-09-10
+- **Statut :** appliqué, question A1 **toujours ouverte**
+- **Le fait :** le diagramme v2 nomme **Docusign**. L'API eSignature REST
+  existe et est documentée — enveloppes, documents, destinataires, suivi de
+  statut (`developers.docusign.com`). L'adaptateur réel s'appelle désormais
+  `DocusignSignatureProvider`.
+- **Ce que cela règle :** on sait quelle interface implémenter. Ce n'est plus
+  une hypothèse de contrat.
+- **Ce que cela ne règle pas, et qu'il ne faut pas confondre :**
+  1. **La valeur juridique.** Une signature techniquement valide n'est pas un
+     acte qui fait foi. Question A1, toujours sans réponse. La mention « SANS
+     VALEUR JURIDIQUE » reste (D-025).
+  2. **La résidence des données.** Prestataire commercial étranger, données
+     d'identité : décision explicite requise sur le lieu de traitement.
+  3. **Le compte signataire.** La commune ou le maire nominativement ? Un
+     changement de maire invalide-t-il les actes antérieurs ?
+- **L'adaptateur lève une exception** nommant ces trois points. Un adaptateur
+  qui rendrait un document « signé » sans les avoir tranchés serait le chemin
+  par lequel un acte frauduleux sort du système.

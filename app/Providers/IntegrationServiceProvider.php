@@ -14,9 +14,9 @@ use App\Integrations\Fake\FakeFacialRecognitionProvider;
 use App\Integrations\Fake\FakeIdentityLookupProvider;
 use App\Integrations\Fake\FakePaymentProvider;
 use App\Integrations\Fake\FakeSignatureProvider;
-use App\Integrations\Real\AccreditedSignatureProvider;
 use App\Integrations\Real\BiometricFacialRecognitionProvider;
 use App\Integrations\Real\DgsnIdentityLookupProvider;
+use App\Integrations\Real\DocusignSignatureProvider;
 use App\Integrations\Real\MobileMoneyPaymentProvider;
 use App\Integrations\Real\NationalCivilRegistryProvider;
 use Illuminate\Support\ServiceProvider;
@@ -48,7 +48,7 @@ class IntegrationServiceProvider extends ServiceProvider
             SignatureProvider::class,
             'signature',
             FakeSignatureProvider::class,
-            AccreditedSignatureProvider::class,
+            DocusignSignatureProvider::class,
         );
 
         $this->bindProvider(

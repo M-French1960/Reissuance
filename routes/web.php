@@ -21,6 +21,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Officer\DecisionController;
 use App\Http\Controllers\Officer\QueueController;
 use App\Http\Controllers\Officer\VerificationController;
+use App\Http\Controllers\RequestMessageController;
 use App\Http\Controllers\TwoFactorSetupController;
 use Illuminate\Support\Facades\Route;
 
@@ -130,6 +131,16 @@ Route::middleware('auth')->group(function (): void {
             Route::post('/dossiers/{reissuanceRequest}/rejeter', [MayorDecisionController::class, 'reject'])->name('reject');
             Route::post('/dossiers/{reissuanceRequest}/retourner', [MayorDecisionController::class, 'returnToOfficer'])->name('return');
         });
+
+        /*
+         * Fil d'echanges d'un dossier — « Contact Officer ».
+         *
+         * Hors des prefixes de role, comme les actes et les pieces : c'est la
+         * Policy qui decide qui ecrit, pas l'URL. L'administrateur en est
+         * exclu (4.2).
+         */
+        Route::post('/dossiers/{reissuanceRequest}/messages', [RequestMessageController::class, 'store'])
+            ->name('requests.messages.store');
 
         /*
          * Centre de notifications, commun aux quatre roles.

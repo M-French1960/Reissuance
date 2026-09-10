@@ -1,5 +1,10 @@
 # Cas d'utilisation — traçabilité
 
+> **Version 2 du diagramme.** Trois divergences signalées sur la version 1 y
+> sont réglées : le maire n'a plus les réglages système, l'administrateur
+> apparaît comme acteur **Super Admin**, et l'acteur de signature est nommé
+> **Docusign**. Ce document suit la version 2.
+
 > Le diagramme de cas d'utilisation fourni devient la **référence** du
 > développement. Ce document trace chaque cas jusqu'au code, et nomme les
 > points où le diagramme et le brief ne disent pas la même chose.
@@ -18,9 +23,9 @@
 | Citizen | `UserRole::Citizen` | — |
 | Civil Registry Officer | `UserRole::Officer` | — |
 | Mayor | `UserRole::Mayor` | — |
-| *(absent du diagramme)* | **`UserRole::Admin`** | ✅ **conservé, sur votre décision** — voir §4.1 |
+| **Super Admin** | `UserRole::Admin` | ✅ présent au diagramme v2 |
 | Payment API | `PaymentProvider` | jalon 7 |
-| DoctSign API | `SignatureProvider` | jalon 5 |
+| Docusign API | `SignatureProvider` → `DocusignSignatureProvider` | ✅ nommé — voir §4.6 |
 | Civil Registry DB | `CivilRegistryProvider` | jalon 4 |
 | GDNS | `IdentityLookupProvider` → `DgsnIdentityLookupProvider` | ✅ **tranché** — voir §4.4 |
 | Facial Recognition AI | `FacialRecognitionProvider` | ✅ **construit** — voir §4.3 et `BIOMETRIE.md` |
@@ -48,6 +53,10 @@
 | Review Escalated Case | tableau du maire | ✅ |
 | Sign Certificate | T7 / T9 | ✅ |
 | — Send Certificate to Officer | T8 / T11 | ✅ |
+| Cancel Request | T13 / T14 | ✅ D-044 |
+| Contact Officer | fil du dossier | ✅ D-047 |
+| Manage Accounts *(Super Admin)* | `admin.users.*` | ✅ |
+| Verify Identity → Facial Recognition API | `FacialRecognitionProvider` | ✅ D-045 |
 
 ---
 
@@ -171,6 +180,31 @@ L'adaptateur réel s'appelle désormais `DgsnIdentityLookupProvider`.
 la **CNI**. Ce n'est pas le tarif d'une **réédition d'acte d'état civil**, qui
 reste inconnu (question 1 d'`INTEGRATIONS.md` §5). Aucun montant n'est repris
 de l'un pour l'autre.
+
+### 4.6 Docusign — le produit est nommé, la question juridique reste
+
+Le diagramme v2 nomme **Docusign**. L'API eSignature REST existe et est
+documentée : elle travaille par « enveloppes » contenant documents et
+destinataires (`developers.docusign.com`). L'adaptateur réel s'appelle
+désormais `DocusignSignatureProvider`.
+
+**Ce que le nom du produit ne règle pas**, et qu'il ne faut pas confondre :
+
+1. **La valeur juridique.** Qu'une signature soit techniquement valide ne dit
+   pas qu'un acte d'état civil camerounais signé ainsi **fait foi**. C'est la
+   question A1, toujours ouverte. Tant qu'elle l'est, la mention « SANS VALEUR
+   JURIDIQUE » reste sur tout acte produit (D-025).
+2. **La résidence des données.** Docusign est un service commercial étranger.
+   Y faire transiter un acte d'état civil appelle une décision explicite sur le
+   lieu de traitement et sur ce que le prestataire conserve.
+3. **Le compte signataire.** La commune, ou le maire nominativement ? Un
+   changement de maire invalide-t-il les actes antérieurs ? La réponse
+   détermine le modèle d'habilitation.
+
+L'adaptateur **lève une exception** nommant ces trois points plutôt que de
+rendre un document « signé ».
+
+---
 
 ### 4.5 Annuler une demande déjà envoyée
 

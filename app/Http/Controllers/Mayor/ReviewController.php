@@ -36,6 +36,7 @@ class ReviewController extends Controller
             'complet' => $this->workflow->isComplete($reissuanceRequest),
             'manquantes' => $this->workflow->missingSteps($reissuanceRequest),
             'reservations' => $this->workflow->reservations($reissuanceRequest),
+            'messages' => $reissuanceRequest->messages()->with('author:id,name')->oldest()->get(),
             'estEscaladee' => $reissuanceRequest->status === RequestStatus::Escalated,
         ]);
     }

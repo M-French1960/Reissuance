@@ -65,6 +65,7 @@ class VerificationController extends Controller
             'complet' => $this->workflow->isComplete($reissuanceRequest),
             'reservations' => $this->workflow->reservations($reissuanceRequest),
             'avisFacial' => $this->workflow->facialOpinion($reissuanceRequest),
+            'messages' => $reissuanceRequest->messages()->with('author:id,name')->oldest()->get(),
             'peutDecider' => $request->user()->can('decide', $reissuanceRequest),
         ]);
     }
