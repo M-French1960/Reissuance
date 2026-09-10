@@ -6,6 +6,7 @@ use App\Http\Controllers\ActDocumentController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Citizen\AttachmentController;
+use App\Http\Controllers\Citizen\PaymentController;
 use App\Http\Controllers\Citizen\ProfileController;
 use App\Http\Controllers\Citizen\RequestTrackingController;
 use App\Http\Controllers\Citizen\RequestWizardController;
@@ -65,6 +66,21 @@ Route::middleware('auth')->group(function (): void {
             Route::post('/demandes/{reissuanceRequest}/pieces', [AttachmentController::class, 'store'])
                 ->name('requests.attachments.store');
             Route::get('/demandes/{reissuanceRequest}', [RequestTrackingController::class, 'show'])->name('requests.show');
+
+            /*
+             * Reglement des frais.
+             *
+             * Un seul ecran sert les deux placements possibles de la barriere
+             * de paiement (D-041) : seul le moment ou l'on y arrive change.
+             */
+            Route::get('/demandes/{reissuanceRequest}/paiement', [PaymentController::class, 'show'])
+                ->name('requests.payment');
+            Route::post('/demandes/{reissuanceRequest}/paiement', [PaymentController::class, 'store'])
+                ->name('requests.payment.store');
+            Route::post('/demandes/{reissuanceRequest}/paiement/rapprocher', [PaymentController::class, 'reconcile'])
+                ->name('requests.payment.reconcile');
+            Route::get('/demandes/{reissuanceRequest}/paiement/recu', [PaymentController::class, 'receipt'])
+                ->name('requests.payment.receipt');
         });
 
         /*

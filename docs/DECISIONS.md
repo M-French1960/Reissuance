@@ -1100,3 +1100,51 @@ prouve que le cas heureux n'aurait rien vu.
 - **Le remboursement existe, la politique de remboursement non.** `refund()`
   rend l'opération possible et tracée ; elle n'est appelée par aucun
   automatisme. La question 4 d'`INTEGRATIONS.md` §5 reste ouverte.
+
+---
+
+## D-041 — Les deux placements de la barrière de paiement sont construits
+
+- **Date :** 2026-09-10
+- **Statut :** appliqué au jalon 7
+- **La question :** le paiement précède-t-il l'envoi de la demande, ou sa
+  signature ? C'est la question 3 d'`INTEGRATIONS.md` §5, **sans réponse**, et
+  c'est une décision de service.
+- **Décision :** ne pas la trancher, et construire **les deux**. Le placement
+  est le réglage `PHOENIX_PAYMENT_GATE` — `none`, `before_submission` ou
+  `before_signature` — et chacun est implémenté, testé, et vérifié au
+  navigateur. Le défaut est `none`.
+- **Le coût assumé :** un peu de travail en double. Le bénéfice : le jour où la
+  question est tranchée, c'est une variable d'environnement, pas un jalon.
+- **Le risque propre au fait d'avoir les deux**, et le test qui le couvre :
+  qu'une barrière s'applique aux **deux** endroits et fasse payer deux fois. Un
+  test vérifie explicitement que le placement non configuré ne bloque rien.
+- **Un seul écran** sert les deux cas ; seul le moment où l'on y arrive change.
+- **Une valeur inconnue échoue bruyamment.** Retomber silencieusement sur
+  « aucun paiement » ferait d'une faute de frappe une gratuité générale ;
+  retomber sur « paiement exigé » bloquerait le service.
+- **Le rapprochement à la demande du citoyen :** un rappel d'opérateur peut se
+  perdre. Sans le bouton « actualiser », un règlement effectivement acquitté
+  resterait « en attente » indéfiniment et le demandeur n'aurait d'autre
+  recours qu'un guichet.
+
+---
+
+## D-042 — Le reçu porte la même mention que l'acte, et pour la même raison
+
+- **Date :** 2026-09-10
+- **Statut :** appliqué au jalon 7
+- **Décision :** tant que l'encaissement passe par l'adaptateur factice, le
+  reçu porte en **première ligne** « RECU DE DEMONSTRATION — AUCUNE SOMME N'A
+  ETE ENCAISSEE ». Vérifié en relisant le PDF avec `pdftotext`, comme pour
+  l'acte (D-025).
+- **La base réglementaire n'est imprimée que si elle est configurée.** On
+  n'imprime pas un fondement juridique qu'on ne peut pas citer (§10 du brief).
+  Deux tests : l'un exige son absence quand elle n'est pas renseignée, l'autre
+  sa présence quand elle l'est.
+- **Un défaut trouvé par ce test :** la colonne `provider` recevait le *choix
+  d'adaptateur* (`fake`) et non le nom que l'adaptateur se donne
+  (`fake-mobile-money`). La comparaison qui déclenche la mention ne
+  correspondait donc jamais, et **le reçu n'aurait porté aucune mention**.
+  C'est exactement le piège de D-021. Le nom rendu par l'adaptateur est
+  désormais enregistré dès sa première réponse.

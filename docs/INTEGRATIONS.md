@@ -162,8 +162,23 @@ il ne dépend d'aucun prestataire et servira quel que soit le choix final.
 
 ## 5. Paiement — `PaymentProvider`
 
-**Hors périmètre jusqu'au jalon 7** (D-003). Le contrat est défini, la table
-`payments` n'est pas créée, **aucun montant n'est codé**.
+**Construit au jalon 7 — mais rien n'est encaissé.** Le contrat, les
+adaptateurs, la table `payments`, l'écran du demandeur et le reçu existent.
+**Aucun montant n'est codé** : le tarif est une donnée de configuration sans
+valeur par défaut, et son absence fait *refuser* l'encaissement (D-039).
+
+Le placement de la barrière — avant l'envoi, ou avant la signature — est un
+**réglage**, et les deux sont implémentés et testés (D-041). Le défaut est
+`none` : tant que les questions ci-dessous n'ont pas de réponse, la plateforme
+n'encaisse rien.
+
+**Ce que l'adaptateur factice fait :** il simule. Il ne représente aucun
+opérateur réel et n'encaisse rien. Le reçu qu'il produit porte en première
+ligne « RECU DE DEMONSTRATION — AUCUNE SOMME N'A ETE ENCAISSEE ».
+
+**Ce que l'adaptateur réel fait :** il lève une exception nommant les six
+questions. Un encaissement qui « marche » sans encaisser est la pire
+défaillance possible ici — le citoyen croit avoir payé.
 
 **À CONFIRMER avant toute ligne de code :**
 

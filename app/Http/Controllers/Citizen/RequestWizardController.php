@@ -8,6 +8,7 @@ use App\Enums\RequestStatus;
 use App\Http\Controllers\Controller;
 use App\Models\CivilStatusCenter;
 use App\Models\ReissuanceRequest;
+use App\Services\PaymentGate;
 use App\Services\RequestTransitionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -133,6 +134,17 @@ class RequestWizardController extends Controller
                     ->route('citizen.requests.step', ['reissuanceRequest' => $draft, 'step' => 3])
                     ->withErrors(['attachments' => "Votre demande ne peut pas être envoyée sans {$label}."]);
             }
+        }
+
+        // Barriere de paiement, si le service l'a placee ici (D-041). Quand le
+        // placement est « none » ou « before_signature », allows() rend true
+        // et ce controleur n'a rien a savoir du paiement.
+        $gate = app(PaymentGate::class);
+
+        if (! $gate->allows($draft, PaymentGate::BEFORE_SUBMISSION)) {
+            return redirect()
+                ->route('citizen.requests.payment', $draft)
+                ->with('status', 'Réglez les frais pour envoyer votre demande.');
         }
 
         $draft->forceFill([

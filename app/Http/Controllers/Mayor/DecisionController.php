@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ReissuanceRequest;
 use App\Models\RequestDecision;
 use App\Services\ActIssuanceService;
+use App\Services\PaymentGate;
 use App\Services\RequestTransitionService;
 use App\Services\VerificationWorkflow;
 use DomainException;
@@ -35,6 +36,7 @@ class DecisionController extends Controller
         private readonly ActIssuanceService $issuance,
         private readonly RequestTransitionService $transitions,
         private readonly VerificationWorkflow $workflow,
+        private readonly PaymentGate $gate,
     ) {}
 
     /** T7 et T9 : la signature produit l'acte. */
@@ -69,6 +71,16 @@ class DecisionController extends Controller
                 'reason' => 'Cette demande ne peut pas être signée : la vérification est incomplète. Il manque — '
                     .implode(' ; ', $libelles)
                     .". Retournez le dossier à l'officier.",
+            ])->withInput();
+        }
+
+        // Barriere de paiement, si le service l'a placee ici (D-041). Le maire
+        // ne signe pas un acte dont les frais ne sont pas acquittes ; il n'a
+        // pas non plus a savoir OU la barriere est posee.
+        if (! $this->gate->allows($reissuanceRequest, PaymentGate::BEFORE_SIGNATURE)) {
+            return back()->withErrors([
+                'reason' => 'Cette demande ne peut pas être signée : les frais ne sont pas acquittés. '
+                    .'Le demandeur doit régler avant la signature.',
             ])->withInput();
         }
 

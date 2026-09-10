@@ -67,7 +67,12 @@ final class PaymentService
                 'amount_minor' => $montant->minorAmount,
                 'currency' => $montant->currency,
                 'minor_unit' => $montant->minorUnit,
-                'provider' => config('phoenix.providers.payment'),
+                // Choix d'adaptateur, remplace par le nom que l'adaptateur
+                // se donne des sa premiere reponse. Sans ce remplacement, la
+                // colonne porterait « fake » la ou le code compare a
+                // « fake-mobile-money » : le recu ne porterait jamais sa
+                // mention de demonstration. Meme piege qu'en D-021.
+                'provider' => (string) config('phoenix.providers.payment'),
                 'idempotency_key' => (string) Str::uuid(),
                 'payer_reference' => $payerReference,
             ]);
@@ -115,6 +120,7 @@ final class PaymentService
             // Rejeu : on enregistre ce que l'operateur a renvoye, sans
             // transition ni seconde ligne d'audit.
             $payment->forceFill([
+                'provider' => $outcome->provider,
                 'provider_reference' => $outcome->providerReference ?? $payment->provider_reference,
                 'provider_payload' => $outcome->payload,
             ])->save();
@@ -139,6 +145,7 @@ final class PaymentService
 
             $payment->forceFill(array_filter([
                 'status' => $vers->value,
+                'provider' => $outcome->provider,
                 'provider_reference' => $outcome->providerReference ?? $payment->provider_reference,
                 'provider_payload' => $outcome->payload,
                 'authorised_at' => $vers === PaymentStatus::Authorised ? now() : $payment->authorised_at,
