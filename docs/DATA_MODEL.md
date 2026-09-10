@@ -179,8 +179,27 @@ bien celui qui a été signé.
 Persistées avant envoi. Un échec n'annule jamais une transition d'état
 (contrainte maintenue de D-006), et la file rejoue.
 
-**`payments`** — hors périmètre jusqu'au jalon 7. La table est prévue au
-diagramme, **non créée** : aucun montant n'est codé (D-003).
+**`payments`** — créée au jalon 7. **Aucun montant n'est codé** : le tarif est
+une donnée de configuration, et son absence fait *refuser* l'encaissement
+plutôt que facturer un chiffre inventé (D-039).
+
+`id`, `request_id`, `initiated_by`, `amount_minor` (**entier**, jamais
+décimal — D-038), `currency` (ISO 4217), `minor_unit`, `status`, `provider`,
+`provider_reference`, `idempotency_key` (unique), `payer_reference`,
+`provider_payload`, les quatre horodatages d'étape, `failure_reason`.
+
+Le cycle de vie du paiement est **séparé** de celui de la demande (D-040) : la
+question « le paiement précède-t-il l'envoi ou la signature ? » n'a pas de
+réponse, et ne doit pas être figée dans le schéma.
+
+Contraintes : montant positif, devise ISO, état dans la liste, un refus porte
+un motif, un remboursement implique un encaissement préalable. Les
+horodatages disent l'**histoire** : un paiement remboursé garde son
+`settled_at`, parce que les fonds ont bel et bien été acquis à cette date.
+
+Transitions gardées par `phoenix_guard_payment_status`, sur le même principe
+que celles des demandes : transition non autorisée refusée, et transition sans
+ligne d'audit correspondante refusée.
 
 ### 2.5 `audit_logs` — en ajout seul
 

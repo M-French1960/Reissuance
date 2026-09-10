@@ -6,11 +6,14 @@ namespace App\Providers;
 
 use App\Contracts\CivilRegistryProvider;
 use App\Contracts\IdentityLookupProvider;
+use App\Contracts\PaymentProvider;
 use App\Contracts\SignatureProvider;
 use App\Integrations\Fake\FakeCivilRegistryProvider;
 use App\Integrations\Fake\FakeIdentityLookupProvider;
+use App\Integrations\Fake\FakePaymentProvider;
 use App\Integrations\Fake\FakeSignatureProvider;
 use App\Integrations\Real\AccreditedSignatureProvider;
+use App\Integrations\Real\MobileMoneyPaymentProvider;
 use App\Integrations\Real\NationalCivilRegistryProvider;
 use App\Integrations\Real\PoliceIdentityLookupProvider;
 use Illuminate\Support\ServiceProvider;
@@ -43,6 +46,13 @@ class IntegrationServiceProvider extends ServiceProvider
             'signature',
             FakeSignatureProvider::class,
             AccreditedSignatureProvider::class,
+        );
+
+        $this->bindProvider(
+            PaymentProvider::class,
+            'payment',
+            FakePaymentProvider::class,
+            MobileMoneyPaymentProvider::class,
         );
     }
 

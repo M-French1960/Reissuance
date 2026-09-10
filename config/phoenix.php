@@ -18,6 +18,7 @@ return [
         'identity' => env('PHOENIX_IDENTITY_PROVIDER', 'fake'),
         'registry' => env('PHOENIX_REGISTRY_PROVIDER', 'fake'),
         'signature' => env('PHOENIX_SIGNATURE_PROVIDER', 'fake'),
+        'payment' => env('PHOENIX_PAYMENT_PROVIDER', 'fake'),
     ],
 
     /*
@@ -46,6 +47,50 @@ return [
          */
         'login_max_attempts' => (int) env('PHOENIX_LOGIN_MAX_ATTEMPTS', 5),
         'login_lockout_seconds' => (int) env('PHOENIX_LOGIN_LOCKOUT_SECONDS', 60),
+    ],
+
+    /*
+     * Encaissement.
+     *
+     * TROIS QUESTIONS SANS REPONSE conditionnent ce bloc
+     * (docs/INTEGRATIONS.md 5). Tant qu'elles ne sont pas tranchees, la
+     * plateforme n'encaisse RIEN : `gate` vaut « none » et aucun montant n'est
+     * code. Le prototype affichait 20 000 CFA — valeur invérifiable, jamais
+     * reprise (D-003).
+     */
+    'payments' => [
+        /*
+         * OU le paiement est exige. C'est la question 3 d'INTEGRATIONS 5, une
+         * decision de service et non d'ingenierie : elle est donc un reglage,
+         * pas une architecture.
+         *
+         *   none              — rien n'est encaisse (defaut)
+         *   before_submission — le citoyen paie avant d'envoyer sa demande
+         *   before_signature  — le citoyen paie une fois la demande acceptee
+         */
+        'gate' => env('PHOENIX_PAYMENT_GATE', 'none'),
+
+        /*
+         * Montant en UNITE MINEURE de la devise, en entier.
+         *
+         * Aucune valeur par defaut, a dessein : un tarif de service public se
+         * lit dans un texte, il ne se devine pas. Si l'encaissement est active
+         * sans montant configure, la plateforme REFUSE de servir plutot que de
+         * facturer un chiffre invente (D-039).
+         *
+         * Le franc CFA n'a pas de subdivision en usage : `minor_unit` vaut 0,
+         * et 1 000 F s'ecrit donc 1000.
+         */
+        'amount_minor' => env('PHOENIX_PAYMENT_AMOUNT_MINOR'),
+        'currency' => env('PHOENIX_PAYMENT_CURRENCY', 'XAF'),
+        'minor_unit' => (int) env('PHOENIX_PAYMENT_MINOR_UNIT', 0),
+
+        /*
+         * Reference reglementaire du tarif, affichee au citoyen.
+         * Vide tant que la question 1 d'INTEGRATIONS 5 n'a pas de reponse : on
+         * n'affiche pas une base legale qu'on ne peut pas citer (10 du brief).
+         */
+        'legal_basis' => env('PHOENIX_PAYMENT_LEGAL_BASIS', ''),
     ],
 
     /*

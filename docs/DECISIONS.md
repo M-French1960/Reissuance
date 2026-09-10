@@ -1034,3 +1034,69 @@ prouve que le cas heureux n'aurait rien vu.
   avant, pas après.
 - **Recommandation :** adopter, dans un jalon court et dédié, dont le contenu
   est la liste de `docs/RLS.md` §5 et le critère d'acceptation le test du §3.1.
+
+---
+
+## D-038 — L'argent est un entier d'unités mineures, jamais un flottant
+
+- **Date :** 2026-09-10
+- **Statut :** appliqué au jalon 7
+- **Le fait :** `0.1 + 0.2` ne vaut pas `0.3` en binaire. Un service public qui
+  encaisse ne peut pas dériver d'un centime par arrondi, ni justifier un écart
+  de caisse par une représentation flottante.
+- **Décision :** `App\Support\Money` porte un **entier** d'unités mineures, une
+  devise ISO 4217 explicite et un nombre de décimales. La colonne est un
+  `bigint`. La seule opération produisant une virgule est le rendu à l'écran.
+- **Le franc CFA n'a pas de subdivision en usage :** `minor_unit` vaut 0, et
+  1 000 F s'écrit `1000`.
+
+---
+
+## D-039 — Sans tarif configuré, la plateforme refuse d'encaisser
+
+- **Date :** 2026-09-10
+- **Statut :** appliqué au jalon 7
+- **Le fait :** le tarif d'une réédition est une donnée **réglementaire**. Le
+  prototype affichait 20 000 CFA, valeur que je n'ai jamais pu vérifier
+  (D-003). La question 1 d'`INTEGRATIONS.md` §5 est toujours sans réponse.
+- **Décision :** `PHOENIX_PAYMENT_AMOUNT_MINOR` n'a **aucune valeur par
+  défaut**. Si l'encaissement est activé sans tarif, `Money::fromConfig()` lève
+  une exception nommant la question ouverte, et **aucun encaissement n'est
+  ouvert**. La plateforme refuse de servir plutôt que de facturer un chiffre
+  inventé.
+- **Pourquoi le refus plutôt qu'un défaut :** un défaut de 0 ferait croire à la
+  gratuité ; un défaut non nul serait un tarif inventé. Le §10 du brief
+  interdit de coder une hypothèse réglementaire.
+- **Vérifié :** un test échoue si un montant à quatre chiffres accolé à une
+  mention monétaire réapparaît dans `app/` ou dans les vues ; éprouvé en
+  réintroduisant délibérément « 20000 F CFA ».
+
+---
+
+## D-040 — Le paiement a son propre cycle de vie, à côté de la demande
+
+- **Date :** 2026-09-10
+- **Statut :** appliqué au jalon 7
+- **La question qu'il ne fallait pas trancher :** le paiement précède-t-il
+  l'envoi de la demande, ou sa signature ? C'est la question 3
+  d'`INTEGRATIONS.md` §5, **sans réponse**, et c'est une décision de service.
+- **Décision :** le paiement n'est **pas** un état de la demande. Il a sa
+  propre machine — `pending`, `authorised`, `settled`, `failed`, `expired`,
+  `refunded` — gardée par son propre déclencheur PostgreSQL. Le moment où le
+  paiement est exigé devient un **réglage** (`PHOENIX_PAYMENT_GATE`), dont la
+  valeur par défaut est `none` : tant que rien n'est tranché, rien n'est
+  encaissé.
+- **Ce que cela évite :** figer dans la machine à états des demandes une
+  réponse qui n'existe pas. Le jour où la question est tranchée, c'est une
+  condition à vérifier, pas une architecture à refaire.
+- **`authorised` n'est pas `settled` :** un ordre pris en compte par un
+  opérateur ne vaut pas des fonds acquis. Seul `settled` vaut paiement, et un
+  test le vérifie — c'est la confusion la plus coûteuse d'un encaissement
+  mobile.
+- **Idempotence :** les opérateurs de paiement mobile **rejouent** leurs
+  rappels. Un rappel annonçant l'état déjà enregistré n'écrit ni transition ni
+  seconde ligne d'audit, et une demande n'a qu'un encaissement vivant à la
+  fois. Vérifié par un test qui rejoue le même événement quatre fois.
+- **Le remboursement existe, la politique de remboursement non.** `refund()`
+  rend l'opération possible et tracée ; elle n'est appelée par aucun
+  automatisme. La question 4 d'`INTEGRATIONS.md` §5 reste ouverte.
