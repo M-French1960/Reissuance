@@ -92,6 +92,26 @@ return [
          * n'affiche pas une base legale qu'on ne peut pas citer (10 du brief).
          */
         'legal_basis' => env('PHOENIX_PAYMENT_LEGAL_BASIS', ''),
+
+        /*
+         * HR-Skills Pay — agregateur mobile money.
+         *
+         * Contrat releve dans la documentation publiee par le prestataire
+         * (hrskills-pay.com). AUCUN APPEL N'A ETE FAIT contre le service
+         * reel : sans identifiants, l'adaptateur est verifie contre un
+         * serveur simule. Voir D-050.
+         */
+        'hrskills' => [
+            'base_url' => env('PHOENIX_HRSKILLS_BASE_URL', 'https://api.hrskills-pay.com'),
+            // Le bac a sable prefixe les chemins par /sandbox.
+            'sandbox' => (bool) env('PHOENIX_HRSKILLS_SANDBOX', true),
+            // Cle A (publique) et cle B (secrete). Jamais dans le depot.
+            'public_key' => env('PHOENIX_HRSKILLS_PUBLIC_KEY', ''),
+            'secret_key' => env('PHOENIX_HRSKILLS_SECRET_KEY', ''),
+            // Secret de signature des rappels (X-Hub-Signature).
+            'webhook_secret' => env('PHOENIX_HRSKILLS_WEBHOOK_SECRET', ''),
+            'timeout' => (int) env('PHOENIX_HRSKILLS_TIMEOUT', 20),
+        ],
     ],
 
     /*

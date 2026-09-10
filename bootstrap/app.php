@@ -24,6 +24,14 @@ return Application::configure(basePath: dirname(__DIR__))
             'two-factor' => EnsureTwoFactorIsConfirmed::class,
         ]);
 
+        /*
+         * Le rappel de l'operateur de paiement vient d'un serveur tiers : il
+         * ne peut pas porter de jeton CSRF. Il est garde par la signature HMAC
+         * de son corps brut, verifiee avant toute lecture — c'est la seule
+         * route du systeme exemptee, et elle l'est explicitement.
+         */
+        $middleware->validateCsrfTokens(except: ['rappels/hrskills']);
+
         // En-tetes de securite sur toutes les reponses (4.5 du brief).
         //
         // EnsureAccountIsActive est pose ici, sur le groupe entier, et non sur

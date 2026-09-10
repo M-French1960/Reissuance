@@ -14,6 +14,7 @@ use App\Http\Controllers\Citizen\RequestWizardController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DevUiController;
 use App\Http\Controllers\HealthController;
+use App\Http\Controllers\HrSkillsWebhookController;
 use App\Http\Controllers\Mayor\DashboardController as MayorDashboardController;
 use App\Http\Controllers\Mayor\DecisionController as MayorDecisionController;
 use App\Http\Controllers\Mayor\ReviewController;
@@ -28,6 +29,15 @@ use Illuminate\Support\Facades\Route;
 Route::view('/', 'welcome')->name('home');
 
 Route::get('/sante', HealthController::class)->name('health');
+
+/*
+ * Rappel de l'operateur de paiement.
+ *
+ * PUBLIQUE a dessein — c'est un serveur tiers qui appelle — mais gardee par la
+ * signature HMAC du corps brut, verifiee avant toute lecture. Sans secret
+ * configure, tout rappel est refuse.
+ */
+Route::post('/rappels/hrskills', HrSkillsWebhookController::class)->name('webhooks.hrskills');
 
 /*
  * Toute route authentifiee passe par trois filtres :

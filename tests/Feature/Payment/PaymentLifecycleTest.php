@@ -7,7 +7,7 @@ namespace Tests\Feature\Payment;
 use App\Contracts\PaymentProvider;
 use App\Enums\PaymentStatus;
 use App\Integrations\Fake\FakePaymentProvider;
-use App\Integrations\Real\MobileMoneyPaymentProvider;
+use App\Integrations\Real\HrSkillsPayPaymentProvider;
 use App\Models\CivilStatusCenter;
 use App\Models\Payment;
 use App\Models\ReissuanceRequest;
@@ -265,13 +265,26 @@ class PaymentLifecycleTest extends TestCase
         $this->assertSame('1 000 XAF', $paiement->money()->format());
     }
 
+    /**
+     * L'adaptateur reel refuse de servir sans identifiants.
+     *
+     * Il n'est plus un squelette : HR-Skills Pay est implemente (D-050). Ce
+     * qu'on verifie ici, c'est qu'il echoue BRUYAMMENT quand il n'est pas
+     * configure, plutot que de tenter un appel voue a l'echec ou, pire, de
+     * rendre un succes.
+     */
     #[Test]
-    public function le_squelette_reel_leve_une_exception_explicite(): void
+    public function l_adaptateur_reel_refuse_de_servir_sans_identifiants(): void
     {
-        $this->app->bind(PaymentProvider::class, fn () => new MobileMoneyPaymentProvider);
+        config([
+            'phoenix.payments.hrskills.public_key' => '',
+            'phoenix.payments.hrskills.secret_key' => '',
+        ]);
+
+        $this->app->bind(PaymentProvider::class, fn () => new HrSkillsPayPaymentProvider);
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessageMatches('/INTEGRATIONS/');
+        $this->expectExceptionMessageMatches('/PHOENIX_HRSKILLS_/');
 
         app(PaymentService::class)->initiate($this->demande, $this->citoyen, '+237600000001');
     }

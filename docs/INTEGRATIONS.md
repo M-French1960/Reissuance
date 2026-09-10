@@ -201,25 +201,68 @@ deviner reviendrait à inventer une règle métier, et un numéro mal classé fe
 échouer un règlement sans que personne comprenne pourquoi. C'est l'opérateur
 qui reconnaît ses propres numéros.
 
-### 5.2 ⚠ L'agrégateur reste à nommer
+### 5.2 HR-Skills Pay — l'agrégateur
+
+**Nommé et implémenté** (D-050). Contrat relevé dans la documentation publiée
+par le prestataire sur `hrskills-pay.com`.
+
+| | |
+|---|---|
+| Base | `https://api.hrskills-pay.com` — bac à sable : chemins préfixés `/sandbox` |
+| Authentification | `POST /v1/auth/transaction-token` — `Authorization: Bearer <clé A>`, corps `{"api_secret": "<clé B>"}` → jeton valable 45 min |
+| Encaissement | `POST /api/v1/payin/mobile-money` — en-têtes `Authorization`, `X-Transaction-Token`, `Idempotency-Key` ; corps `{operator, country, phone_number, amount, currency}` |
+| Rapprochement | `GET /v1/payments/{reference}` |
+| Rappel | `X-Hub-Signature: sha256=<HMAC du corps brut>`, `X-Webhook-Event`, événements `payment.succeeded` / `payment.failed` |
+| Opérateurs | `ORANGE`, `MTN` |
+| Devise / pays | `XAF` / `CM` — montant **entier**, ce qui correspond à `Money` |
+
+> **⚠ AUCUN APPEL N'A ÉTÉ FAIT CONTRE LE SERVICE RÉEL.** Sans identifiants,
+> l'adaptateur n'est vérifié que contre un serveur simulé. Ces tests prouvent
+> que **notre code suit la documentation**, pas que **le prestataire suit sa
+> propre documentation**. La reprise contre le bac à sable, avec de vraies
+> clés, reste à faire.
+
+**Ce que l'implémentation refuse de faire :**
+
+- **Croire un rappel sur parole.** Un rappel signé prouve l'origine, pas la
+  fraîcheur du contenu. On y lit une référence, puis on **re-interroge** le
+  prestataire. Un rappel qui annonce « payé » alors que l'API dit « en
+  attente » ne paie rien — et c'est testé.
+- **Accepter un rappel sans secret configuré.** Le mode ouvert serait ici une
+  porte vers des actes non payés.
+- **Traiter un statut inconnu comme un paiement.** Tout ce qui n'est pas
+  explicitement un succès vaut « en attente ».
+- **Recopier la réponse du prestataire en base.** Liste blanche de champs :
+  `status`, `reference`, `net_amount`, `fee`, `amount`, `currency`,
+  `operator`. Un numéro de téléphone rendu dans la réponse n'entre pas.
+- **Bricoler un remboursement.** Aucun remboursement d'encaissement n'est
+  documenté ; un décaissement (`/api/v1/payout/mobile-money`) est une
+  opération distincte, sans lien comptable avec l'encaissement d'origine.
+  L'adaptateur lève.
+
+**Deux questions nouvelles, ouvertes :**
+
+1. **Qui supporte les frais ?** La réponse porte un `net_amount` inférieur au
+   montant payé. Si le tarif est un montant réglementaire, la commune
+   perçoit-elle *tarif moins frais*, ou le demandeur doit-il payer *tarif plus
+   frais* ? Cela change le montant affiché au citoyen.
+2. **Deux noms de domaine apparaissent** dans la documentation du prestataire :
+   `api.hrskills-pay.com` (avec trait d'union, utilisé par tous les exemples de
+   code) et `api.hrskillspay.com` (sans). La base est donc une donnée de
+   configuration, pas une constante.
+
+### 5.3 ⚠ Ce qui reste ouvert malgré l'agrégateur
 
 Un agrégateur expose **une** interface pour les deux opérateurs — c'est ce que
 montre le diagramme, avec un seul acteur « Payment API ». C'est aussi la forme
 qu'a `PaymentProvider`.
 
-**Lequel ?** La question m'a été posée sous le nom **« HR-SKILLS »**, que je
-n'ai pas pu identifier : ni parmi les compétences disponibles, ni comme
-prestataire de paiement camerounais dans une recherche en ligne. **Je n'ai
-donc rien codé sous ce nom.**
+L'agrégateur est nommé et branché, mais **le tarif ne l'est toujours pas**
+(question 1). `PHOENIX_PAYMENT_AMOUNT_MINOR` reste vide, et sans lui
+l'encaissement refuse de s'ouvrir — ce qui est le comportement voulu (D-039).
 
-Une recherche fait ressortir plusieurs agrégateurs existants au Cameroun —
-CinetPay, Monetbil, Tranzak notamment. **Je ne recommande aucun d'eux sans
-vérification** : leur présence dans un article ne dit rien de leur agrément,
-de leurs tarifs, ni de leur adéquation à un service public.
-
-Le jour où le prestataire est nommé, c'est **une classe** à écrire derrière
-`PaymentProvider`, plus la sélection dans `config/phoenix.php`. Le reste — le
-cycle de vie, l'idempotence, le reçu, les deux opérateurs — ne bouge pas.
+Restent également ouvertes : qui encaisse (question 2), le sort d'un paiement
+après rejet (question 4), et les obligations de reçu (question 6).
 
 **À CONFIRMER avant toute ligne de code :**
 

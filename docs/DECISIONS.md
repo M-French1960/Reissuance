@@ -1356,3 +1356,48 @@ prouve que le cas heureux n'aurait rien vu.
   ligne de configuration. Le cycle de vie, l'idempotence, le reçu et le choix
   d'opérateur ne bougeront pas — c'est précisément ce que D-040 cherchait à
   garantir.
+
+---
+
+## D-050 — HR-Skills Pay branché, contre un serveur simulé
+
+- **Date :** 2026-09-10
+- **Statut :** implémenté ; **reprise contre le bac à sable à faire**
+- **Comment le contrat a été obtenu :** le site est une application
+  JavaScript ; `/docs`, `/api` et `/developers` rendent tous la même coquille
+  de 491 octets. Le contrat a donc été relevé dans le **paquet JavaScript
+  public** du prestataire, qui embarque sa propre documentation — exemples
+  `curl`, Python, PHP et JavaScript compris. C'est leur documentation, pas une
+  déduction.
+- **Ce qui est implémenté :** jeton de transaction (45 min, mis en cache),
+  encaissement mobile money avec la clé d'idempotence de PHOENIX reprise
+  telle quelle, rapprochement par référence, et un rappel signé.
+- **CE QUI N'A PAS ÉTÉ FAIT, et qu'il ne faut pas confondre :** aucun appel
+  contre le service réel. Sans identifiants, l'adaptateur n'est vérifié que
+  contre un serveur simulé. **Les tests prouvent que notre code suit la
+  documentation, pas que le prestataire suit sa propre documentation.**
+- **Cinq refus délibérés :**
+  1. Un statut inconnu vaut « en attente », jamais « payé » : se tromper dans
+     ce sens ferait délivrer un acte contre un encaissement inexistant.
+  2. Un rappel n'est jamais cru sur parole. La signature prouve l'origine, pas
+     la fraîcheur : on re-interroge le prestataire. Un rappel signé annonçant
+     « payé » alors que l'API dit « en attente » ne paie rien — testé.
+  3. Sans secret de rappel configuré, **tout** rappel est refusé.
+  4. La réponse n'est pas recopiée en base : liste blanche de champs, pour
+     qu'un numéro de téléphone rendu par le prestataire n'y entre pas.
+  5. Le remboursement lève. Aucun n'est documenté, et un décaissement est une
+     opération distincte : les confondre reviendrait à virer des fonds sans
+     lien comptable avec l'encaissement d'origine.
+- **Un défaut trouvé en écrivant les tests :** un rappel signé annonçant un
+  état **antérieur** à celui déjà enregistré faisait remonter une
+  `DomainException` et répondre **500** sur une route publique — donc réessayer
+  le prestataire en boucle. Le rapprochement ne recule plus et ne casse plus :
+  une transition non atteignable est journalisée et ignorée.
+- **La seule route CSRF-exemptée du système**, et elle l'est explicitement :
+  un serveur tiers ne peut pas porter de jeton. Elle est gardée par la
+  signature HMAC de son corps brut, vérifiée avant toute lecture.
+- **Deux questions nouvelles :** qui supporte les frais — la réponse porte un
+  `net_amount` inférieur au montant payé, ce qui change le montant à afficher
+  au citoyen ; et deux noms de domaine apparaissent dans leur documentation
+  (`api.hrskills-pay.com` et `api.hrskillspay.com`), d'où une base en
+  configuration.

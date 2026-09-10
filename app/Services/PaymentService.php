@@ -16,6 +16,7 @@ use App\Support\PaymentIntent;
 use App\Support\PaymentOutcome;
 use DomainException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
@@ -168,14 +169,35 @@ final class PaymentService
         });
     }
 
-    /** Interroge l'operateur et rapproche. Utile quand un rappel s'est perdu. */
+    /**
+     * Interroge l'operateur et rapproche. Utile quand un rappel s'est perdu.
+     *
+     * Un rapprochement ne RECULE jamais et ne casse jamais. Si l'operateur
+     * annonce un etat anterieur au notre — sa vue est en retard, ou un rappel
+     * rejoue arrive apres coup — la transition est refusee par la machine a
+     * etats, et on garde ce qu'on a. Laisser remonter l'exception ferait
+     * repondre 500 a un rappel signe, donc reessayer le prestataire en
+     * boucle, sur une route publique.
+     */
     public function reconcile(Payment $payment): Payment
     {
         if ($payment->provider_reference === null || $payment->status->isTerminal()) {
             return $payment;
         }
 
-        return $this->apply($payment, $this->provider->status($payment->provider_reference));
+        $reponse = $this->provider->status($payment->provider_reference);
+
+        try {
+            return $this->apply($payment, $reponse);
+        } catch (DomainException $e) {
+            Log::info('Rapprochement ignore : etat annonce non atteignable depuis l\'etat courant.', [
+                'payment_id' => $payment->id,
+                'from' => $payment->status->value,
+                'to' => $reponse->status->value,
+            ]);
+
+            return $payment;
+        }
     }
 
     /**
