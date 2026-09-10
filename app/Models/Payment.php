@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\PaymentOperator;
 use App\Enums\PaymentStatus;
 use App\Support\Money;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +15,7 @@ class Payment extends Model
     protected $fillable = [
         'request_id', 'initiated_by',
         'amount_minor', 'currency', 'minor_unit',
-        'provider', 'provider_reference', 'idempotency_key',
+        'provider', 'operator', 'provider_reference', 'idempotency_key',
         'payer_reference', 'provider_payload',
     ];
 
@@ -34,6 +35,7 @@ class Payment extends Model
     {
         return [
             'status' => PaymentStatus::class,
+            'operator' => PaymentOperator::class,
             'amount_minor' => 'integer',
             'minor_unit' => 'integer',
             'provider_payload' => 'array',

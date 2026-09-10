@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Contracts\PaymentProvider;
+use App\Enums\PaymentOperator;
 use App\Enums\PaymentStatus;
 use App\Models\AuditLog;
 use App\Models\Payment;
@@ -47,8 +48,12 @@ final class PaymentService
      * fois. Un double clic, un rechargement de page ou un rejeu de formulaire
      * ne cree pas un second ordre.
      */
-    public function initiate(ReissuanceRequest $request, User $actor, ?string $payerReference = null): Payment
-    {
+    public function initiate(
+        ReissuanceRequest $request,
+        User $actor,
+        ?string $payerReference = null,
+        ?PaymentOperator $operator = null,
+    ): Payment {
         $existant = $this->livePayment($request);
 
         if ($existant !== null) {
@@ -60,7 +65,7 @@ final class PaymentService
         // invente (D-039).
         $montant = Money::fromConfig();
 
-        $paiement = DB::transaction(function () use ($request, $actor, $montant, $payerReference): Payment {
+        $paiement = DB::transaction(function () use ($request, $actor, $montant, $payerReference, $operator): Payment {
             $paiement = Payment::create([
                 'request_id' => $request->id,
                 'initiated_by' => $actor->id,
@@ -75,6 +80,7 @@ final class PaymentService
                 'provider' => (string) config('phoenix.providers.payment'),
                 'idempotency_key' => (string) Str::uuid(),
                 'payer_reference' => $payerReference,
+                'operator' => $operator?->value,
             ]);
 
             AuditLog::create([
@@ -99,6 +105,7 @@ final class PaymentService
             $paiement->idempotency_key,
             $request->reference,
             $payerReference,
+            $operator,
         ));
 
         return $this->apply($paiement, $reponse, $actor);

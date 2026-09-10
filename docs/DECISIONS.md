@@ -1325,3 +1325,34 @@ prouve que le cas heureux n'aurait rien vu.
 - **L'adaptateur lève une exception** nommant ces trois points. Un adaptateur
   qui rendrait un document « signé » sans les avoir tranchés serait le chemin
   par lequel un acte frauduleux sort du système.
+
+---
+
+## D-049 — Deux opérateurs, un agrégateur qui reste à nommer
+
+- **Date :** 2026-09-10
+- **Statut :** opérateurs **appliqués** ; agrégateur **ouvert**
+- **Ce qui est fait :** « Pay Through Orange Money » et « Pay Through Mobile
+  Money » du diagramme sont deux valeurs d'une énumération
+  `App\Enums\PaymentOperator`. Le demandeur choisit à l'écran, le choix est
+  conservé avec l'encaissement, il figure au reçu, et un test compte les
+  règlements **par opérateur** — c'est la raison d'être de la colonne : sans
+  elle, on ne saurait pas quel opérateur doit quelle somme.
+- **Hypothèse signalée :** « Mobile Money » lu comme le service de MTN, par
+  opposition à Orange Money. Un seul fichier à changer si c'est autre chose.
+- **Ce qui n'est pas encodé :** les préfixes de numéro par opérateur. Les
+  deviner serait inventer une règle métier ; un numéro mal classé ferait
+  échouer un règlement sans explication. L'opérateur reconnaît ses numéros.
+- **Refus silencieux évités :** un règlement sans opérateur est refusé, un
+  opérateur inconnu aussi — par la validation **et** par une contrainte `CHECK`
+  qui rejette une valeur hors liste même en SQL direct.
+- **L'agrégateur, en revanche, n'est pas nommé.** La demande m'est parvenue
+  sous le nom **« HR-SKILLS »**. Je ne l'ai identifié ni parmi les compétences
+  disponibles, ni comme prestataire de paiement camerounais par une recherche
+  en ligne. **Je n'ai donc rien écrit sous ce nom** : inventer un contrat
+  d'API revient à écrire du code qui ne s'exécutera jamais, et à donner
+  l'illusion que l'intégration avance.
+- **Ce que coûtera la réponse :** une classe derrière `PaymentProvider` et une
+  ligne de configuration. Le cycle de vie, l'idempotence, le reçu et le choix
+  d'opérateur ne bougeront pas — c'est précisément ce que D-040 cherchait à
+  garantir.

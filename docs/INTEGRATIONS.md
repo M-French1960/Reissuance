@@ -184,6 +184,43 @@ ligne « RECU DE DEMONSTRATION — AUCUNE SOMME N'A ETE ENCAISSEE ».
 questions. Un encaissement qui « marche » sans encaisser est la pire
 défaillance possible ici — le citoyen croit avoir payé.
 
+### 5.1 Les deux opérateurs
+
+Le diagramme fait de « Make Payment » deux spécialisations : **Pay Through
+Orange Money** et **Pay Through Mobile Money**. Le demandeur choisit, le choix
+est conservé avec l'encaissement, et il figure au reçu — un rapprochement
+comptable se fait par opérateur.
+
+> **Hypothèse signalée :** au Cameroun, « Mobile Money » désigne couramment le
+> service de MTN, par opposition à Orange Money. C'est ainsi que je l'ai lu.
+> Si un troisième opérateur est visé, `App\Enums\PaymentOperator` est l'unique
+> endroit à changer.
+
+**Ce qui n'est pas encodé :** les préfixes de numéro de chaque opérateur. Les
+deviner reviendrait à inventer une règle métier, et un numéro mal classé ferait
+échouer un règlement sans que personne comprenne pourquoi. C'est l'opérateur
+qui reconnaît ses propres numéros.
+
+### 5.2 ⚠ L'agrégateur reste à nommer
+
+Un agrégateur expose **une** interface pour les deux opérateurs — c'est ce que
+montre le diagramme, avec un seul acteur « Payment API ». C'est aussi la forme
+qu'a `PaymentProvider`.
+
+**Lequel ?** La question m'a été posée sous le nom **« HR-SKILLS »**, que je
+n'ai pas pu identifier : ni parmi les compétences disponibles, ni comme
+prestataire de paiement camerounais dans une recherche en ligne. **Je n'ai
+donc rien codé sous ce nom.**
+
+Une recherche fait ressortir plusieurs agrégateurs existants au Cameroun —
+CinetPay, Monetbil, Tranzak notamment. **Je ne recommande aucun d'eux sans
+vérification** : leur présence dans un article ne dit rien de leur agrément,
+de leurs tarifs, ni de leur adéquation à un service public.
+
+Le jour où le prestataire est nommé, c'est **une classe** à écrire derrière
+`PaymentProvider`, plus la sélection dans `config/phoenix.php`. Le reste — le
+cycle de vie, l'idempotence, le reçu, les deux opérateurs — ne bouge pas.
+
 **À CONFIRMER avant toute ligne de code :**
 
 1. Quel est le tarif officiel d'une réédition, et sur quelle base

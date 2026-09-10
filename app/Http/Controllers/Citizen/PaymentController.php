@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Citizen;
 
+use App\Enums\PaymentOperator;
 use App\Http\Controllers\Controller;
 use App\Models\ReissuanceRequest;
 use App\Services\PaymentGate;
@@ -11,6 +12,7 @@ use App\Services\PaymentReceipt;
 use App\Services\PaymentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -46,6 +48,7 @@ class PaymentController extends Controller
             'montant' => $this->gate->amount(),
             'baseLegale' => $this->gate->legalBasis(),
             'avantEnvoi' => $this->gate->requiredBeforeSubmission(),
+            'operateurs' => PaymentOperator::all(),
         ]);
     }
 
@@ -56,8 +59,10 @@ class PaymentController extends Controller
         abort_unless($this->gate->isEnabled(), 404);
 
         $validated = $request->validate([
+            'operator' => ['required', Rule::enum(PaymentOperator::class)],
             'payer_reference' => ['required', 'string', 'max:64'],
         ], [
+            'operator.required' => 'Choisissez comment vous souhaitez régler.',
             'payer_reference.required' => 'Indiquez le numéro depuis lequel vous réglez.',
         ]);
 
@@ -66,6 +71,7 @@ class PaymentController extends Controller
                 $reissuanceRequest,
                 $request->user(),
                 $validated['payer_reference'],
+                PaymentOperator::from($validated['operator']),
             );
         } catch (RuntimeException $e) {
             // Un fournisseur absent ou injoignable : on le DIT, on ne simule

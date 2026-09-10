@@ -40,6 +40,9 @@ final class FakePaymentProvider implements PaymentProvider
 
     public function initiate(PaymentIntent $intent): PaymentOutcome
     {
+        // L'operateur choisi ne change pas le comportement simule : un
+        // agregateur expose la meme interface pour les deux. Il est conserve
+        // dans la charge pour que le rapprochement comptable le retrouve.
         $reference = self::normalise((string) $intent->payerReference);
 
         foreach (self::TRIGGERS as $prefixe => $etat) {
@@ -56,7 +59,11 @@ final class FakePaymentProvider implements PaymentProvider
             self::PROVIDER,
             'FAKE-'.Str::upper(Str::random(10)),
             "Ordre pris en compte par l'opérateur. Les fonds ne sont pas encore acquis.",
-            ['simulated' => true, 'amount_minor' => $intent->amount->minorAmount],
+            [
+                'simulated' => true,
+                'amount_minor' => $intent->amount->minorAmount,
+                'operator' => $intent->operator?->value,
+            ],
             $intent->amount,
         );
     }

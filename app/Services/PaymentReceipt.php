@@ -50,7 +50,7 @@ final class PaymentReceipt
             // 13:55 ». Le PDF est en WinAnsi, un « a » accentue y passe, mais
             // il n'apporte rien ici.
             ->labelled('Date du reglement', $payment->settled_at?->format('d/m/Y H:i') ?? '-')
-            ->labelled('Moyen de paiement', $payment->provider)
+            ->labelled('Moyen de paiement', $payment->operator?->label() ?? $payment->provider)
             ->labelled('Reference de transaction', (string) ($payment->provider_reference ?? '-'));
 
         $base = trim((string) config('phoenix.payments.legal_basis', ''));

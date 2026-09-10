@@ -164,6 +164,7 @@ class PaymentGateTest extends TestCase
         $this->actingAs($this->citoyen)
             ->post(route('citizen.requests.payment.store', $brouillon), [
                 'payer_reference' => '+237600000001',
+                'operator' => 'orange_money',
             ])->assertSessionHasNoErrors();
 
         // « Autorise » ne suffit pas : la demande ne passe toujours pas.
@@ -197,6 +198,7 @@ class PaymentGateTest extends TestCase
         $this->actingAs($this->citoyen)
             ->post(route('citizen.requests.payment.store', $brouillon), [
                 'payer_reference' => 'DEMO-REFUS-1',
+                'operator' => 'mtn_mobile_money',
             ])->assertSessionHasNoErrors();
 
         $this->actingAs($this->citoyen)
@@ -249,7 +251,9 @@ class PaymentGateTest extends TestCase
         $demande = $this->jusquALaSignature($brouillon->refresh());
 
         $this->actingAs($this->citoyen)
-            ->post(route('citizen.requests.payment.store', $demande), ['payer_reference' => '+237600000001']);
+            ->post(route('citizen.requests.payment.store', $demande), [
+                'payer_reference' => '+237600000001', 'operator' => 'orange_money',
+            ]);
         $this->actingAs($this->citoyen)
             ->post(route('citizen.requests.payment.reconcile', $demande));
 
@@ -307,7 +311,9 @@ class PaymentGateTest extends TestCase
             ->assertNotFound();
 
         $this->actingAs($this->citoyen)
-            ->post(route('citizen.requests.payment.store', $brouillon), ['payer_reference' => '+237600000001']);
+            ->post(route('citizen.requests.payment.store', $brouillon), [
+                'payer_reference' => '+237600000001', 'operator' => 'orange_money',
+            ]);
 
         // Autorise, pas acquis : toujours pas de recu.
         $this->actingAs($this->citoyen)
@@ -333,7 +339,9 @@ class PaymentGateTest extends TestCase
         $this->actingAs($autre)->get(route('citizen.requests.payment', $brouillon))->assertNotFound();
         $this->actingAs($autre)->get(route('citizen.requests.payment.receipt', $brouillon))->assertNotFound();
         $this->actingAs($autre)
-            ->post(route('citizen.requests.payment.store', $brouillon), ['payer_reference' => '+237600000009'])
+            ->post(route('citizen.requests.payment.store', $brouillon), [
+                'payer_reference' => '+237600000009', 'operator' => 'orange_money',
+            ])
             ->assertNotFound();
     }
 }

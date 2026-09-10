@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Support;
 
+use App\Enums\PaymentOperator;
+
 /**
  * Ce qu'on demande a l'operateur.
  *
@@ -17,5 +19,6 @@ final readonly class PaymentIntent
         public string $idempotencyKey,
         public string $requestReference,
         public ?string $payerReference = null,
+        public ?PaymentOperator $operator = null,
     ) {}
 }

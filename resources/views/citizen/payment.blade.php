@@ -57,6 +57,7 @@
             <dl class="review">
                 <div class="review__row"><dt>Montant</dt><dd>{{ $paiement->money()->format() }}</dd></div>
                 <div class="review__row"><dt>Date</dt><dd>{{ $paiement->settled_at?->translatedFormat('d/m/Y à H:i') }}</dd></div>
+                <div class="review__row"><dt>Moyen</dt><dd>{{ $paiement->operator?->label() ?? '—' }}</dd></div>
                 <div class="review__row"><dt>Référence</dt><dd>{{ $paiement->provider_reference ?? '—' }}</dd></div>
             </dl>
             <x-button :href="route('citizen.requests.payment.receipt', $demande)" variant="secondary">
@@ -88,6 +89,27 @@
         <x-card title="Payer">
             <form method="POST" action="{{ route('citizen.requests.payment.store', $demande) }}">
                 @csrf
+
+                <fieldset class="fieldset">
+                    <legend class="field__label">
+                        Comment souhaitez-vous régler ? <span aria-hidden="true">*</span>
+                    </legend>
+                    @foreach ($operateurs as $operateur)
+                        <div class="field--inline">
+                            <input type="radio" class="field__checkbox" required
+                                   id="op-{{ $operateur->value }}" name="operator"
+                                   value="{{ $operateur->value }}"
+                                   @checked(old('operator', $paiement?->operator?->value) === $operateur->value)>
+                            <label for="op-{{ $operateur->value }}">
+                                {{ $operateur->label() }}
+                                <span class="u-note">— {{ $operateur->hint() }}</span>
+                            </label>
+                        </div>
+                    @endforeach
+                    @if ($errors->has('operator'))
+                        <p class="field__error">{{ $errors->first('operator') }}</p>
+                    @endif
+                </fieldset>
 
                 <div class="field">
                     <label class="field__label" for="payer_reference">
