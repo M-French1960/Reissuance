@@ -82,17 +82,9 @@ class RequestTrackingController extends Controller
             ],
         ];
 
-        $ordre = [
-            RequestStatus::Draft->value => 0,
-            RequestStatus::Pending->value => 1,
-            RequestStatus::UnderReview->value => 2,
-            RequestStatus::Escalated->value => 2,
-            RequestStatus::AwaitingSignature->value => 3,
-            RequestStatus::Signed->value => 4,
-            RequestStatus::Rejected->value => 4,
-        ];
-
-        $atteint = $ordre[$statut->value];
+        // L'ordre vit sur l'enumeration : un statut ajoute sans rang y leve
+        // une erreur a la source, plutot que de casser cet ecran (D-043).
+        $atteint = $statut->timelineRank();
         $frise = [];
 
         foreach ($jalons as $index => $jalon) {
@@ -102,7 +94,7 @@ class RequestTrackingController extends Controller
             $frise[] = [
                 'titre' => $jalon['titre'],
                 'etat' => match (true) {
-                    $statut === RequestStatus::Rejected && $rang > $atteint - 1 => 'arrete',
+                    $statut->isStopped() && $rang > $atteint - 1 => 'arrete',
                     $rang < $atteint || $trace !== null => 'fait',
                     $rang === $atteint => 'en_cours',
                     default => 'a_venir',

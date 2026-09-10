@@ -34,8 +34,10 @@ final class RequestTransitionService
      * @var array<string, array<string, string>>
      */
     public const TRANSITIONS = [
-        'draft' => ['pending' => 'citizen'],
-        'pending' => ['under_review' => 'officer'],
+        // T13 et T14 : le demandeur retire sa demande, tant que personne ne
+        // l'a prise en charge. Voir docs/CAS_USAGE.md 4.5.
+        'draft' => ['pending' => 'citizen', 'cancelled' => 'citizen'],
+        'pending' => ['under_review' => 'officer', 'cancelled' => 'citizen'],
         'under_review' => [
             'awaiting_signature' => 'officer',
             'rejected' => 'officer',

@@ -6,6 +6,7 @@ use App\Http\Controllers\ActDocumentController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Citizen\AttachmentController;
+use App\Http\Controllers\Citizen\CancellationController;
 use App\Http\Controllers\Citizen\PaymentController;
 use App\Http\Controllers\Citizen\ProfileController;
 use App\Http\Controllers\Citizen\RequestTrackingController;
@@ -66,6 +67,13 @@ Route::middleware('auth')->group(function (): void {
             Route::post('/demandes/{reissuanceRequest}/pieces', [AttachmentController::class, 'store'])
                 ->name('requests.attachments.store');
             Route::get('/demandes/{reissuanceRequest}', [RequestTrackingController::class, 'show'])->name('requests.show');
+
+            /*
+             * Annulation par le demandeur — « Cancel Request » du diagramme.
+             * Possible tant que personne n'a pris le dossier en charge.
+             */
+            Route::post('/demandes/{reissuanceRequest}/annulation', [CancellationController::class, 'store'])
+                ->name('requests.cancel');
 
             /*
              * Reglement des frais.

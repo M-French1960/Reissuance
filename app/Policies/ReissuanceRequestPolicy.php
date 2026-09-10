@@ -61,6 +61,21 @@ class ReissuanceRequestPolicy
         return $this->update($user, $request);
     }
 
+    /**
+     * Annulation par le demandeur — « Cancel Request » du diagramme.
+     *
+     * Tant que PERSONNE n'a pris le dossier en charge. Au-dela, annuler
+     * jetterait le travail d'un officier ; le demandeur passe alors par
+     * « Contact Officer ». Voir docs/CAS_USAGE.md 4.5.
+     */
+    public function cancel(User $user, ReissuanceRequest $request): bool
+    {
+        return $user->role === UserRole::Citizen
+            && $request->user_id === $user->id
+            && in_array($request->status, [RequestStatus::Draft, RequestStatus::Pending], true)
+            && $request->assigned_officer_id === null;
+    }
+
     public function submit(User $user, ReissuanceRequest $request): bool
     {
         return $this->update($user, $request);

@@ -65,6 +65,13 @@ class StateMachineTest extends TestCase
 
         $path = match ($status) {
             RequestStatus::Pending => [[RequestStatus::Pending, $citizen]],
+            // T14 : le demandeur retire sa demande avant toute prise en
+            // charge. C'est le seul chemin vers `cancelled` depuis un etat
+            // envoye — T13 part d'un brouillon, traite plus haut.
+            RequestStatus::Cancelled => [
+                [RequestStatus::Pending, $citizen],
+                [RequestStatus::Cancelled, $citizen],
+            ],
             RequestStatus::UnderReview => [
                 [RequestStatus::Pending, $citizen],
                 [RequestStatus::UnderReview, $officer],

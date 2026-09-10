@@ -22,6 +22,15 @@ enum RequestStatus: string
     case Rejected = 'rejected';
 
     /**
+     * Retiree par le demandeur lui-meme.
+     *
+     * Distincte de `rejected` : un rejet est une decision de l'administration,
+     * une annulation est un retrait du demandeur. Confondre les deux rendrait
+     * le journal illisible et fausserait toute statistique de refus.
+     */
+    case Cancelled = 'cancelled';
+
+    /**
      * Libelle affiche a l'utilisateur.
      *
      * Le 8.1 du brief interdit d'afficher la valeur technique. Le prototype
@@ -37,12 +46,44 @@ enum RequestStatus: string
             self::Escalated => 'Transmise au maire pour arbitrage',
             self::Signed => 'Signée — acte disponible',
             self::Rejected => 'Refusée',
+            self::Cancelled => 'Annulée par le demandeur',
         };
     }
 
     public function isTerminal(): bool
     {
-        return in_array($this, [self::Signed, self::Rejected], true);
+        return in_array($this, [self::Signed, self::Rejected, self::Cancelled], true);
+    }
+
+    /**
+     * Rang du statut sur la frise de suivi du demandeur.
+     *
+     * Cette correspondance vivait dans un tableau du controleur, indexe par
+     * la VALEUR du statut. Ajouter `cancelled` a l'enumeration a donc casse
+     * l'ecran de suivi — « Undefined array key » — sans qu'aucun outil ne
+     * previenne.
+     *
+     * Ici, c'est un `match` sur l'enumeration : un cas oublie leve une
+     * UnhandledMatchError a la source, au seul endroit qui definit l'ordre, et
+     * un test verifie que chaque cas en a un.
+     */
+    public function timelineRank(): int
+    {
+        return match ($this) {
+            self::Draft => 0,
+            self::Pending => 1,
+            self::UnderReview, self::Escalated => 2,
+            self::AwaitingSignature => 3,
+            // Les trois fins de parcours partagent le dernier rang : le
+            // parcours s'arrete la, qu'il aboutisse ou non.
+            self::Signed, self::Rejected, self::Cancelled => 4,
+        };
+    }
+
+    /** Le parcours s'est-il arrete sans acte ? */
+    public function isStopped(): bool
+    {
+        return in_array($this, [self::Rejected, self::Cancelled], true);
     }
 
     /** Jeton de couleur du design system, jamais une couleur en dur. */
@@ -56,6 +97,7 @@ enum RequestStatus: string
             self::Escalated => 'attention',
             self::Signed => 'success',
             self::Rejected => 'danger',
+            self::Cancelled => 'neutral',
         };
     }
 }

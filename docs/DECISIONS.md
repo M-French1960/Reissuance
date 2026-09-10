@@ -1148,3 +1148,62 @@ prouve que le cas heureux n'aurait rien vu.
   correspondait donc jamais, et **le reçu n'aurait porté aucune mention**.
   C'est exactement le piège de D-021. Le nom rendu par l'adaptateur est
   désormais enregistré dès sa première réponse.
+
+---
+
+## D-043 — Le diagramme de cas d'utilisation devient la référence
+
+- **Date :** 2026-09-10
+- **Statut :** appliqué
+- **Décision :** le diagramme de cas d'utilisation fourni sert désormais de
+  référence au développement. La traçabilité cas par cas, l'état de chacun et
+  les divergences avec le brief sont dans `docs/CAS_USAGE.md`.
+- **Quatre divergences sont signalées, aucune n'est tranchée seul :**
+  le diagramme confie les réglages système **au maire** et ne comporte aucun
+  administrateur, ce qui défait la séparation du §4.2 ; « Generate
+  Certificate » est placé chez l'officier alors que l'acte naît de la
+  signature ; un acteur **Facial Recognition AI** apparaît, avec tout ce qu'un
+  traitement biométrique implique ; et **GDNS** est un sigle dont je ne connais
+  pas la signification et que je n'inventerai pas.
+- **Ce qui est construit sans attendre :** « Cancel Request », le seul cas dont
+  le manque était un trou avéré — la Policy `delete` existait depuis le jalon 3
+  **sans aucune route pour l'appeler**, donc T12 n'a jamais été atteignable.
+
+---
+
+## D-044 — Annuler n'est pas rejeter, et n'est pas effacer
+
+- **Date :** 2026-09-10
+- **Statut :** appliqué
+- **Deux transitions :** T13 (`draft` → `cancelled`) et T14
+  (`pending` → `cancelled`), réservées au demandeur.
+- **`cancelled` est un état distinct de `rejected`.** Un rejet est une décision
+  de l'administration, une annulation un retrait du demandeur. Les confondre
+  fausserait le journal et toute statistique de refus.
+- **Ce n'est pas une suppression.** La demande reste en base avec sa trace :
+  effacer, ce serait perdre le fait qu'une demande a existé, que c'est
+  précisément ce qu'un audit anti-fraude doit pouvoir reconstituer.
+- **La limite, et pourquoi :** l'annulation s'arrête à `pending`. Au-delà, un
+  officier a pris le dossier et annuler jetterait son travail. Le demandeur
+  passe par « Contact Officer ». Ce choix ne fait que restreindre ; l'élargir
+  sera facile s'il le faut.
+- **Frais déjà réglés :** on le **dit** au demandeur, on ne décide pas. La
+  politique de remboursement est la question 4 d'`INTEGRATIONS.md` §5,
+  toujours ouverte. Rembourser automatiquement serait inventer une règle ; se
+  taire laisserait croire la somme perdue.
+- **Deux défauts trouvés en l'implémentant :**
+  1. Le **déclencheur PostgreSQL** listait les états terminaux en dur
+     (`signed`, `rejected`). `cancelled` n'y figurait pas : une sortie
+     d'annulation n'aurait été refusée que parce qu'elle manquait dans
+     `allowed_transitions` — donc une ligne ajoutée par erreur dans cette table
+     aurait suffi à faire repartir une demande annulée. La barrière doit tenir
+     par elle-même.
+  2. L'**écran de suivi** rangeait les statuts dans un tableau indexé par leur
+     valeur. Ajouter un état l'a cassé — « Undefined array key » — sans qu'aucun
+     outil ne prévienne. L'ordre vit désormais sur l'énumération, dans un
+     `match` : un cas oublié y lève une erreur à la source, et un test parcourt
+     tous les cas, donc couvrira aussi le prochain.
+- **Ce que le test exhaustif de la machine à états a bien fait :** il a
+  automatiquement énuméré les sept nouvelles paires interdites au départ de
+  `cancelled`, sans que j'aie à les écrire. Un produit cartésien vaut mieux
+  qu'une liste tenue à la main.

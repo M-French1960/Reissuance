@@ -61,7 +61,9 @@ unique : l'implémentation la reproduit, elle ne l'interprète pas.
 | T9 | `escalated` | maire | approuver par exception | `signed` | **obligatoire** | le maire est rattaché à la commune ; signature produite |
 | T10 | `escalated` | maire | rejeter | `rejected` | **obligatoire** | le maire est rattaché à la commune |
 | T11 | `escalated` | maire | retourner à l'officier | `under_review` | **obligatoire** | le maire est rattaché à la commune |
-| T12 | `draft` | citoyen (auteur) | supprimer | *(effacé)* | — | seule suppression autorisée du système |
+| T12 | `draft` | citoyen (auteur) | supprimer | *(effacé)* | — | seule suppression autorisée du système — **Policy écrite, aucune route : inatteignable** |
+| T13 | `draft` | citoyen (auteur) | annuler | `cancelled` | facultatif | — |
+| T14 | `pending` | citoyen (auteur) | annuler | `cancelled` | facultatif | **personne n'a pris le dossier en charge** |
 
 ### Ce qu'aucune ligne n'autorise, et c'est voulu
 
@@ -71,9 +73,15 @@ unique : l'implémentation la reproduit, elle ne l'interprète pas.
   centre ayant renseigné les 4 vérifications.** Seule T4 y mène.
 - **`pending` ne peut pas devenir `awaiting_signature` directement.** Le passage
   par `under_review` est obligatoire.
-- **`signed` et `rejected` n'ont aucune transition sortante.** Toute reprise
-  passe par une nouvelle demande liée à la précédente
+- **`signed`, `rejected` et `cancelled` n'ont aucune transition sortante.**
+  Toute reprise passe par une nouvelle demande liée à la précédente
   (`reissuance_requests.supersedes_id`).
+- **`cancelled` n'est pas `rejected`.** Un rejet est une décision de
+  l'administration ; une annulation est un retrait du demandeur. Les confondre
+  fausserait toute lecture du journal et toute statistique de refus.
+- **On n'annule plus une fois le dossier pris en charge.** T14 s'arrête à
+  `pending` : au-delà, annuler jetterait le travail d'un officier. Le demandeur
+  passe alors par « Contact Officer » (voir `CAS_USAGE.md` §4.5).
 - **L'administrateur n'apparaît dans aucune ligne.** Il ne peut faire avancer
   aucune demande. C'est l'application du §4.2 : gouvernance et données séparées.
 

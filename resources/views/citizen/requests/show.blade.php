@@ -93,5 +93,33 @@
         </div>
     </x-card>
 
+    @can('cancel', $demande)
+        <x-card title="Annuler ma demande">
+            <p>
+                Vous pouvez retirer cette demande tant qu'aucun agent ne l'a
+                prise en charge. <strong>Cette action est définitive :</strong>
+                pour reprendre la démarche, il faudra déposer une nouvelle
+                demande.
+            </p>
+
+            <form method="POST" action="{{ route('citizen.requests.cancel', $demande) }}">
+                @csrf
+
+                <div class="field">
+                    <label class="field__label" for="cancel-reason">
+                        Motif
+                        <span class="field__hint">Facultatif. Il aide le centre d'état civil à comprendre.</span>
+                    </label>
+                    <textarea class="field__control" id="cancel-reason" name="reason" rows="2">{{ old('reason') }}</textarea>
+                    @if ($errors->has('reason'))
+                        <p class="field__error">{{ $errors->first('reason') }}</p>
+                    @endif
+                </div>
+
+                <x-button type="submit" variant="danger">Annuler ma demande</x-button>
+            </form>
+        </x-card>
+    @endcan
+
     <p class="u-return"><a href="{{ route('citizen.requests.index') }}">Retour à mes demandes</a></p>
 @endsection
