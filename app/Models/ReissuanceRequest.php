@@ -106,6 +106,12 @@ class ReissuanceRequest extends Model
         return $this->hasMany(VerificationStep::class, 'request_id');
     }
 
+    /** Avis de comparaison faciale rendus sur ce dossier (etape 3). */
+    public function facialComparisons(): HasMany
+    {
+        return $this->hasMany(FacialComparison::class, 'request_id');
+    }
+
     public function decisions(): HasMany
     {
         return $this->hasMany(RequestDecision::class, 'request_id');

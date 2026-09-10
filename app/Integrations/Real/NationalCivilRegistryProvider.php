@@ -8,7 +8,7 @@ use App\Contracts\CivilRegistryProvider;
 use App\Support\ProviderResponse;
 use RuntimeException;
 
-/** Voir PoliceIdentityLookupProvider : echoue bruyamment plutot que de mentir. */
+/** Voir DgsnIdentityLookupProvider : echoue bruyamment plutot que de mentir. */
 final class NationalCivilRegistryProvider implements CivilRegistryProvider
 {
     public function search(array $criteria): ProviderResponse

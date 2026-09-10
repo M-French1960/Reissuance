@@ -64,6 +64,7 @@ class VerificationController extends Controller
             'manquantes' => $this->workflow->missingSteps($reissuanceRequest),
             'complet' => $this->workflow->isComplete($reissuanceRequest),
             'reservations' => $this->workflow->reservations($reissuanceRequest),
+            'avisFacial' => $this->workflow->facialOpinion($reissuanceRequest),
             'peutDecider' => $request->user()->can('decide', $reissuanceRequest),
         ]);
     }
@@ -86,10 +87,33 @@ class VerificationController extends Controller
             'result.required' => 'Indiquez le résultat de votre contrôle avant de continuer.',
         ]);
 
+        // Etape 3 : la comparaison faciale est OBLIGATOIRE avant que
+        // l'officier ne conclue. Elle ne decide pas a sa place — elle doit
+        // simplement avoir eu lieu, et figurer au dossier.
+        $avis = null;
+
+        if ($step === 3) {
+            $avis = $this->workflow->facialOpinion($reissuanceRequest);
+
+            if ($avis === null) {
+                return back()->withErrors([
+                    'result' => 'Lancez la comparaison faciale avant de conclure sur les photographies.',
+                ])->withInput();
+            }
+        }
+
         $this->workflow->record(
             $reissuanceRequest, $step, $request->user(),
             VerificationResult::from($validated['result']),
-            ['note' => $validated['note'] ?? null, 'source' => 'officer_observation'],
+            array_filter([
+                'note' => $validated['note'] ?? null,
+                'source' => 'officer_observation',
+                // L'avis de la machine est recopie dans l'etape : on saura
+                // plus tard sur quoi l'officier s'est prononce, et s'il est
+                // passe outre.
+                'facial_outcome' => $avis['outcome'] ?? null,
+                'facial_similarity' => $avis['payload']['similarity'] ?? null,
+            ], fn ($v): bool => $v !== null),
         );
 
         return redirect()->route('officer.verification.step', [
@@ -104,6 +128,26 @@ class VerificationController extends Controller
 
         try {
             $reponse = $this->workflow->runIdentityCheck($reissuanceRequest, $request->user());
+        } catch (RuntimeException $e) {
+            return back()->withErrors(['provider' => $e->getMessage()]);
+        }
+
+        return back()->with('status', $reponse->message ?? $reponse->outcome->label());
+    }
+
+    /**
+     * Étape 3 : comparaison faciale.
+     *
+     * Séparée de l'enregistrement de l'étape, à dessein : l'officier lance la
+     * comparaison, LIT le résultat, puis conclut lui-même. Fusionner les deux
+     * ferait de l'avis de la machine la décision.
+     */
+    public function runFacialComparison(Request $request, ReissuanceRequest $reissuanceRequest): RedirectResponse
+    {
+        $this->authorize('decide', $reissuanceRequest);
+
+        try {
+            $reponse = $this->workflow->runFacialComparison($reissuanceRequest, $request->user());
         } catch (RuntimeException $e) {
             return back()->withErrors(['provider' => $e->getMessage()]);
         }

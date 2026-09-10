@@ -168,8 +168,18 @@ class CompleteJourneyTest extends TestCase
         $this->post(route('officer.verification.identity', $demande))
             ->assertSessionHasNoErrors();
 
-        // Etape 3 : examen des photographies.
+        // Etape 3 : examen des photographies. La comparaison faciale est
+        // OBLIGATOIRE avant que l'officier ne conclue (D-045) — sans elle,
+        // l'enregistrement de l'etape est refuse.
         $this->get(route('officer.verification.step', [$demande, 3]))->assertOk();
+
+        $this->post(route('officer.verification.acknowledge', [$demande, 3]), [
+            'result' => 'match',
+        ])->assertSessionHasErrors('result');
+
+        $this->post(route('officer.verification.facial', $demande))
+            ->assertSessionHasNoErrors();
+
         $this->post(route('officer.verification.acknowledge', [$demande, 3]), [
             'result' => 'match',
         ])->assertSessionHasNoErrors();

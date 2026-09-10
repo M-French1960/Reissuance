@@ -29,7 +29,45 @@
             @endforeach
         </div>
 
+        {{-- Comparaison faciale : obligatoire avant de conclure, et separee de
+             la decision. La machine rend un avis, l'officier tranche. --}}
         @if ($peutDecider)
+            <div class="u-stack">
+                @if ($avisFacial === null)
+                    <x-alert variant="attention" title="Comparaison faciale à lancer">
+                        Le rapprochement automatique des deux photographies est
+                        obligatoire avant de conclure sur cette étape. Il rend un
+                        <strong>avis</strong> : la décision reste la vôtre.
+                    </x-alert>
+                @else
+                    @php
+                        $issue = \App\Support\ProviderOutcome::from($avisFacial['outcome']);
+                        $score = $avisFacial['payload']['similarity'] ?? null;
+                    @endphp
+                    <x-alert :variant="$issue === \App\Support\ProviderOutcome::Match ? 'success' : 'attention'"
+                             title="Avis de la comparaison faciale">
+                        <p class="u-flush">
+                            <span class="badge badge--{{ $issue->toVerificationResult()->tone() }}">{{ $issue->label() }}</span>
+                            @if ($score !== null)
+                                <span class="u-note">Indice de similarité : {{ number_format((float) $score * 100, 0) }} %</span>
+                            @endif
+                        </p>
+                        <p>{{ $avisFacial['message'] ?? '' }}</p>
+                        <p class="u-note">
+                            Cet avis ne décide de rien. Si vous concluez autrement,
+                            votre motif sera obligatoire et figurera au dossier.
+                        </p>
+                    </x-alert>
+                @endif
+
+                <form method="POST" action="{{ route('officer.verification.facial', $demande) }}">
+                    @csrf
+                    <x-button type="submit" variant="secondary">
+                        {{ $avisFacial ? 'Relancer la comparaison' : 'Lancer la comparaison faciale' }}
+                    </x-button>
+                </form>
+            </div>
+
             <form method="POST" action="{{ route('officer.verification.acknowledge', ['reissuanceRequest' => $demande, 'step' => 3]) }}">
                 @csrf
                 <fieldset class="fieldset">

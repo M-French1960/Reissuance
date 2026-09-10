@@ -48,6 +48,25 @@
             </x-alert>
         @endif
 
+        {{-- Information sur le traitement biometrique. Le rapprochement est
+             obligatoire (D-045) : il n'y a donc pas de case a cocher, mais la
+             personne doit savoir ce qui sera fait de sa photographie, et que
+             la decision reste humaine. --}}
+        <x-alert variant="attention" title="Vos deux photographies seront comparées">
+            <p>
+                Un rapprochement automatique sera fait entre votre photo et celle
+                de votre pièce d'identité, afin de vérifier que la pièce est bien
+                la vôtre. <strong>Cette comparaison ne décide pas :</strong> elle
+                donne un avis à l'officier d'état civil, qui examine lui-même les
+                deux photographies et reste seul à décider.
+            </p>
+            <p class="u-flush">
+                Si la comparaison échoue ou n'aboutit pas, votre demande
+                <strong>n'est pas refusée pour autant</strong> : l'officier
+                poursuit l'examen et doit motiver sa décision.
+            </p>
+        </x-alert>
+
         <div class="grid grid--2">
             @foreach ([
                 ['selfie', 'Votre photo', $selfie, "Prenez-vous en photo, visage bien visible et de face. C'est ce qui permet de vérifier que la pièce est bien la vôtre.", 'user'],

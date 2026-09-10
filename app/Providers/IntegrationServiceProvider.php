@@ -5,17 +5,20 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Contracts\CivilRegistryProvider;
+use App\Contracts\FacialRecognitionProvider;
 use App\Contracts\IdentityLookupProvider;
 use App\Contracts\PaymentProvider;
 use App\Contracts\SignatureProvider;
 use App\Integrations\Fake\FakeCivilRegistryProvider;
+use App\Integrations\Fake\FakeFacialRecognitionProvider;
 use App\Integrations\Fake\FakeIdentityLookupProvider;
 use App\Integrations\Fake\FakePaymentProvider;
 use App\Integrations\Fake\FakeSignatureProvider;
 use App\Integrations\Real\AccreditedSignatureProvider;
+use App\Integrations\Real\BiometricFacialRecognitionProvider;
+use App\Integrations\Real\DgsnIdentityLookupProvider;
 use App\Integrations\Real\MobileMoneyPaymentProvider;
 use App\Integrations\Real\NationalCivilRegistryProvider;
-use App\Integrations\Real\PoliceIdentityLookupProvider;
 use Illuminate\Support\ServiceProvider;
 use InvalidArgumentException;
 
@@ -31,7 +34,7 @@ class IntegrationServiceProvider extends ServiceProvider
             IdentityLookupProvider::class,
             'identity',
             FakeIdentityLookupProvider::class,
-            PoliceIdentityLookupProvider::class,
+            DgsnIdentityLookupProvider::class,
         );
 
         $this->bindProvider(
@@ -53,6 +56,13 @@ class IntegrationServiceProvider extends ServiceProvider
             'payment',
             FakePaymentProvider::class,
             MobileMoneyPaymentProvider::class,
+        );
+
+        $this->bindProvider(
+            FacialRecognitionProvider::class,
+            'facial',
+            FakeFacialRecognitionProvider::class,
+            BiometricFacialRecognitionProvider::class,
         );
     }
 

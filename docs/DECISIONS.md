@@ -1207,3 +1207,65 @@ prouve que le cas heureux n'aurait rien vu.
   automatiquement énuméré les sept nouvelles paires interdites au départ de
   `cancelled`, sans que j'aie à les écrire. Un produit cartésien vaut mieux
   qu'une liste tenue à la main.
+
+---
+
+## D-045 — La biométrie est obligatoire, et la machine ne décide pas
+
+- **Date :** 2026-09-10
+- **Statut :** appliqué, **sur décision explicite** après signalement
+- **Le contexte :** j'ai signalé que l'acteur *Facial Recognition AI* du
+  diagramme était un traitement biométrique, et posé cinq questions
+  d'encadrement. La réponse a été que la biométrie est obligatoire. Elle est
+  donc construite.
+- **Ce qui est fait :** à l'étape 3, un rapprochement automatique entre le
+  selfie et la photographie de la pièce. **Obligatoire** — l'officier ne peut
+  pas conclure sur l'étape tant qu'il n'a pas eu lieu.
+- **Les quatre garde-fous, tenus par le code et par des tests :**
+  1. **La machine rend un avis, pas une décision.** L'avis vit dans une table
+     séparée ; l'étape porte la décision de l'officier, avec l'avis recopié
+     pour qu'on sache s'il est passé outre. **Aucun seuil de rejet automatique
+     n'existe nulle part.**
+  2. **Une personne non reconnue n'est jamais bloquée.** `no_match`,
+     `inconclusive` et `unavailable` sont des résultats enregistrés : la
+     vérification est complète et l'officier peut accepter en motivant (D-031).
+     Sans cette porte, un faux négatif serait une **exclusion administrative** —
+     un acte d'état civil conditionne l'accès à presque tout.
+  3. **Aucun gabarit biométrique n'est conservé** : l'issue et le score, rien
+     d'autre. Un test refuse la présence des mots `embedding`, `template`,
+     `descriptor`, `landmarks`, `encoding`, `image` et `base64`.
+  4. **Le journal ne porte que l'issue** (garde-fou n°6).
+- **Le demandeur est informé** avant de téléverser : que ses photographies
+  seront comparées, que la comparaison ne décide pas, et qu'un échec ne vaut
+  pas refus. Pas de case à cocher — un consentement qu'on ne peut pas refuser
+  serait un faux consentement.
+- **L'adaptateur réel lève une exception** plutôt que de simuler un « match ».
+  Un avis fabriqué conduirait un officier à délivrer un acte en croyant qu'une
+  machine a confirmé l'identité : c'est le mécanisme même d'une fraude réussie.
+- **Ce que le code ne peut pas résoudre**, et qui bloque une mise en service
+  réelle : fondement juridique, prestataire et taux d'erreur mesuré, voie de
+  recours en cas de non-reconnaissance répétée, conservation des
+  photographies, responsabilité en cas d'erreur. Voir `docs/BIOMETRIE.md` §4.
+
+---
+
+## D-046 — L'administrateur est conservé ; GDNS est la DGSN
+
+- **Date :** 2026-09-10
+- **Statut :** tranché par vous
+- **L'administrateur reste.** Le diagramme n'en comportait pas et confiait les
+  réglages au maire ; la séparation du §4.2 l'emporte. « Manage system
+  settings » devient un cas de l'administrateur. Un maire qui créerait les
+  comptes officiers **et** signerait les actes cumulerait les deux pouvoirs que
+  la plateforme sépare.
+- **« Generate Certificate » reste la préparation du dossier**, pas la
+  production d'un document. L'acte naît de la signature du maire. Un document
+  existant avant sa décision serait un acte en attente de tampon, et c'est
+  précisément ce qui rend un raccourci possible.
+- **GDNS = DGSN**, Délégation Générale à la Sûreté Nationale, qui délivre la
+  carte nationale d'identité au Cameroun (vérifié en ligne : `dgsn.cm`). C'est
+  l'acteur que `IdentityLookupProvider` modélisait déjà ; l'adaptateur réel
+  s'appelle désormais `DgsnIdentityLookupProvider`.
+- **Un piège écarté au passage :** la DGSN publie des frais pour la CNI. Ce
+  n'est **pas** le tarif d'une réédition d'acte d'état civil, qui reste inconnu.
+  Aucun montant n'est repris de l'un pour l'autre.

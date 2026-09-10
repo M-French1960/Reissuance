@@ -19,6 +19,7 @@ return [
         'registry' => env('PHOENIX_REGISTRY_PROVIDER', 'fake'),
         'signature' => env('PHOENIX_SIGNATURE_PROVIDER', 'fake'),
         'payment' => env('PHOENIX_PAYMENT_PROVIDER', 'fake'),
+        'facial' => env('PHOENIX_FACIAL_PROVIDER', 'fake'),
     ],
 
     /*

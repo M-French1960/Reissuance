@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Contracts\CivilRegistryProvider;
+use App\Contracts\FacialRecognitionProvider;
 use App\Contracts\IdentityLookupProvider;
 use App\Enums\VerificationResult;
 use App\Models\AuditLog;
@@ -53,6 +54,7 @@ final class VerificationWorkflow
     public function __construct(
         private readonly IdentityLookupProvider $identity,
         private readonly CivilRegistryProvider $registry,
+        private readonly FacialRecognitionProvider $facial,
     ) {}
 
     /** @return Collection<int, VerificationStep> indexée par numéro d'étape */
@@ -170,6 +172,67 @@ final class VerificationWorkflow
         );
 
         return $response;
+    }
+
+    /**
+     * Étape 3 : comparaison faciale entre le selfie et la pièce.
+     *
+     * La machine rend un AVIS ; elle ne décide pas. Son résultat est conservé
+     * dans la charge de l'étape, et c'est l'officier qui enregistre le
+     * résultat de l'étape après avoir regardé lui-même les photographies.
+     *
+     * Ce qui est conservé : l'avis et le score. Jamais un gabarit biométrique.
+     */
+    public function runFacialComparison(ReissuanceRequest $request, User $officer): ProviderResponse
+    {
+        $selfie = $request->attachments->firstWhere('kind', 'selfie');
+        $piece = $request->attachments->firstWhere('kind', 'id_document');
+
+        if ($selfie === null || $piece === null) {
+            throw new \RuntimeException(
+                'La comparaison faciale exige le selfie et la photographie de la pièce.'
+            );
+        }
+
+        $response = $this->facial->compare($selfie, $piece);
+
+        // On NE crée PAS le résultat de l'étape ici : l'avis de la machine
+        // n'est pas la décision de l'officier. On le range à part, et l'étape
+        // 3 le reprendra quand l'officier tranchera.
+        $this->rememberFacialOpinion($request, $response);
+
+        AuditLog::create([
+            'actor_id' => $officer->id,
+            'actor_role' => $officer->role->value,
+            'action' => 'verification.facial_comparison_run',
+            'auditable_type' => 'reissuance_request',
+            'auditable_id' => $request->id,
+            // L'issue et rien d'autre : ni image, ni gabarit, ni identité.
+            'reason' => $response->outcome->label(),
+            'ip_address' => request()->ip(),
+        ]);
+
+        return $response;
+    }
+
+    /** L'avis de la machine pour le cycle en cours, s'il a été demandé. */
+    public function facialOpinion(ReissuanceRequest $request): ?array
+    {
+        $ligne = $request->facialComparisons()
+            ->where('cycle', $request->verification_cycle)
+            ->latest('id')
+            ->first();
+
+        return $ligne?->payload;
+    }
+
+    private function rememberFacialOpinion(ReissuanceRequest $request, ProviderResponse $response): void
+    {
+        $request->facialComparisons()->create([
+            'cycle' => $request->verification_cycle,
+            'outcome' => $response->outcome->value,
+            'payload' => $response->toArray(),
+        ]);
     }
 
     /** Étape 4 : recherche de l'acte d'origine. */

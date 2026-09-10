@@ -108,6 +108,8 @@ Route::middleware('auth')->group(function (): void {
                 ->whereNumber('step')->name('verification.acknowledge');
             Route::post('/demandes/{reissuanceRequest}/controle-identite', [VerificationController::class, 'runIdentityCheck'])
                 ->name('verification.identity');
+            Route::post('/demandes/{reissuanceRequest}/comparaison-faciale', [VerificationController::class, 'runFacialComparison'])
+                ->name('verification.facial');
             Route::post('/demandes/{reissuanceRequest}/recherche-registre', [VerificationController::class, 'runRegistrySearch'])
                 ->name('verification.registry');
             Route::post('/demandes/{reissuanceRequest}/decision', [DecisionController::class, 'store'])

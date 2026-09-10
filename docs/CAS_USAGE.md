@@ -18,12 +18,12 @@
 | Citizen | `UserRole::Citizen` | — |
 | Civil Registry Officer | `UserRole::Officer` | — |
 | Mayor | `UserRole::Mayor` | — |
-| *(absent du diagramme)* | **`UserRole::Admin`** | ⚠ voir §4.1 |
+| *(absent du diagramme)* | **`UserRole::Admin`** | ✅ **conservé, sur votre décision** — voir §4.1 |
 | Payment API | `PaymentProvider` | jalon 7 |
 | DoctSign API | `SignatureProvider` | jalon 5 |
 | Civil Registry DB | `CivilRegistryProvider` | jalon 4 |
-| GDNS | `IdentityLookupProvider` ? | ⚠ voir §4.4 |
-| Facial Recognition AI | **rien** | ⚠ voir §4.3 |
+| GDNS | `IdentityLookupProvider` → `DgsnIdentityLookupProvider` | ✅ **tranché** — voir §4.4 |
+| Facial Recognition AI | `FacialRecognitionProvider` | ✅ **construit** — voir §4.3 et `BIOMETRIE.md` |
 
 ---
 
@@ -58,8 +58,8 @@
 | **Cancel Request** | La Policy `delete` existe **mais aucune route ne l'appelle** : T12 est inatteignable. Et le diagramme rattache l'annulation au *suivi* d'une demande, donc à une demande **déjà envoyée** — ce que la machine à états ne prévoit pas du tout. | machine à états |
 | **Contact Officer** | Rien. Aucun canal du demandeur vers l'agent. | modéré |
 | **Through Orange Money / Through Mobile Money** | Un seul adaptateur factice générique. Le diagramme en fait deux spécialisations, donc un choix du demandeur. | faible |
-| **Generate Certificate** *(officier)* | ⚠ voir §4.2 | à clarifier |
-| **Manage system settings** *(maire)* | ⚠ voir §4.1 | à trancher |
+| ~~Generate Certificate~~ | tranché : déjà couvert par T4 puis T8 (§4.2) | — |
+| **Manage system settings** | ⚠ tranché : cas de l'**administrateur** (§4.1) | à construire |
 
 ---
 
@@ -87,9 +87,10 @@ Les deux lectures s'opposent frontalement :
 - **Suivre le brief** : garder l'administrateur, et lire « Manage system
   settings » comme un cas porté par un acteur que le diagramme a omis.
 
-**Je recommande la seconde lecture** et je n'ai rien changé. Si vous voulez la
-première, dites-le : c'est faisable, mais je veux que la conséquence soit
-écrite avant, pas découverte après.
+**TRANCHÉ : l'administrateur est conservé.** La séparation du §4.2 tient. « Manage
+system settings » devient donc un cas de **l'administrateur**, et non du maire :
+un maire qui pourrait créer les comptes officiers et signer les actes cumulerait
+les deux pouvoirs que la plateforme sépare.
 
 ### 4.2 ⚠ « Generate Certificate » du côté de l'officier
 
@@ -106,7 +107,15 @@ Deux lectures :
    créerait un document existant sans décision du maire, ce que le §4.3
    interdit.
 
-Je suis parti de la lecture 1. **À confirmer.**
+**TRANCHÉ : lecture 1.** L'acte naît de la signature du maire, et « Generate
+Certificate » est la préparation du dossier par l'officier — ce que fait déjà
+la transition T4, puis l'option A de T8 lorsque le maire renvoie un dossier
+prêt à signer.
+
+C'est la seule lecture compatible avec le §4.3 : un document existant avant la
+décision du maire serait un acte en attente de tampon, et non un acte que le
+maire décide de délivrer. La différence n'est pas théorique — c'est elle qui
+fait qu'aucun raccourci ne produit d'acte signé.
 
 ### 4.3 ⚠ Reconnaissance faciale — le point le plus lourd du diagramme
 
@@ -131,8 +140,18 @@ assiste l'officier sans jamais décider à sa place**, exactement comme la base
 de la police aujourd'hui. Un `no_match` n'interdit pas l'acceptation, il rend
 le motif obligatoire (D-031). Un être humain reste responsable.
 
-**Ce que je refuse de construire sans réponse** : un rejet automatique fondé
-sur un score biométrique.
+**TRANCHÉ : la biométrie est obligatoire.** Elle est construite, et le
+rapprochement est exigé avant que l'officier ne puisse conclure sur l'étape 3.
+
+Les garde-fous tiennent dans le code, pas dans une intention : la machine rend
+un **avis** et ne décide pas ; une personne qu'elle ne reconnaît pas n'est
+**jamais bloquée** ; aucun gabarit biométrique n'est conservé ; le journal ne
+porte que l'issue. Le détail, les tests qui les protègent et les cinq questions
+qui restent ouvertes pour une mise en service réelle sont dans
+`docs/BIOMETRIE.md`.
+
+**Ce qui n'existe nulle part dans le code** : un seuil au-delà duquel une
+demande serait automatiquement refusée.
 
 ### 4.4 ⚠ GDNS — je ne sais pas ce que c'est
 
@@ -142,7 +161,16 @@ d'identité nationale, il correspond à l'`IdentityLookupProvider` déjà en pla
 et il n'y a rien à faire. Sinon, c'est une intégration de plus, avec son
 contrat et son mode dégradé.
 
-**Question à poser :** que désigne GDNS, et quelle interface expose-t-il ?
+**TRANCHÉ : GDNS = DGSN**, la Délégation Générale à la Sûreté Nationale —
+l'administration camerounaise qui délivre la carte nationale d'identité
+(vérifié : `https://www.dgsn.cm/`). C'est exactement l'acteur que
+`IdentityLookupProvider` modélisait déjà sous le nom de « base de la police ».
+L'adaptateur réel s'appelle désormais `DgsnIdentityLookupProvider`.
+
+**Attention à ne pas confondre deux tarifs :** la DGSN annonce des frais pour
+la **CNI**. Ce n'est pas le tarif d'une **réédition d'acte d'état civil**, qui
+reste inconnu (question 1 d'`INTEGRATIONS.md` §5). Aucun montant n'est repris
+de l'un pour l'autre.
 
 ### 4.5 Annuler une demande déjà envoyée
 
@@ -169,7 +197,9 @@ l'élargir si vous le décidez.
 
 ## 5. Ordre de travail retenu
 
-1. **Cancel Request** — combler un trou réel : T12 n'était pas branché.
-2. **Contact Officer** — le canal manquant entre le demandeur et l'agent.
-3. **Orange Money / Mobile Money** — deux adaptateurs au lieu d'un.
-4. Le reste attend vos réponses aux §4.1 à §4.4.
+1. ~~**Cancel Request**~~ — fait (D-044).
+2. ~~**Facial Recognition**~~ — fait (D-045, `BIOMETRIE.md`).
+3. ~~**GDNS**~~ — identifié : DGSN.
+4. **Manage system settings**, côté administrateur.
+5. **Contact Officer** — le canal manquant entre le demandeur et l'agent.
+6. **Orange Money / Mobile Money** — deux adaptateurs au lieu d'un.

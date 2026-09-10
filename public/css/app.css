@@ -274,6 +274,9 @@ th { background: var(--color-surface-sunken); font-size: var(--text-xs); text-tr
    l'application dans un navigateur, pas par les tests. */
 .u-flush { margin: 0; }
 .u-stack-top { margin-top: var(--space-4); }
+/* Empile des blocs autonomes avec un espacement constant. */
+.u-stack > * + * { margin-top: var(--space-3); }
+.u-stack { margin-bottom: var(--space-4); }
 .u-note { font-size: var(--text-sm); color: var(--color-ink-500); }
 .u-note--tight { margin: var(--space-1) 0 0; }
 .u-note--loose { margin-top: var(--space-3); }

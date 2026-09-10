@@ -9,8 +9,8 @@ use App\Contracts\IdentityLookupProvider;
 use App\Enums\VerificationResult;
 use App\Integrations\Fake\FakeCivilRegistryProvider;
 use App\Integrations\Fake\FakeIdentityLookupProvider;
+use App\Integrations\Real\DgsnIdentityLookupProvider;
 use App\Integrations\Real\NationalCivilRegistryProvider;
-use App\Integrations\Real\PoliceIdentityLookupProvider;
 use App\Support\ProviderOutcome;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -34,7 +34,7 @@ class IntegrationAdaptersTest extends TestCase
     public function la_selection_par_variable_d_environnement_fonctionne(): void
     {
         config(['phoenix.providers.identity' => 'real']);
-        $this->assertInstanceOf(PoliceIdentityLookupProvider::class, app(IdentityLookupProvider::class));
+        $this->assertInstanceOf(DgsnIdentityLookupProvider::class, app(IdentityLookupProvider::class));
 
         config(['phoenix.providers.registry' => 'real']);
         $this->assertInstanceOf(NationalCivilRegistryProvider::class, app(CivilRegistryProvider::class));
@@ -61,7 +61,7 @@ class IntegrationAdaptersTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessageMatches("/n'est pas implémenté/");
 
-        (new PoliceIdentityLookupProvider)->verify('DEMO-1', 'Personne DE TEST');
+        (new DgsnIdentityLookupProvider)->verify('DEMO-1', 'Personne DE TEST');
     }
 
     #[Test]

@@ -59,7 +59,11 @@ jamais bloquer l'officier sans explication. Elle est enregistrée dans
 
 ---
 
-## 2. Base de la police — `IdentityLookupProvider`
+## 2. DGSN — `IdentityLookupProvider`
+
+*Délégation Générale à la Sûreté Nationale : l'administration qui délivre la
+carte nationale d'identité, et l'acteur « GDNS » du diagramme de cas
+d'utilisation (D-046).*
 
 **Usage :** étape 2 de la vérification (§5.3) — contrôler le numéro de pièce.
 
