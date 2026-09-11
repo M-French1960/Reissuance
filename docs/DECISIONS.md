@@ -2142,3 +2142,67 @@ chaque cas reste vérifié par son propre fichier. Celui-ci ne couvre que la
 traçabilité du diagramme au code — et c'est déjà ce qui manquait.
 
 ---
+
+## D-062 — Le diagramme v2 relu à la source : trois écarts, dont un de ma main
+
+- **Date :** 2026-09-11
+- **Statut :** écarts corrigés ou déclarés ; 656 tests, 0 échec
+- **Origine :** vous avez repartagé le diagramme. Jusque-là, `UseCaseCoverageTest`
+  encodait ma **transcription** du diagramme, pas le diagramme. Confronté à la
+  source, il manquait trois choses.
+
+### 1. « Manage system settings » n'existe pas au diagramme v2 — et je l'ai construit
+
+Le Super Admin n'y porte **qu'un seul cas : « Manage Accounts »**. Il n'y a pas
+de cas « Manage system settings », ni chez lui ni chez le maire.
+
+J'ai pourtant construit cet écran (D-060) en annonçant qu'il achevait la
+couverture du diagramme. **Cette croyance venait de ma propre analyse de la
+version 1** — où le cas existait, confié au maire — et non de la version 2, qui
+est la référence. C'est exactement la dérive contre laquelle `UseCaseCoverageTest`
+a été écrit, et elle est passée par moi, le jour même.
+
+L'écran est **conservé** : consultation seule, aucune route d'écriture, aucun
+secret affiché, et il signale que la plateforme tourne sur des adaptateurs
+factices — ce que rien d'autre ne fait. Mais il est désormais **déclaré hors
+diagramme**, et son maintien vous revient.
+
+### 2. Deux cas du diagramme n'étaient pas tracés
+
+**« Pay Through Orange Money »** et **« Pay Through Mobile Money »** sont deux
+spécialisations de « Make Payment » au diagramme. Mon test ne traçait que le cas
+parent. Les deux sont implémentés et couverts — vérifié, `PaymentOperatorTest`
+les exerce l'un et l'autre — mais ils ne figuraient pas dans la traçabilité.
+
+### 3. « Generate Certificate » : j'avais tranché ce qui ne m'appartenait pas
+
+Le diagramme place ce cas chez l'**officier**. Le code n'a aucune route
+correspondante : l'acte n'est fabriqué que par `ActIssuanceService`, appelé
+depuis le contrôleur du **maire**.
+
+`docs/CAS_USAGE.md` §4.2 portait « **TRANCHÉ** : lecture 1 », de ma main. Ma
+lecture reste défendable — un document existant avant la décision du maire
+serait un acte en attente de tampon — mais **qui rédige l'acte est une question
+de responsabilité du contenu, pas d'implémentation.** Elle est rouverte, et
+désormais déclarée dans `UseCaseCoverageTest::CAS_SANS_ROUTE` avec sa
+justification, de sorte qu'elle ne puisse plus se perdre dans un document.
+
+### Ce qui change dans le test
+
+- Les cas portent les **noms exacts du diagramme** : « Escalate Request » et
+  non « Escalate Case », « Make Reissuance Request » et non « Make Request ».
+  Une traduction approximative fait perdre la trace.
+- « Accept Request » et « Reject Request » sont deux cas distincts, comme au
+  diagramme, et non un « Accept / Reject » de ma composition.
+- Une liste **`CAS_SANS_ROUTE`** rend visibles les cas du diagramme sans
+  implémentation. Un test échoue si elle change sans qu'on l'ait voulu : un cas
+  non construit ne doit pas pouvoir sortir de la discussion.
+
+### La leçon, et elle est pour moi
+
+Un test qui encode une transcription ne vaut pas mieux que la transcription.
+`UseCaseCoverageTest` prouvait la cohérence entre mon souvenir du diagramme et
+le code — pas entre le diagramme et le code. **La source doit être relue, pas
+mémorisée.**
+
+---

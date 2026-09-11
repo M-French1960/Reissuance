@@ -123,28 +123,39 @@ class UseCaseCoverageTest extends TestCase
      */
     public static function casDuDiagramme(): iterable
     {
-        // [acteur, routes qui realisent le cas, ecran a ouvrir]
+        /*
+         * LES NOMS SONT CEUX DU DIAGRAMME, a la lettre. « Escalate Request »
+         * et non « Escalate Case », « Make Reissuance Request » et non « Make
+         * Request » : une traduction approximative fait perdre la trace.
+         *
+         * [acteur, routes qui realisent le cas, ecran a ouvrir]
+         */
         $cas = [
             'Authenticate' => ['visitor', ['login', 'two-factor.setup'], 'login'],
-            'Create Account' => ['visitor', ['register'], 'register'],
-            'Make Request' => ['citizen', ['citizen.requests.start', 'citizen.requests.step', 'citizen.requests.save'], 'wizard'],
+            'Create Citizen Account' => ['visitor', ['register'], 'register'],
+            'Make Reissuance Request' => ['citizen', ['citizen.requests.start', 'citizen.requests.step', 'citizen.requests.save'], 'wizard'],
             'Update Account Information' => ['citizen', ['citizen.profile.edit', 'citizen.profile.update'], 'citizen.profile.edit'],
             'Consult Notification' => ['citizen', ['notifications.index'], 'notifications.index'],
             'Track Request Status' => ['citizen', ['citizen.requests.index', 'citizen.requests.show'], 'citizen.requests.index'],
             'Download Certificate' => ['citizen', ['acts.document', 'acts.proof'], null],
             'Make Payment' => ['citizen', ['citizen.requests.payment', 'citizen.requests.payment.store'], null],
+            // Deux specialisations de « Make Payment » au diagramme. Elles
+            // partagent la route : ce qui les distingue est l'operateur choisi
+            // par le demandeur, porte par la colonne `operator`.
+            'Pay Through Orange Money' => ['citizen', ['citizen.requests.payment.store'], null],
+            'Pay Through Mobile Money' => ['citizen', ['citizen.requests.payment.store'], null],
             'Cancel Request' => ['citizen', ['citizen.requests.cancel'], null],
             'Contact Officer' => ['citizen', ['requests.messages.store'], null],
             'Manage Request' => ['officer', ['officer.queue', 'officer.verification.claim'], 'officer.queue'],
             'Verify Identity' => ['officer', ['officer.verification.step', 'officer.verification.identity', 'officer.verification.facial'], 'verification'],
             'Search Registry' => ['officer', ['officer.verification.registry'], null],
-            'Accept / Reject Request' => ['officer', ['officer.decision.store'], null],
-            'Escalate Case' => ['officer', ['officer.decision.store'], null],
-            'Review Escalated Case' => ['mayor', ['mayor.dashboard', 'mayor.review'], 'mayor.dashboard'],
+            'Accept Request' => ['officer', ['officer.decision.store'], null],
+            'Reject Request' => ['officer', ['officer.decision.store'], null],
+            'Escalate Request' => ['officer', ['officer.decision.store'], null],
+            'Review Escalated Request' => ['mayor', ['mayor.dashboard', 'mayor.review'], 'mayor.dashboard'],
             'Sign Certificate' => ['mayor', ['mayor.sign'], null],
             'Send Certificate to Officer' => ['mayor', ['mayor.return'], null],
             'Manage Accounts' => ['admin', ['admin.users.index', 'admin.users.store', 'admin.users.status', 'admin.users.reassign'], 'admin.users.index'],
-            'Manage System Settings' => ['admin', ['admin.settings.index'], 'admin.settings.index'],
         ];
 
         foreach ($cas as $nom => $definition) {
@@ -288,6 +299,57 @@ class UseCaseCoverageTest extends TestCase
     }
 
     /**
+     * Les cas du diagramme QUI N'ONT PAS de route dediee.
+     *
+     * Ils sont declares ici avec leur justification, plutot que passes sous
+     * silence dans un document. Le test ci-dessous echoue si la liste change
+     * sans qu'on l'ait voulu : un cas non implemente ne doit pas pouvoir
+     * disparaitre de la discussion.
+     *
+     * @return array<string, string>
+     */
+    public const CAS_SANS_ROUTE = [
+        'Generate Certificate' => <<<'RAISON'
+            Le diagramme place « Generate Certificate » chez l'OFFICIER. Dans
+            le code, l'acte n'est fabrique qu'a la signature du maire
+            (ActIssuanceService, appele depuis Mayor\DecisionController) : aucun
+            officier ne genere de document.
+
+            Ma lecture — l'acceptation de l'officier (T4) declenche la
+            fabrication en aval — est une INTERPRETATION, pas un fait etabli.
+            L'autre lecture est que l'officier prepare un projet d'acte que le
+            maire signe ensuite, ce qui serait une capacite absente.
+
+            DIVERGENCE OUVERTE : elle touche a qui redige l'acte, donc a la
+            responsabilite de son contenu. Elle n'est pas mienne a trancher.
+            Voir docs/CAS_USAGE.md 4.2.
+            RAISON,
+    ];
+
+    /**
+     * Un cas du diagramme sans route reste visible et justifie.
+     *
+     * Ce test ne verifie pas que le cas est implemente — il ne l'est pas. Il
+     * verifie qu'on ne l'a pas oublie : la liste des cas manquants est une
+     * donnee du projet, pas une note de bas de page.
+     */
+    #[Test]
+    public function les_cas_du_diagramme_sans_route_restent_declares(): void
+    {
+        $this->assertSame(
+            ['Generate Certificate'],
+            array_keys(self::CAS_SANS_ROUTE),
+            'La liste des cas du diagramme sans implémentation a changé. '
+                .'Si un cas a été construit, retirez-le et ajoutez-le à casDuDiagramme(). '
+                .'Si un nouveau cas manque, déclarez-le et dites pourquoi.'
+        );
+
+        foreach (self::CAS_SANS_ROUTE as $cas => $raison) {
+            $this->assertNotSame('', trim($raison), "Le cas « {$cas} » est déclaré sans justification.");
+        }
+    }
+
+    /**
      * Ce qui existe sans figurer au diagramme, et pourquoi.
      *
      * Le diagramme est la reference : ce qui n'y figure pas doit etre declare,
@@ -304,6 +366,23 @@ class UseCaseCoverageTest extends TestCase
             // affecte ne peut plus agir n'etait repris par personne.
             'admin.assignments.index' => 'Affectations bloquées (D-057)',
             'admin.assignments.release' => 'Libération d’une affectation (D-057)',
+
+            /*
+             * CONSTRUIT A TORT COMME UN CAS DU DIAGRAMME (D-062).
+             *
+             * La version 2 du diagramme ne comporte AUCUN cas « Manage system
+             * settings » : le Super Admin n'y porte que « Manage Accounts ».
+             * Je l'ai construit en croyant achever la couverture, sur la foi
+             * de ma propre analyse de la version 1 — ou le cas existait, confie
+             * au maire — et non sur la version 2, qui est la reference.
+             *
+             * L'ecran est utile et sans danger : consultation seule, aucune
+             * route d'ecriture, aucun secret affiche. Il est donc CONSERVE,
+             * mais declare ici pour ce qu'il est — un ajout hors diagramme,
+             * dont le maintien vous revient.
+             */
+            'admin.settings.index' => 'Réglages, consultation seule — HORS DIAGRAMME v2 (D-062)',
+
             // Le journal d'audit sert le 4.4 du brief, pas un cas du diagramme.
             'admin.audit.index' => "Journal d'audit (§4.4 du brief)",
             // Exploitation, hors parcours metier.

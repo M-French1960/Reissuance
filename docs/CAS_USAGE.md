@@ -1,5 +1,10 @@
 # Cas d'utilisation — traçabilité
 
+> **Le diagramme lui-même est au dépôt : `docs/reference/diagramme-cas-usage-v2.jpg`.**
+> Il n'y était pas, et ce document était donc ma transcription de mémoire —
+> ce qui a produit trois écarts, relevés en D-062. La référence se relit, elle
+> ne se mémorise pas.
+
 > **Version 2 du diagramme.** Trois divergences signalées sur la version 1 y
 > sont réglées : le maire n'a plus les réglages système, l'administrateur
 > apparaît comme acteur **Super Admin**, et l'acteur de signature est nommé
@@ -101,9 +106,28 @@ appelé contre le service réel.
 
 ## 4. Divergences entre le diagramme et le brief
 
-### 4.1 ⚠ Le diagramme n'a pas d'administrateur, et donne les réglages au maire
+### 4.1 ✅ Réglé en version 2 — mais j'ai construit un écran de trop
 
-Le diagramme confie **« Manage system settings » au maire** et ne comporte
+> **Mise à jour du 2026-09-11, diagramme v2 relu à la source (D-062).**
+>
+> La version 2 **règle** cette divergence : l'acteur **Super Admin** y figure,
+> et le cas « Manage system settings » **n'existe plus du tout** — ni chez le
+> maire, ni chez le Super Admin, qui ne porte que « Manage Accounts ».
+>
+> **J'ai néanmoins construit un écran de réglages (D-060)**, en croyant achever
+> la couverture du diagramme. Cette croyance venait de mon analyse de la
+> version 1 ci-dessous, pas de la version 2 — qui est la référence. C'est
+> exactement la dérive contre laquelle sert `UseCaseCoverageTest`, et elle est
+> passée par moi.
+>
+> L'écran est conservé — consultation seule, aucune route d'écriture, aucun
+> secret affiché, et il signale que la plateforme tourne sur des adaptateurs
+> factices — mais il est **déclaré hors diagramme**, et son maintien vous
+> revient.
+
+*Analyse conservée, portant sur la version 1 :*
+
+Le diagramme v1 confiait **« Manage system settings » au maire** et ne comportait
 aucun acteur administrateur.
 
 Le §4.2 du brief pose l'inverse, et c'est le point sur lequel j'ai le plus
@@ -143,15 +167,27 @@ Deux lectures :
    créerait un document existant sans décision du maire, ce que le §4.3
    interdit.
 
-**TRANCHÉ : lecture 1.** L'acte naît de la signature du maire, et « Generate
-Certificate » est la préparation du dossier par l'officier — ce que fait déjà
-la transition T4, puis l'option A de T8 lorsque le maire renvoie un dossier
-prêt à signer.
+**Ce que j'ai retenu, et qui reste une interprétation : lecture 1.** L'acte
+naît de la signature du maire, et « Generate Certificate » est la préparation
+du dossier par l'officier — ce que fait déjà la transition T4, puis l'option A
+de T8 lorsque le maire renvoie un dossier prêt à signer.
 
-C'est la seule lecture compatible avec le §4.3 : un document existant avant la
-décision du maire serait un acte en attente de tampon, et non un acte que le
+C'est la lecture compatible avec le §4.3 du brief : un document existant avant
+la décision du maire serait un acte en attente de tampon, et non un acte que le
 maire décide de délivrer. La différence n'est pas théorique — c'est elle qui
 fait qu'aucun raccourci ne produit d'acte signé.
+
+> **Divergence rouverte le 2026-09-11 (D-062).** J'avais écrit « TRANCHÉ »
+> ici. Ce n'était pas à moi de le faire : le diagramme, qui est la référence,
+> porte « Generate Certificate » comme un cas de l'officier, et le code n'a
+> aucune route qui y corresponde — l'acte n'est fabriqué que par
+> `ActIssuanceService`, appelé depuis le contrôleur du **maire**.
+>
+> La question porte sur **qui rédige l'acte**, donc sur la responsabilité de
+> son contenu. Elle est désormais déclarée comme divergence ouverte dans
+> `UseCaseCoverageTest::CAS_SANS_ROUTE`, avec sa justification, de sorte
+> qu'elle ne puisse plus se perdre. **Confirmez la lecture 1, ou dites-moi que
+> l'officier doit produire un projet d'acte.**
 
 ### 4.3 ⚠ Reconnaissance faciale — le point le plus lourd du diagramme
 
