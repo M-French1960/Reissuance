@@ -235,6 +235,45 @@ class AuthorizationTest extends TestCase
         $this->assertCount(0, ReissuanceRequest::all());
     }
 
+    /**
+     * R13quater — le maire, sans `where` explicite.
+     *
+     * C'est le role dont la portee est la plus fine : commune ET deux etats
+     * seulement. R6 et R7 la verifient par la Policy ; ce test la verifie par
+     * la portee globale, qui est la barriere qui tient quand l'appelant a
+     * oublie d'y penser. Sans lui, le maire etait le seul role dont la clause
+     * n'etait jamais exercee a ce niveau.
+     */
+    #[Test]
+    public function r13quater_le_maire_ne_voit_que_sa_commune_aux_deux_etats_ou_il_decide(): void
+    {
+        $aSigner = $this->requestIn($this->centerA, RequestStatus::AwaitingSignature);
+        $escalade = $this->requestIn($this->centerA, RequestStatus::Escalated);
+
+        // Meme commune, mais des etats ou le maire n'a pas competence.
+        $this->requestIn($this->centerA, RequestStatus::Pending);
+        $this->requestIn($this->centerA, RequestStatus::UnderReview);
+
+        // Competence correcte, mais une autre commune.
+        $ailleurs = $this->requestIn($this->centerB, RequestStatus::AwaitingSignature);
+
+        Auth::login(User::factory()->mayor($this->centerA->commune)->create());
+
+        $visibles = ReissuanceRequest::all();
+
+        $this->assertEqualsCanonicalizing(
+            [$aSigner->id, $escalade->id],
+            $visibles->pluck('id')->all(),
+            'Le maire ne doit voir que sa commune, et seulement en attente de signature ou escaladée.'
+        );
+
+        $this->assertNotContains(
+            $ailleurs->id,
+            $visibles->pluck('id')->all(),
+            "Une demande d'une autre commune ne doit jamais remonter."
+        );
+    }
+
     /** Un brouillon n'existe que pour son auteur, jamais pour un officier. */
     #[Test]
     public function un_brouillon_reste_invisible_a_l_officier_du_centre(): void

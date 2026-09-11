@@ -178,6 +178,9 @@ minimum :
 | R15 | `DROP TRIGGER` sur une garde de machine à états avec le compte applicatif | erreur MySQL 1142 — le droit `TRIGGER` n'est pas accordé (D-052) |
 | R16 | `GRANT` à l'échelle de la base pour le compte applicatif | détecté par `DatabasePrivilegesTest` |
 | R13 | Requête Eloquent sans `where` explicite sur les demandes, exécutée en tant qu'officier | ne retourne **que** son centre (portée globale) |
+| R13quater | Idem en tant que maire | **que** sa commune, et **que** `awaiting_signature` / `escalated` |
+| R17 | Démarrage de l'application avec la portée globale absente du modèle | refus de démarrer (D-053) |
+| R18 | Contournement de la portée ailleurs que dans `loadForAuthorization()` | détecté par `ScopeBypassTest` (D-053) |
 | R14 | Utilisateur désactivé tentant de se connecter | refus, et session existante invalidée |
 | R15 | Officier consultant une pièce d'identité | accès accordé **et** ligne d'audit écrite |
 | R16 | Requête `GET` quelconque sans session | seules les routes de la liste blanche répondent |

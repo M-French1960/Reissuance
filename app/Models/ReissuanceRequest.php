@@ -138,4 +138,32 @@ class ReissuanceRequest extends Model
     {
         return $this->status === RequestStatus::Draft;
     }
+
+    /**
+     * Charge une demande SANS la portee de visibilite, pour l'autoriser ensuite.
+     *
+     * C'EST LE SEUL ENDROIT DE `app/` OU LA PORTEE EST CONTOURNEE, et
+     * `tests/Feature/Security/ScopeBypassTest.php` echoue si un autre
+     * apparait.
+     *
+     * Pourquoi ce contournement est necessaire : servir une piece d'identite
+     * ou un acte signe part de la piece jointe ou de la signature, pas de la
+     * demande. Il faut donc charger la demande pour pouvoir l'autoriser — et
+     * la portee, elle, la masquerait avant meme qu'on puisse poser la
+     * question. L'ordre est imposteur : on charge, PUIS on autorise.
+     *
+     * Pourquoi une methode nommee plutot que l'appel brut ecrit sur place :
+     * l'idiome se recopie sans y penser, et il ne reste alors
+     * qu'une ligne d'autorisation, que rien ne garde, entre le chargement et
+     * la fuite. Depuis le passage a MySQL, qui n'a pas de securite au niveau
+     * des lignes, plus aucune barriere en base ne rattraperait cet oubli
+     * (D-051, docs/RLS.md 7.3).
+     *
+     * L'APPELANT DOIT AUTORISER LA DEMANDE RENDUE, immediatement et sans
+     * condition. Ne l'appelez pas pour autre chose.
+     */
+    public static function loadForAuthorization(int|string $id): self
+    {
+        return self::withoutGlobalScopes()->findOrFail($id);
+    }
 }

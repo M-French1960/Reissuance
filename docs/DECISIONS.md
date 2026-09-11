@@ -330,7 +330,7 @@ Ils sont listés ici pour éviter qu'une décision implicite ne s'installe.
 | Pest et Larastan | **Toujours bloqués par le réseau — voir D-012.** Fortify s'est installé au jalon 2, mais pas ces deux-là. |
 | ~~Plan Vercel~~ | **Sans objet — tranché en D-011** |
 | 2FA du citoyen (TOTP / SMS / aucun) | **Toujours ouvert.** Le TOTP fonctionne pour tous les rôles ; il reste facultatif pour le citoyen faute de réponse sur la faisabilité SMS. |
-| Défense en profondeur RLS | ⚠️ **Sans objet depuis D-051 : MySQL n'a pas de sécurité au niveau des lignes.** La fuite de lecture entre centres reste tenue par la seule portée globale Eloquent. Trois compensations proposées au §7.3 de `docs/RLS.md` — **arbitrage à rendre.** |
+| Défense en profondeur RLS | ⚠️ **Sans objet depuis D-051 : MySQL n'a pas de sécurité au niveau des lignes.** Trois compensations **implémentées** (D-053). Il reste un risque résiduel en lecture, chiffré au §7.4 de `docs/RLS.md` — **arbitrage à rendre : revenir à PostgreSQL pour RLS, ou consigner le risque accepté.** |
 | Conservation du genre et des données parentales | Après avis juridique |
 
 ---
@@ -1531,5 +1531,64 @@ aucune n'est équivalente.
   le tient.
 - **Effet de bord utile :** la commande de vérification de restauration passe
   par la même vue, et cesse donc de crier au loup.
+
+---
+
+## D-053 — Trois compensations pour la fuite en lecture que MySQL ne ferme plus
+
+- **Date :** 2026-09-11
+- **Statut :** implémenté ; 493 tests au vert. **Un arbitrage reste ouvert
+  (§7.4 de `docs/RLS.md`).**
+- **Origine :** D-051 a rendu D-037 inapplicable — MySQL n'a pas de sécurité au
+  niveau des lignes. La fraude **par écriture** reste couverte en base
+  (déclencheurs, contraintes, journal en ajout seul) ; la fuite **par lecture**
+  entre centres et communes est redevenue tenue par la seule portée globale
+  Eloquent, c'est-à-dire précisément celle qui avait disparu sans bruit au
+  jalon 2 (D-013).
+
+### Ce qui a été fait
+
+1. **La portée est testée pour les quatre rôles, sans `where` explicite.** Le
+   maire manquait — le rôle dont la clause est la plus fine (commune **et**
+   deux états seulement). R6 et R7 le couvraient par la Policy, ce qui n'est
+   pas la même barrière.
+2. **L'application refuse de démarrer si la portée n'est pas enregistrée.**
+   Un test protège là où des tests tournent ; en production il n'en tourne
+   aucun.
+3. **Un seul point de contournement dans `app/`, et il est audité.** Les deux
+   contrôleurs qui doivent charger une demande hors portée pour pouvoir
+   l'autoriser passent par `ReissuanceRequest::loadForAuthorization()`, et un
+   test structurel interdit l'idiome brut ailleurs.
+
+### Une chose que j'ai affirmée puis vérifiée fausse
+
+En écrivant le garde-fou n°2, j'ai d'abord repris tel quel le constat de
+D-013 : « une classe inexistante dans `#[ScopedBy(...)]` ne lève aucune erreur
+PHP ». **C'est faux sur Laravel 13.30**, qui lève désormais une
+`InvalidArgumentException` — vérifié en reproduisant le défaut. Le garde-fou ne
+couvre donc pas la forme exacte de D-013, mais les deux formes restées
+silencieuses : l'attribut **supprimé**, et l'attribut remplacé par une autre
+portée valide. Le commentaire et le message d'erreur ont été corrigés en
+conséquence.
+
+### Une chose que j'ai crue nécessaire et qui ne l'est pas
+
+Le `tearDown` de `VisibilityScopeGuardTest` remet la portée en place. Je
+pensais que son absence contaminerait toute la suite. **Non :**
+`DatabaseServiceProvider::boot()` appelle `Model::clearBootedModels()` à chaque
+démarrage d'application, donc à chaque test. Vérifié en le retirant : la suite
+reste verte. Il est conservé par précaution, et le commentaire dit maintenant
+qu'il est une précaution et non une nécessité.
+
+### Ce que cela ne fait pas
+
+Ces trois points protègent **la barrière** ; ils ne la remplacent pas. La
+portée reste le point unique de défaillance en lecture : sa disparition devient
+bruyante et son contournement visible, ce qui est très différent d'impossible.
+Et quiconque dispose des identifiants du compte applicatif peut lire toutes les
+demandes en SQL direct — c'était déjà vrai sans RLS, RLS l'aurait fermé.
+
+Le tableau comparatif et les deux voies possibles sont au §7.4 de
+`docs/RLS.md`. **La décision vous revient.**
 
 ---

@@ -60,8 +60,7 @@ class AttachmentController extends Controller
      */
     public function show(Request $request, RequestAttachment $attachment): StreamedResponse
     {
-        $reissuanceRequest = ReissuanceRequest::withoutGlobalScopes()
-            ->findOrFail($attachment->request_id);
+        $reissuanceRequest = ReissuanceRequest::loadForAuthorization($attachment->request_id);
 
         $this->authorize('viewIdentityDocuments', $reissuanceRequest);
 

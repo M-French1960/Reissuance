@@ -36,7 +36,7 @@ class ActDocumentController extends Controller
         string $type,
         string $filename,
     ): StreamedResponse {
-        $demande = ReissuanceRequest::withoutGlobalScopes()->findOrFail($signature->request_id);
+        $demande = ReissuanceRequest::loadForAuthorization($signature->request_id);
 
         // 404 et non 403 : les identifiants de signature sont sequentiels, et
         // un 403 confirmerait qu'un acte porte ce numero — donc combien

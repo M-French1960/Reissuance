@@ -201,22 +201,101 @@ Ce qu'elles ne couvrent pas : la **fuite par lecture** entre centres ou
 communes, qui reste tenue par la seule portée globale Eloquent — précisément
 celle qui avait disparu sans bruit au jalon 2 (D-013).
 
-### 7.3 Ce que je propose à la place
+### 7.3 Ce qui a été fait à la place — **implémenté** (D-053)
 
-Le trou n'est pas comblé, il est déplacé. Trois pistes, par ordre de coût
-croissant, **aucune n'étant équivalente à RLS** :
+Le trou n'est pas comblé, il est déplacé. Les trois compensations sont en
+place. **Aucune n'est équivalente à RLS**, et le §7.4 dit précisément ce qui
+reste découvert.
 
-1. **Un test de non-régression dédié à la portée globale**, qui échoue si
-   `RequestVisibilityScope` cesse d'être appliquée — le défaut de D-013 aurait
-   été vu immédiatement. Coût faible, à faire dans tous les cas.
-2. **Une vérification au démarrage** : l'application refuse de démarrer si la
-   portée n'est pas enregistrée sur le modèle. Transforme un défaut silencieux
-   en panne bruyante.
-3. **Un contrôle de périmètre centralisé** à la frontière des dépôts, qui
-   n'est plus contournable en écrivant `withoutGlobalScopes()`.
+#### 1. La portée globale est testée pour chaque rôle
 
-**Question ouverte, qui vous revient :** si la fuite de lecture entre communes
-est jugée aussi grave que la fraude par écriture, alors le choix de MySQL a un
-coût de sécurité qu'il faut assumer explicitement, ou compenser par les trois
-points ci-dessus. Je ne peux pas trancher cela à votre place : c'est une
-question de risque acceptable, pas de technique.
+`AuthorizationTest` exerce la portée **sans `where` explicite** — c'est-à-dire
+dans le scénario réel de l'oubli — pour les quatre rôles :
+
+| Test | Rôle | Ce qu'il vérifie |
+|---|---|---|
+| R13 | officier | son centre seulement |
+| R13bis | citoyen | ses propres demandes seulement |
+| R13ter | administrateur | **aucune** demande |
+| **R13quater** | maire | sa commune **et** seulement `awaiting_signature` / `escalated` |
+
+R13quater comblait un vrai manque : le maire était le seul rôle dont la clause
+— la plus fine des quatre — n'était jamais exercée au niveau de la portée. R6
+et R7 la vérifiaient par la Policy, ce qui n'est pas la même barrière.
+
+Éprouvé : en retirant la restriction d'état du maire dans la portée, R13quater
+échoue.
+
+#### 2. L'application refuse de démarrer sans la portée
+
+`App\Support\Security\VisibilityScopeGuard`, appelé depuis
+`AppServiceProvider::boot()`. Un test rattrape ce défaut là où des tests
+tournent ; en production il n'en tourne aucun, et la fuite y vivrait aussi
+longtemps que personne ne la remarquerait.
+
+**Ce qu'il couvre exactement.** Vérifié sur Laravel 13.30 : cette version lève
+désormais elle-même une `InvalidArgumentException` quand `#[ScopedBy(...)]`
+désigne une classe inexistante. **La forme précise de D-013 n'est donc plus
+silencieuse**, et ce contrôle n'est pas ce qui l'attraperait. Restent
+silencieuses les deux formes les plus banales, et c'est elles qu'il attrape :
+
+- l'attribut **supprimé** — une ligne perdue dans une fusion ;
+- l'attribut désignant une portée **valide mais différente**.
+
+Dans les deux cas le modèle fonctionne, rien n'est levé, et il rend tout.
+Éprouvé en retirant réellement l'attribut : l'application refuse de démarrer.
+
+#### 3. Un seul point de contournement, et il est audité
+
+Servir une pièce d'identité ou un acte signé part de la pièce jointe ou de la
+signature, pas de la demande : il faut charger la demande **pour pouvoir
+l'autoriser**, et la portée la masquerait avant qu'on puisse poser la question.
+Le contournement est donc légitime — mais tout ce qui sépare alors le
+chargement de la fuite est **une ligne d'autorisation, que rien ne gardait**.
+
+`ReissuanceRequest::loadForAuthorization()` est désormais le seul endroit de
+`app/` où la portée est contournée, et `ScopeBypassTest` échoue :
+
+- si l'idiome brut réapparaît ailleurs dans `app/` ;
+- s'il apparaît deux fois dans le fichier exempté lui-même — sans quoi le
+  premier test se contenterait d'un fichier où l'on pourrait en ajouter
+  autant qu'on veut ;
+- si la méthode cesse de faire ce qu'elle annonce (un test structurel seul
+  serait satisfait par une méthode qui ne contourne rien).
+
+Les deux échappatoires ont été éprouvées : réintroduire l'appel brut dans
+`ActDocumentController`, puis ajouter un second contournement dans le modèle,
+font bien échouer le test. Et la ligne d'autorisation elle-même est
+load-bearing : la supprimer fait échouer R2, R9 et le refus inter-centres.
+
+### 7.4 Ce qui reste découvert, et qu'il faut savoir
+
+Ces trois compensations protègent **la barrière**. Elles ne la remplacent pas.
+
+| | RLS sur PostgreSQL | Ce qui est en place sur MySQL |
+|---|---|---|
+| Requête applicative sans `where` | refusée par la base | filtrée par la portée Eloquent |
+| Portée absente ou contournée | **refusée quand même par la base** | plus rien ne rattrape |
+| SQL direct avec le compte applicatif | refusé par la base | **rien** |
+| Écriture hors périmètre | refusée par la base | Policy + déclencheurs pour les transitions |
+
+La ligne qui compte est la deuxième : la portée reste le **point unique de
+défaillance** en lecture. Les compensations rendent sa disparition bruyante et
+son contournement visible, ce qui est très différent de la rendre impossible.
+
+La troisième ligne mérite d'être dite franchement : **quiconque dispose des
+identifiants du compte applicatif peut lire toutes les demandes en SQL
+direct.** C'était déjà vrai sans RLS ; RLS l'aurait fermé. Aujourd'hui, la
+protection de ces identifiants est la seule chose qui tienne.
+
+**Ce qui reste à arbitrer, et qui vous revient.** Si la fuite de lecture entre
+communes est jugée aussi grave que la fraude par écriture, alors le choix de
+MySQL garde un coût de sécurité résiduel que ces trois points réduisent sans
+l'annuler. Deux voies existent, et aucune n'est gratuite :
+
+1. revenir à PostgreSQL pour la seule raison de RLS — le prototype de
+   `docs/prototypes/rls/` redeviendrait applicable tel quel ;
+2. accepter le risque résiduel, en le consignant explicitement.
+
+Je ne peux pas trancher cela à votre place : c'est une question de risque
+acceptable, pas de technique.
