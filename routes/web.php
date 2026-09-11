@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\ActDocumentController;
 use App\Http\Controllers\Admin\AssignmentController;
 use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Citizen\AttachmentController;
 use App\Http\Controllers\Citizen\CancellationController;
@@ -210,6 +211,12 @@ Route::middleware('auth')->group(function (): void {
              */
             Route::post('/affectations/{demande}/liberation', [AssignmentController::class, 'release'])
                 ->whereNumber('demande')->name('assignments.release');
+
+            /*
+             * Reglages : CONSULTATION SEULE, et aucune route d'ecriture
+             * n'existe. Voir D-060.
+             */
+            Route::get('/reglages', [SettingController::class, 'index'])->name('settings.index');
 
             Route::get('/journal', [AuditLogController::class, 'index'])->name('audit.index');
         });

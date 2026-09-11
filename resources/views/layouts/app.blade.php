@@ -37,6 +37,8 @@
                            @if (request()->routeIs('admin.assignments.*')) aria-current="page" @endif>Affectations</a>
                         <a href="{{ route('admin.audit.index') }}"
                            @if (request()->routeIs('admin.audit.*')) aria-current="page" @endif>Journal</a>
+                        <a href="{{ route('admin.settings.index') }}"
+                           @if (request()->routeIs('admin.settings.*')) aria-current="page" @endif>Réglages</a>
                     @endif
                     @if (auth()->user()->role === \App\Enums\UserRole::Officer)
                         <a href="{{ route('officer.queue') }}"

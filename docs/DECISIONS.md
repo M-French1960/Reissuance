@@ -2016,3 +2016,68 @@ pendant sa session est redirigé vers la connexion, et `can('decide')` répond
 **non** hors requête HTTP, là où aucun middleware ne tourne.
 
 ---
+
+## D-060 — « Manage system settings » : consultable, non modifiable, incapable de fuir un secret
+
+- **Date :** 2026-09-11
+- **Statut :** implémenté ; 581 tests au vert. **Dernier cas d'utilisation du
+  diagramme — la couverture est complète.**
+- **Arbitrage appliqué :** lecture pour tous les réglages, écriture pour aucun.
+
+### Pourquoi la lecture seule n'est pas de la timidité
+
+Rendre ces réglages modifiables depuis un navigateur ouvrirait un vecteur de
+fraude direct : un administrateur pourrait **basculer un prestataire sur
+l'adaptateur factice** et faire délivrer des actes sans vérification réelle, ou
+changer le tarif d'un service public depuis une page web. Ils restent donc des
+variables d'environnement, sous le contrôle de qui déploie.
+
+Un test structurel le tient : `admin.settings.*` ne doit comporter **aucune
+route autre que GET**. Ce n'est pas une convention qu'on peut oublier.
+
+### Ce que l'écran apporte malgré tout, et ce n'est pas rien
+
+Avant lui, **rien dans l'application ne permettait de voir qu'elle ne vérifie
+rien de réel.** Quatre adaptateurs sur cinq sont des squelettes ; une
+démonstration prise pour un service réel est le risque d'exploitation le plus
+concret de ce projet à ce stade. L'écran l'annonce en haut, en rouge, et nomme
+les intégrations concernées.
+
+Il signale aussi deux incohérences d'exploitation qui seraient sinon
+silencieuses : un encaissement activé sans tarif (la plateforme refusera de
+servir), et un tarif affiché sans base légale citable.
+
+### Le risque propre à cet écran, et comment il est fermé
+
+Un écran de réglages affiche la configuration, et cette configuration contient
+des **secrets** : clé d'index aveugle, clés de l'agrégateur de paiement, secret
+de signature des rappels. C'est typiquement l'endroit où un secret finit par
+s'afficher « pour déboguer », puis y reste.
+
+**La protection ne tient pas à un masquage à l'affichage.**
+`SystemSetting::secret()` consomme la valeur et ne retient que « configuré » ou
+« non configuré » : **la valeur n'entre jamais dans l'objet**. Il n'y a donc
+rien à masquer dans le gabarit, parce qu'il n'y a rien à fuir.
+
+Vérifié avec des valeurs reconnaissables (`SECRET-…-NE-DOIT-PAS-FUIR`) : aucune
+n'apparaît dans le HTML, ni même dans les objets sérialisés que la vue reçoit.
+Éprouvé en affichant délibérément un secret « pour déboguer » : deux tests
+tombent.
+
+### Deux erreurs dans mes propres tests, corrigées
+
+1. Une assertion cherchait `n'ont` dans du texte non échappé du gabarit — elle
+   ne mesurait rien d'utile, et a été remplacée.
+2. Le refus pour un visiteur anonyme était vérifié **après** trois `actingAs()`
+   dans la même méthode. Or `actingAs()` persiste jusqu'à la fin du test : je ne
+   mesurais que le dernier rôle connecté, et j'obtenais 403 là où un invité
+   reçoit une redirection. L'invité a désormais son propre test — confirmé au
+   navigateur : 302 vers la connexion, comme les autres routes d'administration.
+
+### Ce qui reste à trancher, et qui n'est pas technique
+
+Le tarif et sa base légale restent vides : questions 1 et 6 du §7 de
+`docs/INTEGRATIONS.md`. L'écran les affiche comme « non défini », ce qui est
+l'état réel.
+
+---

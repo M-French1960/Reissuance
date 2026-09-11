@@ -190,6 +190,8 @@ minimum :
 | R25 | Rattachement d'un maire sans commune | erreur de validation, pas une erreur 500 (D-058) |
 | R26 | `can()` sur n'importe quelle capacité avec un compte suspendu, désactivé ou en attente | **refus**, hors requête HTTP comprise (D-059) |
 | R27 | Officier suspendu pendant sa session tentant de décider | refusé par la Policy **et** par le middleware |
+| R28 | Recherche d'une valeur de secret dans l'écran des réglages | aucune — la valeur n'entre pas dans l'objet affiché (D-060) |
+| R29 | Requête autre que GET sur `admin.settings.*` | aucune route n'existe ; un test structurel le tient (D-060) |
 
 ### Le statut du compte est vérifié en amont des Policies
 

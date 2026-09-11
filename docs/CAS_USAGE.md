@@ -68,7 +68,7 @@
 
 | Cas d'utilisation | Constat | Difficulté |
 |---|---|---|
-| **Manage system settings** | **Le seul cas du diagramme qui n'existe pas** : aucune route, aucun écran. Tranché en §4.1 : c'est un cas de l'**administrateur**, pas du maire. | à construire |
+| ~~Manage system settings~~ | **Fait** (D-060) — écran d'administration en **consultation seule** : le rendre modifiable permettrait de basculer un prestataire sur l'adaptateur factice, donc de faire délivrer des actes sans vérification réelle. | — |
 | ~~Cancel Request~~ | **Fait** (D-044) — T13 et T14, avec les deux états terminaux correspondants. | — |
 | ~~Contact Officer~~ | **Fait** (D-047) — fil d'échanges porté par le dossier. | — |
 | ~~Through Orange Money / Through Mobile Money~~ | **Fait** — colonne `operator` (migration `2026_01_10_000100`), les deux opérateurs sont proposés au demandeur sur l'écran de paiement. | — |
@@ -248,12 +248,9 @@ l'élargir si vous le décidez.
 3. ~~**GDNS**~~ — identifié : DGSN.
 4. ~~**Contact Officer**~~ — fait (D-047).
 5. ~~**Orange Money / Mobile Money**~~ — fait, colonne `operator`.
-6. **Manage system settings**, côté administrateur — **seul cas restant.**
+6. ~~**Manage system settings**~~ — fait (D-060), en consultation seule.
 
-> Point de conception à trancher avant de le construire : les réglages qui
-> comptent (tarif, porte de paiement, choix des prestataires) sont aujourd'hui
-> des variables d'environnement. Les rendre modifiables depuis l'interface crée
-> un vecteur de fraude — un administrateur pourrait basculer un prestataire sur
-> l'adaptateur factice, donc faire délivrer des actes sans vérification réelle.
-> Proposition : lecture pour tous, écriture pour aucun des réglages de
-> sécurité. **Arbitrage attendu.**
+> **Tous les cas d'utilisation du diagramme sont couverts.** Ce qui reste n'est
+> plus un écran à construire : quatre adaptateurs sur cinq sont des squelettes,
+> et aucun n'est bloqué par du code. Voir §3.1 et le §7 de
+> `docs/INTEGRATIONS.md`.
