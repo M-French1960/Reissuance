@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Support\Security\DatabaseEngineGuard;
 use App\Support\Security\VisibilityScopeGuard;
 use Illuminate\Support\ServiceProvider;
 
@@ -11,7 +12,14 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        /*
+         * Avant toute chose : MySQL est le seul moteur supporte, et les
+         * connexions que le cadre reinjecte sont elaguees ici.
+         *
+         * Dans register() et non boot() : une connexion etrangere doit
+         * disparaitre avant que quoi que ce soit puisse l'utiliser.
+         */
+        DatabaseEngineGuard::enforce();
     }
 
     public function boot(): void

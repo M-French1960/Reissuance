@@ -23,28 +23,36 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Database Connections
+    | Connexions
     |--------------------------------------------------------------------------
     |
-    | Below are all of the database connections defined for your application.
-    | An example configuration is provided for each database system which
-    | is supported by Laravel. You're free to add / remove connections.
+    | DEUX CONNEXIONS, ET UN SEUL MOTEUR. Les connexions livrees par defaut
+    | avec Laravel — sqlite, mariadb, pgsql, sqlsrv — ont ete RETIREES, et ce
+    | n'est pas du menage : toutes les barrieres anti-fraude de PHOENIX sont
+    | posees dans la base elle-meme (declencheurs de machine a etats,
+    | contraintes CHECK, droits accordes table par table qui rendent le journal
+    | d'audit inaltérable). Aucune ne survit a un changement de moteur.
+    |
+    | Un `DB_CONNECTION=sqlite` pose par erreur, ou herite d'un fichier .env
+    | d'exemple, ferait demarrer une application qui fonctionne, qui passe les
+    | ecrans, et dans laquelle une transition interdite serait acceptee et le
+    | journal d'audit modifiable. Rien ne le signalerait.
+    |
+    | ATTENTION : LES RETIRER D'ICI NE LES SUPPRIME PAS. Verifie. Laravel
+    | fusionne sa configuration de base avec celle de l'application, et
+    | `connections` figure dans ses options fusionnables
+    | (LoadConfiguration::mergeableOptions). Les connexions du cadre revenaient
+    | donc toutes, ce fichier vide ou non. Ce fichier dit l'intention ;
+    | l'application, elle, est faite par DatabaseEngineGuard, qui elague les
+    | connexions au demarrage et refuse de demarrer sur un pilote autre que
+    | MySQL (D-054).
+    |
+    | `mysql`       : l'application. Droits table par table, jamais sur la base.
+    | `mysql_owner` : les migrations UNIQUEMENT. Voir docs/ARCHITECTURE_LOCAL.md 5.1.
     |
     */
 
     'connections' => [
-
-        'sqlite' => [
-            'driver' => 'sqlite',
-            'url' => env('DB_URL'),
-            'database' => env('DB_DATABASE', database_path('database.sqlite')),
-            'prefix' => '',
-            'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
-            'busy_timeout' => null,
-            'journal_mode' => null,
-            'synchronous' => null,
-            'transaction_mode' => 'DEFERRED',
-        ],
 
         'mysql' => [
             'driver' => 'mysql',
@@ -98,72 +106,8 @@ return [
             ]) : [],
         ],
 
-        'mariadb' => [
-            'driver' => 'mariadb',
-            'url' => env('DB_URL'),
-            'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE', 'laravel'),
-            'username' => env('DB_USERNAME', 'root'),
-            'password' => env('DB_PASSWORD', ''),
-            'unix_socket' => env('DB_SOCKET', ''),
-            'charset' => env('DB_CHARSET', 'utf8mb4'),
-            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
-            'prefix' => '',
-            'prefix_indexes' => true,
-            'strict' => true,
-            'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
-                Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
-            ]) : [],
-        ],
-
-        'pgsql' => [
-            'driver' => 'pgsql',
-            'url' => env('DB_URL'),
-            'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '5432'),
-            'database' => env('DB_DATABASE', 'laravel'),
-            'username' => env('DB_USERNAME', 'root'),
-            'password' => env('DB_PASSWORD', ''),
-            'charset' => env('DB_CHARSET', 'utf8'),
-            'prefix' => '',
-            'prefix_indexes' => true,
-            'search_path' => 'public',
-            'sslmode' => env('DB_SSLMODE', 'prefer'),
-        ],
-
         // Connexion proprietaire du schema : migrations UNIQUEMENT.
         // L'application ne l'utilise jamais (docs/ARCHITECTURE_LOCAL.md 5.1).
-        'pgsql_owner' => [
-            'driver' => 'pgsql',
-            'url' => env('DB_URL'),
-            'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '5432'),
-            'database' => env('DB_DATABASE', 'laravel'),
-            'username' => env('DB_OWNER_USERNAME', 'phoenix_owner'),
-            'password' => env('DB_OWNER_PASSWORD', ''),
-            'charset' => env('DB_CHARSET', 'utf8'),
-            'prefix' => '',
-            'prefix_indexes' => true,
-            'search_path' => 'public',
-            'sslmode' => env('DB_SSLMODE', 'prefer'),
-        ],
-
-        'sqlsrv' => [
-            'driver' => 'sqlsrv',
-            'url' => env('DB_URL'),
-            'host' => env('DB_HOST', 'localhost'),
-            'port' => env('DB_PORT', '1433'),
-            'database' => env('DB_DATABASE', 'laravel'),
-            'username' => env('DB_USERNAME', 'root'),
-            'password' => env('DB_PASSWORD', ''),
-            'charset' => env('DB_CHARSET', 'utf8'),
-            'prefix' => '',
-            'prefix_indexes' => true,
-            // 'encrypt' => env('DB_ENCRYPT', 'yes'),
-            // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
-        ],
 
     ],
 

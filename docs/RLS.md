@@ -8,12 +8,13 @@
 > Ce n'est pas une différence de syntaxe à contourner, c'est une
 > fonctionnalité absente.
 >
-> Le document est conservé pour trois raisons : les mesures du §3 restent
-> vraies et instructives ; le défaut qu'il décrit au §1 est réel et n'a pas
-> disparu ; et la recommandation redeviendrait applicable telle quelle si le
-> projet revenait à PostgreSQL.
+> **L'arbitrage a été rendu le 2026-09-11 : MySQL est le seul moteur maintenu,
+> et le risque résiduel en lecture est accepté et consigné (D-054).** Le
+> détail de ce qui est accepté est au §7.5.
 >
-> **Ce qui reste à trancher aujourd'hui est au §7.**
+> Le document est conservé pour deux raisons : les mesures du §3 restent vraies
+> et instructives, et le défaut qu'il décrit au §1 est réel et n'a pas disparu
+> — ce sont les compensations du §7.3 qui le tiennent désormais.
 
 ---
 
@@ -288,14 +289,33 @@ identifiants du compte applicatif peut lire toutes les demandes en SQL
 direct.** C'était déjà vrai sans RLS ; RLS l'aurait fermé. Aujourd'hui, la
 protection de ces identifiants est la seule chose qui tienne.
 
-**Ce qui reste à arbitrer, et qui vous revient.** Si la fuite de lecture entre
-communes est jugée aussi grave que la fraude par écriture, alors le choix de
-MySQL garde un coût de sécurité résiduel que ces trois points réduisent sans
-l'annuler. Deux voies existent, et aucune n'est gratuite :
+### 7.5 Arbitrage rendu — MySQL uniquement, risque résiduel accepté
 
-1. revenir à PostgreSQL pour la seule raison de RLS — le prototype de
-   `docs/prototypes/rls/` redeviendrait applicable tel quel ;
-2. accepter le risque résiduel, en le consignant explicitement.
+**Décision du 2026-09-11 (D-054) : MySQL est le seul moteur maintenu.** La
+seconde voie a été retenue — accepter le risque résiduel et le consigner.
+Revenir à PostgreSQL pour la seule raison de RLS n'est plus à l'ordre du jour.
 
-Je ne peux pas trancher cela à votre place : c'est une question de risque
-acceptable, pas de technique.
+Ce qui est accepté, en toutes lettres, pour qu'il n'y ait aucun malentendu
+plus tard :
+
+1. **La portée globale Eloquent est le point unique de défaillance en lecture.**
+   Sa disparition est désormais bruyante (l'application refuse de démarrer) et
+   son contournement visible (un seul point audité), mais elle n'est pas
+   impossible.
+2. **Quiconque dispose des identifiants du compte applicatif peut lire toutes
+   les demandes en SQL direct.** La protection de ces identifiants est la seule
+   chose qui tienne sur ce point.
+
+**Ce que la décision ne change pas :** la fraude par écriture reste refusée par
+la base elle-même — déclencheurs de machine à états, contraintes CHECK, journal
+d'audit en ajout seul par droits table par table. C'est le §4.3 du brief, et
+c'est l'essentiel.
+
+**Ce qui reste à faire, et qui n'est pas technique.** Les deux points acceptés
+ci-dessus devraient figurer dans l'analyse de risque remise au maître
+d'ouvrage. Je ne peux pas l'écrire à votre place : elle engage une
+responsabilité, pas un choix d'implémentation.
+
+**Si la décision devait être révisée**, `docs/prototypes/rls/` conserve le
+prototype mesuré. Il est spécifique à PostgreSQL et n'est plus maintenu ; il
+est conservé comme trace de l'évaluation, pas comme chemin à suivre.

@@ -330,7 +330,7 @@ Ils sont listés ici pour éviter qu'une décision implicite ne s'installe.
 | Pest et Larastan | **Toujours bloqués par le réseau — voir D-012.** Fortify s'est installé au jalon 2, mais pas ces deux-là. |
 | ~~Plan Vercel~~ | **Sans objet — tranché en D-011** |
 | 2FA du citoyen (TOTP / SMS / aucun) | **Toujours ouvert.** Le TOTP fonctionne pour tous les rôles ; il reste facultatif pour le citoyen faute de réponse sur la faisabilité SMS. |
-| Défense en profondeur RLS | ⚠️ **Sans objet depuis D-051 : MySQL n'a pas de sécurité au niveau des lignes.** Trois compensations **implémentées** (D-053). Il reste un risque résiduel en lecture, chiffré au §7.4 de `docs/RLS.md` — **arbitrage à rendre : revenir à PostgreSQL pour RLS, ou consigner le risque accepté.** |
+| ~~Défense en profondeur RLS~~ | **Clos le 2026-09-11 par D-054 : MySQL est le seul moteur maintenu.** Trois compensations implémentées (D-053) ; risque résiduel en lecture **accepté et consigné** au §7.5 de `docs/RLS.md`. Reste à porter dans l'analyse de risque remise au maître d'ouvrage — ce qui n'est pas une tâche technique. |
 | Conservation du genre et des données parentales | Après avis juridique |
 
 ---
@@ -1590,5 +1590,77 @@ demandes en SQL direct — c'était déjà vrai sans RLS, RLS l'aurait fermé.
 
 Le tableau comparatif et les deux voies possibles sont au §7.4 de
 `docs/RLS.md`. **La décision vous revient.**
+
+---
+
+## D-054 — MySQL est le seul moteur, et l'application le fait respecter
+
+- **Date :** 2026-09-11
+- **Statut :** implémenté ; 500 tests au vert
+- **Origine :** votre arbitrage — « maintiens uniquement MySQL pour la base de
+  données ». C'est la seconde voie du §7.4 de `docs/RLS.md` : accepter le
+  risque résiduel en lecture et le consigner, plutôt que revenir à PostgreSQL
+  pour la seule raison de RLS.
+
+### Pourquoi un moteur unique n'est pas qu'une question de préférence
+
+Toutes les barrières anti-fraude de PHOENIX sont posées **dans la base** :
+déclencheurs de machine à états, contraintes CHECK, exigence d'une ligne
+d'audit dans la même transaction, droits accordés table par table qui rendent
+le journal d'audit inaltérable. **Aucune ne survit à un changement de moteur.**
+
+Sur SQLite, l'application démarrerait, les écrans fonctionneraient, et une
+transition interdite serait acceptée sans que rien ne le signale. C'est la
+pire des pannes : silencieuse, et du côté de la permissivité. Un
+`DB_CONNECTION=sqlite` posé par erreur — ou hérité d'un `.env` d'exemple —
+suffisait.
+
+### Ce que j'ai cru faire, et ce qu'il fallait faire
+
+J'ai d'abord retiré `sqlite`, `mariadb`, `pgsql`, `pgsql_owner` et `sqlsrv` de
+`config/database.php`, en pensant que cela les supprimait. **Vérifié : non.**
+Laravel fusionne sa configuration de base avec celle de l'application, et
+`connections` figure dans ses options fusionnables
+(`LoadConfiguration::mergeableOptions`). Les cinq connexions revenaient
+intégralement, le fichier du projet vide ou non — `config("database.connections")`
+les listait encore toutes.
+
+Un fichier trimé donnait donc une **fausse impression de fermeture**. C'est
+exactement la classe de défaut que ce projet passe son temps à traquer.
+
+### Ce qui est en place
+
+`App\Support\Security\DatabaseEngineGuard`, appelé depuis
+`AppServiceProvider::register()` — dans `register()` et non `boot()`, pour
+qu'une connexion étrangère disparaisse avant que quoi que ce soit puisse
+l'utiliser. Trois actions :
+
+1. **élaguer** les connexions que le cadre réinjecte ;
+2. **refuser** une connexion par défaut hors du projet ;
+3. **refuser** toute connexion dont le pilote n'est pas `mysql`.
+
+Éprouvé pour de bon : `DB_CONNECTION=sqlite` et `DB_CONNECTION=pgsql` font
+refuser le démarrage avec un message qui nomme la variable à corriger ; changer
+le pilote d'une connexion du projet le fait refuser aussi. Et les deux parties
+sont porteuses : sans l'élagage, la troisième vérification attrape la connexion
+réinjectée et refuse tout — moins commode, toujours sûr.
+
+`config/queue.php` repliait sur `sqlite` pour les lots et les tâches échouées ;
+corrigé.
+
+### Ce qui est accepté, en toutes lettres
+
+1. La portée globale Eloquent reste le **point unique de défaillance en
+   lecture**. Sa disparition est bruyante et son contournement visible
+   (D-053), pas impossible.
+2. **Quiconque dispose des identifiants du compte applicatif peut lire toutes
+   les demandes en SQL direct.** RLS l'aurait fermé. Leur protection est la
+   seule chose qui tienne sur ce point.
+
+La fraude **par écriture** reste, elle, refusée par la base elle-même.
+
+**Ce qui n'est pas technique et reste à faire :** ces deux points ont leur
+place dans l'analyse de risque remise au maître d'ouvrage. Je ne peux pas
+l'écrire — elle engage une responsabilité, pas un choix d'implémentation.
 
 ---

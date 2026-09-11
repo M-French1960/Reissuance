@@ -11,6 +11,12 @@ Conçue pour une **exécution locale** (décision D-011). Laravel 13 + MySQL
 Prérequis : PHP 8.4 (`pdo_mysql`, `mbstring`, `intl`, `gd`, `zip`),
 Composer 2, et Docker — ou un MySQL 8.0.16+ / MariaDB 10.11+ local.
 
+**MySQL est le seul moteur supporté, et l'application le fait respecter.** Elle
+refuse de démarrer sur tout autre pilote : ses barrières anti-fraude sont
+posées dans la base, et aucune ne survit à un changement de moteur. Sur SQLite
+elle fonctionnerait en apparence, et accepterait une transition interdite sans
+rien signaler (D-054).
+
 ```bash
 cp .env.example .env
 docker compose up -d              # MySQL + collecteur de courriels

@@ -134,6 +134,21 @@ serait un gain nul contre une dette certaine.
 Le passage en local n'allège **aucune** exigence du §4. Les mêmes Policies, la
 même machine à états appliquée en base, le même journal en ajout seul.
 
+### 5.0 Un seul moteur, et c'est appliqué
+
+**MySQL uniquement (D-054).** Les barrières décrites dans cette section sont
+posées dans la base : déclencheurs de machine à états, contraintes CHECK,
+journal d'audit en ajout seul par droits table par table. **Aucune ne survit à
+un changement de moteur.**
+
+`App\Support\Security\DatabaseEngineGuard` élague au démarrage les connexions
+que Laravel réinjecte — les retirer de `config/database.php` ne suffit pas, le
+cadre fusionne ses propres connexions — puis refuse de démarrer si le pilote
+n'est pas `mysql`.
+
+Sans ce contrôle, un `DB_CONNECTION=sqlite` posé par erreur ferait tourner une
+application qui accepte une transition interdite sans rien signaler.
+
 ### 5.1 Deux comptes MySQL distincts
 
 C'est le point d'architecture le plus important de cette section.
