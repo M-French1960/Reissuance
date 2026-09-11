@@ -15,6 +15,12 @@ use App\Models\User;
  * Refus par defaut : chaque methode retourne false sauf cas explicite.
  * Cette Policy double la portee globale plutot que de la remplacer : la portee
  * evite les fuites de liste, la Policy protege l'acces unitaire.
+ *
+ * LE STATUT DU COMPTE N'EST PAS VERIFIE ICI, ET C'EST VOULU. Aucune methode de
+ * cette Policy ne regarde `status` : un compte qui n'est pas actif est refuse
+ * AVANT d'y arriver, par `AccountStatusGate` (D-059). Poser la regle une fois
+ * vaut mieux que la repeter dans chaque capacite, ou il suffirait d'un oubli —
+ * mais ne cherchez donc pas ce controle dans les methodes ci-dessous.
  */
 class ReissuanceRequestPolicy
 {

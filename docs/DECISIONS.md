@@ -1953,3 +1953,66 @@ d'option inconnue. Le cycle complet a été réexécuté, et la commande
 recommandée fonctionne maintenant telle quelle.
 
 ---
+
+## D-059 — Le statut du compte devient une barrière d'autorisation
+
+- **Date :** 2026-09-11
+- **Statut :** implémenté ; 569 tests au vert
+- **Origine :** jalon A. Deux défauts relevés séparément — `decide()` répondait
+  **oui** pour un officier suspendu, `reassign()` admettait l'administrateur —
+  n'étaient pas deux bogues distincts mais **deux symptômes du même trou** :
+  aucune des vingt-trois capacités des Policies ne regardait le statut du
+  compte.
+
+### Ce qui tenait la ligne jusqu'ici, et pourquoi ça ne suffisait pas
+
+En pratique rien ne passait : `EnsureAccountIsActive` déconnecte un compte
+suspendu à la porte HTTP. S'en remettre à lui a deux défauts, et le second est
+le plus sérieux :
+
+1. **Les Policies sont aussi consultées hors requête HTTP** — file d'attente,
+   commandes Artisan, semences — où aucun middleware ne tourne.
+2. **Une Policy qu'on relit ne disait pas ce qu'elle applique.** Un développeur
+   qui lit `decide()` y voit trois conditions et en conclut, raisonnablement,
+   qu'un agent suspendu est refusé par la Policy. Il ne l'était pas. **Croire
+   lire une barrière là où elle n'est pas est exactement ce qui produit la
+   faille suivante** — et c'est comme cela que `reassign()` est passé.
+
+### La règle, posée une fois
+
+`AccountStatusGate`, un `Gate::before` : **un compte qui n'est pas actif n'est
+autorisé à rien.** Rien d'autre ne change ; les Policies gardent leur logique
+métier.
+
+**Pourquoi pas dans chaque capacité :** répéter `$user->isActive()` vingt-trois
+fois, c'est vingt-trois occasions de l'oublier — et la vingt-quatrième
+capacité, écrite dans six mois, ne l'aura pas.
+
+**Pourquoi les Policies le disent quand même :** leur en-tête indique désormais
+que le contrôle est ailleurs, et où. Une barrière invisible là où on la cherche
+est le problème qu'on vient de corriger ; il ne s'agissait pas de le déplacer.
+
+### Ce que cela n'empêche pas
+
+Un compte en attente de configuration atteint toujours son écran de double
+authentification — vérifié : il n'est gardé par aucune Policy. C'est la seule
+chose qu'il doit pouvoir faire. Et le statut de la **cible** reste traité dans
+`UserPolicy` : réactiver un compte suspendu est précisément le travail de
+l'administrateur.
+
+### Vérifié
+
+`AccountStatusAuthorizationTest` parcourt la matrice entière — 4 rôles × 3
+statuts inactifs × toutes les capacités, **lues par réflexion sur les Policies
+elles-mêmes**, si bien qu'une capacité ajoutée demain est couverte sans qu'on
+pense à ce fichier. 27 tests, 286 assertions.
+
+Éprouvé en retirant la règle : **14 tests sur 27 échouent**, sur les quatre
+rôles. Un test de contrepartie vérifie qu'un compte actif conserve toutes ses
+capacités — sans lui, la règle serait satisfaite en refusant tout le monde.
+
+Vérifié aussi au navigateur, dans les deux contextes : un officier suspendu
+pendant sa session est redirigé vers la connexion, et `can('decide')` répond
+**non** hors requête HTTP, là où aucun middleware ne tourne.
+
+---

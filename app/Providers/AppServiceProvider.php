@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Support\Security\AccountStatusGate;
 use App\Support\Security\DatabaseEngineGuard;
 use App\Support\Security\VisibilityScopeGuard;
 use Illuminate\Support\ServiceProvider;
@@ -34,5 +35,12 @@ class AppServiceProvider extends ServiceProvider
          * fuite en lecture hors perimetre (D-051, docs/RLS.md 7).
          */
         VisibilityScopeGuard::assertRegistered();
+
+        /*
+         * Un compte qui n'est pas actif n'est autorise a rien, et cela est
+         * pose UNE fois plutot que repete dans chacune des capacites des
+         * Policies — ou il suffirait d'un oubli (D-059).
+         */
+        AccountStatusGate::register();
     }
 }

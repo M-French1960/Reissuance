@@ -12,6 +12,12 @@ use App\Models\User;
  *
  * Separation stricte : l'administrateur gere les comptes et n'accede a aucun
  * contenu de dossier d'identite. Cette Policy ne lui ouvre donc rien d'autre.
+ *
+ * LE STATUT DU COMPTE DE L'ACTEUR N'EST PAS VERIFIE ICI, ET C'EST VOULU. Un
+ * administrateur suspendu est refuse AVANT d'y arriver, par
+ * `AccountStatusGate` (D-059). Le statut de la CIBLE, lui, se traite bien dans
+ * les methodes ci-dessous : reactiver un compte suspendu est precisement le
+ * travail de l'administrateur.
  */
 class UserPolicy
 {

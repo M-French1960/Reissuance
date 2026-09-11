@@ -188,6 +188,16 @@ minimum :
 | R23 | `/sante` consultée par un visiteur anonyme | le verdict seul ; ni version, ni compte, ni état des droits (D-058) |
 | R24 | Rattachement d'un administrateur à une commune | refusé par la Policy, pas par une erreur 500 (D-058) |
 | R25 | Rattachement d'un maire sans commune | erreur de validation, pas une erreur 500 (D-058) |
+| R26 | `can()` sur n'importe quelle capacité avec un compte suspendu, désactivé ou en attente | **refus**, hors requête HTTP comprise (D-059) |
+| R27 | Officier suspendu pendant sa session tentant de décider | refusé par la Policy **et** par le middleware |
+
+### Le statut du compte est vérifié en amont des Policies
+
+Un compte qui n'est pas `active` n'est autorisé à rien. La règle est posée une
+fois, dans `AccountStatusGate` (un `Gate::before`), et non répétée dans les
+vingt-trois capacités — où il aurait suffi d'un oubli. **Ne cherchez donc pas
+ce contrôle dans les Policies** : leur en-tête indique où il se trouve. Voir
+D-059.
 | R14 | Utilisateur désactivé tentant de se connecter | refus, et session existante invalidée |
 | R15 | Officier consultant une pièce d'identité | accès accordé **et** ligne d'audit écrite |
 | R16 | Requête `GET` quelconque sans session | seules les routes de la liste blanche répondent |
