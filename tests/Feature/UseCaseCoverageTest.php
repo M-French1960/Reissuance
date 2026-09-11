@@ -8,6 +8,7 @@ use App\Enums\RequestStatus;
 use App\Models\CivilStatusCenter;
 use App\Models\ReissuanceRequest;
 use App\Models\User;
+use App\Services\ActDraftService;
 use App\Services\RequestTransitionService;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -149,6 +150,9 @@ class UseCaseCoverageTest extends TestCase
             'Manage Request' => ['officer', ['officer.queue', 'officer.verification.claim'], 'officer.queue'],
             'Verify Identity' => ['officer', ['officer.verification.step', 'officer.verification.identity', 'officer.verification.facial'], 'verification'],
             'Search Registry' => ['officer', ['officer.verification.registry'], null],
+            // Tranche en lecture 2 (D-064) : l'officier redige le projet
+            // d'acte au moment ou sa decision remet le dossier au maire.
+            'Generate Certificate' => ['officer', ['officer.decision.store'], null],
             'Accept Request' => ['officer', ['officer.decision.store'], null],
             'Reject Request' => ['officer', ['officer.decision.store'], null],
             'Escalate Request' => ['officer', ['officer.decision.store'], null],
@@ -444,7 +448,10 @@ class UseCaseCoverageTest extends TestCase
      *
      * @return array<string, string>
      */
-    public const CAS_SANS_ROUTE = [
+    public const CAS_SANS_ROUTE = [];
+
+    /** Conserve pour memoire : la divergence a ete tranchee en D-064. */
+    private const CAS_TRANCHES = [
         'Generate Certificate' => <<<'RAISON'
             Le diagramme place « Generate Certificate » chez l'OFFICIER. Dans
             le code, l'acte n'est fabrique qu'a la signature du maire
@@ -463,6 +470,26 @@ class UseCaseCoverageTest extends TestCase
     ];
 
     /**
+     * « Generate Certificate » produit reellement un projet d'acte.
+     *
+     * La tracer vers `officer.decision.store` ne suffirait pas : cette route
+     * porte aussi le rejet, qui ne redige rien. Ce test verifie que le cas
+     * fait ce que le diagramme dit — sinon la tracabilite serait formelle.
+     */
+    #[Test]
+    public function generate_certificate_produit_bien_un_projet(): void
+    {
+        $this->assertDatabaseCount('act_drafts', 0);
+
+        app(ActDraftService::class)->draft($this->aSigner, $this->officier);
+
+        $this->assertDatabaseHas('act_drafts', [
+            'request_id' => $this->aSigner->id,
+            'officer_id' => $this->officier->id,
+        ]);
+    }
+
+    /**
      * Un cas du diagramme sans route reste visible et justifie.
      *
      * Ce test ne verifie pas que le cas est implemente — il ne l'est pas. Il
@@ -473,7 +500,7 @@ class UseCaseCoverageTest extends TestCase
     public function les_cas_du_diagramme_sans_route_restent_declares(): void
     {
         $this->assertSame(
-            ['Generate Certificate'],
+            [],
             array_keys(self::CAS_SANS_ROUTE),
             'La liste des cas du diagramme sans implémentation a changé. '
                 .'Si un cas a été construit, retirez-le et ajoutez-le à casDuDiagramme(). '
@@ -483,6 +510,8 @@ class UseCaseCoverageTest extends TestCase
         foreach (self::CAS_SANS_ROUTE as $cas => $raison) {
             $this->assertNotSame('', trim($raison), "Le cas « {$cas} » est déclaré sans justification.");
         }
+
+        $this->assertNotSame([], self::CAS_TRANCHES, 'La mémoire des divergences tranchées ne doit pas se perdre.');
     }
 
     /**

@@ -18,10 +18,13 @@ use App\Services\VerificationWorkflow;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
 use RuntimeException;
+use Tests\Support\WritesActDrafts;
 use Tests\TestCase;
 
 class SignatureTest extends TestCase
 {
+    use WritesActDrafts;
+
     private CivilStatusCenter $centre;
 
     private User $maire;
@@ -82,6 +85,9 @@ class SignatureTest extends TestCase
         app(RequestTransitionService::class)->transition(
             $this->demande, RequestStatus::AwaitingSignature, $this->officier
         );
+        // Le maire signe un PROJET établi par l'officier (D-064) : le
+        // contrôleur de l'officier le rédige en même temps qu'il décide.
+        $this->redigeLeProjet($this->demande, $this->officier);
         $this->demande->refresh();
     }
 
@@ -90,6 +96,7 @@ class SignatureTest extends TestCase
         app(RequestTransitionService::class)->transition(
             $this->demande, RequestStatus::Escalated, $this->officier, 'Doute sur la pièce présentée.'
         );
+        $this->redigeLeProjet($this->demande, $this->officier);
         $this->demande->refresh();
     }
 

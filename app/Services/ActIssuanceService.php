@@ -10,6 +10,7 @@ use App\Models\AuditLog;
 use App\Models\DocumentSignature;
 use App\Models\ReissuanceRequest;
 use App\Models\User;
+use DomainException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -34,6 +35,7 @@ final class ActIssuanceService
         private readonly SignatureProvider $signature,
         private readonly DocumentBuilder $builder,
         private readonly RequestTransitionService $transitions,
+        private readonly ActDraftService $drafts,
     ) {}
 
     public function issue(ReissuanceRequest $request, User $mayor, ?string $reason = null): DocumentSignature
@@ -47,7 +49,37 @@ final class ActIssuanceService
 
             $request->refresh()->load('citizen.profile', 'center', 'commune');
 
-            // 2. Composition, puis signature du document tel quel.
+            // 2. LE MAIRE SIGNE CE QUE L'OFFICIER A REDIGE, ET RIEN D'AUTRE.
+            //
+            //    Depuis D-064, le contenu de l'acte est redige par l'officier
+            //    (lecture 2 du diagramme). Deplacer la redaction en amont de
+            //    la decision ouvre une faille : l'officier pourrait modifier
+            //    le dossier APRES que le maire a lu le projet, et le maire
+            //    signerait autre chose que ce qu'il a vu.
+            //
+            //    On recalcule donc l'empreinte du contenu et on la compare a
+            //    celle relevee a la redaction. Si elle a bouge, on refuse —
+            //    la transition est annulee avec le reste de la transaction, et
+            //    aucun acte n'est produit.
+            $projet = $this->drafts->latest($request);
+
+            if ($projet === null) {
+                throw new DomainException(
+                    "Aucun projet d'acte n'a été rédigé pour cette demande. "
+                    ."Le maire signe un projet établi par l'officier ; il ne rédige pas l'acte."
+                );
+            }
+
+            $empreinte = DocumentBuilder::contentFingerprint($request);
+
+            if (! hash_equals($projet->content_hash, $empreinte)) {
+                throw new DomainException(
+                    'Le dossier a changé depuis la rédaction du projet d’acte. '
+                    .'Signer maintenant reviendrait à signer autre chose que ce qui a été soumis : '
+                    ."l'officier doit établir un nouveau projet."
+                );
+            }
+
             $document = $this->builder->build($request, $mayor, legallyBinding: false);
 
             $resultat = $this->signature->sign($document, [
@@ -72,6 +104,9 @@ final class ActIssuanceService
             $signature = DocumentSignature::create([
                 'request_id' => $request->id,
                 'mayor_id' => $mayor->id,
+                // De quel projet cet acte est issu : la responsabilite du
+                // contenu remonte nominativement a l'officier qui l'a redige.
+                'draft_id' => $projet->id,
                 'document_hash' => $resultat->documentHash,
                 'document_path' => $documentPath,
                 'proof_path' => $proofPath,

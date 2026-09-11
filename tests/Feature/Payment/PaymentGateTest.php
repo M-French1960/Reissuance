@@ -17,6 +17,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\Support\WritesActDrafts;
 use Tests\TestCase;
 
 /**
@@ -29,6 +30,8 @@ use Tests\TestCase;
  */
 class PaymentGateTest extends TestCase
 {
+    use WritesActDrafts;
+
     private CivilStatusCenter $centre;
 
     private User $citoyen;
@@ -104,6 +107,9 @@ class PaymentGateTest extends TestCase
         }
 
         $transitions->transition($demande->refresh(), RequestStatus::AwaitingSignature, $this->officier);
+
+        // Le maire signe un PROJET établi par l'officier (D-064).
+        $this->redigeLeProjet($demande, $this->officier);
 
         return $demande->refresh();
     }

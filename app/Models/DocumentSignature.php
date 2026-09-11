@@ -15,7 +15,7 @@ class DocumentSignature extends Model
     use HasFactory;
 
     protected $fillable = [
-        'request_id', 'mayor_id', 'document_hash',
+        'request_id', 'mayor_id', 'draft_id', 'document_hash',
         'document_path', 'proof_path', 'legally_binding',
         'provider', 'signature_payload', 'signed_at',
     ];

@@ -9,6 +9,7 @@ use App\Enums\RequestStatus;
 use App\Http\Controllers\Controller;
 use App\Models\ReissuanceRequest;
 use App\Models\RequestDecision;
+use App\Services\ActDraftService;
 use App\Services\RequestTransitionService;
 use App\Services\VerificationWorkflow;
 use DomainException;
@@ -49,6 +50,7 @@ class DecisionController extends Controller
     public function __construct(
         private readonly VerificationWorkflow $workflow,
         private readonly RequestTransitionService $transitions,
+        private readonly ActDraftService $drafts,
     ) {}
 
     public function store(Request $request, ReissuanceRequest $reissuanceRequest): RedirectResponse
@@ -117,6 +119,23 @@ class DecisionController extends Controller
                     $reissuanceRequest, $cible, $request->user(),
                     $validated['reason'] ?? null, $request->ip(),
                 );
+
+                /*
+                 * « Generate Certificate » : l'officier redige le projet
+                 * d'acte (D-064, lecture 2 du diagramme).
+                 *
+                 * Sur LES DEUX chemins qui remettent le dossier au maire —
+                 * acceptation (T4) et escalade (T6) — parce que tous deux
+                 * peuvent mener a une signature. N'en couvrir qu'un rendrait
+                 * la signature impossible apres une escalade.
+                 *
+                 * Rien de ce qui est produit ici n'a valeur d'acte : le projet
+                 * porte son bandeau, vit dans sa propre table, et le citoyen
+                 * n'y a aucun acces.
+                 */
+                if (in_array($cible, [RequestStatus::AwaitingSignature, RequestStatus::Escalated], true)) {
+                    $this->drafts->draft($reissuanceRequest->refresh(), $request->user());
+                }
 
                 RequestDecision::create([
                     'request_id' => $reissuanceRequest->id,

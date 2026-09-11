@@ -2264,3 +2264,76 @@ L'écart est porté par un test qui tombe si le centre de notifications cesse
 d'être commun — pour qu'on en reparle plutôt que de le subir.
 
 ---
+
+## D-064 — « Generate Certificate » : l'officier rédige, le maire signe ce qu'il a lu
+
+- **Date :** 2026-09-11
+- **Statut :** implémenté ; 694 tests, 0 échec
+- **Arbitrage appliqué :** **lecture 2** — l'officier produit un projet d'acte
+  que le maire signe ensuite. C'est votre décision sur la divergence rouverte
+  en D-062.
+
+### Ce que cette lecture déplace, et ce qu'elle ouvre
+
+Elle transfère la **responsabilité du contenu** de l'acte à l'officier, et
+laisse au maire celle de la **délivrance**. C'est cohérent avec le diagramme,
+qui place « Generate Certificate » chez l'officier.
+
+Mais elle ouvre une faille que je devais fermer en la construisant : **si
+l'officier rédige en amont, il peut modifier le dossier après que le maire a lu
+le projet.** Le maire signerait alors autre chose que ce qu'il a vu — un acte
+dont le contenu lui aurait échappé. C'est exactement ce que le §4.3 du brief
+interdit, et c'était mon objection à la lecture 2.
+
+### Comment elle est fermée
+
+Une **empreinte du contenu**, relevée à la rédaction et recalculée à la
+signature. Si elle a bougé, la signature est refusée, et le refus annule la
+transition avec le reste de la transaction : aucun acte n'est produit.
+
+**L'empreinte porte sur le contenu, pas sur le PDF.** Le projet porte un
+bandeau « PROJET » que l'acte final n'a pas : les deux fichiers diffèrent
+forcément, et comparer leurs octets ne dirait rien. C'est le contenu qui doit
+être stable, pas la mise en page.
+
+Un test lit le corps du document généré et vérifie que **chaque champ imprimé
+est couvert par l'empreinte** : un champ ajouté à l'acte sans être ajouté à
+l'empreinte deviendrait modifiable après lecture du maire, sans que rien ne le
+signale.
+
+### Ce qui garantit qu'un projet n'est jamais pris pour un acte
+
+- Table **distincte** de `document_signatures` — un projet n'a ni signataire,
+  ni preuve, ni valeur.
+- Bandeau **« PROJET D'ACTE — NON SIGNÉ — SANS VALEUR »** en tête, avant tout
+  le reste, et répété en pied.
+- Aucun bloc « Signé par » : à sa place, le nom de l'officier qui l'a rédigé.
+- Le citoyen n'y a **aucun accès**.
+
+Le §4.3 tient donc malgré le déplacement : aucun document ayant valeur d'acte
+n'existe avant la décision du maire.
+
+### La traçabilité que la lecture 2 rend nécessaire
+
+`document_signatures.draft_id` relie l'acte au projet dont il est issu. La
+responsabilité du contenu remonte ainsi **nominativement** à l'officier qui l'a
+rédigé — ce que la lecture 1 n'avait pas à faire, puisque le maire composait.
+
+### Douze tests sont tombés, et c'était juste
+
+Leurs fixtures poussaient une demande jusqu'à `awaiting_signature` par un appel
+direct au service de transition, sans passer par la décision de l'officier :
+elles sautaient une étape devenue réelle. Elles appellent désormais le **même
+service** que le contrôleur — fabriquer un `ActDraft` à la main aurait
+contourné l'empreinte, c'est-à-dire la seule chose qui rend cette lecture sûre.
+
+Le jeu de démonstration avait le même trou : **aucun dossier n'y était
+signable**. Corrigé.
+
+### Le projet est rédigé sur les deux chemins
+
+Acceptation (T4) **et** escalade (T6), parce que les deux peuvent mener à une
+signature. N'en couvrir qu'un rendrait la signature impossible après une
+escalade — T9.
+
+---

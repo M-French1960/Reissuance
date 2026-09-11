@@ -15,6 +15,7 @@ use App\Services\RequestTransitionService;
 use App\Services\VerificationWorkflow;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\Support\WritesActDrafts;
 use Tests\TestCase;
 
 /**
@@ -31,6 +32,8 @@ use Tests\TestCase;
  */
 class RestoreVerificationTest extends TestCase
 {
+    use WritesActDrafts;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -76,6 +79,9 @@ class RestoreVerificationTest extends TestCase
         }
 
         $transitions->transition($demande->refresh(), RequestStatus::AwaitingSignature, $officier);
+
+        // Le maire signe un PROJET établi par l'officier (D-064).
+        $this->redigeLeProjet($demande, $officier);
         app(ActIssuanceService::class)->issue($demande->refresh(), $maire);
 
         return $demande->refresh()->signature;

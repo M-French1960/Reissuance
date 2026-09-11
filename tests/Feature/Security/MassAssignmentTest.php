@@ -15,6 +15,7 @@ use App\Services\RequestTransitionService;
 use App\Services\VerificationWorkflow;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\Support\WritesActDrafts;
 use Tests\TestCase;
 
 /**
@@ -29,6 +30,8 @@ use Tests\TestCase;
  */
 class MassAssignmentTest extends TestCase
 {
+    use WritesActDrafts;
+
     private CivilStatusCenter $centre;
 
     private User $citoyen;
@@ -203,6 +206,9 @@ class MassAssignmentTest extends TestCase
             $workflow->record($demande, $n, $officier, VerificationResult::Match);
         }
         app(RequestTransitionService::class)->transition($demande, RequestStatus::AwaitingSignature, $officier);
+
+        // Le maire signe un PROJET établi par l'officier (D-064).
+        $this->redigeLeProjet($demande, $officier);
 
         $this->actingAs($maire)->post(route('mayor.sign', $demande->refresh()), [
             'legally_binding' => 1,

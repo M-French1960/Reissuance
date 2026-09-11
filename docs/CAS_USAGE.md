@@ -152,7 +152,7 @@ system settings » devient donc un cas de **l'administrateur**, et non du maire 
 un maire qui pourrait créer les comptes officiers et signer les actes cumulerait
 les deux pouvoirs que la plateforme sépare.
 
-### 4.2 ⚠ « Generate Certificate » du côté de l'officier
+### 4.2 ✅ « Generate Certificate » du côté de l'officier — tranché (lecture 2)
 
 Aujourd'hui, l'acte est **produit au moment de la signature du maire**
 (jalon 5) : il n'existe aucun document avant la décision de signer. Le
@@ -177,17 +177,19 @@ la décision du maire serait un acte en attente de tampon, et non un acte que le
 maire décide de délivrer. La différence n'est pas théorique — c'est elle qui
 fait qu'aucun raccourci ne produit d'acte signé.
 
-> **Divergence rouverte le 2026-09-11 (D-062).** J'avais écrit « TRANCHÉ »
-> ici. Ce n'était pas à moi de le faire : le diagramme, qui est la référence,
-> porte « Generate Certificate » comme un cas de l'officier, et le code n'a
-> aucune route qui y corresponde — l'acte n'est fabriqué que par
-> `ActIssuanceService`, appelé depuis le contrôleur du **maire**.
+> **TRANCHÉ PAR VOUS le 2026-09-11 : lecture 2 (D-064).** L'officier **rédige
+> un projet d'acte**, le maire le signe. La responsabilité du contenu est celle
+> de l'officier ; celle de la délivrance reste au maire.
 >
-> La question porte sur **qui rédige l'acte**, donc sur la responsabilité de
-> son contenu. Elle est désormais déclarée comme divergence ouverte dans
-> `UseCaseCoverageTest::CAS_SANS_ROUTE`, avec sa justification, de sorte
-> qu'elle ne puisse plus se perdre. **Confirmez la lecture 1, ou dites-moi que
-> l'officier doit produire un projet d'acte.**
+> Mon objection au §4.3 est traitée, pas contournée : un projet n'est pas un
+> acte — table distincte, bandeau « PROJET — NON SIGNÉ », aucun signataire,
+> aucun accès pour le citoyen. Et le maire ne peut signer que le contenu qu'il
+> a lu : une **empreinte du contenu** est relevée à la rédaction et recalculée
+> à la signature. Si le dossier a changé entre-temps, la signature est refusée.
+>
+> Ce qui précède reste l'analyse qui m'avait fait pencher pour la lecture 1 ;
+> elle est conservée parce qu'elle explique pourquoi la lecture 2 a dû être
+> construite ainsi et pas autrement.
 
 ### 4.3 ⚠ Reconnaissance faciale — le point le plus lourd du diagramme
 

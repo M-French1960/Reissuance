@@ -9,6 +9,7 @@ use App\Enums\VerificationResult;
 use App\Models\CivilStatusCenter;
 use App\Models\ReissuanceRequest;
 use App\Models\User;
+use App\Services\ActDraftService;
 use App\Services\RequestTransitionService;
 use App\Services\VerificationWorkflow;
 use Illuminate\Database\Seeder;
@@ -105,6 +106,16 @@ class DemoRequestsSeeder extends Seeder
                 }
 
                 $transitions->transition($request, $to, $actor, $reason);
+
+                /*
+                 * Le maire signe un PROJET etabli par l'officier (D-064). Sans
+                 * projet, aucun dossier du jeu de demonstration ne serait
+                 * signable — c'est le meme trou qui a fait tomber douze tests
+                 * le jour ou la regle est entree en vigueur.
+                 */
+                if (in_array($to, [RequestStatus::AwaitingSignature, RequestStatus::Escalated], true)) {
+                    app(ActDraftService::class)->draft($request->refresh(), $officer);
+                }
             }
 
             $this->command?->line("  {$request->reference} → {$target->label()}");
