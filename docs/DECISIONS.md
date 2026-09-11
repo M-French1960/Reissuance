@@ -2337,3 +2337,65 @@ signature. N'en couvrir qu'un rendrait la signature impossible après une
 escalade — T9.
 
 ---
+
+## D-065 — Le diagramme est confronté en entier : systèmes externes et extensions
+
+- **Date :** 2026-09-11
+- **Statut :** implémenté ; 709 tests, 0 échec. **La confrontation au diagramme
+  est complète.**
+
+### Ce qui restait
+
+D-061 avait encodé les cas, D-063 les acteurs et les `«Include» Authenticate`.
+Restaient les deux dernières informations que le diagramme porte.
+
+### 1. Les cinq systèmes externes
+
+Le diagramme relie **Payment API** à « Make Payment », **Docusign** à « Sign
+Certificate », et **GDNS**, **Civil Registry DB** et **Facial Recognition API**
+à « Verify Identity ».
+
+Le test vérifie, pour chacun : que le contrat existe, qu'il est lié à une
+implémentation dans le conteneur, et que **le service du cas en dépend
+réellement**. Sans cette dernière vérification, un câblage pourrait exister à
+côté du parcours sans le servir.
+
+**Ce que ce test ne prouve pas, et il faut le redire :** que le câblage existe
+ne dit rien du fonctionnement. **Quatre de ces cinq adaptateurs sont des
+squelettes qui lèvent**, faute de réponse aux questions du §7 de
+`docs/INTEGRATIONS.md`. Confondre « câblé » et « fonctionne » serait exactement
+l'erreur que ce projet passe son temps à éviter.
+
+Éprouvé en débranchant la reconnaissance faciale de `VerificationWorkflow` :
+le test tombe en nommant le système et le cas.
+
+### 2. Les relations «Extend»
+
+Le diagramme ne dit pas seulement que « Cancel Request » existe : il dit
+qu'elle **étend** « Track Request Status », donc qu'on y accède **depuis le
+suivi de sa demande**. Une annulation joignable depuis un autre écran
+satisferait la route et trahirait le diagramme.
+
+Le test lit l'écran du cas de base — **et les composants qu'il inclut**, parce
+que le fil d'échanges de « Contact Officer » vit dans un composant et
+l'y chercher à la main aurait été fragile. Éprouvé en retirant l'annulation de
+l'écran de suivi : le test tombe.
+
+### Où en est la confrontation
+
+| Information du diagramme | Appliquée par |
+|---|---|
+| Les cas | D-061 |
+| Les acteurs, et qui ne peut pas | D-063 |
+| `«Include» Authenticate` | D-063 |
+| Les cinq systèmes externes | D-065 |
+| Les relations `«Extend»` | D-065 |
+| Ce qui existe hors diagramme | D-061, D-062 |
+| Les divergences tranchées | D-062, D-064 |
+
+**Tout ce que le diagramme porte est désormais vérifié par la suite.** Ce qui
+reste n'est plus une question de conformité au diagramme mais de service réel :
+les six questions du §7 de `docs/INTEGRATIONS.md`, et les essais terrain que
+nul outil ne remplace.
+
+---

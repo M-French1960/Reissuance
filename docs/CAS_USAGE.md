@@ -25,6 +25,11 @@
 > qui l'exerce. Si un cas devient inatteignable — route supprimée, renommée,
 > fermée au mauvais rôle — la suite échoue. Éprouvé dans les deux sens.
 >
+> **Tout ce que le diagramme porte y est désormais appliqué** : les cas
+> (D-061), les acteurs et les refus qu'ils impliquent (D-063), les
+> `«Include» Authenticate` (D-063), les cinq systèmes externes et les
+> relations `«Extend»` (D-065).
+>
 > Il vérifie aussi que chaque route citée est **réellement exercée par un
 > test** : c'est ainsi qu'on a découvert que `admin.users.reassign` ne l'était
 > par aucun, alors que ses règles venaient d'être corrigées (D-058).

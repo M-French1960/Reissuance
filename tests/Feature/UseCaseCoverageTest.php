@@ -4,12 +4,20 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Contracts\CivilRegistryProvider;
+use App\Contracts\FacialRecognitionProvider;
+use App\Contracts\IdentityLookupProvider;
+use App\Contracts\PaymentProvider;
+use App\Contracts\SignatureProvider;
 use App\Enums\RequestStatus;
 use App\Models\CivilStatusCenter;
 use App\Models\ReissuanceRequest;
 use App\Models\User;
 use App\Services\ActDraftService;
+use App\Services\ActIssuanceService;
+use App\Services\PaymentService;
 use App\Services\RequestTransitionService;
+use App\Services\VerificationWorkflow;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -468,6 +476,134 @@ class UseCaseCoverageTest extends TestCase
             Voir docs/CAS_USAGE.md 4.2.
             RAISON,
     ];
+
+    /**
+     * Les ACTEURS EXTERNES du diagramme, et le cas auquel chacun est relie.
+     *
+     * Le diagramme relie cinq systemes : Payment API a « Make Payment »,
+     * Docusign a « Sign Certificate », et GDNS, Civil Registry DB et Facial
+     * Recognition API a « Verify Identity ».
+     *
+     * CE QUE CE TEST PROUVE, ET CE QU'IL NE PROUVE PAS. Il prouve que le
+     * cablage existe : un contrat par systeme, resolu par le conteneur, et
+     * consomme par le service du cas correspondant. Il ne prouve RIEN du
+     * fonctionnement : quatre de ces cinq adaptateurs sont des squelettes qui
+     * levent, faute de reponse aux questions du 7 de docs/INTEGRATIONS.md.
+     * Confondre « cable » et « fonctionne » serait exactement l'erreur que ce
+     * projet passe son temps a eviter.
+     *
+     * @return iterable<string, array{string, class-string, string}>
+     */
+    public static function systemesExternes(): iterable
+    {
+        $systemes = [
+            'Payment API' => [PaymentProvider::class, 'Make Payment', PaymentService::class],
+            'Docusign API' => [SignatureProvider::class, 'Sign Certificate', ActIssuanceService::class],
+            'GDNS' => [IdentityLookupProvider::class, 'Verify Identity', VerificationWorkflow::class],
+            'Civil Registry DB' => [CivilRegistryProvider::class, 'Verify Identity', VerificationWorkflow::class],
+            'Facial Recognition API' => [FacialRecognitionProvider::class, 'Verify Identity', VerificationWorkflow::class],
+        ];
+
+        foreach ($systemes as $nom => [$contrat, $cas, $service]) {
+            yield $nom => [$nom, $contrat, $cas, $service];
+        }
+    }
+
+    /**
+     * @param  class-string  $contrat
+     * @param  class-string  $service
+     */
+    #[Test]
+    #[DataProvider('systemesExternes')]
+    public function chaque_systeme_externe_est_cable_au_cas_du_diagramme(
+        string $nom,
+        string $contrat,
+        string $cas,
+        string $service,
+    ): void {
+        $this->assertTrue(
+            interface_exists($contrat),
+            "Le système « {$nom} » du diagramme n'a plus de contrat."
+        );
+
+        $this->assertInstanceOf(
+            $contrat,
+            app($contrat),
+            "Le système « {$nom} » n'est lié à aucune implémentation."
+        );
+
+        // Le service du cas doit vraiment dependre du contrat : sans cela, le
+        // cablage existerait a cote du parcours, sans le servir.
+        $constructeur = (new \ReflectionClass($service))->getConstructor();
+        $dependances = array_map(
+            static fn (\ReflectionParameter $p): ?string => $p->getType() instanceof \ReflectionNamedType
+                ? $p->getType()->getName()
+                : null,
+            $constructeur?->getParameters() ?? [],
+        );
+
+        $this->assertContains(
+            $contrat,
+            $dependances,
+            "Le cas « {$cas} » n'utilise pas le système « {$nom} » que le diagramme lui relie."
+        );
+    }
+
+    /**
+     * Les relations «Extend» : l'extension part de l'ecran du cas de base.
+     *
+     * Le diagramme ne dit pas seulement que « Cancel Request » existe : il dit
+     * qu'elle ETEND « Track Request Status », donc qu'on y accede depuis le
+     * suivi de sa demande. Une annulation reachable depuis un autre ecran
+     * satisferait la route et trahirait le diagramme.
+     *
+     * @return iterable<string, array{string, string, string}>
+     */
+    public static function extensionsDuDiagramme(): iterable
+    {
+        $extensions = [
+            'Cancel Request' => ['Track Request Status', 'citizen/requests/show', 'citizen.requests.cancel'],
+            'Contact Officer' => ['Track Request Status', 'citizen/requests/show', 'requests.messages.store'],
+            'Send Certificate to Officer' => ['Sign Certificate', 'mayor/review', 'mayor.return'],
+            'Accept Request' => ['Manage Request', 'officer/verification/step-5', 'officer.decision.store'],
+            'Reject Request' => ['Manage Request', 'officer/verification/step-5', 'officer.decision.store'],
+        ];
+
+        foreach ($extensions as $cas => [$base, $vue, $route]) {
+            yield "{$cas} étend {$base}" => [$cas, $vue, $route];
+        }
+    }
+
+    #[Test]
+    #[DataProvider('extensionsDuDiagramme')]
+    public function chaque_extension_part_de_l_ecran_de_son_cas_de_base(
+        string $cas,
+        string $vue,
+        string $route,
+    ): void {
+        $chemin = resource_path("views/{$vue}.blade.php");
+
+        $this->assertFileExists($chemin, "L'écran du cas de base de « {$cas} » a disparu.");
+
+        // Le gabarit, et les composants qu'il inclut : le fil d'echanges vit
+        // dans un composant, et l'y chercher a la main serait fragile.
+        $contenu = (string) file_get_contents($chemin);
+
+        foreach (glob(resource_path('views/components/*.blade.php')) ?: [] as $composant) {
+            $nom = basename($composant, '.blade.php');
+
+            if (str_contains($contenu, "<x-{$nom}")) {
+                $contenu .= (string) file_get_contents($composant);
+            }
+        }
+
+        $this->assertStringContainsString(
+            $route,
+            $contenu,
+            "« {$cas} » étend un cas dont l'écran ne l'offre pas : le diagramme veut "
+                ."qu'on y accède depuis là, pas d'ailleurs."
+        );
+    }
 
     /**
      * « Generate Certificate » produit reellement un projet d'acte.
