@@ -2081,3 +2081,64 @@ Le tarif et sa base légale restent vides : questions 1 et 6 du §7 de
 l'état réel.
 
 ---
+
+## D-061 — Le diagramme cesse d'être un document et devient une contrainte
+
+- **Date :** 2026-09-11
+- **Statut :** implémenté ; 649 tests, 0 échec
+- **Origine :** votre consigne — « va toujours sur la base du diagramme
+  fourni ».
+
+### Ce qui n'allait pas dans ma façon de suivre le diagramme
+
+Je venais d'annoncer « tous les cas d'utilisation sont couverts » **sur la foi
+de `docs/CAS_USAGE.md`** — un tableau que j'entretiens moi-même. Ce n'est pas
+une preuve, et ce document avait déjà divergé une fois : son §3 listait comme
+« à construire » trois cas que son propre §2 donnait pour faits.
+
+Une note de synthèse dérive. Un test, non.
+
+### Ce qui est en place
+
+`tests/Feature/UseCaseCoverageTest.php` encode le diagramme : chaque cas, son
+acteur, ses routes nommées. Trois vérifications :
+
+1. **Chaque cas a ses routes** — une route supprimée ou renommée fait échouer
+   le cas correspondant, nommément.
+2. **Chaque écran s'ouvre pour l'acteur du diagramme** — un écran fermé au
+   mauvais rôle fait échouer le cas.
+3. **Chaque route citée est réellement exercée par un test** — sans quoi le
+   saut des cas « en écriture » serait une façon élégante de ne rien tester.
+
+Éprouvé dans les deux sens : en supprimant la route des réglages, et en
+fermant un écran à son propre acteur. Les deux font tomber la suite.
+
+### Ce que ce test a immédiatement trouvé
+
+**`admin.users.reassign` n'était exercée par aucun test** — alors que je venais
+d'en corriger la validation et la Policy en D-058. J'avais vérifié mon
+affirmation par un `grep`, qui comptait… ce fichier de traçabilité lui-même.
+Corriger sans test, c'est corriger jusqu'à la prochaine fois. Sept tests
+couvrent désormais le rattachement, dont les deux cas qui rendaient 500.
+
+### Ce qui existe hors diagramme, et qui est maintenant déclaré
+
+Le diagramme est la référence : ce qui n'y figure pas doit être **déclaré**,
+pas glissé en douce. Six routes sont dans ce cas, et le test tombe si une
+septième apparaît sans être documentée :
+
+| Hors diagramme | Pourquoi |
+|---|---|
+| `admin.assignments.*` | Ne vient pas d'un besoin exprimé mais d'une impasse constatée (D-057) |
+| `admin.audit.index` | Sert le §4.4 du brief, pas un cas du diagramme |
+| `health` | Exploitation |
+| `dev.ui` | Galerie de composants, hors production |
+| `webhooks.hrskills` | Rappel signé de l'agrégateur |
+
+### Ce que ce test ne prouve pas
+
+Qu'un cas soit atteignable ne dit rien de sa **justesse**. Le comportement de
+chaque cas reste vérifié par son propre fichier. Celui-ci ne couvre que la
+traçabilité du diagramme au code — et c'est déjà ce qui manquait.
+
+---

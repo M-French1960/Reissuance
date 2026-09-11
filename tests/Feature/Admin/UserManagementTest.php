@@ -184,4 +184,139 @@ class UserManagementTest extends TestCase
         // Le motif peut contenir du contenu de dossier : il n'est pas exposé.
         $reponse->assertDontSee('CONTENU-SENSIBLE-A-NE-PAS-AFFICHER');
     }
+
+    /**
+     * Le rattachement d'un agent — le cas « Manage Accounts » du diagramme.
+     *
+     * CES TESTS MANQUAIENT. `UseCaseCoverageTest` l'a revele : la route
+     * `admin.users.reassign` n'etait exercee par aucun test, alors meme que
+     * ses regles de validation et sa Policy venaient d'etre corrigees en D-058
+     * — un rattachement mal forme rendait 500. Corriger sans test, c'est
+     * corriger jusqu'a la prochaine fois.
+     */
+    #[Test]
+    public function un_officier_change_de_centre(): void
+    {
+        $depart = CivilStatusCenter::factory()->create();
+        $arrivee = CivilStatusCenter::factory()->create();
+        $officier = User::factory()->officer($depart)->create();
+
+        $this->actingAs($this->admin())
+            ->patch(route('admin.users.reassign', $officier), [
+                'civil_status_center_id' => $arrivee->id,
+                'reason' => 'Mutation demandée par le centre de départ.',
+            ])
+            ->assertRedirect();
+
+        $this->assertSame($arrivee->id, $officier->fresh()->civil_status_center_id);
+
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'account.reassigned',
+            'auditable_type' => 'user',
+            'auditable_id' => $officier->id,
+        ]);
+    }
+
+    #[Test]
+    public function un_maire_change_de_commune(): void
+    {
+        $centre = CivilStatusCenter::factory()->create();
+        $ailleurs = CivilStatusCenter::factory()->create();
+        $maire = User::factory()->mayor($centre->commune)->create();
+
+        $this->actingAs($this->admin())
+            ->patch(route('admin.users.reassign', $maire), [
+                'commune_id' => $ailleurs->commune_id,
+                'reason' => 'Changement de commune après élection.',
+            ])
+            ->assertRedirect();
+
+        $this->assertSame($ailleurs->commune_id, $maire->fresh()->commune_id);
+    }
+
+    /**
+     * Un rattachement absent est une erreur de validation, pas une erreur 500.
+     *
+     * `commune_id` etait `nullable` : la colonne partait a NULL,
+     * `users_role_scope_check` refusait, et l'utilisateur recevait une page
+     * d'erreur au lieu d'un message (D-058).
+     */
+    #[Test]
+    public function un_maire_ne_peut_pas_etre_laisse_sans_commune(): void
+    {
+        $centre = CivilStatusCenter::factory()->create();
+        $maire = User::factory()->mayor($centre->commune)->create();
+
+        $this->actingAs($this->admin())
+            ->patch(route('admin.users.reassign', $maire), [
+                'reason' => 'Tentative de rattachement sans commune.',
+            ])
+            ->assertSessionHasErrors('commune_id');
+
+        $this->assertNotNull($maire->fresh()->commune_id);
+    }
+
+    #[Test]
+    public function un_officier_ne_peut_pas_etre_laisse_sans_centre(): void
+    {
+        $centre = CivilStatusCenter::factory()->create();
+        $officier = User::factory()->officer($centre)->create();
+
+        $this->actingAs($this->admin())
+            ->patch(route('admin.users.reassign', $officier), [
+                'reason' => 'Tentative de rattachement sans centre.',
+            ])
+            ->assertSessionHasErrors('civil_status_center_id');
+
+        $this->assertNotNull($officier->fresh()->civil_status_center_id);
+    }
+
+    /**
+     * Un administrateur n'a PAS de rattachement, et ne peut pas en recevoir.
+     *
+     * `isOfficial()` n'exclut que le citoyen, si bien que la Policy admettait
+     * l'administrateur ; `users_role_scope_check` refusait ensuite, en 500.
+     */
+    #[Test]
+    public function un_administrateur_ne_peut_pas_etre_rattache(): void
+    {
+        $centre = CivilStatusCenter::factory()->create();
+        $cible = User::factory()->admin()->create();
+
+        $this->actingAs($this->admin())
+            ->patch(route('admin.users.reassign', $cible), [
+                'commune_id' => $centre->commune_id,
+                'reason' => "Tentative de rattachement d'un administrateur.",
+            ])
+            ->assertForbidden();
+
+        $this->assertNull($cible->fresh()->commune_id);
+    }
+
+    #[Test]
+    public function un_citoyen_ne_peut_pas_etre_rattache(): void
+    {
+        $centre = CivilStatusCenter::factory()->create();
+
+        $this->actingAs($this->admin())
+            ->patch(route('admin.users.reassign', User::factory()->citizen()->create()), [
+                'civil_status_center_id' => $centre->id,
+                'reason' => "Tentative de rattachement d'un citoyen.",
+            ])
+            ->assertForbidden();
+    }
+
+    #[Test]
+    public function seul_un_administrateur_peut_rattacher(): void
+    {
+        $centre = CivilStatusCenter::factory()->create();
+        $officier = User::factory()->officer($centre)->create();
+
+        $this->actingAs($officier)
+            ->patch(route('admin.users.reassign', $officier), [
+                'civil_status_center_id' => $centre->id,
+                'reason' => 'Un agent ne se rattache pas lui-même.',
+            ])
+            ->assertForbidden();
+    }
 }

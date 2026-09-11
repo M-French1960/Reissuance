@@ -5,9 +5,24 @@
 > apparaît comme acteur **Super Admin**, et l'acteur de signature est nommé
 > **Docusign**. Ce document suit la version 2.
 
-> Le diagramme de cas d'utilisation fourni devient la **référence** du
+> Le diagramme de cas d'utilisation fourni est la **référence** du
 > développement. Ce document trace chaque cas jusqu'au code, et nomme les
 > points où le diagramme et le brief ne disent pas la même chose.
+>
+> ## ⚠️ Ce document ne fait pas foi — le test, si
+>
+> **`tests/Feature/UseCaseCoverageTest.php` porte la traçabilité applicable.**
+> Ce document-ci est une note que j'entretiens, et une note que son auteur
+> entretient ne prouve rien : celle-ci a déjà divergé, listant en §3 comme
+> « à construire » trois cas que son propre §2 donnait pour faits (D-061).
+>
+> Le test attache chaque cas du diagramme à ses routes nommées et à l'acteur
+> qui l'exerce. Si un cas devient inatteignable — route supprimée, renommée,
+> fermée au mauvais rôle — la suite échoue. Éprouvé dans les deux sens.
+>
+> Il vérifie aussi que chaque route citée est **réellement exercée par un
+> test** : c'est ainsi qu'on a découvert que `admin.users.reassign` ne l'était
+> par aucun, alors que ses règles venaient d'être corrigées (D-058).
 >
 > Ce que je ne fais pas : trancher seul ces divergences. Le §4.2 du brief et le
 > diagramme portent deux répartitions de pouvoir différentes, et une
