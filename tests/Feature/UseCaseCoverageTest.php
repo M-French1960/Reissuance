@@ -299,6 +299,142 @@ class UseCaseCoverageTest extends TestCase
     }
 
     /**
+     * « Include Authenticate » : le diagramme le porte sur TOUS les cas.
+     *
+     * Une seule exception, et elle est evidente au diagramme : « Create
+     * Citizen Account » part du Visitor et n'a aucune fleche vers
+     * Authenticate — on ne peut pas exiger d'etre connecte pour creer son
+     * compte.
+     *
+     * Ce test rend la propriete applicable : une route de cas ajoutee hors du
+     * groupe authentifie fait echouer la suite. Sans lui, la regle tient au
+     * fait que personne ne s'est trompe jusqu'ici.
+     *
+     * @param  list<string>  $routes
+     */
+    #[Test]
+    #[DataProvider('casDuDiagramme')]
+    public function chaque_cas_du_diagramme_exige_l_authentification(
+        string $cas,
+        string $acteur,
+        array $routes,
+        ?string $ecran,
+    ): void {
+        if ($acteur === 'visitor') {
+            $this->markTestSkipped("« {$cas} » est un cas du Visitor : exiger une session serait absurde.");
+        }
+
+        $connues = app('router')->getRoutes()->getRoutesByName();
+
+        foreach ($routes as $nom) {
+            $intergiciels = $connues[$nom]->gatherMiddleware();
+
+            $this->assertTrue(
+                in_array('auth', $intergiciels, true) || in_array('auth:web', $intergiciels, true),
+                "Le cas « {$cas} » expose la route « {$nom} » sans authentification, "
+                    .'alors que le diagramme porte « Include Authenticate » sur tous les cas.'
+            );
+        }
+    }
+
+    /**
+     * Les liens ACTEUR → CAS du diagramme, dans les deux sens.
+     *
+     * Le diagramme ne dit pas seulement qui peut faire quoi : en ne tracant
+     * PAS de lien, il dit aussi qui ne le peut pas. C'est le coeur de la
+     * separation des pouvoirs — le maire ne gouverne pas les comptes,
+     * l'administrateur ne voit pas les dossiers, l'officier ne signe pas.
+     *
+     * Le test precedent verifie que l'acteur lie y arrive ; celui-ci verifie
+     * que les autres sont refuses.
+     *
+     * @return iterable<string, array{string, list<string>}>
+     */
+    public static function exclusivitesDuDiagramme(): iterable
+    {
+        // cas => [ecran, acteurs LIES au diagramme]
+        $matrice = [
+            'Make Reissuance Request' => ['wizard', ['citizen']],
+            'Track Request Status' => ['citizen.requests.index', ['citizen']],
+            'Update Account Information' => ['citizen.profile.edit', ['citizen']],
+            'Manage Request' => ['officer.queue', ['officer']],
+            'Verify Identity' => ['verification', ['officer']],
+            'Review Escalated Request' => ['mayor.dashboard', ['mayor']],
+            'Manage Accounts' => ['admin.users.index', ['admin']],
+        ];
+
+        foreach ($matrice as $cas => [$ecran, $lies]) {
+            yield $cas => [$cas, $ecran, $lies];
+        }
+    }
+
+    /**
+     * @param  list<string>  $lies
+     */
+    #[Test]
+    #[DataProvider('exclusivitesDuDiagramme')]
+    public function un_acteur_non_lie_au_diagramme_est_refuse(string $cas, string $ecran, array $lies): void
+    {
+        $url = match ($ecran) {
+            'wizard' => route('citizen.requests.step', ['reissuanceRequest' => $this->brouillon, 'step' => 1]),
+            'verification' => route('officer.verification.step', ['reissuanceRequest' => $this->enExamen, 'step' => 1]),
+            default => route($ecran),
+        };
+
+        foreach (['citizen', 'officer', 'mayor', 'admin'] as $role) {
+            if (in_array($role, $lies, true)) {
+                continue;
+            }
+
+            $reponse = $this->actingAs(match ($role) {
+                'citizen' => $this->citoyen,
+                'officer' => $this->officier,
+                'mayor' => $this->maire,
+                'admin' => $this->admin,
+            })->get($url);
+
+            /*
+             * 403 OU 404, et 404 est le refus le plus fort.
+             *
+             * Les ecrans qui portent une demande en parametre passent par la
+             * liaison de modele, donc par la portee globale de visibilite :
+             * hors perimetre, la demande n'existe simplement pas pour cet
+             * acteur, et il obtient 404 avant qu'aucune Policy ne s'exprime.
+             * C'est le meme raisonnement que pour le telechargement d'un acte
+             * — un 403 confirmerait que le dossier existe.
+             */
+            $this->assertContains(
+                $reponse->getStatusCode(),
+                [403, 404],
+                "Le diagramme ne lie pas « {$role} » au cas « {$cas} », "
+                    ."et l'écran lui a pourtant répondu {$reponse->getStatusCode()}."
+            );
+        }
+    }
+
+    /**
+     * Un cas que l'implementation ELARGIT volontairement, et pourquoi.
+     *
+     * Le diagramme lie « Consult Notification » au seul Citizen. Le code
+     * l'ouvre aux quatre roles, et c'est delibere : quand le maire renvoie un
+     * dossier (T8/T11), l'officier qui le tient doit l'apprendre autrement
+     * qu'en rafraichissant sa file. Suivre le diagramme a la lettre ici
+     * rendrait la consigne du maire invisible.
+     *
+     * L'ecart est declare plutot que subi : ce test tombe si le centre de
+     * notifications cesse d'etre commun, pour qu'on en reparle.
+     */
+    #[Test]
+    public function le_centre_de_notifications_elargit_le_diagramme_et_c_est_declare(): void
+    {
+        foreach ([$this->citoyen, $this->officier, $this->maire, $this->admin] as $acteur) {
+            $this->actingAs($acteur)
+                ->get(route('notifications.index'))
+                ->assertOk('Le centre de notifications est commun aux quatre rôles — voir D-063.');
+        }
+    }
+
+    /**
      * Les cas du diagramme QUI N'ONT PAS de route dediee.
      *
      * Ils sont declares ici avec leur justification, plutot que passes sous

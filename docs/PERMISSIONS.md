@@ -192,6 +192,8 @@ minimum :
 | R27 | Officier suspendu pendant sa session tentant de décider | refusé par la Policy **et** par le middleware |
 | R28 | Recherche d'une valeur de secret dans l'écran des réglages | aucune — la valeur n'entre pas dans l'objet affiché (D-060) |
 | R29 | Requête autre que GET sur `admin.settings.*` | aucune route n'existe ; un test structurel le tient (D-060) |
+| R30 | Route d'un cas du diagramme hors du groupe authentifié | la suite échoue — « Include Authenticate » est applicable (D-063) |
+| R31 | Acteur non lié à un cas au diagramme tentant d'y accéder | 403, ou 404 lorsque la portée masque la demande (D-063) |
 
 ### Le statut du compte est vérifié en amont des Policies
 

@@ -2206,3 +2206,61 @@ le code — pas entre le diagramme et le code. **La source doit être relue, pas
 mémorisée.**
 
 ---
+
+## D-063 — Le diagramme ne dit pas que qui peut faire quoi : il dit aussi qui ne le peut pas
+
+- **Date :** 2026-09-11
+- **Statut :** implémenté ; 686 tests, 0 échec
+- **Origine :** poursuite de D-062. Je n'avais confronté au diagramme que les
+  **cas**. Il porte deux autres informations, et aucune n'était vérifiée.
+
+### 1. « Include Authenticate » sur tous les cas
+
+Toutes les ellipses du diagramme portent une flèche `«Include»` vers
+`Authenticate`, sauf une : **« Create Citizen Account »**, qui part du Visitor —
+on ne peut pas exiger d'être connecté pour créer son compte.
+
+La propriété tenait, mais au fait que personne ne s'était trompé. Elle est
+désormais applicable : une route de cas déclarée hors du groupe authentifié
+fait échouer la suite. Éprouvé en sortant le centre de notifications du
+groupe — le test le nomme.
+
+### 2. Les liens acteur → cas, **dans les deux sens**
+
+En ne traçant PAS de lien, le diagramme dit aussi qui ne peut pas. C'est le
+cœur de la séparation des pouvoirs : le maire ne gouverne pas les comptes,
+l'administrateur ne voit pas les dossiers, l'officier ne signe pas.
+
+Le test précédent vérifiait que l'acteur lié arrive à l'écran. Celui-ci
+vérifie que **les trois autres sont refusés**, cas par cas.
+
+**Un refus par 404 compte, et vaut mieux qu'un 403.** Les écrans qui portent
+une demande en paramètre passent par la portée globale : hors périmètre, la
+demande n'existe pas pour cet acteur, et il obtient 404 avant qu'aucune Policy
+ne s'exprime. C'est le raisonnement déjà retenu pour le téléchargement d'un
+acte — un 403 confirmerait que le dossier existe.
+
+### Une sonde que j'ai d'abord mal choisie
+
+Ma première tentative pour éprouver ce test a ouvert la gestion des comptes au
+maire **dans la Policy** : le test est resté vert. Ma deuxième l'a ouverte
+**dans le middleware** : vert encore.
+
+Ce n'était pas une faiblesse du test mais une propriété du système : l'écran
+est gardé **deux fois**, indépendamment. Il a fallu ouvrir les deux gardes pour
+que le maire passe — et là, le test tombe en nommant le cas et le rôle.
+
+J'aurais pu conclure « le test ne détecte rien » après la première sonde. La
+bonne conclusion était : *pourquoi ne détecte-t-il rien ?*
+
+### Un écart assumé, et déclaré
+
+Le diagramme lie **« Consult Notification » au seul Citizen**. Le code l'ouvre
+aux quatre rôles, délibérément : quand le maire renvoie un dossier (T8/T11),
+l'officier qui le tient doit l'apprendre autrement qu'en rafraîchissant sa
+file. Suivre le diagramme à la lettre rendrait la consigne du maire invisible.
+
+L'écart est porté par un test qui tombe si le centre de notifications cesse
+d'être commun — pour qu'on en reparle plutôt que de le subir.
+
+---
