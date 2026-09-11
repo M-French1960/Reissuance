@@ -8,7 +8,6 @@ use App\Contracts\SignatureProvider;
 use App\Enums\RequestStatus;
 use App\Enums\VerificationResult;
 use App\Integrations\Fake\FakeSignatureProvider;
-use App\Integrations\Real\DocusignSignatureProvider;
 use App\Models\CivilStatusCenter;
 use App\Models\DocumentSignature;
 use App\Models\ReissuanceRequest;
@@ -17,7 +16,6 @@ use App\Services\RequestTransitionService;
 use App\Services\VerificationWorkflow;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
-use RuntimeException;
 use Tests\Support\WritesActDrafts;
 use Tests\TestCase;
 
@@ -290,15 +288,6 @@ class SignatureTest extends TestCase
 
         $this->assertSame(1, DocumentSignature::count());
         $this->assertSame(RequestStatus::Signed, $this->demande->refresh()->status);
-    }
-
-    #[Test]
-    public function le_squelette_reel_de_signature_leve_une_exception(): void
-    {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessageMatches("/n'est pas implémenté/");
-
-        (new DocusignSignatureProvider)->sign('%PDF-1.4', []);
     }
 
     #[Test]

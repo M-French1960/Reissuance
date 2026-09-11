@@ -39,6 +39,16 @@ ignore s'il vaut quelque chose.
 - A8. Un horodatage qualifié est-il requis ?
 - A9. Quelle est la durée de conservation légale de la preuve de signature, et
   que se passe-t-il lorsque le certificat expire ?
+- A10. **Un acte d'état civil peut-il être traité hors du Cameroun ?** Ajoutée
+  en D-066. Docusign héberge chaque compte dans une région donnée : signer par
+  son intermédiaire revient à faire transiter des données d'identité par un
+  prestataire étranger. `DocusignClient::account()` rend le domaine
+  d'hébergement du compte, ce qui rend la question **vérifiable** une fois un
+  compte ouvert — mais la réponse est juridique, pas technique.
+- A11. Le compte du prestataire doit-il disposer d'un **sceau électronique**
+  au nom de la commune ? C'est le seul mode de signature sans intervention
+  humaine dans l'interface du prestataire ; il se souscrit, il ne se
+  configure pas. Question contractuelle liée à A4.
 
 ---
 

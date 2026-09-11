@@ -19,6 +19,7 @@ use App\Integrations\Real\DgsnIdentityLookupProvider;
 use App\Integrations\Real\DocusignSignatureProvider;
 use App\Integrations\Real\HrSkillsPayPaymentProvider;
 use App\Integrations\Real\NationalCivilRegistryProvider;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 use InvalidArgumentException;
 
@@ -73,12 +74,15 @@ class IntegrationServiceProvider extends ServiceProvider
      */
     private function bindProvider(string $contract, string $key, string $fake, string $real): void
     {
-        $this->app->bind($contract, function () use ($key, $fake, $real): object {
+        $this->app->bind($contract, function (Application $app) use ($key, $fake, $real): object {
             $choice = (string) config("phoenix.providers.{$key}");
 
+            // `make` et non `new` : un adaptateur reel a des dependances —
+            // DocusignSignatureProvider recoit son client. Les construire a la
+            // main obligerait a les enumerer ici, et a les oublier un jour.
             return match ($choice) {
-                'fake' => new $fake,
-                'real' => new $real,
+                'fake' => $app->make($fake),
+                'real' => $app->make($real),
                 // Une valeur inconnue echoue bruyamment plutot que de retomber
                 // silencieusement sur un adaptateur qu'on n'a pas choisi.
                 default => throw new InvalidArgumentException(

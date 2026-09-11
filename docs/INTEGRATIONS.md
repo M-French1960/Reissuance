@@ -129,8 +129,20 @@ dépassement du délai.
 
 **Usage :** jalon 5, transitions T7 et T9 (`STATE_MACHINE.md`).
 
-**Ce que je suppose :** on soumet un document ; on obtient un document signé et
-une preuve vérifiable.
+**Ce que je supposais — et ce que la construction a démenti.** Le contrat
+suppose qu'on soumet un document et qu'on obtient un document signé **dans le
+même appel**. Docusign ne fonctionne pas ainsi : on crée une enveloppe, la
+plateforme la traite, puis on récupère le document. Même avec un sceau
+électronique — le seul mode sans intervention humaine — il faut créer,
+attendre, télécharger. Et `ActIssuanceService::issue()` appelle `sign()` **à
+l'intérieur d'une transaction de base de données** : y attendre un service
+étranger tiendrait des verrous ouverts pendant tout le délai.
+
+La suite exigera donc un **flux en deux temps** : la décision du maire demande
+la signature et place la demande en attente ; un travail de file récupère
+l'acte signé et achève la transition. C'est un changement de machine à états,
+qui ne sera pas fait avant que la question 1 ci-dessous ait une réponse. Voir
+D-066.
 
 **Ce que je ne sais pas — et c'est bloquant pour le jalon 5 :**
 
@@ -146,6 +158,10 @@ une preuve vérifiable.
 6. Quelle durée de conservation de la preuve ? Que se passe-t-il à l'expiration
    du certificat — l'acte reste-t-il vérifiable ?
 7. Un horodatage qualifié est-il requis ?
+8. **Où les données peuvent-elles être traitées ?** Ajoutée en D-066 : faire
+   transiter un acte d'état civil par un prestataire étranger revient à faire
+   traiter des données d'identité hors du pays. Question absente de cette liste
+   jusque-là, alors qu'elle conditionne le choix même du prestataire.
 
 **Ce que je fais en attendant — implémenté au jalon 5 :**
 `FakeSignatureProvider` scelle l'empreinte du document par HMAC et déclare
@@ -161,6 +177,24 @@ Voir D-025.
 
 `document_signatures.document_hash` (SHA-256) est enregistré dès maintenant :
 il ne dépend d'aucun prestataire et servira quel que soit le choix final.
+
+**Le client Docusign, lui, est construit** (D-066) : authentification JWT
+Grant, lecture du compte et de son domaine d'hébergement, liste des sceaux,
+création d'enveloppe, statut, téléchargement. Contrat relevé dans le code
+publié par Docusign, vérifié contre un **serveur simulé** — aucun appel n'a été
+fait contre le service réel. `DocusignSignatureProvider::sign()` lève, et lève
+**avant tout appel** : aucune enveloppe n'est créée en passant.
+
+Deux questions ci-dessus deviennent vérifiables sans devenir tranchées.
+`DocusignClient::account()` rend le domaine d'hébergement du compte, donc la
+région où les données seraient traitées (question 8). Et le flux
+JWT Grant agit **au nom d'un utilisateur** : c'est lui qui apparaît comme
+expéditeur de l'enveloppe — ce qui donne à la question 4 une conséquence
+technique immédiate, la configuration `PHOENIX_DOCUSIGN_USER_ID`.
+
+Une exigence contractuelle s'ajoute à la liste : **le compte doit disposer d'un
+sceau électronique provisionné**. Il se souscrit auprès de Docusign, il ne se
+crée pas par l'API.
 
 ---
 

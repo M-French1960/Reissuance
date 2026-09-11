@@ -115,6 +115,66 @@ return [
     ],
 
     /*
+     * Signature electronique.
+     *
+     * L'adaptateur reste « fake » par defaut, et le restera tant que la
+     * question A1 de docs/COMPLIANCE_OPEN_QUESTIONS.md n'aura pas de reponse :
+     * on ignore aujourd'hui si un acte d'etat civil camerounais signe
+     * electroniquement fait foi.
+     *
+     * Ce bloc configure le CLIENT Docusign, qui lui est construit et verifie
+     * contre un serveur simule (D-066). Le renseigner ne suffit pas a activer
+     * la signature : voir DocusignSignatureProvider.
+     */
+    'signature' => [
+        'docusign' => [
+            /*
+             * Serveur d'autorisation, hote nu.
+             *   account-d.docusign.com — bac a sable (defaut)
+             *   account.docusign.com   — production
+             * Cette valeur est aussi le `aud` de l'assertion JWT.
+             */
+            'oauth_base_path' => env('PHOENIX_DOCUSIGN_OAUTH_BASE', 'account-d.docusign.com'),
+
+            // Cle d'integration de l'application (le `iss` de l'assertion).
+            'integration_key' => env('PHOENIX_DOCUSIGN_INTEGRATION_KEY', ''),
+
+            /*
+             * Utilisateur impersonne (le `sub`). Le flux JWT Grant agit EN SON
+             * NOM : c'est lui, et non l'application, qui apparait comme
+             * expediteur de l'enveloppe. Qui doit-il etre — la commune, le
+             * maire nominativement ? Question ouverte (D-066).
+             */
+            'user_id' => env('PHOENIX_DOCUSIGN_USER_ID', ''),
+
+            /*
+             * Cle privee RSA : chemin d'un fichier HORS du depot, ou le PEM
+             * lui-meme. Le client REFUSE une cle rangee dans l'arborescence du
+             * projet — c'est la cle qui autorise a signer des actes.
+             */
+            'private_key' => env('PHOENIX_DOCUSIGN_PRIVATE_KEY', ''),
+
+            /*
+             * Compte Docusign. Vide : le compte par defaut de l'utilisateur.
+             * A renseigner des que l'utilisateur appartient a plusieurs
+             * comptes — le compte signataire d'un acte ne se devine pas.
+             */
+            'account_id' => env('PHOENIX_DOCUSIGN_ACCOUNT_ID', ''),
+
+            /*
+             * Sceau electronique (`seal_name`, un identifiant rendu par
+             * GET /v2.1/accounts/{id}/seals). Le sceau est la seule facon
+             * d'apposer une signature sans intervention humaine dans
+             * l'interface de Docusign. Il se provisionne sur le compte, il ne
+             * se cree pas par l'API.
+             */
+            'seal_name' => env('PHOENIX_DOCUSIGN_SEAL_NAME', ''),
+
+            'timeout' => (int) env('PHOENIX_DOCUSIGN_TIMEOUT', 30),
+        ],
+    ],
+
+    /*
      * Cible de compression cote navigateur avant envoi (D-008).
      */
     'uploads' => [

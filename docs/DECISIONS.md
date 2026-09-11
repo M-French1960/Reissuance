@@ -2399,3 +2399,124 @@ les six questions du §7 de `docs/INTEGRATIONS.md`, et les essais terrain que
 nul outil ne remplace.
 
 ---
+
+## D-066 — Docusign : le client est construit, la signature reste bloquée, et on dit pourquoi
+
+**Contexte.** Sur les cinq systèmes externes du diagramme, quatre adaptateurs
+sont des squelettes qui lèvent. Docusign était le seul constructible
+aujourd'hui : son API est publiée, comme l'était celle d'HR-Skills Pay.
+
+### Le contrat a été lu, pas rappelé de mémoire
+
+Les pages de référence de Docusign n'ont pas pu être récupérées — réponses
+vides ou 404. J'ai donc cloné les dépôts que Docusign publie et lu leur code :
+
+| Ce qui a été relevé | Où |
+|---|---|
+| `/oauth/token`, `/oauth/userinfo`, claim JWT `{iss, sub, aud, iat, exp, scope}`, RS256, `grant_type urn:ietf:params:oauth:grant-type:jwt-bearer` | `docusign-esign-php-client`, `src/Client/ApiClient.php` |
+| `{account_id, is_default, base_uri}` | `src/Client/Auth/Account.php` |
+| `/v2.1/accounts/{id}/envelopes[...]` | `src/Api/EnvelopesApi.php` |
+| `/v2.1/accounts/{id}/seals` | `src/Api/TrustServiceProvidersApi.php` |
+| `recipients.seals`, et l'exemple JSON d'un sceau | `src/Model/SealSign.php` |
+| `base_uri . "/restapi"`, erreur `consent_required` | `code-examples-php`, `src/Services/JWTService.php` |
+
+**Ce que cette lecture a évité.** J'avais écrit le destinataire « sceau » avec
+un `signatureProviderName` et des `signatureProviderOptions` — de mémoire.
+L'exemple publié par Docusign ne porte ni l'un ni l'autre : `sealName` est un
+champ direct. Écrit de mémoire, l'adaptateur aurait été refusé au premier appel
+réel, et rien ici ne l'aurait montré.
+
+**Et une deuxième fois, par un test.** Le serveur simulé rend `sealName`, la
+casse du fil ; mon client lisait `seal_name`, la casse du SDK. Docusign emploie
+**les deux conventions** : `/oauth/userinfo` rend `account_id` et `base_uri` en
+minuscules soulignées, l'API eSignature rend `sealName` et `envelopeId` en
+casse chamelle. C'est l'`attributeMap` du SDK qui fait foi, champ par champ.
+
+### L'obstacle que la construction a révélé
+
+**Le contrat de PHOENIX est synchrone. Docusign ne l'est pas.**
+`SignatureProvider::sign()` reçoit un PDF et doit rendre un PDF signé dans le
+même appel. Docusign travaille par enveloppes : on en crée une, la plateforme
+la traite, puis on récupère le document. Même avec un **sceau électronique** —
+le seul mode sans intervention humaine, et il faut le provisionner sur le
+compte — il faut créer, attendre, puis télécharger.
+
+**Aggravant, et vérifié dans le code :** `ActIssuanceService::issue()` appelle
+`sign()` **à l'intérieur d'un `DB::transaction()`**. Y attendre Docusign
+tiendrait une transaction MySQL ouverte, verrous compris, pendant un appel
+réseau vers un service étranger. Sur les réseaux contraints que ce projet vise,
+ce n'est pas un ralentissement : c'est une panne.
+
+**Ce que cela imposera :** un flux en deux temps. La décision du maire *demande*
+la signature et place la demande dans un état d'attente ; un travail de file
+récupère l'acte signé et achève la transition. C'est un changement de machine à
+états, sur le chemin le plus sensible du système.
+
+### Ce qui a été décidé, et ce qui ne l'a pas été
+
+**Construit :** `DocusignClient` — authentification JWT Grant (assertion RS256
+signée avec `openssl`, sans dépendance ajoutée), lecture du compte et de son
+domaine d'hébergement, liste des sceaux, création d'enveloppe, statut,
+téléchargement du document. 22 tests contre un serveur simulé.
+
+**Non construit :** le flux en deux temps. Le bâtir maintenant reviendrait à
+refaire la machine à états du chemin de production des actes autour d'un
+prestataire dont **on ignore s'il peut légalement servir** (question A1). On ne
+refait pas ce chemin-là sur une hypothèse.
+
+**`sign()` lève donc, et lève AVANT le moindre appel.** Un test l'exige
+(`Http::assertNothingSent`) : refuser *après* avoir créé l'enveloppe laisserait
+chez un prestataire étranger un acte d'état civil qu'aucun maire n'a signé,
+sans trace dans PHOENIX. Un adaptateur non achevé qui renverrait un succès est
+exactement le chemin par lequel un acte frauduleux sort du système (§13).
+
+### Trois refus délibérés dans le client
+
+1. **Une clé privée rangée dans le dépôt est refusée**, sur son emplacement,
+   avant toute lecture. C'est la clé qui autorise à signer des actes : elle n'a
+   rien à faire à portée d'un `git add` ni d'une erreur de configuration du
+   serveur web.
+2. **Un téléchargement qui ne commence pas par `%PDF-` est refusé.** Un corps
+   d'erreur rendu avec un code 200 serait sinon enregistré dans le dossier du
+   citoyen comme s'il s'agissait de son acte.
+3. **Le corps d'une erreur d'authentification n'est jamais recopié** dans le
+   message d'exception : Docusign renvoie l'assertion en écho, et elle porte
+   une signature valide de notre clé privée.
+
+S'y ajoutent deux refus sur le compte : un `account_id` configuré mais
+inaccessible ne retombe **pas** sur le compte par défaut, et l'absence de
+compte par défaut exige un choix explicite. Le compte signataire d'un acte
+d'état civil ne se devine pas.
+
+### Ce que ces tests ne prouvent pas
+
+**Aucun appel n'a été fait contre le service réel.** Sans identifiants, le
+client est vérifié contre un serveur simulé : les tests montrent que le client
+se conforme au contrat publié par Docusign, **pas** que Docusign se conforme à
+son propre SDK. Même réserve que pour HR-Skills Pay (D-050). La reprise contre
+le bac à sable reste à faire.
+
+Éprouvé en réintroduisant deux défauts : une assertion mal signée (le test de
+signature tombe, vérification faite avec la clé publique correspondante) et la
+suppression du contrôle `%PDF-` (le test de téléchargement tombe).
+
+### Ce que cela change ailleurs
+
+`IntegrationServiceProvider` résout désormais les adaptateurs par le conteneur
+(`make`) et non par `new` : `DocusignSignatureProvider` reçoit son client. Un
+`new` aurait échoué au pire moment — à la première signature tentée.
+
+Le test `SignatureTest::le_squelette_reel_de_signature_leve_une_exception` est
+supprimé : `DocusignSignatureProviderTest` le remplace par quatre tests plus
+exigeants, dont celui qui vérifie qu'aucune requête n'est émise.
+
+### Les questions qui restent, et à qui elles s'adressent
+
+| Question | Nature | Pour qui |
+|---|---|---|
+| A1 — un acte signé électroniquement fait-il foi au Cameroun ? | Juridique | Autorité de tutelle |
+| Où les données d'identité sont-elles traitées ? `DocusignClient::account()` rend le domaine du compte, ce qui rend la question **vérifiable** — pas tranchée. | Juridique et politique | Client |
+| Qui est le compte signataire — la commune, le maire nominativement ? Le flux JWT Grant agit **au nom d'un utilisateur** : c'est lui qui apparaît comme expéditeur. | Institutionnelle | Client |
+| Le compte dispose-t-il d'un sceau électronique provisionné ? | Contractuelle | Client |
+
+Les quatre premières lignes du §4 de `docs/INTEGRATIONS.md` restent ouvertes.
