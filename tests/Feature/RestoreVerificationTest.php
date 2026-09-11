@@ -24,10 +24,10 @@ use Tests\TestCase;
  * qu'aucune commande : elle donne la certitude a la place de la preuve. Ces
  * tests provoquent donc les defaillances qu'elle est censee detecter.
  *
- * La procedure complete — vidage, restauration dans une autre base,
+ * La procedure complete — sauvegarde, restauration dans une autre base,
  * verification — est executee a la main et consignee dans docs/SAUVEGARDE.md :
- * elle suppose pg_dump, pg_restore et une base d'essai, ce qui sort du cadre
- * d'un test unitaire.
+ * elle suppose mysqldump, le client mysql et une base d'essai, ce qui sort du
+ * cadre d'un test unitaire.
  */
 class RestoreVerificationTest extends TestCase
 {

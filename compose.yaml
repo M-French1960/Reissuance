@@ -3,20 +3,28 @@
 
 services:
   db:
-    image: postgres:17
+    image: mysql:8.4
+    # utf8mb4_unicode_ci n'est pas un detail d'affichage : la recherche par nom
+    # et par reference est insensible a la casse PARCE QUE l'interclassement
+    # l'est. Un interclassement binaire la rendrait silencieusement incomplete
+    # (D-051).
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
     environment:
-      POSTGRES_DB: phoenix
-      POSTGRES_USER: phoenix_owner
-      POSTGRES_PASSWORD: ${DB_OWNER_PASSWORD:-changez-moi-en-local}
+      MYSQL_DATABASE: phoenix
+      MYSQL_USER: phoenix_owner
+      MYSQL_PASSWORD: ${DB_OWNER_PASSWORD:-changez-moi-en-local}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-changez-moi-en-local}
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "${DB_PORT:-3306}:3306"
     volumes:
       # Volume nomme : les donnees survivent au redemarrage, ce que
       # l'hebergement conteneurise ne permettait pas.
-      - phoenix-db:/var/lib/postgresql/data
+      - phoenix-db:/var/lib/mysql
       - ./docker/init-roles.sql:/docker-entrypoint-initdb.d/10-roles.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U phoenix_owner -d phoenix"]
+      test: ["CMD", "mysqladmin", "ping", "--host=127.0.0.1", "--silent"]
       interval: 5s
       timeout: 5s
       retries: 20

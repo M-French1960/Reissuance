@@ -36,6 +36,7 @@ lire_env() {
 BASE="$(lire_env DB_DATABASE)"
 HOTE="$(lire_env DB_HOST)"
 PORT="$(lire_env DB_PORT)"
+SOCKET="$(lire_env DB_SOCKET)"
 PROPRIETAIRE="$(lire_env DB_OWNER_USERNAME)"
 MOT_DE_PASSE="$(lire_env DB_OWNER_PASSWORD)"
 
@@ -44,13 +45,43 @@ if [[ -z "${BASE}" || -z "${PROPRIETAIRE}" ]]; then
   exit 1
 fi
 
+# Le mot de passe n'est JAMAIS passé en argument : la ligne de commande d'un
+# processus est lisible par tout le monde dans `ps`. Un fichier temporaire en
+# 0600, effacé par le trap, est le mécanisme prévu par MySQL pour cela.
+IDENTIFIANTS="${TRAVAIL}/client.cnf"
+# Les droits AVANT l'écriture : entre un `cat >` et un `chmod` il existe un
+# instant où le mot de passe est lisible par tous.
+touch "${IDENTIFIANTS}"
+chmod 600 "${IDENTIFIANTS}"
+cat > "${IDENTIFIANTS}" <<CNF
+[client]
+host=${HOTE}
+port=${PORT}
+user=${PROPRIETAIRE}
+password=${MOT_DE_PASSE}
+CNF
+if [[ -n "${SOCKET}" ]]; then
+  echo "socket=${SOCKET}" >> "${IDENTIFIANTS}"
+fi
+
 echo "→ Base de données (${BASE})"
-# --clean --if-exists : la restauration écrase proprement une base existante.
-# Le format personnalisé permet une restauration parallèle et sélective.
-PGPASSWORD="${MOT_DE_PASSE}" pg_dump \
-  --host="${HOTE}" --port="${PORT}" --username="${PROPRIETAIRE}" \
-  --format=custom --clean --if-exists \
-  --file="${TRAVAIL}/base.dump" "${BASE}"
+# --single-transaction : instantané cohérent sans verrouiller les écritures.
+# --routines --events : sans elles, la sauvegarde laisserait derrière elle les
+#   objets qui ne sont pas des tables.
+# --triggers est actif par défaut : les déclencheurs de machine à états, qui
+#   sont la barrière anti-fraude, partent donc avec le reste.
+#
+# CE QUI N'EST PAS DANS CE FICHIER : les droits du compte applicatif. Sur
+# MySQL ils vivent dans la base système `mysql`, pas dans la base du projet —
+# contrairement à PostgreSQL, où pg_dump les emportait. Une base restaurée
+# depuis ce fichier a donc ses tables et ses déclencheurs, mais AUCUN droit
+# pour phoenix_app : le journal d'audit y serait modifiable par le compte
+# applicatif s'il recevait des droits trop larges. La restauration relance
+# `php artisan phoenix:droits`, et un contrôle le vérifie (D-051).
+mysqldump --defaults-extra-file="${IDENTIFIANTS}" \
+  --single-transaction --routines --events \
+  --add-drop-table --add-drop-trigger \
+  --result-file="${TRAVAIL}/base.sql" "${BASE}"
 
 echo "→ Stockage privé"
 if [[ -d storage/app/private ]]; then
@@ -72,20 +103,20 @@ chmod 600 "${TRAVAIL}/cles.env"
 
 # Un inventaire pour vérifier, à la restauration, qu'on a bien tout remis.
 echo "→ Inventaire"
-PGPASSWORD="${MOT_DE_PASSE}" psql --host="${HOTE}" --port="${PORT}" \
-  --username="${PROPRIETAIRE}" --dbname="${BASE}" --tuples-only --no-align \
-  --command="SELECT 'demandes=' || count(*) FROM reissuance_requests
-             UNION ALL SELECT 'comptes=' || count(*) FROM users
-             UNION ALL SELECT 'journal=' || count(*) FROM audit_logs
-             UNION ALL SELECT 'signatures=' || count(*) FROM document_signatures
-             UNION ALL SELECT 'pieces=' || count(*) FROM request_attachments" \
+mysql --defaults-extra-file="${IDENTIFIANTS}" --database="${BASE}" \
+  --skip-column-names --batch \
+  --execute="SELECT CONCAT('demandes=', count(*)) FROM reissuance_requests
+             UNION ALL SELECT CONCAT('comptes=', count(*)) FROM users
+             UNION ALL SELECT CONCAT('journal=', count(*)) FROM audit_logs
+             UNION ALL SELECT CONCAT('signatures=', count(*)) FROM document_signatures
+             UNION ALL SELECT CONCAT('pieces=', count(*)) FROM request_attachments" \
   > "${TRAVAIL}/inventaire.txt"
 echo "fichiers_stockage=$(find storage/app/private -type f 2>/dev/null | wc -l)" \
   >> "${TRAVAIL}/inventaire.txt"
 
 mkdir -p "${DESTINATION}"
 ARCHIVE="${DESTINATION}/phoenix-${HORODATAGE}.tar.gz"
-tar -czf "${ARCHIVE}" -C "${TRAVAIL}" base.dump stockage-prive.tar.gz cles.env inventaire.txt
+tar -czf "${ARCHIVE}" -C "${TRAVAIL}" base.sql stockage-prive.tar.gz cles.env inventaire.txt
 chmod 600 "${ARCHIVE}"
 
 echo
