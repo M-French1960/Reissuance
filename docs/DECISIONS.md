@@ -1664,3 +1664,111 @@ place dans l'analyse de risque remise au maître d'ouvrage. Je ne peux pas
 l'écrire — elle engage une responsabilité, pas un choix d'implémentation.
 
 ---
+
+## D-055 — Un bandeau qui affirmait une chose fausse, et le dossier bloqué qu'il cachait
+
+- **Date :** 2026-09-11
+- **Statut :** bandeau corrigé et testé ; **le blocage sous-jacent reste à
+  trancher (voir plus bas)**
+- **Comment il a été trouvé :** en regardant une capture d'écran. Pas un test.
+
+### Ce que l'écran disait
+
+Sur l'écran de vérification, dès que l'officier ne pouvait pas décider, le
+bandeau affichait :
+
+> Lecture seule — Ce dossier est pris en charge par **un autre agent**.
+
+Le repli `{{ $demande->assignedOfficer?->name ?? 'un autre agent' }}` traitait
+« personne n'a pris ce dossier » comme « quelqu'un d'autre l'a pris ». Pour un
+agent devant un dossier libre, l'effet concret est un cul-de-sac : il croit que
+le dossier ne lui revient pas et passe au suivant, alors qu'il lui suffisait de
+le prendre en charge — action que le bandeau ne proposait pas.
+
+**Pourquoi les tests ne l'ont pas vu :** ils vérifiaient que l'état lecture
+seule *bloque la décision*, ce qui était vrai et reste vrai. Aucun ne
+vérifiait que le message *dise la vérité*.
+
+### Ce qui est corrigé
+
+Trois cas, trois messages, et le test qui va avec
+(`VerificationBannerTest`, éprouvé en rétablissant l'ancien bandeau) :
+
+| Situation | Message |
+|---|---|
+| Dossier libre et prenable | « Dossier à prendre en charge » + le bouton |
+| Dossier tenu par un collègue | « Lecture seule — pris en charge par *[nom]* » |
+| En examen, sans agent affecté | « Dossier sans agent affecté » + renvoi à l'administrateur |
+
+Au passage, la vue pointait vers `officer.claim`, une route qui n'existe pas —
+le nom réel est `officer.verification.claim`. Elle aurait levé dès qu'on aurait
+atteint la branche. Ce sont les nouveaux tests qui l'ont attrapé.
+
+### Le vrai problème, qui n'est pas le message — **arbitrage attendu**
+
+En cherchant la cause, j'ai vérifié le cycle complet des affectations :
+
+- `claim` exige l'état **en attente** ET aucun agent affecté ;
+- `decide` exige l'état **en cours d'examen** ET l'affectation à soi-même ;
+- `assigned_officer_id` n'est **jamais remis à zéro**.
+
+Conséquence, reproduite : **un dossier en cours d'examen dont l'agent affecté
+ne peut plus agir n'est repris par personne.** Aucun collègue du même centre ne
+peut ni le décider ni le prendre en charge. Il n'existe aucun chemin de reprise.
+
+Cet état est atteignable par une action ordinaire de l'administrateur —
+suspendre un agent, ou le rattacher à un autre centre. La demande d'un citoyen
+devient alors définitivement intraitable, sans qu'aucune alerte ne le signale.
+
+J'ai aussi relevé que la Policy `decide` répond **oui** pour un agent suspendu :
+c'est le middleware `EnsureAccountIsActive` qui le bloque à la porte HTTP, pas
+la Policy. Cela fonctionne, mais la Policy n'est pas la barrière qu'on croit
+lire.
+
+**Je n'ai pas construit de mécanisme de reprise, et c'est délibéré.** « Qui peut
+reprendre un dossier tenu par un autre agent » est une question anti-fraude, pas
+une question d'ergonomie : un chemin de reprise mal posé permet à un agent de
+récupérer les dossiers d'un collègue. Trois options, à trancher :
+
+1. **L'administrateur libère** le dossier depuis la gestion des comptes —
+   tracé, réversible, et cohérent avec son rôle actuel.
+2. **Libération automatique** quand l'agent affecté n'est plus actif ou n'est
+   plus rattaché au centre.
+3. **Reprise entre pairs du même centre**, avec journalisation obligatoire —
+   le plus souple, et le plus exposé.
+
+Mon avis : l'option 1, complétée par une alerte listant les dossiers orphelins.
+Mais c'est une règle de gestion, pas un choix technique.
+
+---
+
+## D-056 — Les mesures de performance reprises sur MySQL
+
+- **Date :** 2026-09-11
+- **Statut :** fait ; `docs/PERFORMANCE.md` à jour
+- **Pourquoi :** D-051 avait laissé publiées des durées relevées sur
+  PostgreSQL. Des chiffres qui ne décrivent plus le système sont pires que pas
+  de chiffres.
+- **Conditions reproduites à l'identique** — 515 demandes, 513 comptes — pour
+  que la comparaison veuille dire quelque chose. Trois chargements par écran,
+  médiane retenue.
+- **Résultat : le changement de moteur ne se voit pas.** Temps serveur 25 à
+  41 ms contre 27 à 38 ms sur PostgreSQL ; l'écart le plus large est de 9 ms,
+  du même ordre que la dispersion entre deux passages sur le même moteur. Il
+  serait malhonnête d'en conclure qu'un moteur est plus rapide que l'autre.
+- **Les compteurs SQL n'ont pas bougé** (5, 5, 4, 5, 4), ce qui était attendu :
+  c'est une propriété du code, pas du moteur.
+
+### Deux chiffres que j'ai failli publier faux
+
+1. **Le chargement complet.** Mon premier harnais attendait `networkidle`, qui
+   attend 500 ms de silence réseau **par construction**. Toutes les pages
+   sortaient à ~550 ms — un plateau suspect qui n'était que ce délai. Remplacé
+   par la lecture de `loadEventEnd - startTime` dans la page.
+2. **Le coût SQL.** Un relevé bricolé hors du harnais de test donnait 3
+   requêtes au lieu de 5 pour deux écrans. La différence venait de mon jeu
+   d'essai — un administrateur fraîchement créé, sans les lignes de session
+   d'une vraie visite. Les chiffres publiés sont ceux du harnais, qui passe par
+   la pile HTTP complète.
+
+---

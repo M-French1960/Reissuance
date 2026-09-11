@@ -1,7 +1,8 @@
 # Performance — mesures
 
-> Jalon 6. Toutes les valeurs sont **mesurées** sur l'application en
-> fonctionnement, avec une base peuplée. Aucune n'est estimée.
+> **Reprises le 2026-09-11 sur MySQL** (D-056). Toutes les valeurs sont
+> **mesurées** sur l'application en fonctionnement, avec une base peuplée.
+> Aucune n'est estimée.
 
 ---
 
@@ -11,16 +12,24 @@
 |---|---|
 | Demandes en base | **515** |
 | Comptes | **513** |
-| Entrées du journal d'audit | **1 711** |
-| Étapes de vérification | **682** |
+| Entrées du journal d'audit | **1 697** |
+| Étapes de vérification | **674** |
 | Fenêtre | 390 × 844 px |
 | Navigateur | Chromium, piloté par Playwright |
-| Serveur | `php artisan serve`, PostgreSQL 16 local |
+| Serveur | `php artisan serve`, **MariaDB 10.11 locale** |
 
-> **Mesures antérieures au passage à MySQL (D-051).** Les chiffres ci-dessous
-> ont été relevés sur PostgreSQL et n'ont **pas** été refaits. Le nombre de
-> requêtes SQL par écran, lui, ne dépend pas du moteur et reste valable ; les
-> durées, elles, sont à reprendre avant toute conclusion.
+Les conditions reproduisent celles de la mesure PostgreSQL du jalon 6 (515
+demandes, 513 comptes) pour que la comparaison ait un sens. Chaque écran est
+chargé **trois fois**, la médiane est retenue : un à-coup isolé ne doit pas
+devenir un chiffre publié.
+
+> **Un chiffre que j'ai failli publier faux.** Mon premier harnais mesurait le
+> chargement complet avec `waitUntil: 'networkidle'`, qui attend 500 ms de
+> silence réseau **par construction**. Toutes les pages sortaient à ~550 ms,
+> un plateau suspect qui n'était que ce délai. Le temps de chargement est
+> désormais lu dans l'API Navigation Timing de la page
+> (`loadEventEnd - startTime`), qui mesure la page et non l'attente de
+> l'outil.
 
 Le jeu de volume est produit par `database/seeders/VolumeSeeder.php`, avec des
 données **entièrement synthétiques** (garde-fou n°1). Un écran mesuré sur trois
@@ -32,11 +41,11 @@ lignes ne mesure rien.
 
 | Ressource | Brut | Gzip | Budget | Marge |
 |---|---:|---:|---:|---|
-| `css/tokens.css` | 4 058 o | 1 757 o | — | — |
-| `css/app.css` | 19 844 o | 4 978 o | — | — |
-| **CSS total** | **23 902 o** | **6 446 o** | 50 000 o | **87 %** |
-| `js/identity-capture.js` | 7 675 o | 2 908 o | — | — |
-| **JS total** | **7 675 o** | **2 888 o** | 100 000 o | **97 %** |
+| `css/tokens.css` | 4 058 o | 1 730 o | — | — |
+| `css/app.css` | 20 791 o | 5 182 o | — | — |
+| **CSS total** | **24 849 o** | **6 912 o** | 50 000 o | **86 %** |
+| `js/identity-capture.js` | 7 675 o | 2 871 o | — | — |
+| **JS total** | **7 675 o** | **2 871 o** | 100 000 o | **97 %** |
 
 Aucune étape de compilation, aucune dépendance tierce chargée par le
 navigateur : c'est ce que valait la décision D-010 (HTML et CSS écrits à la
@@ -48,18 +57,25 @@ main).
 
 Base peuplée, quatre requêtes réseau par page (HTML + 2 CSS + 1 JS) :
 
-| Écran | HTML brut | Serveur | Chargement complet |
-|---|---:|---:|---:|
-| Tableau de bord citoyen | 5 449 o | 28 ms | 51 ms |
-| Mes demandes | 7 967 o | 31 ms | 47 ms |
-| Tableau de bord officier | 3 384 o | 38 ms | 55 ms |
-| File de traitement | 32 330 o | 32 ms | 83 ms |
-| File de signature | 12 069 o | 36 ms | 53 ms |
-| Comptes | 79 663 o | 27 ms | 64 ms |
-| Journal d'audit | 32 342 o | 28 ms | 52 ms |
+| Écran | HTML brut | Serveur | Chargement complet | Serveur sur PostgreSQL |
+|---|---:|---:|---:|---:|
+| Tableau de bord citoyen | 5 435 o | 28 ms | 88 ms | 28 ms |
+| Mes demandes | 7 964 o | 30 ms | 52 ms | 31 ms |
+| Tableau de bord officier | 3 384 o | 25 ms | 52 ms | 38 ms |
+| File de traitement | 33 959 o | 41 ms | 120 ms | 32 ms |
+| File de signature | 12 069 o | 32 ms | 53 ms | 36 ms |
+| Comptes | 79 663 o | 32 ms | 80 ms | 27 ms |
+| Journal d'audit | 32 320 o | 29 ms | 63 ms | 28 ms |
 
-**Le temps serveur ne dépasse jamais 38 ms** et ne varie pas avec le volume :
+**Le temps serveur ne dépasse jamais 41 ms** et ne varie pas avec le volume :
 toutes les listes paginent, aucune ne parcourt la table entière.
+
+**Le changement de moteur ne se voit pas.** La dernière colonne reprend les
+temps serveur relevés sur PostgreSQL au jalon 6, dans les mêmes conditions.
+L'écart le plus large est de 9 ms sur la file de traitement — du même ordre que
+la dispersion entre deux passages sur le même moteur. Il serait malhonnête d'en
+tirer qu'un moteur est plus rapide que l'autre : à cette échelle de volume, ni
+l'un ni l'autre n'est le facteur limitant.
 
 ---
 
@@ -70,9 +86,9 @@ très bien :
 
 | Écran | Brut | Gzip | Facteur |
 |---|---:|---:|---:|
-| Comptes | 79 663 o | **3 305 o** | **×24** |
-| Journal d'audit | 32 342 o | **2 333 o** | ×14 |
-| File de traitement | 32 330 o | **2 781 o** | ×12 |
+| Comptes | 79 663 o | **3 524 o** | **×23** |
+| Journal d'audit | 32 320 o | **2 394 o** | ×14 |
+| File de traitement | 33 959 o | **2 984 o** | ×11 |
 
 **Conséquence pour le déploiement :** sans compression activée sur le serveur
 web, la page des comptes coûte 79 Ko au lieu de 3,3 Ko. Sur le réseau contraint
@@ -98,6 +114,16 @@ avec peu puis beaucoup de lignes, et compare.
 | Mes demandes (citoyen) | 4 | non |
 | Comptes (administrateur) | 5 | non |
 | Journal d'audit | 4 | non |
+
+**Aucun de ces compteurs n'a bougé au passage à MySQL** — ce qui était attendu,
+le nombre de requêtes étant une propriété du code et non du moteur. Relevés
+avec `PHOENIX_SHOW_QUERIES=1 ./vendor/bin/phpunit tests/Feature/QueryBudgetTest.php`.
+
+> Un relevé bricolé à côté du harnais de test m'avait donné 3 requêtes pour la
+> file de signature et pour les comptes, au lieu de 5. La différence venait de
+> mon propre jeu d'essai — un administrateur fraîchement créé, sans les lignes
+> de session que charge une vraie visite — et non de l'application. Les
+> chiffres publiés sont ceux du harnais, qui passe par la pile HTTP complète.
 
 ### Ce que la mesure a corrigé
 

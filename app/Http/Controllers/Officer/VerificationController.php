@@ -67,6 +67,10 @@ class VerificationController extends Controller
             'avisFacial' => $this->workflow->facialOpinion($reissuanceRequest),
             'messages' => $reissuanceRequest->messages()->with('author:id,name')->oldest()->get(),
             'peutDecider' => $request->user()->can('decide', $reissuanceRequest),
+            // La vue doit pouvoir dire la VERITE sur l'etat du dossier, et
+            // pas seulement « vous ne pouvez pas decider ». Trois cas
+            // distincts, trois messages distincts (D-055).
+            'peutPrendreEnCharge' => $request->user()->can('claim', $reissuanceRequest),
         ]);
     }
 

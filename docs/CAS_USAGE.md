@@ -62,13 +62,25 @@
 
 ## 3. Cas manquants — à construire
 
+> Mis à jour le 2026-09-11. Cette section listait encore comme manquants trois
+> cas que le §2 du **même document** donnait pour faits. Une documentation qui
+> se contredit fait perdre plus de temps qu'elle n'en fait gagner.
+
 | Cas d'utilisation | Constat | Difficulté |
 |---|---|---|
-| **Cancel Request** | La Policy `delete` existe **mais aucune route ne l'appelle** : T12 est inatteignable. Et le diagramme rattache l'annulation au *suivi* d'une demande, donc à une demande **déjà envoyée** — ce que la machine à états ne prévoit pas du tout. | machine à états |
-| **Contact Officer** | Rien. Aucun canal du demandeur vers l'agent. | modéré |
-| **Through Orange Money / Through Mobile Money** | Un seul adaptateur factice générique. Le diagramme en fait deux spécialisations, donc un choix du demandeur. | faible |
+| **Manage system settings** | **Le seul cas du diagramme qui n'existe pas** : aucune route, aucun écran. Tranché en §4.1 : c'est un cas de l'**administrateur**, pas du maire. | à construire |
+| ~~Cancel Request~~ | **Fait** (D-044) — T13 et T14, avec les deux états terminaux correspondants. | — |
+| ~~Contact Officer~~ | **Fait** (D-047) — fil d'échanges porté par le dossier. | — |
+| ~~Through Orange Money / Through Mobile Money~~ | **Fait** — colonne `operator` (migration `2026_01_10_000100`), les deux opérateurs sont proposés au demandeur sur l'écran de paiement. | — |
 | ~~Generate Certificate~~ | tranché : déjà couvert par T4 puis T8 (§4.2) | — |
-| **Manage system settings** | ⚠ tranché : cas de l'**administrateur** (§4.1) | à construire |
+
+### 3.1 Ce qui bloque, et qui n'est pas un écran
+
+Quatre adaptateurs sur cinq sont des squelettes qui lèvent — DGSN, registre
+national d'état civil, signature Docusign, reconnaissance faciale. **Aucun
+n'est bloqué par du code** : ils attendent les réponses du §7 de
+`docs/INTEGRATIONS.md`. Seul HR-Skills Pay est implémenté, et n'a jamais été
+appelé contre le service réel.
 
 ---
 
@@ -234,6 +246,14 @@ l'élargir si vous le décidez.
 1. ~~**Cancel Request**~~ — fait (D-044).
 2. ~~**Facial Recognition**~~ — fait (D-045, `BIOMETRIE.md`).
 3. ~~**GDNS**~~ — identifié : DGSN.
-4. **Manage system settings**, côté administrateur.
-5. **Contact Officer** — le canal manquant entre le demandeur et l'agent.
-6. **Orange Money / Mobile Money** — deux adaptateurs au lieu d'un.
+4. ~~**Contact Officer**~~ — fait (D-047).
+5. ~~**Orange Money / Mobile Money**~~ — fait, colonne `operator`.
+6. **Manage system settings**, côté administrateur — **seul cas restant.**
+
+> Point de conception à trancher avant de le construire : les réglages qui
+> comptent (tarif, porte de paiement, choix des prestataires) sont aujourd'hui
+> des variables d'environnement. Les rendre modifiables depuis l'interface crée
+> un vecteur de fraude — un administrateur pourrait basculer un prestataire sur
+> l'adaptateur factice, donc faire délivrer des actes sans vérification réelle.
+> Proposition : lecture pour tous, écriture pour aucun des réglages de
+> sécurité. **Arbitrage attendu.**

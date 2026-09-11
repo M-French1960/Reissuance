@@ -23,13 +23,37 @@
         </div>
     @endif
 
+    {{--
+        Trois raisons distinctes de ne pas pouvoir décider, et trois messages
+        distincts. La version précédente repliait tout sur « pris en charge par
+        un autre agent », y compris quand PERSONNE ne l'avait pris : elle
+        affirmait une chose fausse et masquait la seule action possible
+        (D-055).
+    --}}
     @unless ($peutDecider)
-        <x-alert variant="attention" title="Lecture seule">
-            Ce dossier est pris en charge par
-            {{ $demande->assignedOfficer?->name ?? 'un autre agent' }}.
-            Vous pouvez le consulter — la consultation est journalisée — mais
-            la décision lui revient.
-        </x-alert>
+        @if ($peutPrendreEnCharge)
+            <x-alert variant="attention" title="Dossier à prendre en charge">
+                Personne ne traite ce dossier. Prenez-le en charge pour pouvoir
+                le vérifier et décider.
+                <form method="POST" action="{{ route('officer.verification.claim', $demande) }}" class="alert__action">
+                    @csrf
+                    <x-button type="submit">Prendre en charge</x-button>
+                </form>
+            </x-alert>
+        @elseif ($demande->assignedOfficer !== null)
+            <x-alert variant="attention" title="Lecture seule">
+                Ce dossier est pris en charge par
+                {{ $demande->assignedOfficer->name }}.
+                Vous pouvez le consulter — la consultation est journalisée — mais
+                la décision lui revient.
+            </x-alert>
+        @else
+            <x-alert variant="attention" title="Dossier sans agent affecté">
+                Ce dossier est à l'état « {{ $demande->status->label() }} » et
+                n'est affecté à personne : il ne peut être ni pris en charge ni
+                décidé en l'état. Signalez-le à l'administrateur.
+            </x-alert>
+        @endif
     @endunless
 
     @yield('etape')
