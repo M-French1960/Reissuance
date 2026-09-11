@@ -36,6 +36,21 @@ class ScopeBypassTest extends TestCase
     /** Le seul fichier de `app/` autorise a contourner la portee. */
     private const POINT_UNIQUE = 'app/Models/ReissuanceRequest.php';
 
+    /**
+     * Les methodes auditees qui ont le droit de contourner la portee.
+     *
+     * Il y en a deux, et il ne doit pas y en avoir une troisieme sans qu'on
+     * l'ait voulu : chacune est documentee dans le modele, et chacune porte sa
+     * propre protection — une autorisation immediate pour la premiere, une
+     * liste blanche de colonnes sans donnee d'identite pour la seconde.
+     *
+     * @var list<string>
+     */
+    private const METHODES_AUDITEES = [
+        'loadForAuthorization',
+        'assignmentsForAdministration',
+    ];
+
     #[Test]
     public function le_contournement_de_portee_n_apparait_qu_a_un_seul_endroit(): void
     {
@@ -61,23 +76,57 @@ class ScopeBypassTest extends TestCase
     }
 
     /**
-     * Le point unique lui-meme doit rester unique DANS son fichier.
+     * Le fichier exempte ne contourne la portee que dans les methodes prevues.
      *
      * Sans cela, le test ci-dessus se contenterait d'un fichier exempte dans
      * lequel on pourrait en ajouter autant qu'on veut.
      */
     #[Test]
-    public function le_point_unique_ne_contourne_la_portee_qu_une_fois(): void
+    public function le_fichier_exempte_ne_contourne_la_portee_que_dans_les_methodes_auditees(): void
     {
         $contenu = (string) file_get_contents(base_path(self::POINT_UNIQUE));
 
-        // On compte les APPELS, pas les mentions : le commentaire qui explique
-        // la methode cite l'idiome, et c'est voulu.
+        // On compte les APPELS, pas les mentions : les commentaires qui
+        // expliquent ces methodes citent l'idiome, et c'est voulu.
         $this->assertSame(
-            1,
+            count(self::METHODES_AUDITEES),
             preg_match_all('/withoutGlobalScopes\s*\(/', $contenu),
-            'Le point de contournement doit rester unique dans son propre fichier.'
+            'Un contournement de portée est apparu hors des méthodes auditées.'
         );
+
+        foreach (self::METHODES_AUDITEES as $methode) {
+            $this->assertStringContainsString(
+                "function {$methode}(",
+                $contenu,
+                "La méthode auditée {$methode}() a disparu : la liste est à revoir."
+            );
+        }
+    }
+
+    /**
+     * L'administration ne lit AUCUNE donnee d'identite, colonne par colonne.
+     *
+     * C'est la protection de `assignmentsForAdministration()` : elle contourne
+     * la portee, donc sa liste blanche est tout ce qui separe la gestion des
+     * comptes de la consultation des dossiers.
+     */
+    #[Test]
+    public function la_lecture_administrative_ne_porte_aucune_donnee_d_identite(): void
+    {
+        $interdites = [
+            'full_name_at_birth', 'date_of_birth', 'place_of_birth',
+            'father_name', 'mother_name', 'parents_address',
+            'original_certificate_number', 'registration_year',
+            'father_nationality', 'mother_nationality', 'user_id',
+        ];
+
+        foreach ($interdites as $colonne) {
+            $this->assertNotContains(
+                $colonne,
+                ReissuanceRequest::ADMINISTRATION_COLUMNS,
+                "La colonne {$colonne} ne doit jamais être lisible par l'administration."
+            );
+        }
     }
 
     /**

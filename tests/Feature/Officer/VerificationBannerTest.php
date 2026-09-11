@@ -104,14 +104,15 @@ class VerificationBannerTest extends TestCase
     }
 
     /**
-     * Dossier en cours d'examen sans agent affecte : etat sans issue.
+     * Dossier en cours d'examen libere par l'administrateur : reprenable.
      *
-     * Ni `claim` (qui exige l'etat « en attente ») ni `decide` (qui exige une
-     * affectation) ne s'appliquent. Le bandeau doit le dire, et renvoyer vers
-     * l'administrateur — pas pretendre qu'un collegue s'en occupe.
+     * C'etait une impasse avant D-057 : `claim` exigeait l'etat « en
+     * attente », `decide` exigeait une affectation, et un dossier en cours
+     * d'examen sans agent n'etait donc traitable par personne. Il l'est
+     * desormais, et le bandeau propose l'action.
      */
     #[Test]
-    public function un_dossier_en_examen_sans_agent_affecte_le_dit_et_ne_ment_pas(): void
+    public function un_dossier_en_examen_libere_est_de_nouveau_prenable(): void
     {
         $collegue = User::factory()->officer($this->centre)->create();
 
@@ -119,8 +120,50 @@ class VerificationBannerTest extends TestCase
             ->post(route('officer.verification.claim', $this->demande))
             ->assertRedirect();
 
-        // L'affectation disparait : c'est l'etat qu'on obtient quand l'agent
-        // affecte n'est plus en mesure d'agir.
+        // L'administrateur libere l'affectation.
+        $this->demande->refresh()->forceFill(['assigned_officer_id' => null])->save();
+
+        $this->ecran($this->officier)
+            ->assertOk()
+            ->assertSee('Dossier à prendre en charge')
+            ->assertDontSee('un autre agent')
+            ->assertDontSee('Dossier sans agent affecté');
+
+        // Et la reprise fonctionne vraiment, sans changer l'etat du dossier.
+        $this->actingAs($this->officier)
+            ->post(route('officer.verification.claim', $this->demande))
+            ->assertRedirect();
+
+        $this->demande->refresh();
+        $this->assertSame($this->officier->id, $this->demande->assigned_officer_id);
+        $this->assertSame(RequestStatus::UnderReview, $this->demande->status);
+
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'request.assignment_resumed',
+            'auditable_id' => $this->demande->id,
+            'actor_id' => $this->officier->id,
+        ]);
+    }
+
+    /**
+     * Dossier ni prenable ni decidable, et sans agent : le bandeau le dit.
+     *
+     * Un dossier en attente de signature n'appartient plus a l'officier. S'il
+     * se retrouve sans affectation, aucune des deux actions ne s'applique : le
+     * bandeau doit renvoyer a l'administrateur plutot que d'inventer un
+     * occupant.
+     */
+    #[Test]
+    public function un_dossier_hors_perimetre_et_sans_agent_le_dit_sans_mentir(): void
+    {
+        $this->actingAs($this->officier)
+            ->post(route('officer.verification.claim', $this->demande))
+            ->assertRedirect();
+
+        app(RequestTransitionService::class)->transition(
+            $this->demande->refresh(), RequestStatus::AwaitingSignature, $this->officier
+        );
+
         $this->demande->refresh()->forceFill(['assigned_officer_id' => null])->save();
 
         $this->ecran($this->officier)

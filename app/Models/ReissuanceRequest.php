@@ -8,6 +8,7 @@ use App\Enums\RequestStatus;
 use App\Models\Scopes\RequestVisibilityScope;
 use Database\Factories\ReissuanceRequestFactory;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -166,4 +167,48 @@ class ReissuanceRequest extends Model
     {
         return self::withoutGlobalScopes()->findOrFail($id);
     }
+
+    /**
+     * Les AFFECTATIONS, pour l'administration — et rien d'autre.
+     *
+     * Second des deux seuls contournements de portee autorises dans `app/`,
+     * audite par `tests/Feature/Security/ScopeBypassTest.php`.
+     *
+     * POURQUOI UN CONTOURNEMENT EST NECESSAIRE : la portee globale rend
+     * l'administrateur aveugle a toute demande — `whereRaw('1 = 0')`. C'est
+     * voulu, et c'est la regle la plus importante de la matrice : il gere les
+     * comptes, pas les dossiers d'identite.
+     *
+     * POURQUOI CE N'EST PAS UNE BRECHE : liberer une affectation bloquee
+     * (D-057) demande de savoir QUI tient QUEL dossier, pas ce que le dossier
+     * contient. La selection est donc verrouillee sur une liste de colonnes
+     * qui ne porte AUCUNE donnee d'identite — ni nom de naissance, ni date de
+     * naissance, ni filiation, ni piece jointe. L'administrateur voit une
+     * reference, un centre, un agent et une date. Un test le verifie colonne
+     * par colonne.
+     *
+     * @return Builder<self>
+     */
+    public static function assignmentsForAdministration(): Builder
+    {
+        return self::withoutGlobalScopes()->select(self::ADMINISTRATION_COLUMNS);
+    }
+
+    /**
+     * Les seules colonnes que l'administration peut lire d'une demande.
+     *
+     * Toute colonne ajoutee ici doit etre defendable devant la question :
+     * « en quoi gerer les comptes exige-t-il de savoir cela ? »
+     *
+     * @var list<string>
+     */
+    public const ADMINISTRATION_COLUMNS = [
+        'id',
+        'reference',
+        'status',
+        'civil_status_center_id',
+        'assigned_officer_id',
+        'submitted_at',
+        'updated_at',
+    ];
 }

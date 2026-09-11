@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Officer;
 use App\Enums\RequestStatus;
 use App\Enums\VerificationResult;
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\ReissuanceRequest;
 use App\Services\RequestTransitionService;
 use App\Services\VerificationWorkflow;
@@ -24,19 +25,44 @@ class VerificationController extends Controller
         private readonly RequestTransitionService $transitions,
     ) {}
 
-    /** Prise en charge : transition T3. */
+    /**
+     * Prise en charge d'un dossier : transition T3, ou simple reprise.
+     *
+     * Deux cas, et le second n'est pas une transition d'etat :
+     *
+     * - dossier « en attente » : c'est T3, pending -> under_review ;
+     * - dossier deja « en cours d'examen » et libere par l'administrateur
+     *   (D-057) : l'etat ne change pas, seule l'affectation. Appeler la
+     *   transition ici leverait — under_review -> under_review n'existe pas
+     *   dans la machine a etats, et il n'est pas question de l'y ajouter pour
+     *   la commodite d'un controleur.
+     *
+     * Dans les deux cas l'operation est tracee : par la transition pour le
+     * premier, par une ligne d'audit explicite pour le second.
+     */
     public function claim(Request $request, ReissuanceRequest $reissuanceRequest): RedirectResponse
     {
         $this->authorize('claim', $reissuanceRequest);
 
         DB::transaction(function () use ($request, $reissuanceRequest): void {
-            $this->transitions->transition(
-                $reissuanceRequest,
-                RequestStatus::UnderReview,
-                $request->user(),
-                null,
-                $request->ip(),
-            );
+            if ($reissuanceRequest->status === RequestStatus::Pending) {
+                $this->transitions->transition(
+                    $reissuanceRequest,
+                    RequestStatus::UnderReview,
+                    $request->user(),
+                    null,
+                    $request->ip(),
+                );
+            } else {
+                AuditLog::create([
+                    'actor_id' => $request->user()->id,
+                    'actor_role' => $request->user()->role->value,
+                    'action' => 'request.assignment_resumed',
+                    'auditable_type' => 'reissuance_request',
+                    'auditable_id' => $reissuanceRequest->id,
+                    'ip_address' => $request->ip(),
+                ]);
+            }
 
             $reissuanceRequest->forceFill([
                 'assigned_officer_id' => $request->user()->id,

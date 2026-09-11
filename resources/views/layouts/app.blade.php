@@ -33,6 +33,8 @@
                     @if (auth()->user()->role === \App\Enums\UserRole::Admin)
                         <a href="{{ route('admin.users.index') }}"
                            @if (request()->routeIs('admin.users.*')) aria-current="page" @endif>Comptes</a>
+                        <a href="{{ route('admin.assignments.index') }}"
+                           @if (request()->routeIs('admin.assignments.*')) aria-current="page" @endif>Affectations</a>
                         <a href="{{ route('admin.audit.index') }}"
                            @if (request()->routeIs('admin.audit.*')) aria-current="page" @endif>Journal</a>
                     @endif

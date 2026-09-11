@@ -1772,3 +1772,91 @@ Mais c'est une règle de gestion, pas un choix technique.
    la pile HTTP complète.
 
 ---
+
+## D-057 — Libérer une affectation bloquée, sans donner les dossiers à l'administrateur
+
+- **Date :** 2026-09-11
+- **Statut :** implémenté ; 515 tests au vert
+- **Origine :** votre arbitrage sur D-055 — **option 1**, l'administrateur
+  libère le dossier depuis la gestion des comptes.
+
+### Le défaut corrigé
+
+`claim` exigeait l'état **en attente** et aucun agent affecté ; `decide` exige
+l'état **en cours d'examen** et l'affectation à soi-même ; et
+`assigned_officer_id` n'était jamais remis à zéro. Un dossier dont l'agent
+affecté ne pouvait plus agir — suspendu, désactivé, ou rattaché à un autre
+centre — n'était donc repris par personne. **La demande d'un citoyen devenait
+définitivement intraitable, sans aucune alerte**, à la suite d'une action
+ordinaire de l'administrateur.
+
+### Libérer ne suffisait pas
+
+Effacer l'affectation seule aurait laissé le dossier dans l'état « en cours
+d'examen », que `claim` refusait : on aurait remplacé une impasse par une
+autre. `claim` accepte désormais ce second état, à condition qu'aucun agent ne
+soit affecté.
+
+**Aucune transition d'état n'a été ajoutée pour autant.** Un dossier déjà en
+cours d'examen le reste, et `under_review → under_review` n'existe pas dans la
+machine à états — l'y ajouter pour la commodité d'un contrôleur aurait affaibli
+la seule barrière qui refuse une transition interdite. Le contrôleur ne
+transitionne que depuis « en attente », et trace la reprise par une ligne
+d'audit dédiée (`request.assignment_resumed`).
+
+### La tension à résoudre : l'administrateur ne voit aucun dossier
+
+C'est la règle la plus contre-intuitive de la matrice, et la plus importante :
+`RequestVisibilityScope` renvoie `whereRaw('1 = 0')` pour l'administrateur. Il
+gouverne les comptes, pas les dossiers d'identité (§4.2 du brief).
+
+Or libérer une affectation suppose de savoir **qui tient quel dossier**.
+
+**La distinction retenue :** l'écran ne montre pas des demandes mais des
+**affectations**. Une référence, un centre, un agent, une date. La sélection
+est verrouillée sur `ReissuanceRequest::ADMINISTRATION_COLUMNS`, qui ne porte
+ni nom de naissance, ni date de naissance, ni filiation, ni pièce jointe. Deux
+tests le vérifient : l'un colonne par colonne sur la liste blanche, l'autre en
+cherchant des données d'identité dans le HTML rendu.
+
+C'est un second contournement de portée dans `app/`, et il est audité comme le
+premier : `ScopeBypassTest` liste désormais les **deux** méthodes autorisées et
+échoue si une troisième apparaît.
+
+### Un 404 qui disait la vérité
+
+La liaison automatique de modèle résolvait `{reissuanceRequest}` **à travers la
+portée globale** — donc introuvable pour l'administrateur, donc 404 sur une
+action qui lui est pourtant réservée. Ce n'était pas un bogue de la portée mais
+sa cohérence. L'identifiant est passé en clair et résolu dans le contrôleur par
+la méthode auditée.
+
+### Ce que libérer fait, et ne fait pas
+
+Efface l'affectation, rien d'autre : ni l'état de la demande, ni les étapes de
+vérification déjà franchies. Le dossier redevient prenable par un agent du
+centre, qui reprend où le précédent s'est arrêté. L'opération est tracée
+(`request.assignment_released`), avec le nom de l'agent dessaisi.
+
+**Le rôle est le seul critère d'autorisation, délibérément.** Un officier ne
+peut ni se défaire d'un dossier ni reprendre celui d'un collègue sans passer
+par l'administration : rendre le choix de l'agent négociable entre pairs est
+exactement le levier d'une fraude.
+
+### Vérifié pour de bon
+
+La boucle complète a été exécutée au navigateur : dossier pris en charge, agent
+suspendu, alerte affichée, libération par l'administrateur, reprise par un
+collègue du centre, et l'alerte disparaît. L'état du dossier n'a pas bougé, et
+les deux lignes d'audit sont en base.
+
+### Ce qui reste ouvert
+
+La Policy `decide` répond **oui** pour un agent suspendu : c'est le middleware
+`EnsureAccountIsActive` qui le bloque à la porte HTTP, pas la Policy. Cela
+fonctionne, mais la Policy n'est pas la barrière qu'on croit lire en la
+relisant. Je ne l'ai pas modifiée dans ce jalon : y ajouter un contrôle de
+statut de compte touche **toutes** les Policies, et mérite d'être fait d'un
+seul tenant plutôt qu'au coup par coup.
+
+---

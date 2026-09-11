@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\ActDocumentController;
+use App\Http\Controllers\Admin\AssignmentController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Citizen\AttachmentController;
@@ -193,6 +194,22 @@ Route::middleware('auth')->group(function (): void {
             Route::patch('/comptes/{user}/statut', [UserController::class, 'changeStatus'])->name('users.status');
             Route::post('/comptes/{user}/reinitialisation', [UserController::class, 'sendPasswordReset'])->name('users.reset');
             Route::patch('/comptes/{user}/rattachement', [UserController::class, 'reassign'])->name('users.reassign');
+
+            /*
+             * Affectations bloquees (D-057). Ce n'est PAS un acces aux
+             * dossiers : le controleur ne lit qu'une liste blanche de colonnes
+             * sans donnee d'identite.
+             */
+            Route::get('/affectations', [AssignmentController::class, 'index'])->name('assignments.index');
+            /*
+             * L'identifiant est passe en clair, et NON resolu par le liaison
+             * automatique de modele : celle-ci applique la portee globale, qui
+             * rend l'administrateur aveugle a toute demande — elle renvoyait
+             * donc 404. Le controleur resout via la methode auditee, qui ne
+             * lit que des colonnes sans donnee d'identite.
+             */
+            Route::post('/affectations/{demande}/liberation', [AssignmentController::class, 'release'])
+                ->whereNumber('demande')->name('assignments.release');
 
             Route::get('/journal', [AuditLogController::class, 'index'])->name('audit.index');
         });

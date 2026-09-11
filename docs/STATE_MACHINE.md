@@ -191,6 +191,20 @@ manuelle.
 acteur, rôle, action, entité visée, **statut source**, **statut cible**, motif,
 horodatage, adresse IP, empreinte de session.
 
+### L'affectation n'est pas un état
+
+Un dossier « en cours d'examen » peut changer d'agent sans changer d'état.
+L'administrateur libère une affectation bloquée (D-057), un agent du centre
+reprend : la demande reste `under_review`, et les étapes de vérification déjà
+franchies sont conservées.
+
+**Aucune transition `under_review → under_review` n'existe**, et il ne faut pas
+en ajouter : la machine à états décrit le parcours du dossier, pas qui le
+tient. Les deux mouvements d'affectation sont tracés séparément —
+`request.assignment_released` et `request.assignment_resumed`.
+
+---
+
 `audit_logs` est en ajout seul : ni `UPDATE`, ni `DELETE`, y compris pour un
 administrateur. Appliqué par les droits MySQL du compte applicatif, qui ne
 reçoit que `SELECT, INSERT` sur cette table — pas par convention. Détaillé

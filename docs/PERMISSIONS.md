@@ -182,6 +182,9 @@ minimum :
 | R17 | Démarrage de l'application avec la portée globale absente du modèle | refus de démarrer (D-053) |
 | R18 | Contournement de la portée ailleurs que dans `loadForAuthorization()` | détecté par `ScopeBypassTest` (D-053) |
 | R19 | Démarrage avec `DB_CONNECTION` pointant sur un autre moteur | refus de démarrer (D-054) |
+| R20 | Officier tentant de libérer une affectation | 403 — réservé à l'administrateur (D-057) |
+| R21 | Maire ou citoyen sur l'écran des affectations | 403 |
+| R22 | Écran des affectations : recherche d'une donnée d'identité dans le HTML rendu | aucune — liste blanche de colonnes (D-057) |
 | R14 | Utilisateur désactivé tentant de se connecter | refus, et session existante invalidée |
 | R15 | Officier consultant une pièce d'identité | accès accordé **et** ligne d'audit écrite |
 | R16 | Requête `GET` quelconque sans session | seules les routes de la liste blanche répondent |
