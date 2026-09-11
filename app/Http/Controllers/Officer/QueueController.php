@@ -46,8 +46,8 @@ class QueueController extends Controller
             ->when($request->filled('recherche'), function ($q) use ($request): void {
                 $terme = trim((string) $request->input('recherche'));
                 $q->where(function ($sub) use ($terme): void {
-                    $sub->where('reference', 'ilike', "%{$terme}%")
-                        ->orWhere('full_name_at_birth', 'ilike', "%{$terme}%");
+                    $sub->where('reference', 'like', "%{$terme}%")
+                        ->orWhere('full_name_at_birth', 'like', "%{$terme}%");
                 });
             })
             ->when($request->filled('depuis'), fn ($q) => $q->where('submitted_at', '>=', $request->date('depuis')))

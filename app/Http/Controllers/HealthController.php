@@ -49,12 +49,12 @@ class HealthController extends Controller
             $version = DB::selectOne('SELECT version() AS v')->v ?? '';
 
             return [
-                'label' => 'Connexion PostgreSQL',
+                'label' => 'Connexion MySQL',
                 'ok' => true,
                 'detail' => explode(' (', $version)[0],
             ];
         } catch (Throwable $e) {
-            return ['label' => 'Connexion PostgreSQL', 'ok' => false, 'detail' => $e->getMessage()];
+            return ['label' => 'Connexion MySQL', 'ok' => false, 'detail' => $e->getMessage()];
         }
     }
 
@@ -62,8 +62,14 @@ class HealthController extends Controller
     private function stateMachineTrigger(): array
     {
         try {
+            // On passe par la vue phoenix_guards, et non par
+            // information_schema.TRIGGERS : celle-ci est filtree par les
+            // droits du lecteur, et le compte applicatif n'a deliberement
+            // aucun droit sur les declencheurs. Lu directement, le controle
+            // annoncait « ABSENT » sur une base saine. Voir la migration
+            // 2026_01_11_000200 et D-052.
             $present = DB::selectOne(
-                'SELECT 1 AS ok FROM pg_trigger WHERE tgname = ?',
+                'SELECT 1 AS ok FROM phoenix_guards WHERE name = ?',
                 ['phoenix_guard_request_status_trigger']
             ) !== null;
 
@@ -85,19 +91,35 @@ class HealthController extends Controller
     private function auditLogIsAppendOnly(): array
     {
         try {
-            $role = (string) config('database.connections.pgsql.username');
+            $role = (string) config('database.connections.mysql.username');
 
-            $canUpdate = DB::selectOne(
-                "SELECT has_table_privilege(?, 'audit_logs', 'UPDATE') AS granted",
-                [$role]
-            )->granted;
+            // MySQL n'a pas d'equivalent de has_table_privilege(). On lit les
+            // trois niveaux de droits, parce qu'ils s'ADDITIONNENT : un droit
+            // de base ou global rendrait le journal alterable meme si le droit
+            // de table est correct (D-051).
+            $alterants = DB::select(
+                "SELECT 'table' AS portee, PRIVILEGE_TYPE AS droit
+                   FROM information_schema.TABLE_PRIVILEGES
+                  WHERE GRANTEE = CONCAT(QUOTE(SUBSTRING_INDEX(CURRENT_USER(), '@', 1)), '@',
+                                         QUOTE(SUBSTRING_INDEX(CURRENT_USER(), '@', -1)))
+                    AND TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'audit_logs'
+                    AND PRIVILEGE_TYPE IN ('UPDATE', 'DELETE')
+                 UNION ALL
+                 SELECT 'base', PRIVILEGE_TYPE
+                   FROM information_schema.SCHEMA_PRIVILEGES
+                  WHERE GRANTEE = CONCAT(QUOTE(SUBSTRING_INDEX(CURRENT_USER(), '@', 1)), '@',
+                                         QUOTE(SUBSTRING_INDEX(CURRENT_USER(), '@', -1)))
+                    AND TABLE_SCHEMA = DATABASE()
+                    AND PRIVILEGE_TYPE IN ('UPDATE', 'DELETE')
+                 UNION ALL
+                 SELECT 'globale', PRIVILEGE_TYPE
+                   FROM information_schema.USER_PRIVILEGES
+                  WHERE GRANTEE = CONCAT(QUOTE(SUBSTRING_INDEX(CURRENT_USER(), '@', 1)), '@',
+                                         QUOTE(SUBSTRING_INDEX(CURRENT_USER(), '@', -1)))
+                    AND PRIVILEGE_TYPE IN ('UPDATE', 'DELETE')"
+            );
 
-            $canDelete = DB::selectOne(
-                "SELECT has_table_privilege(?, 'audit_logs', 'DELETE') AS granted",
-                [$role]
-            )->granted;
-
-            $appendOnly = ! $canUpdate && ! $canDelete;
+            $appendOnly = $alterants === [];
 
             return [
                 'label' => "Journal d'audit en ajout seul",

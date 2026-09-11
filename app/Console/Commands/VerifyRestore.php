@@ -84,11 +84,11 @@ class VerifyRestore extends Command
         $base = $this->option('db');
 
         if ($base === null) {
-            return 'pgsql';
+            return 'mysql';
         }
 
         Config::set('database.connections.verification', array_merge(
-            config('database.connections.pgsql'),
+            config('database.connections.mysql'),
             ['database' => $base],
         ));
 
@@ -224,8 +224,12 @@ class VerifyRestore extends Command
     /** Sans le declencheur, la base accepterait une transition interdite. */
     private function declencheur(string $connexion): string
     {
+        // La vue phoenix_guards, et non information_schema.TRIGGERS : cette
+        // derniere est filtree par les droits du lecteur, et le compte
+        // applicatif n'en a aucun sur les declencheurs (D-052). Un controle
+        // de restauration qui crie au loup sur une base saine ne sert a rien.
         $existe = DB::connection($connexion)->selectOne(
-            "SELECT tgname FROM pg_trigger WHERE tgname = 'phoenix_guard_request_status_trigger'"
+            "SELECT name FROM phoenix_guards WHERE name = 'phoenix_guard_request_status_trigger'"
         );
 
         if ($existe === null) {

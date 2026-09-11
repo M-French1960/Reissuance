@@ -40,7 +40,7 @@ class AuditLogController extends Controller
             ->select(self::SAFE_COLUMNS)
             ->with('actor:id,name,email,role')
             ->when($request->filled('acteur'), fn ($q) => $q->where('actor_id', $request->integer('acteur')))
-            ->when($request->filled('action'), fn ($q) => $q->where('action', 'ilike', '%'.$request->input('action').'%'))
+            ->when($request->filled('action'), fn ($q) => $q->where('action', 'like', '%'.$request->input('action').'%'))
             ->when($request->filled('depuis'), fn ($q) => $q->where('created_at', '>=', $request->date('depuis')))
             ->latest('created_at')
             ->paginate(50)

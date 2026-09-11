@@ -26,7 +26,7 @@ return new class extends Migration
     public function up(): void
     {
         // La contrainte enumere les etats : elle doit connaitre le nouveau.
-        DB::statement('ALTER TABLE reissuance_requests DROP CONSTRAINT IF EXISTS reissuance_requests_status_check');
+        self::dropCheck('reissuance_requests', 'reissuance_requests_status_check');
         DB::statement("ALTER TABLE reissuance_requests ADD CONSTRAINT reissuance_requests_status_check
             CHECK (status IN ('draft','pending','under_review','awaiting_signature','escalated','signed','rejected','cancelled'))");
 
@@ -39,7 +39,7 @@ return new class extends Migration
          * (T14) doit toujours porter son centre et sa commune. La contrainte
          * distingue donc les deux cas au lieu d'exempter `cancelled` en bloc.
          */
-        DB::statement('ALTER TABLE reissuance_requests DROP CONSTRAINT IF EXISTS reissuance_requests_submitted_scope_check');
+        self::dropCheck('reissuance_requests', 'reissuance_requests_submitted_scope_check');
         DB::statement("ALTER TABLE reissuance_requests ADD CONSTRAINT reissuance_requests_submitted_scope_check
             CHECK (
                 status = 'draft'
@@ -58,60 +58,15 @@ return new class extends Migration
             )");
 
         /*
-         * Le declencheur connait la liste des etats terminaux en dur. Sans
-         * cette mise a jour, `cancelled` n'y figurerait pas : une sortie
-         * d'annulation ne serait refusee que parce qu'elle n'est pas dans
-         * allowed_transitions — donc une ligne ajoutee par erreur dans cette
-         * table suffirait a faire repartir une demande annulee. La barriere
-         * doit tenir par elle-meme.
+         * Le declencheur n'est PAS recree ici.
+         *
+         * En PostgreSQL, cette migration remplacait la fonction du declencheur
+         * pour y ajouter `cancelled` a la liste des etats terminaux. En MySQL,
+         * un declencheur ne se remplace pas : il se supprime et se recree. Ces
+         * migrations n'ayant jamais tourne en production, la liste est posee
+         * directement dans 2026_01_01_000700 — une sequence fraiche est plus
+         * lisible qu'un empilement de correctifs (D-051).
          */
-        DB::statement(<<<'SQL'
-            CREATE OR REPLACE FUNCTION phoenix_guard_request_status()
-            RETURNS trigger LANGUAGE plpgsql AS $$
-            BEGIN
-                -- Le statut ne change pas : rien a verifier.
-                IF NEW.status IS NOT DISTINCT FROM OLD.status THEN
-                    RETURN NEW;
-                END IF;
-
-                -- signed, rejected et cancelled sont terminaux. Toute reprise
-                -- passe par une nouvelle demande liee via supersedes_id.
-                IF OLD.status IN ('signed', 'rejected', 'cancelled') THEN
-                    RAISE EXCEPTION
-                        'Transition interdite : % est un etat terminal (demande %)',
-                        OLD.status, OLD.id
-                        USING ERRCODE = 'check_violation';
-                END IF;
-
-                IF NOT EXISTS (
-                    SELECT 1 FROM allowed_transitions
-                    WHERE from_status = OLD.status AND to_status = NEW.status
-                ) THEN
-                    RAISE EXCEPTION
-                        'Transition interdite : % -> % (demande %)',
-                        OLD.status, NEW.status, OLD.id
-                        USING ERRCODE = 'check_violation';
-                END IF;
-
-                -- Une transition sans trace d'audit est impossible. L'audit
-                -- doit avoir ete ecrit plus tot dans la meme transaction.
-                IF NOT EXISTS (
-                    SELECT 1 FROM audit_logs
-                    WHERE auditable_type = 'reissuance_request'
-                      AND auditable_id = OLD.id
-                      AND from_status = OLD.status
-                      AND to_status = NEW.status
-                ) THEN
-                    RAISE EXCEPTION
-                        'Transition % -> % refusee : aucune ligne d''audit correspondante (demande %)',
-                        OLD.status, NEW.status, OLD.id
-                        USING ERRCODE = 'check_violation';
-                END IF;
-
-                RETURN NEW;
-            END;
-            $$;
-        SQL);
 
         DB::table('allowed_transitions')->insert([
             ['from_status' => 'draft', 'to_status' => 'cancelled', 'actor_role' => 'citizen', 'label' => 'T13'],
@@ -119,15 +74,34 @@ return new class extends Migration
         ]);
     }
 
+    /**
+     * Supprime une contrainte CHECK si elle existe.
+     *
+     * `DROP CONSTRAINT IF EXISTS` est propre a MariaDB ; MySQL ne l'accepte
+     * pas. On interroge donc information_schema, ce qui marche sur les deux.
+     */
+    public static function dropCheck(string $table, string $contrainte): void
+    {
+        $existe = DB::selectOne(
+            'SELECT 1 AS ok FROM information_schema.TABLE_CONSTRAINTS
+             WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = ? AND CONSTRAINT_NAME = ?',
+            [$table, $contrainte]
+        );
+
+        if ($existe !== null) {
+            DB::statement("ALTER TABLE `{$table}` DROP CONSTRAINT `{$contrainte}`");
+        }
+    }
+
     public function down(): void
     {
         DB::table('allowed_transitions')->whereIn('label', ['T13', 'T14'])->delete();
 
-        DB::statement('ALTER TABLE reissuance_requests DROP CONSTRAINT IF EXISTS reissuance_requests_status_check');
+        self::dropCheck('reissuance_requests', 'reissuance_requests_status_check');
         DB::statement("ALTER TABLE reissuance_requests ADD CONSTRAINT reissuance_requests_status_check
             CHECK (status IN ('draft','pending','under_review','awaiting_signature','escalated','signed','rejected'))");
 
-        DB::statement('ALTER TABLE reissuance_requests DROP CONSTRAINT IF EXISTS reissuance_requests_submitted_scope_check');
+        self::dropCheck('reissuance_requests', 'reissuance_requests_submitted_scope_check');
         DB::statement("ALTER TABLE reissuance_requests ADD CONSTRAINT reissuance_requests_submitted_scope_check
             CHECK (
                 status = 'draft'

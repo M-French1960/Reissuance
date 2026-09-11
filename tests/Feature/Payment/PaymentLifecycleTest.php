@@ -294,24 +294,120 @@ class PaymentLifecycleTest extends TestCase
      *
      * Deux tables de transitions qui divergent, c'est un refus cote base que
      * le code croyait autorise — ou l'inverse, ce qui est pire.
+     *
+     * La version PostgreSQL de ce test lisait pg_proc.prosrc et se contentait
+     * de chercher l'etat de DEPART dans la source. Elle serait passee au vert
+     * sur un declencheur autorisant n'importe quelle cible depuis cet etat :
+     * elle ne verifiait jamais la PAIRE. Ici on interroge la base sur chacune
+     * des paires possibles, dans les deux sens : ce que le service autorise,
+     * la base doit l'accepter ; ce qu'il refuse, elle doit le refuser.
      */
     #[Test]
     public function le_service_et_le_declencheur_decrivent_la_meme_machine(): void
     {
-        $source = DB::selectOne(
-            "SELECT prosrc FROM pg_proc WHERE proname = 'phoenix_guard_payment_status'"
+        $etats = array_map(
+            static fn (PaymentStatus $statut): string => $statut->value,
+            PaymentStatus::cases(),
         );
 
-        $this->assertNotNull($source, 'Le déclencheur de paiement est absent.');
+        $divergences = [];
 
-        foreach (PaymentService::TRANSITIONS as $depuis => $vers) {
-            foreach ($vers as $cible) {
-                $this->assertStringContainsString(
-                    "('{$depuis}',",
-                    $source->prosrc,
-                    "La transition {$depuis} → {$cible} est autorisée par le service mais absente du déclencheur."
-                );
+        foreach ($etats as $depuis) {
+            foreach ($etats as $vers) {
+                if ($depuis === $vers) {
+                    continue;
+                }
+
+                $serviceAutorise = in_array($vers, PaymentService::TRANSITIONS[$depuis] ?? [], true);
+                $baseAutorise = $this->laBaseAccepteLaTransition($depuis, $vers);
+
+                if ($serviceAutorise !== $baseAutorise) {
+                    $divergences[] = sprintf(
+                        '%s → %s : service=%s, base=%s',
+                        $depuis,
+                        $vers,
+                        $serviceAutorise ? 'autorisé' : 'refusé',
+                        $baseAutorise ? 'autorisé' : 'refusé',
+                    );
+                }
             }
         }
+
+        $this->assertSame([], $divergences, "Le service et le déclencheur divergent :\n".implode("\n", $divergences));
+    }
+
+    /**
+     * La base accepte-t-elle cette transition ?
+     *
+     * On la tente reellement, sur une ligne jetable, avec la ligne d'audit que
+     * le declencheur exige — sans quoi TOUTE transition serait refusee et le
+     * test serait vert pour la mauvaise raison. Le point de sauvegarde annule
+     * l'ecriture quelle que soit l'issue.
+     */
+    private function laBaseAccepteLaTransition(string $depuis, string $vers): bool
+    {
+        DB::beginTransaction();
+
+        try {
+            // Ecriture directe : le modele et le service appliquent leurs
+            // propres regles, et c'est la base seule qu'on interroge ici.
+            $identifiant = DB::table('payments')->insertGetId([
+                'request_id' => $this->demande->id,
+                'initiated_by' => $this->citoyen->id,
+                'amount_minor' => 1000,
+                'currency' => 'XAF',
+                'minor_unit' => 0,
+                'status' => $depuis,
+                'provider' => 'fake-mobile-money',
+                'idempotency_key' => 'essai-'.bin2hex(random_bytes(8)),
+                'created_at' => now(),
+                'updated_at' => now(),
+                ...self::colonnesLieesAuStatut($depuis),
+            ]);
+
+            DB::table('audit_logs')->insert([
+                'action' => 'payment.transition.probe',
+                'auditable_type' => 'payment',
+                'auditable_id' => $identifiant,
+                'from_status' => $depuis,
+                'to_status' => $vers,
+                'created_at' => now(),
+            ]);
+
+            DB::table('payments')->where('id', $identifiant)->update([
+                'status' => $vers,
+                ...self::colonnesLieesAuStatut($vers),
+            ]);
+
+            return true;
+        } catch (QueryException) {
+            return false;
+        } finally {
+            DB::rollBack();
+        }
+    }
+
+    /**
+     * Les colonnes que les contraintes CHECK exigent pour un statut donne.
+     *
+     * Sans elles, la sonde se ferait refuser par une contrainte CHECK et non
+     * par le declencheur : le test conclurait « la base refuse cette
+     * transition » alors qu'elle refusait une ligne incoherente. On isole donc
+     * la question posee — le declencheur — en satisfaisant tout le reste.
+     *
+     * @return array<string, string|null>
+     */
+    private static function colonnesLieesAuStatut(string $statut): array
+    {
+        $horodatage = now()->toDateTimeString();
+
+        return [
+            // `settled_at is null or status in ('settled','refunded')`
+            'settled_at' => in_array($statut, ['settled', 'refunded'], true) ? $horodatage : null,
+            // `refunded_at is null or status = 'refunded'`
+            'refunded_at' => $statut === 'refunded' ? $horodatage : null,
+            // `status <> 'failed' or failure_reason is not null`
+            'failure_reason' => $statut === 'failed' ? 'sonde de test' : null,
+        ];
     }
 }

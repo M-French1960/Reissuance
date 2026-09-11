@@ -58,71 +58,83 @@ return new class extends Migration
             ]);
         }
 
-        // Personne n'ecrit dans cette table en dehors des migrations.
-        DB::statement('REVOKE INSERT, UPDATE, DELETE ON allowed_transitions FROM PUBLIC');
+        /*
+         * MySQL n'a pas de revocation « depuis PUBLIC » : les droits sont
+         * accordes nominativement, table par table. Le compte applicatif ne
+         * recevra donc jamais INSERT/UPDATE/DELETE sur cette table — voir la
+         * migration des droits (D-051).
+         */
 
+        /*
+         * Le declencheur.
+         *
+         * MySQL n'a pas de fonction de declencheur separee : le corps est
+         * ecrit dans le declencheur lui-meme, et l'erreur est levee par
+         * SIGNAL SQLSTATE '45000'.
+         *
+         * `DB::unprepared` envoie l'instruction telle quelle : les `;`
+         * internes ne posent pas de probleme, contrairement au client en
+         * ligne de commande qui, lui, decoupe dessus.
+         */
         DB::unprepared(<<<'SQL'
-        CREATE OR REPLACE FUNCTION phoenix_guard_request_status()
-        RETURNS TRIGGER
-        LANGUAGE plpgsql
-        AS $$
+        CREATE TRIGGER phoenix_guard_request_status_trigger
+        BEFORE UPDATE ON reissuance_requests
+        FOR EACH ROW
         BEGIN
+            DECLARE autorisee INT DEFAULT 0;
+            DECLARE trace INT DEFAULT 0;
+            DECLARE message VARCHAR(255);
+
             -- Le statut ne change pas : rien a verifier.
-            IF NEW.status IS NOT DISTINCT FROM OLD.status THEN
-                RETURN NEW;
-            END IF;
+            IF NOT (NEW.status <=> OLD.status) THEN
 
-            -- signed et rejected sont terminaux. Toute reprise passe par une
-            -- nouvelle demande liee via supersedes_id.
-            IF OLD.status IN ('signed', 'rejected') THEN
-                RAISE EXCEPTION
-                    'Transition interdite : % est un etat terminal (demande %)',
-                    OLD.status, OLD.id
-                    USING ERRCODE = 'check_violation';
-            END IF;
+                -- signed, rejected et cancelled sont terminaux. Toute reprise
+                -- passe par une nouvelle demande liee via supersedes_id.
+                IF OLD.status IN ('signed', 'rejected', 'cancelled') THEN
+                    SET message = CONCAT(
+                        'Transition interdite : ', OLD.status,
+                        ' est un etat terminal (demande ', OLD.id, ')'
+                    );
+                    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = message;
+                END IF;
 
-            IF NOT EXISTS (
-                SELECT 1 FROM allowed_transitions
-                WHERE from_status = OLD.status AND to_status = NEW.status
-            ) THEN
-                RAISE EXCEPTION
-                    'Transition interdite : % -> % (demande %)',
-                    OLD.status, NEW.status, OLD.id
-                    USING ERRCODE = 'check_violation';
-            END IF;
+                SELECT COUNT(*) INTO autorisee
+                FROM allowed_transitions
+                WHERE from_status = OLD.status AND to_status = NEW.status;
 
-            -- Une transition sans trace d'audit est impossible. L'audit doit
-            -- avoir ete ecrit plus tot dans la meme transaction.
-            IF NOT EXISTS (
-                SELECT 1 FROM audit_logs
+                IF autorisee = 0 THEN
+                    SET message = CONCAT(
+                        'Transition interdite : ', OLD.status, ' -> ', NEW.status,
+                        ' (demande ', OLD.id, ')'
+                    );
+                    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = message;
+                END IF;
+
+                -- Une transition sans trace d'audit est impossible. L'audit
+                -- doit avoir ete ecrit plus tot dans la meme transaction.
+                SELECT COUNT(*) INTO trace
+                FROM audit_logs
                 WHERE auditable_type = 'reissuance_request'
                   AND auditable_id = OLD.id
                   AND from_status = OLD.status
-                  AND to_status = NEW.status
-            ) THEN
-                RAISE EXCEPTION
-                    'Transition % -> % refusee : aucune ligne d''audit correspondante (demande %)',
-                    OLD.status, NEW.status, OLD.id
-                    USING ERRCODE = 'check_violation';
+                  AND to_status = NEW.status;
+
+                IF trace = 0 THEN
+                    SET message = CONCAT(
+                        'Transition ', OLD.status, ' -> ', NEW.status,
+                        ' refusee : aucune ligne d''audit correspondante (demande ',
+                        OLD.id, ')'
+                    );
+                    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = message;
+                END IF;
             END IF;
-
-            RETURN NEW;
-        END;
-        $$;
-        SQL);
-
-        DB::unprepared(<<<'SQL'
-        CREATE TRIGGER phoenix_guard_request_status_trigger
-            BEFORE UPDATE ON reissuance_requests
-            FOR EACH ROW
-            EXECUTE FUNCTION phoenix_guard_request_status();
+        END
         SQL);
     }
 
     public function down(): void
     {
-        DB::unprepared('DROP TRIGGER IF EXISTS phoenix_guard_request_status_trigger ON reissuance_requests');
-        DB::unprepared('DROP FUNCTION IF EXISTS phoenix_guard_request_status()');
+        DB::unprepared('DROP TRIGGER IF EXISTS phoenix_guard_request_status_trigger');
         Schema::dropIfExists('allowed_transitions');
     }
 };

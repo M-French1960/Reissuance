@@ -37,8 +37,8 @@ class UserController extends Controller
             ->when($request->filled('recherche'), function ($query) use ($request): void {
                 $term = trim((string) $request->input('recherche'));
                 $query->where(function ($q) use ($term): void {
-                    $q->where('name', 'ilike', "%{$term}%")
-                        ->orWhere('email', 'ilike', "%{$term}%");
+                    $q->where('name', 'like', "%{$term}%")
+                        ->orWhere('email', 'like', "%{$term}%");
                 });
             })
             ->when($request->filled('role'), fn ($q) => $q->where('role', $request->input('role')))

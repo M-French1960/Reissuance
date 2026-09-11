@@ -54,7 +54,9 @@ return new class extends Migration
 
             $table->timestamps();
 
-            $table->index(['civil_status_center_id', 'status', 'submitted_at']);
+            // Nom explicite : le nom genere par Laravel ferait 68 caracteres, et
+            // MySQL plafonne les identifiants a 64 (D-051).
+            $table->index(['civil_status_center_id', 'status', 'submitted_at'], 'requests_center_status_submitted_idx');
             $table->index(['commune_id', 'status', 'submitted_at']);
             $table->index(['user_id', 'created_at']);
             $table->index(['assigned_officer_id', 'status']);

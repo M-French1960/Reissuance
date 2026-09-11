@@ -53,7 +53,7 @@ return new class extends Migration
             $table->string('idempotency_key', 80)->unique();
 
             $table->string('payer_reference')->nullable();
-            $table->jsonb('provider_payload')->nullable();
+            $table->json('provider_payload')->nullable();
 
             $table->timestamp('authorised_at')->nullable();
             $table->timestamp('settled_at')->nullable();
@@ -72,7 +72,7 @@ return new class extends Migration
             CHECK (amount_minor >= 0)');
 
         DB::statement("ALTER TABLE payments ADD CONSTRAINT payments_currency_check
-            CHECK (currency ~ '^[A-Z]{3}$')");
+            CHECK (currency REGEXP '^[A-Z]{3}$')");
 
         DB::statement("ALTER TABLE payments ADD CONSTRAINT payments_status_check
             CHECK (status IN ('pending','authorised','settled','failed','expired','refunded'))");
@@ -113,41 +113,41 @@ return new class extends Migration
      */
     private function createTransitionGuard(): void
     {
-        DB::statement(<<<'SQL'
-            CREATE OR REPLACE FUNCTION phoenix_guard_payment_status()
-            RETURNS trigger LANGUAGE plpgsql AS $$
-            DECLARE
-                autorise boolean;
-                trace integer;
-            BEGIN
-                IF NEW.status = OLD.status THEN
-                    RETURN NEW;
-                END IF;
+        DB::unprepared(<<<'SQL'
+        CREATE TRIGGER phoenix_guard_payment_status_trigger
+        BEFORE UPDATE ON payments
+        FOR EACH ROW
+        BEGIN
+            DECLARE autorisee INT DEFAULT 0;
+            DECLARE trace INT DEFAULT 0;
+            DECLARE message VARCHAR(255);
+
+            IF NOT (NEW.status <=> OLD.status) THEN
 
                 IF OLD.status IN ('failed', 'expired', 'refunded') THEN
-                    RAISE EXCEPTION
-                        'Transition % -> % refusee : % est un etat terminal (paiement %)',
-                        OLD.status, NEW.status, OLD.status, OLD.id;
+                    SET message = CONCAT(
+                        'Transition ', OLD.status, ' -> ', NEW.status,
+                        ' refusee : ', OLD.status, ' est un etat terminal (paiement ',
+                        OLD.id, ')'
+                    );
+                    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = message;
                 END IF;
 
-                autorise := (OLD.status, NEW.status) IN (
-                    ('pending',    'authorised'),
-                    ('pending',    'failed'),
-                    ('pending',    'expired'),
-                    ('pending',    'settled'),
-                    ('authorised', 'settled'),
-                    ('authorised', 'failed'),
-                    ('authorised', 'expired'),
-                    ('settled',    'refunded')
+                SET autorisee = (
+                    (OLD.status = 'pending'    AND NEW.status IN ('authorised', 'failed', 'expired', 'settled'))
+                 OR (OLD.status = 'authorised' AND NEW.status IN ('settled', 'failed', 'expired'))
+                 OR (OLD.status = 'settled'    AND NEW.status = 'refunded')
                 );
 
-                IF NOT autorise THEN
-                    RAISE EXCEPTION
-                        'Transition % -> % interdite pour le paiement %',
-                        OLD.status, NEW.status, OLD.id;
+                IF autorisee = 0 THEN
+                    SET message = CONCAT(
+                        'Transition ', OLD.status, ' -> ', NEW.status,
+                        ' interdite pour le paiement ', OLD.id
+                    );
+                    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = message;
                 END IF;
 
-                SELECT count(*) INTO trace
+                SELECT COUNT(*) INTO trace
                 FROM audit_logs
                 WHERE auditable_type = 'payment'
                   AND auditable_id = OLD.id
@@ -155,25 +155,21 @@ return new class extends Migration
                   AND to_status = NEW.status;
 
                 IF trace = 0 THEN
-                    RAISE EXCEPTION
-                        'Transition % -> % refusee : aucune ligne d''audit correspondante (paiement %)',
-                        OLD.status, NEW.status, OLD.id;
+                    SET message = CONCAT(
+                        'Transition ', OLD.status, ' -> ', NEW.status,
+                        ' refusee : aucune ligne d''audit correspondante (paiement ',
+                        OLD.id, ')'
+                    );
+                    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = message;
                 END IF;
-
-                RETURN NEW;
-            END;
-            $$;
+            END IF;
+        END
         SQL);
-
-        DB::statement('CREATE TRIGGER phoenix_guard_payment_status_trigger
-            BEFORE UPDATE ON payments
-            FOR EACH ROW EXECUTE FUNCTION phoenix_guard_payment_status()');
     }
 
     public function down(): void
     {
-        DB::statement('DROP TRIGGER IF EXISTS phoenix_guard_payment_status_trigger ON payments');
-        DB::statement('DROP FUNCTION IF EXISTS phoenix_guard_payment_status()');
+        DB::unprepared('DROP TRIGGER IF EXISTS phoenix_guard_payment_status_trigger');
         Schema::dropIfExists('payments');
     }
 };

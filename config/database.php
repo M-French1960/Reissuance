@@ -19,7 +19,7 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'sqlite'),
+    'default' => env('DB_CONNECTION', 'mysql'),
 
     /*
     |--------------------------------------------------------------------------
@@ -54,6 +54,38 @@ return [
             'database' => env('DB_DATABASE', 'laravel'),
             'username' => env('DB_USERNAME', 'root'),
             'password' => env('DB_PASSWORD', ''),
+            'unix_socket' => env('DB_SOCKET', ''),
+            'charset' => env('DB_CHARSET', 'utf8mb4'),
+            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
+        /*
+         * Connexion PROPRIETAIRE du schema : migrations UNIQUEMENT.
+         *
+         * L'application ne l'utilise jamais. C'est ce qui permet au journal
+         * d'audit d'etre inalterable pour le compte applicatif
+         * (docs/ARCHITECTURE_LOCAL.md 5.1).
+         *
+         * En MySQL, les droits de base et de table S'ADDITIONNENT : on ne peut
+         * pas revoquer sur une table ce qui est accorde sur la base. Les
+         * droits du compte applicatif sont donc accordes TABLE PAR TABLE
+         * (D-051).
+         */
+        'mysql_owner' => [
+            'driver' => 'mysql',
+            'url' => env('DB_URL'),
+            'host' => env('DB_HOST', '127.0.0.1'),
+            'port' => env('DB_PORT', '3306'),
+            'database' => env('DB_DATABASE', 'laravel'),
+            'username' => env('DB_OWNER_USERNAME', 'phoenix_owner'),
+            'password' => env('DB_OWNER_PASSWORD', ''),
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => env('DB_CHARSET', 'utf8mb4'),
             'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),

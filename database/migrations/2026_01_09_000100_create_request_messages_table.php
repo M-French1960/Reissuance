@@ -45,7 +45,7 @@ return new class extends Migration
 
         // Un message vide n'est pas un message.
         DB::statement('ALTER TABLE request_messages ADD CONSTRAINT request_messages_body_check
-            CHECK (length(btrim(body)) >= 2)');
+            CHECK (CHAR_LENGTH(TRIM(body)) >= 2)');
     }
 
     public function down(): void

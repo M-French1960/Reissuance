@@ -122,7 +122,7 @@ class DatabaseConstraintsTest extends TestCase
     public function le_referentiel_des_transitions_est_en_lecture_seule_pour_l_application(): void
     {
         $this->expectException(QueryException::class);
-        $this->expectExceptionMessageMatches('/permission denied/i');
+        $this->expectExceptionMessageMatches('/INSERT command denied/i');
 
         DB::table('allowed_transitions')->insert([
             'from_status' => 'draft', 'to_status' => 'signed',

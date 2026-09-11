@@ -92,6 +92,36 @@ class QueueTest extends TestCase
             ->assertOk()->assertSee($cible->reference)->assertDontSee($autre->reference);
     }
 
+    /**
+     * La recherche ignore la casse — et ce n'est pas gratuit.
+     *
+     * Sur PostgreSQL c'etait `ilike`, explicite. Sur MySQL c'est `like`, dont
+     * l'insensibilite a la casse tient a l'INTERCLASSEMENT des colonnes
+     * (utf8mb4_unicode_ci). Le jour ou quelqu'un passe une colonne en
+     * interclassement binaire, la recherche cesse silencieusement de trouver
+     * « amadou » pour « AMADOU », sans qu'aucune erreur ne soit levee. Ce test
+     * est la seule chose qui le signalera. Voir D-051.
+     */
+    #[Test]
+    public function la_recherche_ignore_la_casse(): void
+    {
+        $cible = $this->demandeEnvoyee($this->centreA, 'Amadou RECHERCHE');
+
+        foreach (['recherche', 'RECHERCHE', 'ReChErChE'] as $saisie) {
+            $this->actingAs($this->officier)
+                ->get(route('officer.queue', ['recherche' => $saisie]))
+                ->assertOk()
+                ->assertSee($cible->reference);
+        }
+
+        // La reference, elle, est saisie en majuscules par les agents : la
+        // recherche doit la trouver meme tapee en minuscules.
+        $this->actingAs($this->officier)
+            ->get(route('officer.queue', ['recherche' => strtolower($cible->reference)]))
+            ->assertOk()
+            ->assertSee($cible->reference);
+    }
+
     #[Test]
     public function le_filtre_par_assignation_fonctionne(): void
     {

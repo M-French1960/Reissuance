@@ -30,7 +30,7 @@ return new class extends Migration
             $table->foreignId('request_id')->constrained('reissuance_requests')->cascadeOnDelete();
             $table->unsignedInteger('cycle')->default(1);
             $table->string('outcome', 20);
-            $table->jsonb('payload')->nullable();
+            $table->json('payload')->nullable();
             $table->timestamps();
 
             $table->index(['request_id', 'cycle']);

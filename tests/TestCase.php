@@ -16,22 +16,10 @@ abstract class TestCase extends BaseTestCase
      * role proprietaire, alors que les tests doivent s'executer sous le role
      * applicatif — c'est precisement ce qui permet de verifier que le journal
      * d'audit lui est inalterable.
+     *
+     * La migration elle-meme a lieu dans tests/bootstrap.php, avant le premier
+     * test : depuis setUp() elle arriverait trop tard, la transaction du trait
+     * etant deja ouverte sous un compte encore sans droits.
      */
     use DatabaseTransactions;
-
-    private static bool $migrated = false;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        if (! self::$migrated) {
-            $this->artisan('migrate:fresh', [
-                '--database' => 'pgsql_owner',
-                '--force' => true,
-            ])->run();
-
-            self::$migrated = true;
-        }
-    }
 }

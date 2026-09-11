@@ -50,7 +50,7 @@ return new class extends Migration
             $table->unsignedTinyInteger('step');
             $table->foreignId('officer_id')->constrained('users')->restrictOnDelete();
             $table->string('result', 32)->nullable();
-            $table->jsonb('payload')->nullable();
+            $table->json('payload')->nullable();
             $table->timestamp('started_at')->nullable();
             $table->timestamp('completed_at')->nullable();
             $table->timestamps();
@@ -88,7 +88,7 @@ return new class extends Migration
         // signature simple (docs/STATE_MACHINE.md 2, colonne Motif).
         DB::statement("ALTER TABLE request_decisions ADD CONSTRAINT request_decisions_reason_required_check CHECK (
             decision IN ('accepted','signed')
-            OR (reason IS NOT NULL AND length(btrim(reason)) >= 10)
+            OR (reason IS NOT NULL AND CHAR_LENGTH(TRIM(reason)) >= 10)
         )");
 
         Schema::create('document_signatures', function (Blueprint $table) {
@@ -99,7 +99,7 @@ return new class extends Migration
             // presente est bien celui qui a ete signe.
             $table->string('document_hash', 64);
             $table->string('provider', 64);
-            $table->jsonb('signature_payload')->nullable();
+            $table->json('signature_payload')->nullable();
             $table->timestamp('signed_at');
             $table->timestamps();
         });
@@ -110,7 +110,7 @@ return new class extends Migration
             $table->foreignId('request_id')->nullable()->constrained('reissuance_requests')->cascadeOnDelete();
             $table->string('channel', 32)->default('mail');
             $table->string('type', 64);
-            $table->jsonb('payload')->nullable();
+            $table->json('payload')->nullable();
             $table->timestamp('sent_at')->nullable();
             $table->timestamp('failed_at')->nullable();
             $table->unsignedSmallInteger('attempts')->default(0);
