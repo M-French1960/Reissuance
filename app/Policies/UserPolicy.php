@@ -61,9 +61,21 @@ class UserPolicy
         return $actor->role === UserRole::Admin;
     }
 
+    /**
+     * Changer le rattachement d'un agent de terrain.
+     *
+     * `isOfficial()` n'exclut que le citoyen — l'ADMINISTRATEUR y passait
+     * donc. Or `users_role_scope_check` exige qu'un administrateur n'ait ni
+     * centre ni commune : lui en poser un levait une `QueryException` non
+     * rattrapee, donc une erreur 500 (D-058).
+     *
+     * Seuls l'officier et le maire ont un rattachement. Le dire ici plutot que
+     * de s'en remettre a une negation.
+     */
     public function reassign(User $actor, User $target): bool
     {
-        return $actor->role === UserRole::Admin && $target->role->isOfficial();
+        return $actor->role === UserRole::Admin
+            && in_array($target->role, [UserRole::Officer, UserRole::Mayor], true);
     }
 
     /** Metadonnees d'audit seulement : qui a consulte quoi, jamais le contenu. */

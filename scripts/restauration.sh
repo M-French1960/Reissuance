@@ -127,4 +127,4 @@ echo "Sans APP_KEY, les numéros de pièce restaurés sont illisibles."
 echo "Sans PHOENIX_BLIND_INDEX_KEY, la recherche par numéro ne fonctionne pas."
 echo
 echo "Vérification obligatoire après restauration :"
-echo "  php artisan phoenix:verifier-restauration --database=<connexion>"
+echo "  php artisan phoenix:verifier-restauration --db='"${CIBLE}"'"

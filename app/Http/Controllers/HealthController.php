@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\UserRole;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +18,17 @@ use Throwable;
  * declencheur de machine a etats et la revocation d'ecriture sur le journal
  * d'audit sont bien en place. Une base joignable dont le declencheur a
  * disparu est un systeme sans anti-fraude qui a l'air de fonctionner.
+ *
+ * DEUX PUBLICS, DEUX REPONSES (D-058). La route est publique, parce qu'une
+ * sonde de supervision n'a pas de session. Mais le DETAIL des verifications
+ * renseignait un visiteur anonyme sur la version du serveur de base, le nom du
+ * compte applicatif, l'hote — le message brut d'une exception PDO y passait tel
+ * quel — et sur l'etat des droits du journal d'audit. C'est une carte du
+ * systeme offerte a qui la demande.
+ *
+ * Un anonyme recoit donc le VERDICT et rien d'autre ; le detail est reserve a
+ * l'administrateur authentifie, qui en a l'usage. Le code HTTP, lui, ne change
+ * pas : 200 ou 503, ce dont une sonde a besoin.
  */
 class HealthController extends Controller
 {
@@ -31,15 +43,23 @@ class HealthController extends Controller
         ];
 
         $healthy = collect($checks)->every(fn (array $c): bool => $c['ok']);
+        $detaille = $request->user()?->role === UserRole::Admin;
 
         if ($request->wantsJson()) {
             return response()->json(
-                ['status' => $healthy ? 'ok' : 'degraded', 'checks' => $checks],
+                array_filter([
+                    'status' => $healthy ? 'ok' : 'degraded',
+                    'checks' => $detaille ? $checks : null,
+                ], static fn ($valeur): bool => $valeur !== null),
                 $healthy ? 200 : 503
             );
         }
 
-        return view('health', ['checks' => $checks, 'healthy' => $healthy]);
+        return view('health', [
+            'checks' => $detaille ? $checks : [],
+            'healthy' => $healthy,
+            'detaille' => $detaille,
+        ]);
     }
 
     /** @return array{label: string, ok: bool, detail: string} */

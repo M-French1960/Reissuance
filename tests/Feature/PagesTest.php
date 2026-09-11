@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use Illuminate\Support\Facades\Route;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -19,7 +20,9 @@ class PagesTest extends TestCase
     #[Test]
     public function la_page_de_sante_verifie_les_barrieres_de_securite(): void
     {
-        $response = $this->getJson('/sante');
+        // Le detail est reserve a l'administration (D-058) : c'est donc en
+        // administrateur qu'on verifie que les barrieres sont bien controlees.
+        $response = $this->actingAs(User::factory()->admin()->create())->getJson('/sante');
 
         $response->assertOk()->assertJsonPath('status', 'ok');
 
@@ -31,6 +34,37 @@ class PagesTest extends TestCase
         foreach ($response->json('checks') as $check) {
             $this->assertTrue($check['ok'], "Vérification en échec : {$check['label']} — {$check['detail']}");
         }
+    }
+
+    /**
+     * Un visiteur anonyme obtient le verdict, jamais la carte du systeme.
+     *
+     * Le detail renseignait sur la version du serveur de base, le nom du
+     * compte applicatif, l'hote — le message brut d'une exception PDO y
+     * passait tel quel — et sur l'etat des droits du journal d'audit (D-058).
+     */
+    #[Test]
+    public function la_page_de_sante_ne_renseigne_pas_un_visiteur_anonyme(): void
+    {
+        $json = $this->getJson('/sante')->assertOk();
+
+        $json->assertJsonPath('status', 'ok');
+        $json->assertJsonMissingPath('checks');
+
+        $html = $this->get('/sante')->assertOk();
+
+        $html->assertSee('Service opérationnel');
+        $html->assertDontSee("Journal d'audit en ajout seul");
+        $html->assertDontSee('MariaDB');
+        $html->assertDontSee('MySQL');
+        $html->assertDontSee(config('database.connections.mysql.username'));
+    }
+
+    /** Une sonde de supervision garde son code HTTP : 200 ou 503. */
+    #[Test]
+    public function la_sonde_anonyme_conserve_son_code_http(): void
+    {
+        $this->getJson('/sante')->assertStatus(200)->assertJsonPath('status', 'ok');
     }
 
     #[Test]

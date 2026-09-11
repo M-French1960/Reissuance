@@ -90,6 +90,7 @@ class RequestStatusChanged extends Notification implements ShouldQueue
             RequestStatus::Escalated => 'Transmis au maire pour examen',
             RequestStatus::Signed => 'Votre acte est disponible',
             RequestStatus::Rejected => 'Demande refusée',
+            RequestStatus::Cancelled => 'Demande annulée',
             RequestStatus::Draft => 'Demande en brouillon',
         };
     }
@@ -105,6 +106,7 @@ class RequestStatusChanged extends Notification implements ShouldQueue
             RequestStatus::Escalated => "Votre demande {$this->reference} a été transmise au maire pour un examen particulier.",
             RequestStatus::Signed => "Votre acte est prêt pour la demande {$this->reference}. Connectez-vous pour le télécharger.",
             RequestStatus::Rejected => "Votre demande {$this->reference} a été refusée. Le motif figure sur la page de votre demande.",
+            RequestStatus::Cancelled => "Votre demande {$this->reference} a été annulée. Vous pouvez en déposer une nouvelle à tout moment.",
             RequestStatus::Draft => "Votre demande {$this->reference} est un brouillon.",
         };
     }

@@ -85,7 +85,28 @@ class RequestTrackingController extends Controller
 
         // L'ordre vit sur l'enumeration : un statut ajoute sans rang y leve
         // une erreur a la source, plutot que de casser cet ecran (D-043).
-        $atteint = $statut->timelineRank();
+        //
+        // MAIS LE RANG NE SUFFIT PAS QUAND LE PARCOURS S'EST ARRETE. `signed`,
+        // `rejected` et `cancelled` partagent le rang 4 : le parcours s'arrete
+        // la, qu'il aboutisse ou non. S'en servir pour decider quels jalons
+        // sont « terminés » revenait a annoncer au demandeur des etapes qui
+        // n'ont jamais eu lieu — un brouillon annule affichait « Demande
+        // envoyée ✓ », « Vérification par l'officier ✓ » et « Décision du
+        // maire ✓ ». Mentir au demandeur sur l'instruction de son dossier est
+        // grave, et c'est exactement ce que la frise faisait.
+        //
+        // Pour un parcours arrete, le point d'arret se lit donc dans le
+        // JOURNAL D'AUDIT — la seule trace de ce qui s'est reellement passe —
+        // et non dans un rang que trois etats se partagent.
+        $dernierJalonTrace = 0;
+
+        foreach ($jalons as $index => $jalon) {
+            if ($transitions->get($jalon['statut']->value) !== null) {
+                $dernierJalonTrace = $index + 1;
+            }
+        }
+
+        $atteint = $statut->isStopped() ? $dernierJalonTrace : $statut->timelineRank();
         $frise = [];
 
         foreach ($jalons as $index => $jalon) {
@@ -95,9 +116,12 @@ class RequestTrackingController extends Controller
             $frise[] = [
                 'titre' => $jalon['titre'],
                 'etat' => match (true) {
-                    $statut->isStopped() && $rang > $atteint - 1 => 'arrete',
-                    $rang < $atteint || $trace !== null => 'fait',
-                    $rang === $atteint => 'en_cours',
+                    // Une trace d'audit prime sur tout raisonnement de rang :
+                    // c'est la preuve que l'etape a eu lieu.
+                    $trace !== null => 'fait',
+                    $statut->isStopped() && $rang > $atteint => 'arrete',
+                    $rang < $atteint => 'fait',
+                    $rang === $atteint && ! $statut->isStopped() => 'en_cours',
                     default => 'a_venir',
                 },
                 'detail' => $jalon['detail'],

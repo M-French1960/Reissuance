@@ -1860,3 +1860,96 @@ statut de compte touche **toutes** les Policies, et mérite d'être fait d'un
 seul tenant plutôt qu'au coup par coup.
 
 ---
+
+## D-058 — Six défauts trouvés par une relecture, et ce qu'ils ont en commun
+
+- **Date :** 2026-09-11
+- **Statut :** les six corrigés ; 542 tests au vert
+- **Origine :** une relecture systématique du diff complet de la branche. Les
+  six ont été **reproduits** avant toute correction — un rapport n'est pas une
+  preuve.
+
+### Ce qu'ils ont en commun
+
+Aucun n'était visible depuis la suite de tests, et pour trois raisons
+différentes qui valent d'être nommées :
+
+1. **Un test qui simule ne rend rien.** Tous les tests de notification
+   utilisent `Notification::fake()`, qui intercepte l'envoi **avant** le
+   rendu. Ils prouvaient qu'une notification part, jamais qu'elle se fabrique.
+2. **Un chemin d'échec n'est pas un chemin testé.** Le paiement était éprouvé
+   sur le succès et sur le refus de l'opérateur, jamais sur l'échec de la
+   *prise de contact*.
+3. **Un affichage faux n'échoue pas.** La frise rendait « terminé » des étapes
+   qui n'avaient pas eu lieu : rien ne casse, et personne ne le voit.
+
+### 1. Toute annulation tuait sa notification *(grave)*
+
+`RequestStatusChanged` construit titre et corps par un `match` sur l'état
+d'arrivée. `cancelled`, ajouté en D-044, n'y avait pas d'entrée : chaque
+annulation levait une `UnhandledMatchError` **dans le worker**. La transition
+passait, la demande était bien annulée, et le citoyen n'était **jamais**
+prévenu — la tâche échouait hors de la requête HTTP, en silence.
+
+`NotificationRenderingTest` parcourt désormais l'énumération entière et **rend**
+chaque notification. Un état ajouté demain sans entrée échouera ici.
+
+### 2. Un paiement pouvait devenir définitivement impayable *(grave)*
+
+La ligne de paiement est validée en base **avant** l'appel à l'opérateur — il
+le faut, la clé d'idempotence doit exister avant d'être envoyée. Si l'appel
+échouait ensuite (numéro invalide, clés absentes, jeton refusé), la ligne
+restait « en attente » sans `provider_reference` ; `initiate()` la rendait
+telle quelle **sans jamais rappeler l'opérateur**, et `reconcile()` s'arrêtait
+faute de référence. **Le citoyen ne pouvait plus jamais payer sa demande.**
+
+La reprise se fait avec **la même clé d'idempotence** : en générer une nouvelle
+ouvrirait un second ordre chez l'opérateur pour un seul acte — c'est-à-dire un
+risque de double prélèvement. Le montant repris est celui de la ligne, pas
+celui de la configuration : un changement de tarif entre deux tentatives ne
+doit pas suivre le demandeur en cours de route.
+
+### 3. La frise annonçait des étapes qui n'avaient pas eu lieu
+
+`signed`, `rejected` et `cancelled` partagent le rang 4 — le parcours s'arrête
+là, qu'il aboutisse ou non. Ce rang servait à décider quels jalons étaient
+« terminés ». Un **brouillon annulé** affichait donc « Demande envoyée ✓ »,
+« Vérification par l'officier ✓ » et « Décision du maire ✓ » : trois étapes
+qui n'ont jamais eu lieu. Un refus de l'officier affichait la décision du maire
+comme rendue.
+
+Annoncer à un demandeur que son dossier a été instruit alors qu'il ne l'a pas
+été n'est pas un défaut d'affichage. Le point d'arrêt se lit désormais dans le
+**journal d'audit**, seule trace de ce qui s'est réellement passé.
+
+### 4. Le rattachement pouvait rendre 500
+
+`UserPolicy::reassign` admettait l'**administrateur** — `isOfficial()` n'exclut
+que le citoyen. Or `users_role_scope_check` exige qu'un administrateur n'ait ni
+centre ni commune. Et `commune_id` était `nullable` : un formulaire soumis sans
+commune pour un maire partait à NULL. Dans les deux cas, `QueryException` non
+rattrapée, donc **500**.
+
+La contrainte faisait son travail ; c'est la validation qui manquait. La Policy
+nomme maintenant les deux rôles qui ont un rattachement, plutôt que de s'en
+remettre à une négation.
+
+### 5. La page de santé dessinait la carte du système
+
+`/sante` est publique — une sonde de supervision n'a pas de session. Mais elle
+rendait à un visiteur anonyme la version du serveur de base, le nom du compte
+applicatif, l'hôte (le message brut d'une exception PDO y passait tel quel) et
+**l'état des droits du journal d'audit**.
+
+Deux publics, deux réponses : l'anonyme reçoit le verdict, l'administrateur
+authentifié reçoit le détail. Le code HTTP ne change pas — 200 ou 503, ce dont
+une sonde a besoin.
+
+### 6. Le script de restauration recommandait une option inexistante
+
+Il imprimait `--database=`, la commande déclare `--db=`. L'étape intitulée
+« Vérification obligatoire après restauration » s'arrêtait sur une erreur
+d'option inconnue. Le cycle complet a été réexécuté, et la commande
+recommandée fonctionne maintenant telle quelle.
+
+---

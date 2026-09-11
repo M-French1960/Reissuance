@@ -185,6 +185,9 @@ minimum :
 | R20 | Officier tentant de libérer une affectation | 403 — réservé à l'administrateur (D-057) |
 | R21 | Maire ou citoyen sur l'écran des affectations | 403 |
 | R22 | Écran des affectations : recherche d'une donnée d'identité dans le HTML rendu | aucune — liste blanche de colonnes (D-057) |
+| R23 | `/sante` consultée par un visiteur anonyme | le verdict seul ; ni version, ni compte, ni état des droits (D-058) |
+| R24 | Rattachement d'un administrateur à une commune | refusé par la Policy, pas par une erreur 500 (D-058) |
+| R25 | Rattachement d'un maire sans commune | erreur de validation, pas une erreur 500 (D-058) |
 | R14 | Utilisateur désactivé tentant de se connecter | refus, et session existante invalidée |
 | R15 | Officier consultant une pièce d'identité | accès accordé **et** ligne d'audit écrite |
 | R16 | Requête `GET` quelconque sans session | seules les routes de la liste blanche répondent |

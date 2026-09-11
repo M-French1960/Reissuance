@@ -172,11 +172,30 @@ class UserController extends Controller
     {
         $this->authorize('reassign', $user);
 
-        $validated = $request->validate([
-            'civil_status_center_id' => ['nullable', 'integer', 'exists:civil_status_centers,id'],
-            'commune_id' => ['nullable', 'integer', 'exists:communes,id'],
-            'reason' => ['required', 'string', 'min:10', 'max:500'],
-        ]);
+        /*
+         * Le rattachement est OBLIGATOIRE, et il depend du role.
+         *
+         * `nullable` laissait passer un formulaire sans commune pour un maire :
+         * la colonne partait a NULL, `users_role_scope_check` refusait, et
+         * l'utilisateur recevait une erreur 500 au lieu d'un message de
+         * validation. La contrainte faisait son travail ; c'est la validation
+         * qui manquait (D-058).
+         */
+        $validated = $request->validate(
+            $user->role === UserRole::Officer
+                ? [
+                    'civil_status_center_id' => ['required', 'integer', 'exists:civil_status_centers,id'],
+                    'reason' => ['required', 'string', 'min:10', 'max:500'],
+                ]
+                : [
+                    'commune_id' => ['required', 'integer', 'exists:communes,id'],
+                    'reason' => ['required', 'string', 'min:10', 'max:500'],
+                ],
+            [
+                'civil_status_center_id.required' => "Choisissez le centre d'état civil de rattachement.",
+                'commune_id.required' => 'Choisissez la commune de rattachement.',
+            ],
+        );
 
         $before = $user->role === UserRole::Officer
             ? "centre #{$user->civil_status_center_id}"

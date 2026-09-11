@@ -58,7 +58,7 @@ final class PaymentService
         $existant = $this->livePayment($request);
 
         if ($existant !== null) {
-            return $existant;
+            return $this->resumeOrReturn($existant, $request, $actor, $payerReference, $operator);
         }
 
         // Le tarif est lu ici, et sa lecture echoue si aucun n'est configure :
@@ -107,6 +107,61 @@ final class PaymentService
             $request->reference,
             $payerReference,
             $operator,
+        ));
+
+        return $this->apply($paiement, $reponse, $actor);
+    }
+
+    /**
+     * Un encaissement vivant : le rendre, ou reprendre contact avec l'operateur.
+     *
+     * LE DEFAUT QUE CECI CORRIGE. La ligne de paiement est validee en base
+     * AVANT l'appel a l'operateur — il le faut, pour que la cle d'idempotence
+     * existe avant d'etre envoyee. Si l'appel echouait ensuite (numero
+     * invalide, cles absentes, jeton refuse), la ligne restait « en attente »
+     * avec `provider_reference` a NULL. Au coup suivant, cette methode rendait
+     * cette ligne telle quelle sans jamais rappeler l'operateur, et le
+     * rapprochement s'arretait faute de reference : le citoyen ne pouvait plus
+     * JAMAIS payer sa demande. Impasse definitive, sans message.
+     *
+     * LA REGLE DE SURETE. On reprend contact avec LA MEME cle d'idempotence.
+     * En generer une nouvelle ouvrirait un second ordre chez l'operateur pour
+     * un seul acte a payer — c'est-a-dire un risque de double prelevement.
+     *
+     * LE MONTANT EST CELUI DE LA LIGNE, pas celui de la configuration : le
+     * demandeur a ete engage sur un tarif, et un changement de tarif entre
+     * deux tentatives ne doit pas le suivre en cours de route.
+     */
+    private function resumeOrReturn(
+        Payment $paiement,
+        ReissuanceRequest $request,
+        User $actor,
+        ?string $payerReference,
+        ?PaymentOperator $operator,
+    ): Payment {
+        // Un ordre reellement ouvert chez l'operateur : on n'y retouche pas.
+        if ($paiement->provider_reference !== null || $paiement->status !== PaymentStatus::Pending) {
+            return $paiement;
+        }
+
+        // Le demandeur peut corriger ce qui a fait echouer la premiere prise
+        // de contact — un numero mal saisi, un operateur qui n'est pas le sien.
+        $corrections = array_filter([
+            'payer_reference' => $payerReference,
+            'operator' => $operator?->value,
+        ], static fn ($valeur): bool => $valeur !== null);
+
+        if ($corrections !== []) {
+            $paiement->forceFill($corrections)->save();
+            $paiement->refresh();
+        }
+
+        $reponse = $this->provider->initiate(new PaymentIntent(
+            new Money($paiement->amount_minor, $paiement->currency, $paiement->minor_unit),
+            $paiement->idempotency_key,
+            $request->reference,
+            $paiement->payer_reference,
+            $paiement->operator,
         ));
 
         return $this->apply($paiement, $reponse, $actor);

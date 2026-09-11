@@ -13,6 +13,8 @@ use App\Models\Payment;
 use App\Models\ReissuanceRequest;
 use App\Models\User;
 use App\Services\PaymentService;
+use App\Support\Money;
+use App\Support\PaymentIntent;
 use App\Support\PaymentOutcome;
 use DomainException;
 use Illuminate\Database\QueryException;
@@ -409,5 +411,97 @@ class PaymentLifecycleTest extends TestCase
             // `status <> 'failed' or failure_reason is not null`
             'failure_reason' => $statut === 'failed' ? 'sonde de test' : null,
         ];
+    }
+
+    /**
+     * Le prestataire echoue a la premiere prise de contact : le citoyen doit
+     * pouvoir reessayer.
+     *
+     * LE DEFAUT : la ligne de paiement est validee en base AVANT l'appel a
+     * l'operateur — il le faut, la cle d'idempotence doit exister avant d'etre
+     * envoyee. Si l'appel echouait ensuite, la ligne restait « en attente »
+     * sans reference prestataire, `initiate()` la rendait telle quelle sans
+     * jamais rappeler l'operateur, et `reconcile()` s'arretait faute de
+     * reference. Le citoyen ne pouvait plus JAMAIS payer sa demande.
+     */
+    #[Test]
+    public function un_paiement_dont_la_premiere_prise_de_contact_a_echoue_peut_etre_repris(): void
+    {
+        $prestataire = new class implements PaymentProvider
+        {
+            public int $appels = 0;
+
+            /** @var list<string> */
+            public array $clesVues = [];
+
+            public function initiate(PaymentIntent $intent): PaymentOutcome
+            {
+                $this->appels++;
+                $this->clesVues[] = $intent->idempotencyKey;
+
+                if ($this->appels === 1) {
+                    throw new RuntimeException('numéro de téléphone invalide');
+                }
+
+                return new PaymentOutcome(PaymentStatus::Pending, 'prestataire-essai', 'REF-'.$this->appels);
+            }
+
+            public function status(string $providerReference): PaymentOutcome
+            {
+                return new PaymentOutcome(PaymentStatus::Settled, 'prestataire-essai', $providerReference);
+            }
+
+            public function refund(Payment $payment, Money $amount, string $reason): PaymentOutcome
+            {
+                throw new RuntimeException('hors sujet ici');
+            }
+        };
+
+        $this->app->instance(PaymentProvider::class, $prestataire);
+        $service = app(PaymentService::class);
+
+        try {
+            $service->initiate($this->demande, $this->citoyen, '+237600000000');
+            $this->fail('La premiere prise de contact aurait du echouer.');
+        } catch (RuntimeException) {
+            // Attendu : l'echec remonte, la ligne reste en base.
+        }
+
+        $bloque = $service->livePayment($this->demande);
+        $this->assertNotNull($bloque);
+        $this->assertNull($bloque->provider_reference, "Aucun ordre n'existe chez l'opérateur.");
+
+        // Le demandeur corrige son numero et recommence.
+        $repris = $service->initiate($this->demande, $this->citoyen, '+237699999999');
+
+        $this->assertSame('REF-2', $repris->provider_reference, "L'opérateur doit avoir été rappelé.");
+        $this->assertSame('+237699999999', $repris->payer_reference, 'La correction doit être prise en compte.');
+
+        // LA propriete de surete : un seul ordre, une seule cle.
+        $this->assertSame(1, Payment::where('request_id', $this->demande->id)->count());
+        $this->assertCount(
+            1,
+            array_unique($prestataire->clesVues),
+            "La cle d'idempotence doit etre reutilisee : en changer ouvrirait un second ordre chez l'operateur, donc un risque de double prelevement."
+        );
+
+        // Et le rapprochement redevient possible.
+        $this->assertSame(PaymentStatus::Settled, $service->reconcile($repris->refresh())->status);
+    }
+
+    /** Un ordre reellement ouvert chez l'operateur n'est jamais rejoue. */
+    #[Test]
+    public function un_ordre_deja_ouvert_chez_l_operateur_n_est_pas_relance(): void
+    {
+        $service = app(PaymentService::class);
+
+        $premier = $service->initiate($this->demande, $this->citoyen, '+237600000000');
+        $this->assertNotNull($premier->provider_reference);
+
+        $second = $service->initiate($this->demande, $this->citoyen, '+237611111111');
+
+        $this->assertSame($premier->id, $second->id);
+        $this->assertSame($premier->provider_reference, $second->provider_reference);
+        $this->assertSame(1, Payment::where('request_id', $this->demande->id)->count());
     }
 }
