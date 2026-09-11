@@ -31,7 +31,7 @@ class ReissuanceRequest extends Model
 
     /**
      * `status` est volontairement absent : il n'est jamais assignable en masse.
-     * Seul le service de transition l'ecrit, et le declencheur PostgreSQL
+     * Seul le service de transition l'ecrit, et le declencheur MySQL
      * refuse toute transition non autorisee (docs/STATE_MACHINE.md 4).
      */
     protected $fillable = [

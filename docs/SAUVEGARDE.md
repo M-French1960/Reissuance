@@ -10,7 +10,8 @@
 
 | Élément | Perte si absent |
 |---|---|
-| Base PostgreSQL | tout |
+| Base MySQL | tout |
+| Droits du compte applicatif | **absents du vidage** — MySQL les range dans la base système `mysql`. Sans eux, l'application n'accède à rien ; accordés trop largement, le journal d'audit redevient modifiable (D-051). `scripts/restauration.sh` relance `php artisan phoenix:droits`. |
 | `storage/app/private/` | **toutes les pièces d'identité et tous les actes signés** |
 | `APP_KEY` | les numéros de pièce deviennent illisibles |
 | `PHOENIX_BLIND_INDEX_KEY` | la recherche par numéro ne trouve plus rien |

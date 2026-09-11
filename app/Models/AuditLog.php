@@ -13,7 +13,7 @@ use RuntimeException;
  *
  * Les garde-fous ci-dessous sont une commodite de developpement, pas la
  * barriere : celle-ci est la revocation des droits UPDATE et DELETE sur le
- * role applicatif PostgreSQL (migration 2026_01_01_000800). Une exception PHP
+ * compte applicatif MySQL (migration 2026_01_01_000800). Une exception PHP
  * se contourne, une revocation de droit non.
  */
 class AuditLog extends Model

@@ -1,8 +1,11 @@
 # Modèle de données
 
 - **Date :** 2026-09-06
-- **SGBD :** PostgreSQL, en local (D-011). Aucune dépendance à Supabase dans le
-  code : seule la chaîne de connexion changerait.
+- **SGBD :** MySQL 8.4, en local (D-011, puis D-051 pour le passage depuis
+  PostgreSQL). Vérifié aussi sur MariaDB 10.11. Aucune dépendance à Supabase.
+- **Interclassement :** `utf8mb4_unicode_ci` pour la base et les colonnes. Ce
+  n'est pas un réglage d'affichage : la recherche par nom et par référence est
+  insensible à la casse **parce que** l'interclassement l'est (D-051).
 - **Source de vérité du schéma :** `database/migrations/`, gérées par Laravel.
   Aucune modification de schéma par un autre moyen.
 

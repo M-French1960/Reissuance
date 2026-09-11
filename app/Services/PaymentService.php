@@ -23,7 +23,7 @@ use Illuminate\Support\Str;
  * Seul point d'ecriture de payments.status.
  *
  * Meme dispositif que RequestTransitionService : l'audit est ecrit AVANT la
- * mise a jour, dans la meme transaction, et le declencheur PostgreSQL exige de
+ * mise a jour, dans la meme transaction, et le declencheur MySQL exige de
  * le trouver. Une transition sans trace est impossible.
  */
 final class PaymentService

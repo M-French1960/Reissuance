@@ -21,7 +21,7 @@ use Throwable;
  *
  * Aucun controleur, aucune vue, aucun seeder n'ecrit `status` directement.
  * C'est la couche 1 des trois decrites dans docs/STATE_MACHINE.md 4 ; la
- * barriere reelle reste le declencheur PostgreSQL, qui refuse toute
+ * barriere reelle reste le declencheur MySQL, qui refuse toute
  * transition non autorisee et toute transition sans ligne d'audit.
  */
 final class RequestTransitionService

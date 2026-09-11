@@ -330,7 +330,7 @@ Ils sont listés ici pour éviter qu'une décision implicite ne s'installe.
 | Pest et Larastan | **Toujours bloqués par le réseau — voir D-012.** Fortify s'est installé au jalon 2, mais pas ces deux-là. |
 | ~~Plan Vercel~~ | **Sans objet — tranché en D-011** |
 | 2FA du citoyen (TOTP / SMS / aucun) | **Toujours ouvert.** Le TOTP fonctionne pour tous les rôles ; il reste facultatif pour le citoyen faute de réponse sur la faisabilité SMS. |
-| Défense en profondeur RLS | **Évalué au jalon 6 — voir D-037 et `docs/RLS.md`. Recommandé, décision d'adoption ouverte.** |
+| Défense en profondeur RLS | ⚠️ **Sans objet depuis D-051 : MySQL n'a pas de sécurité au niveau des lignes.** La fuite de lecture entre centres reste tenue par la seule portée globale Eloquent. Trois compensations proposées au §7.3 de `docs/RLS.md` — **arbitrage à rendre.** |
 | Conservation du genre et des données parentales | Après avis juridique |
 
 ---
@@ -1401,3 +1401,135 @@ prouve que le cas heureux n'aurait rien vu.
   au citoyen ; et deux noms de domaine apparaissent dans leur documentation
   (`api.hrskills-pay.com` et `api.hrskillspay.com`), d'où une base en
   configuration.
+
+---
+
+## D-051 — Passage à MySQL : ce qui change, et ce qui aurait cassé en silence
+
+- **Date :** 2026-09-11
+- **Statut :** implémenté ; 485 tests au vert sur MariaDB 10.11 / MySQL 8.4
+- **Origine :** demande explicite de votre part de faire passer la base en
+  MySQL. Ce n'est pas un simple changement de pilote : quatre garanties de
+  sécurité du système reposaient sur des mécanismes que MySQL n'a pas.
+
+### Ce qui a été vérifié AVANT d'écrire du code
+
+Trois propriétés, prouvées directement en SQL sur le serveur avant tout
+portage, parce que s'en remettre à la documentation aurait été insuffisant :
+
+1. les contraintes `CHECK` sont bien appliquées (elles étaient ignorées avant
+   MariaDB 10.2 / MySQL 8.0.16) ;
+2. un déclencheur `BEFORE UPDATE` peut lire une **autre** table et interrompre
+   l'écriture par `SIGNAL SQLSTATE '45000'` ;
+3. le journal d'audit ne peut être rendu inaltérable **que** par des droits
+   accordés table par table.
+
+### Les droits MySQL s'ADDITIONNENT — la différence la plus lourde
+
+Sur PostgreSQL chaque objet porte ses droits : accorder largement puis
+révoquer sur `audit_logs` fonctionnait. Sur MySQL, un
+`GRANT ... ON phoenix.*` suivi d'un `REVOKE ... ON phoenix.audit_logs` **ne
+révoque rien** — la révocation est acceptée, et le droit de base subsiste.
+
+Conséquence : le journal d'audit redeviendrait modifiable dès que quelqu'un
+accorderait un droit sur la base « pour dépanner », sans aucun message
+d'erreur. Toute la logique de droits est donc centralisée dans
+`ApplicationPrivileges`, table par table, et deux tests l'entourent : l'un
+vérifie qu'aucune table n'a été oubliée, l'autre qu'aucun droit à l'échelle
+de la base n'existe.
+
+### Il n'y a pas d'`ALTER DEFAULT PRIVILEGES`
+
+Une table créée par une migration ultérieure ne reçoit **aucun** droit. D'où
+la migration de rafraîchissement et la commande `php artisan phoenix:droits`,
+à relancer après toute migration créant une table — et le test qui échoue si
+on l'oublie.
+
+### `information_schema` est filtrée par les droits du lecteur
+
+Deux contrôles se sont cassés **en silence**, ce qui est la pire forme :
+
+- La page de santé annonçait le déclencheur de machine à états **ABSENT** sur
+  une base parfaitement saine : le compte applicatif n'a pas le droit
+  `TRIGGER`, donc il ne voit pas les déclencheurs. Lui accorder ce droit
+  aurait réglé l'affichage **et** ouvert la faille : `TRIGGER` permet
+  `DROP TRIGGER`, c'est-à-dire laisser l'application supprimer la seule
+  barrière qui refuse une transition interdite. Une vue en
+  `SQL SECURITY DEFINER` expose les noms sans accorder ce pouvoir (D-052).
+- Le test « aucune table oubliée » ne pouvait **structurellement pas** échouer :
+  un compte ne voit pas dans `information_schema.TABLES` une table sur
+  laquelle il n'a aucun droit. Il listait donc toujours zéro oubli. La liste
+  des tables est désormais lue sous le compte propriétaire.
+
+### `SHOW GRANTS` couvre toutes les bases
+
+Le lecteur de droits des tests confondait `phoenix` et `phoenix_test` : un
+droit laxiste en développement aurait pu décider du résultat d'un test, et
+l'ordre des lignes décidait lequel l'emportait. Le filtre sur la base
+courante est maintenant explicite.
+
+### `ilike` n'existe pas — la recherche était cassée
+
+Trois écrans de recherche (journal d'audit, comptes, file d'attente) ont été
+portés vers `like`. Sur MySQL, `like` est insensible à la casse **parce que**
+les colonnes sont en `utf8mb4_unicode_ci` : la correction dépend désormais de
+l'interclassement, qui est une propriété de schéma modifiable sans erreur.
+Un test l'ancre, et il échoue bien si l'on passe une colonne en
+interclassement binaire — vérifié.
+
+### La sauvegarde ne contient pas les droits
+
+MySQL range les droits dans la base système `mysql`, pas dans celle du
+projet : `mysqldump` ne les emporte pas, là où `pg_dump` le faisait. Une base
+restaurée a ses tables et ses déclencheurs, et aucun droit. La restauration
+relance donc `phoenix:droits`. Cycle complet exécuté pour de bon :
+inventaire identique, puis les garanties elles-mêmes revérifiées sur la base
+restaurée — journal en ajout seul, référentiel en lecture seule, déclencheur
+insupprimable, et `draft -> signed` refusé.
+
+### Autres différences rencontrées
+
+| Sujet | PostgreSQL | MySQL |
+|---|---|---|
+| Corps du déclencheur | fonction séparée, réutilisable | écrit dans le déclencheur ; pas de `CREATE OR REPLACE TRIGGER` |
+| Erreur levée | `RAISE EXCEPTION` | `SIGNAL SQLSTATE '45000'` |
+| Longueur d'identifiant | 63 caractères | **64** — un index généré en faisait 68, nommé explicitement |
+| Erreur après un échec dans une transaction | transaction empoisonnée | l'instruction échoue, la transaction continue |
+| `DROP CONSTRAINT IF EXISTS` | oui | non (MariaDB seulement) — passage par `information_schema` |
+
+### Ce qui devient sans objet
+
+**D-037 (RLS) ne peut pas être adopté tel quel : MySQL n'a pas de sécurité
+au niveau des lignes.** Le prototype conservé dans `docs/prototypes/rls/`
+reste valable pour PostgreSQL uniquement. La défense en profondeur qu'il
+apportait doit être repensée — `docs/RLS.md` détaille les options et
+aucune n'est équivalente.
+
+---
+
+## D-052 — Le compte applicatif ne doit pas voir les déclencheurs, mais la page de santé doit
+
+- **Date :** 2026-09-11
+- **Statut :** implémenté
+- **Le problème :** la page de santé doit pouvoir affirmer que le déclencheur
+  de machine à états est en place. Sur MySQL, `information_schema.TRIGGERS`
+  est filtrée par les droits du lecteur : sans le droit `TRIGGER` sur la
+  table, le compte applicatif ne voit rien. La page annonçait donc **ABSENT**
+  sur une base saine — et un voyant rouge permanent est un voyant qu'on
+  apprend à ignorer.
+- **La solution écartée :** accorder `TRIGGER` au compte applicatif. Ce droit
+  permet `DROP TRIGGER`. L'application pourrait supprimer la seule barrière
+  qui refuse une transition interdite : le contraire exact de ce que le
+  déclencheur protège.
+- **La solution retenue :** une vue `phoenix_guards` en
+  `SQL SECURITY DEFINER`, évaluée avec les droits du compte de migration, qui
+  n'expose que le nom du déclencheur et sa table. Le compte applicatif y gagne
+  une lecture et aucun pouvoir.
+- **Vérifié, pas supposé :** le compte applicatif lit bien la vue et se voit
+  toujours refuser `DROP TRIGGER` avec l'erreur 1142 — dans la base de
+  développement comme dans une base restaurée depuis une sauvegarde. Un test
+  le tient.
+- **Effet de bord utile :** la commande de vérification de restauration passe
+  par la même vue, et cesse donc de crier au loup.
+
+---

@@ -23,7 +23,7 @@ use Illuminate\Support\Str;
  * habilité de la commune.
  *
  * Cette classe est le SEUL endroit qui produit un acte. Elle repose sur la
- * transition T7/T9, elle-même gardée par le déclencheur PostgreSQL : atteindre
+ * transition T7/T9, elle-même gardée par le déclencheur MySQL : atteindre
  * `signed` exige un maire de la commune, et n'est possible que depuis
  * `awaiting_signature` ou `escalated` — deux états qu'un officier habilité est
  * seul à pouvoir produire.

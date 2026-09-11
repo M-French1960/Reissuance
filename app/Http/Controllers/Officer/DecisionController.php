@@ -83,7 +83,7 @@ class DecisionController extends Controller
         $decision = DecisionType::from($validated['decision']);
 
         // La barrière anti-fraude : on n'accepte pas un dossier dont la
-        // vérification n'a pas été menée. Le déclencheur PostgreSQL ne peut
+        // vérification n'a pas été menée. Le déclencheur MySQL ne peut
         // pas connaître cette règle — elle porte sur les étapes, pas sur le
         // couple de statuts — donc elle est vérifiée ici ET testée (R5).
         //

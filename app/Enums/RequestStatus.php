@@ -8,7 +8,7 @@ namespace App\Enums;
  * Etats d'une demande de reedition.
  *
  * Reference : docs/STATE_MACHINE.md. Cette enumeration ne fait pas autorite a
- * elle seule : la table allowed_transitions et le declencheur PostgreSQL sont
+ * elle seule : la table allowed_transitions et le declencheur MySQL sont
  * la barriere reelle. Les deux sont tenus synchronises par un test.
  */
 enum RequestStatus: string

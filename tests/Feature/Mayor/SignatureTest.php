@@ -268,7 +268,7 @@ class SignatureTest extends TestCase
      *
      * Une fois signée, la demande sort de la portée du maire — qui ne voit
      * que `awaiting_signature` et `escalated`. Le refus est donc un 404 : le
-     * dossier n'existe plus pour lui. Le déclencheur PostgreSQL refuserait de
+     * dossier n'existe plus pour lui. Le déclencheur MySQL refuserait de
      * toute façon toute sortie d'un état terminal.
      */
     #[Test]

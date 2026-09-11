@@ -144,10 +144,15 @@ détecter un officier qui consulte des dossiers anormalement nombreux, sans
 accéder lui-même aux données. C'est exactement le point d'équilibre visé par le
 §4.2.
 
-L'impossibilité de modifier ou supprimer est appliquée par **révocation des
-droits `UPDATE` et `DELETE` sur `audit_logs`** pour le rôle applicatif
-PostgreSQL, pas par une Policy. Une Policy se contourne par un bug ; une
-révocation de droit, non.
+L'impossibilité de modifier ou supprimer est appliquée au niveau des **droits
+MySQL** : le compte applicatif ne reçoit que `SELECT, INSERT` sur
+`audit_logs`, table par table. Pas par une Policy — une Policy se contourne par
+un bug, un droit absent non.
+
+**Et jamais par révocation**, contrairement à ce que faisait la version
+PostgreSQL : sur MySQL, droits de base et de table s'additionnent, et révoquer
+sur une table un droit accordé sur la base ne révoque rien (D-051). Le compte
+n'a donc **aucun** droit à l'échelle de la base, ce qu'un test vérifie.
 
 ---
 
@@ -169,7 +174,9 @@ minimum :
 | R9 | **Admin demande un selfie ou un numéro de pièce** | 403 |
 | R10 | Admin tente de signer une demande | 403 |
 | R11 | Inscription en forçant `role=officer` dans la requête | compte créé en `citizen` |
-| R12 | `UPDATE` puis `DELETE` sur `audit_logs` en SQL avec le rôle applicatif | erreur PostgreSQL |
+| R12 | `UPDATE` puis `DELETE` sur `audit_logs` en SQL avec le compte applicatif | erreur MySQL 1142 (`command denied`) |
+| R15 | `DROP TRIGGER` sur une garde de machine à états avec le compte applicatif | erreur MySQL 1142 — le droit `TRIGGER` n'est pas accordé (D-052) |
+| R16 | `GRANT` à l'échelle de la base pour le compte applicatif | détecté par `DatabasePrivilegesTest` |
 | R13 | Requête Eloquent sans `where` explicite sur les demandes, exécutée en tant qu'officier | ne retourne **que** son centre (portée globale) |
 | R14 | Utilisateur désactivé tentant de se connecter | refus, et session existante invalidée |
 | R15 | Officier consultant une pièce d'identité | accès accordé **et** ligne d'audit écrite |

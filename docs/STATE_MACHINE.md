@@ -160,7 +160,7 @@ ALTER TABLE reissuance_requests
 
 Empêche une valeur inventée. N'empêche pas une transition illégale.
 
-### Couche 3 — déclencheur PostgreSQL *(celle qui applique réellement la règle)*
+### Couche 3 — déclencheur MySQL *(celle qui applique réellement la règle)*
 
 Une table `allowed_transitions (from_status, to_status)` alimentée par migration
 depuis la table du §2, et un déclencheur `BEFORE UPDATE` sur
@@ -192,8 +192,14 @@ acteur, rôle, action, entité visée, **statut source**, **statut cible**, moti
 horodatage, adresse IP, empreinte de session.
 
 `audit_logs` est en ajout seul : ni `UPDATE`, ni `DELETE`, y compris pour un
-administrateur. Appliqué par révocation des droits sur le rôle applicatif
-PostgreSQL, pas par convention — détaillé dans `docs/DATA_MODEL.md`.
+administrateur. Appliqué par les droits MySQL du compte applicatif, qui ne
+reçoit que `SELECT, INSERT` sur cette table — pas par convention. Détaillé
+dans `docs/DATA_MODEL.md` et D-051.
+
+Le compte applicatif n'a pas non plus le droit `TRIGGER` : il ne peut pas
+supprimer le déclencheur décrit ci-dessus. La page de santé lit son nom par la
+vue `phoenix_guards` plutôt que par `information_schema`, qui est filtrée par
+les droits du lecteur (D-052).
 
 ---
 

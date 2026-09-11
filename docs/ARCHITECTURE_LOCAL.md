@@ -22,9 +22,9 @@
 └───┬───────────────────┬──────────────────┬───────────────┘
     │                   │                  │
 ┌───▼──────────┐  ┌─────▼──────────┐  ┌────▼─────────────┐
-│ PostgreSQL   │  │ Disque local   │  │ Worker de file   │
+│ MySQL        │  │ Disque local   │  │ Worker de file   │
 │ (local)      │  │ storage/app/   │  │ + ordonnanceur   │
-│ 2 rôles SQL  │  │   private/     │  │ (processus réels)│
+│ 2 comptes SQL│  │   private/     │  │ (processus réels)│
 └──────────────┘  └────────────────┘  └──────────────────┘
 ```
 
@@ -45,8 +45,8 @@ Versions vérifiées le 2026-09-06 sur Packagist et Docker Hub, pas de mémoire.
 | Composant | Version | Note |
 |---|---|---|
 | Laravel | **13.30.1** (dernière stable) | exige PHP ^8.3 |
-| PHP | **8.4** recommandé | extensions : `pdo_pgsql`, `intl`, `mbstring`, `gd` ou `imagick`, `zip` |
-| PostgreSQL | **17** | image officielle `postgres:17` |
+| PHP | **8.4** recommandé | extensions : `pdo_mysql`, `intl`, `mbstring`, `gd` ou `imagick`, `zip` |
+| MySQL | **8.4** | image officielle `mysql:8.4` ; MariaDB 10.11 vérifiée aussi |
 | Blade | inclus | seul élément de la couche vue (D-010) |
 | Pest | 5.x si PHP 8.4, sinon 4.x | Pest 5 exige PHP ^8.4 |
 | Larastan | 3.x | niveau 6 minimum |
@@ -65,17 +65,17 @@ est constitué de quelques fichiers vanille (D-010).
 
 ### 3.1 Docker Compose — mode recommandé
 
-Trois services : `app` (PHP + serveur web), `db` (PostgreSQL 17), `mail`
+Trois services : `app` (PHP + serveur web), `db` (MySQL 8.4), `mail`
 (collecteur de courriels local, pour ne jamais envoyer un courriel réel depuis
 un poste de développement).
 
-Volumes persistants pour les données PostgreSQL et pour `storage/app/private`.
+Volumes persistants pour les données MySQL et pour `storage/app/private`.
 Les deux survivent au redémarrage — c'est précisément ce que Vercel ne
 permettait pas.
 
 ### 3.2 Sans Docker
 
-PHP 8.4, PostgreSQL 17 et Composer installés nativement ; `php artisan serve`.
+PHP 8.4, MySQL 8.4 et Composer installés nativement ; `php artisan serve`.
 Fonctionne, mais la procédure d'installation est plus longue et dépend du
 système. Docker Compose reste le chemin documenté et testé.
 
@@ -114,7 +114,7 @@ demande poursuit son cycle.
 |---|---|---|
 | `APP_ENV` | `local` \| `production` | |
 | `APP_DEBUG` | `true` en local, **`false` sinon** | |
-| `DB_CONNECTION` | `pgsql` | connexion directe, aucune dépendance Supabase |
+| `DB_CONNECTION` | `mysql` | connexion directe, aucune dépendance Supabase |
 | `SESSION_DRIVER` | `database` | choix conservé volontairement — voir ci-dessous |
 | `CACHE_STORE` | `database` | idem |
 | `QUEUE_CONNECTION` | `database` | worker réel |
@@ -134,14 +134,31 @@ serait un gain nul contre une dette certaine.
 Le passage en local n'allège **aucune** exigence du §4. Les mêmes Policies, la
 même machine à états appliquée en base, le même journal en ajout seul.
 
-### 5.1 Deux rôles PostgreSQL distincts
+### 5.1 Deux comptes MySQL distincts
 
 C'est le point d'architecture le plus important de cette section.
 
-| Rôle | Usage | Droits |
+| Compte | Usage | Droits |
 |---|---|---|
-| `phoenix_owner` | migrations uniquement | propriétaire du schéma |
-| `phoenix_app` | **l'application** | `SELECT/INSERT/UPDATE/DELETE`, **sauf `UPDATE` et `DELETE` sur `audit_logs`** |
+| `phoenix_owner` | migrations uniquement | tous droits sur la base du projet, avec `GRANT OPTION` |
+| `phoenix_app` | **l'application** | `SELECT/INSERT/UPDATE/DELETE` **table par table**, `SELECT, INSERT` seulement sur `audit_logs`, `SELECT` seulement sur `allowed_transitions` |
+
+**Les droits sont accordés table par table, et jamais sur la base entière.**
+Sur MySQL, droits de base et droits de table **s'additionnent** : un
+`GRANT ... ON phoenix.*` accordé « pour dépanner » rendrait le journal d'audit
+modifiable, et un `REVOKE ... ON phoenix.audit_logs` ne le reprendrait pas — la
+révocation serait acceptée sans effet. C'est la différence la plus lourde avec
+PostgreSQL, détaillée en D-051.
+
+Conséquences pratiques :
+
+- toute migration qui crée une table doit être suivie de
+  `php artisan phoenix:droits` (MySQL n'a pas d'`ALTER DEFAULT PRIVILEGES`) ;
+- `tests/Feature/Security/DatabasePrivilegesTest.php` échoue si une table a été
+  oubliée, ou si un droit à l'échelle de la base est apparu ;
+- le compte applicatif n'a **pas** le droit `TRIGGER` : il ne peut pas
+  supprimer les déclencheurs de machine à états. La page de santé lit leurs
+  noms par la vue `phoenix_guards` (D-052).
 
 L'application ne tourne **jamais** sous le rôle propriétaire. C'est ce qui rend
 le journal d'audit réellement inaltérable (§4.4) plutôt que simplement
@@ -212,7 +229,8 @@ Sujet que Vercel masquait et qui devient entièrement de notre ressort.
 
 | Élément | À sauvegarder | Perte si absent |
 |---|---|---|
-| Base PostgreSQL | `pg_dump` régulier | tout |
+| Base MySQL | `mysqldump` régulier (`scripts/sauvegarde.sh`) | tout |
+| Droits du compte applicatif | **ne sont PAS dans le vidage** — `php artisan phoenix:droits` après restauration | journal d'audit sans protection, ou application sans accès |
 | `storage/app/private/` | copie du volume | **toutes les pièces d'identité** |
 | `APP_KEY` | hors de la machine | numéros de pièce illisibles |
 | Clé HMAC | hors de la machine | recherche par numéro impossible |

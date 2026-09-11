@@ -17,6 +17,11 @@
 | Navigateur | Chromium, piloté par Playwright |
 | Serveur | `php artisan serve`, PostgreSQL 16 local |
 
+> **Mesures antérieures au passage à MySQL (D-051).** Les chiffres ci-dessous
+> ont été relevés sur PostgreSQL et n'ont **pas** été refaits. Le nombre de
+> requêtes SQL par écran, lui, ne dépend pas du moteur et reste valable ; les
+> durées, elles, sont à reprendre avant toute conclusion.
+
 Le jeu de volume est produit par `database/seeders/VolumeSeeder.php`, avec des
 données **entièrement synthétiques** (garde-fou n°1). Un écran mesuré sur trois
 lignes ne mesure rien.

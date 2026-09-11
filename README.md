@@ -2,21 +2,22 @@
 
 Plateforme de réédition d'actes d'état civil — Cameroun.
 
-Conçue pour une **exécution locale** (décision D-011). Laravel 13 + PostgreSQL,
-interfaces en HTML et CSS écrits à la main, sans framework front-end (D-010).
+Conçue pour une **exécution locale** (décision D-011). Laravel 13 + MySQL
+(D-051), interfaces en HTML et CSS écrits à la main, sans framework front-end
+(D-010).
 
 ## Démarrage
 
-Prérequis : PHP 8.4 (`pdo_pgsql`, `mbstring`, `intl`, `gd`, `zip`),
-Composer 2, et Docker — ou un PostgreSQL 16+ local.
+Prérequis : PHP 8.4 (`pdo_mysql`, `mbstring`, `intl`, `gd`, `zip`),
+Composer 2, et Docker — ou un MySQL 8.0.16+ / MariaDB 10.11+ local.
 
 ```bash
 cp .env.example .env
-docker compose up -d              # PostgreSQL + collecteur de courriels
+docker compose up -d              # MySQL + collecteur de courriels
 composer install
 php artisan key:generate          # APP_KEY — À SAUVEGARDER
 php artisan phoenix:generate-index-key   # clé de recherche — À SAUVEGARDER
-php artisan migrate --database=pgsql_owner --force
+php artisan migrate --database=mysql_owner --force
 php artisan db:seed
 php artisan serve
 ```
@@ -106,8 +107,15 @@ rien d'autre ; `composer require dompdf/dompdf` doit le remplacer.
 **L'application ne tourne jamais sous le propriétaire du schéma.** Les
 migrations utilisent `phoenix_owner`, l'application `phoenix_app`, qui n'a ni
 `UPDATE` ni `DELETE` sur `audit_logs`. C'est ce qui rend le journal d'audit
-réellement inaltérable. Conséquence : `migrate:fresh` échoue avec le rôle
-applicatif — c'est voulu, utiliser `--database=pgsql_owner`.
+réellement inaltérable. Conséquence : `migrate:fresh` échoue avec le compte
+applicatif — c'est voulu, utiliser `--database=mysql_owner`.
+
+**Après toute migration qui crée une table, lancer `php artisan phoenix:droits`.**
+MySQL n'accorde aucun droit sur une table nouvelle et n'a pas d'équivalent
+d'`ALTER DEFAULT PRIVILEGES`. Les droits sont posés **table par table**, jamais
+sur la base entière : sur MySQL les deux portées s'additionnent, et un droit de
+base rendrait le journal d'audit modifiable sans qu'aucune révocation par table
+ne puisse le reprendre (D-051). Un test le vérifie.
 
 **`APP_KEY` et `PHOENIX_BLIND_INDEX_KEY` doivent être sauvegardées hors de la
 machine.** La première chiffre les numéros de pièce ; les perdre les rend
@@ -123,13 +131,19 @@ la décision D-015.
 ## Vérifications
 
 ```bash
-./vendor/bin/phpunit    # 286 tests, sur un vrai PostgreSQL
+./vendor/bin/phpunit    # 485 tests, sur un vrai MySQL
 ./vendor/bin/pint       # formatage
 ```
 
-Les tests tournent sur PostgreSQL et non sur SQLite : les barrières de sécurité
-du projet sont des déclencheurs et des révocations de droits, que SQLite ne
-saurait pas reproduire.
+Les tests tournent sur MySQL et non sur SQLite : les barrières de sécurité du
+projet sont des déclencheurs et des droits accordés table par table, que SQLite
+ne saurait pas reproduire.
+
+La base d'essai est migrée par `tests/bootstrap.php`, avant le premier test :
+depuis `setUp()` la migration arriverait trop tard, la transaction du trait
+`DatabaseTransactions` étant déjà ouverte sous un compte encore sans droits. Ce
+fichier **vide la base qu'il vise** et refuse donc de s'exécuter si `APP_ENV`
+n'est pas `testing` ou si le nom de la base ne se termine pas par `_test`.
 
 ## Documentation
 

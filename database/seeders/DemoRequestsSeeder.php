@@ -17,7 +17,7 @@ use Illuminate\Database\Seeder;
  * Demandes de demonstration couvrant les 7 etats.
  *
  * Les etats non-brouillon sont atteints en passant par le service de
- * transition, donc par le declencheur PostgreSQL : le jeu de demonstration
+ * transition, donc par le declencheur MySQL : le jeu de demonstration
  * ne peut pas contenir une demande dans un etat qu'aucun chemin legitime ne
  * permettrait d'atteindre.
  *

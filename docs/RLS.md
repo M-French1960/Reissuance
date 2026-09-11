@@ -1,8 +1,26 @@
-# Sécurité au niveau des lignes — évaluation mesurée
+# Sécurité au niveau des lignes — évaluation mesurée, puis rendue caduque
+
+> ## ⚠️ Ce document ne décrit plus une option disponible
+>
+> **Depuis le passage à MySQL (D-051), la recommandation de ce document ne
+> peut plus être suivie : MySQL n'a pas de sécurité au niveau des lignes.**
+> Il n'existe aucun équivalent de `CREATE POLICY` ni de `ROW LEVEL SECURITY`.
+> Ce n'est pas une différence de syntaxe à contourner, c'est une
+> fonctionnalité absente.
+>
+> Le document est conservé pour trois raisons : les mesures du §3 restent
+> vraies et instructives ; le défaut qu'il décrit au §1 est réel et n'a pas
+> disparu ; et la recommandation redeviendrait applicable telle quelle si le
+> projet revenait à PostgreSQL.
+>
+> **Ce qui reste à trancher aujourd'hui est au §7.**
+
+---
 
 > Jalon 6. D-011 avait reporté ce sujet ici, « après évaluation du coût ».
 > Le prototype a été **construit et exécuté** : les chiffres ci-dessous sont
-> mesurés, pas estimés. Le code est conservé dans `docs/prototypes/rls/`.
+> mesurés, pas estimés. Le code est conservé dans `docs/prototypes/rls/`,
+> et il est **spécifique à PostgreSQL**.
 
 ---
 
@@ -140,3 +158,65 @@ posent pas de vrai contexte n'est pas testée — elle est seulement présente.
 
 **La décision vous revient** : elle engage l'exploitation, pas seulement le
 code.
+
+> **Cette recommandation est suspendue depuis D-051.** Elle supposait
+> PostgreSQL. Voir le §7.
+
+---
+
+## 7. Après le passage à MySQL — ce qui reste, et ce qui manque
+
+### 7.1 Ce que MySQL n'a pas
+
+Aucune sécurité au niveau des lignes. Les contournements que l'on rencontre
+en cherchant un équivalent n'en sont pas :
+
+| Contournement proposé | Pourquoi il ne remplace pas RLS |
+|---|---|
+| Une vue par rôle, avec `WHERE` | L'application garde `SELECT` sur la table, donc peut la lire directement. Une vue ne restreint que qui passe par elle. |
+| Une vue `SQL SECURITY DEFINER` + retrait du droit sur la table | Possible sur la lecture, mais les écritures à travers une vue sont très limitées, et tout le code Eloquent devrait viser des vues. Le coût dépasse celui du portage de l'application. |
+| Un compte MySQL par utilisateur | Ingérable : il faudrait créer et supprimer un compte serveur à chaque agent, et le mutualiseur de connexions perdrait son intérêt. |
+| Des déclencheurs qui refusent les écritures hors périmètre | Couvre l'écriture, **jamais la lecture** — or la fuite de D-013 était une fuite de lecture. |
+
+Aucune de ces pistes ne reproduit la propriété qui faisait l'intérêt de RLS :
+**une requête écrite sans y penser ne rend que les lignes autorisées.**
+
+### 7.2 Ce qui subsiste, et qui n'est pas rien
+
+Les barrières posées en base **restent en place et sont vérifiées** :
+
+- le journal d'audit en ajout seul, par des droits table par table (D-051) ;
+- le référentiel des transitions en lecture seule ;
+- les déclencheurs de machine à états, que le compte applicatif ne peut pas
+  supprimer (D-052) ;
+- les contraintes `CHECK`, qui rendent les états incohérents impossibles ;
+- l'exigence d'une ligne d'audit dans la **même transaction** que toute
+  transition.
+
+Ce que ces barrières couvrent : la **fraude par écriture** — produire un acte
+signé sans décision, altérer une trace, forcer un état. C'est le §4.3 du
+brief, et c'est l'essentiel.
+
+Ce qu'elles ne couvrent pas : la **fuite par lecture** entre centres ou
+communes, qui reste tenue par la seule portée globale Eloquent — précisément
+celle qui avait disparu sans bruit au jalon 2 (D-013).
+
+### 7.3 Ce que je propose à la place
+
+Le trou n'est pas comblé, il est déplacé. Trois pistes, par ordre de coût
+croissant, **aucune n'étant équivalente à RLS** :
+
+1. **Un test de non-régression dédié à la portée globale**, qui échoue si
+   `RequestVisibilityScope` cesse d'être appliquée — le défaut de D-013 aurait
+   été vu immédiatement. Coût faible, à faire dans tous les cas.
+2. **Une vérification au démarrage** : l'application refuse de démarrer si la
+   portée n'est pas enregistrée sur le modèle. Transforme un défaut silencieux
+   en panne bruyante.
+3. **Un contrôle de périmètre centralisé** à la frontière des dépôts, qui
+   n'est plus contournable en écrivant `withoutGlobalScopes()`.
+
+**Question ouverte, qui vous revient :** si la fuite de lecture entre communes
+est jugée aussi grave que la fraude par écriture, alors le choix de MySQL a un
+coût de sécurité qu'il faut assumer explicitement, ou compenser par les trois
+points ci-dessus. Je ne peux pas trancher cela à votre place : c'est une
+question de risque acceptable, pas de technique.

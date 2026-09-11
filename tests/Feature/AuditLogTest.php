@@ -15,7 +15,7 @@ use Tests\TestCase;
 /**
  * Test R12 de docs/PERMISSIONS.md.
  *
- * L'inalterabilite doit tenir au niveau des droits PostgreSQL, pas seulement
+ * L'inalterabilite doit tenir au niveau des droits MySQL, pas seulement
  * dans le modele : une exception PHP se contourne, une revocation non.
  */
 class AuditLogTest extends TestCase
