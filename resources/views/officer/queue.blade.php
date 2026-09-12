@@ -86,7 +86,13 @@
                                     @if ($demande->assignedOfficer)
                                         {{ $demande->assigned_officer_id === auth()->id() ? 'Vous' : $demande->assignedOfficer->name }}
                                     @else
-                                        <span class="u-note">Personne</span>
+                                        {{--
+                                            « Non assignée » et non « Personne » : la colonne
+                                            voisine porte le NOM du demandeur, et « Personne »
+                                            s'y lit comme un nom propre plutot que comme
+                                            « aucun agent ». Releve en regardant la file.
+                                        --}}
+                                        <span class="u-note">Non assignée</span>
                                     @endif
                                 </td>
                                 <td>
