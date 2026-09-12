@@ -11,7 +11,7 @@
     @unless ($valeurJuridique)
         <div class="bandeau">
             <strong>{{ $mentionDemo }}</strong>
-            <p>Ce document ne peut etre presente a aucune administration.</p>
+            <p>Ce document ne peut être présenté à aucune administration.</p>
         </div>
     @endunless
 
@@ -37,10 +37,10 @@
             <hr>
             <strong>{{ $mentionDemo }}</strong>
             <p>
-                Ce document a ete produit par un adaptateur de signature de demonstration.
-                Il ne resulte d'aucune signature electronique agreee. La valeur legale d'un
-                acte d'etat civil signe electroniquement au Cameroun, ainsi que les exigences
-                d'agrement du prestataire de signature, restent a confirmer : voir le bloc A
+                Ce document a été produit par un adaptateur de signature de démonstration.
+                Il ne résulte d'aucune signature électronique agréée. La valeur légale d'un
+                acte d'état civil signé électroniquement au Cameroun, ainsi que les exigences
+                d'agrément du prestataire de signature, restent à confirmer : voir le bloc A
                 de docs/COMPLIANCE_OPEN_QUESTIONS.md.
             </p>
         </div>

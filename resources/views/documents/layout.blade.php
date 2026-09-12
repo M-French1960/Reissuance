@@ -27,14 +27,14 @@
 
         body {
             font-family: 'DejaVu Sans', sans-serif;
-            font-size: 10pt;
-            line-height: 1.45;
+            font-size: 9.5pt;
+            line-height: 1.35;
         }
 
         .bandeau {
             border: 1.5pt solid;
-            padding: 6pt 8pt;
-            margin-bottom: 10pt;
+            padding: 5pt 7pt;
+            margin-bottom: 8pt;
         }
 
         .bandeau strong { font-size: 12pt; letter-spacing: 0.3pt; }
@@ -43,12 +43,12 @@
         .entete { text-align: center; margin-bottom: 6pt; }
         .entete .republique { font-size: 11pt; font-weight: bold; }
         .entete .devise { font-size: 8.5pt; }
-        .entete h1 { font-size: 16pt; margin: 10pt 0 2pt; }
+        .entete h1 { font-size: 15pt; margin: 6pt 0 2pt; }
         .entete .sous-titre { font-size: 9.5pt; }
 
-        hr { border: 0; border-top: 0.6pt solid; margin: 8pt 0; }
+        hr { border: 0; border-top: 0.6pt solid; margin: 6pt 0; }
 
-        h2 { font-size: 11pt; margin: 12pt 0 4pt; }
+        h2 { font-size: 11pt; margin: 10pt 0 3pt; }
 
         /*
             Les champs sont un tableau, et non deux colonnes flottantes : c'est
@@ -63,12 +63,27 @@
             text-align: left;
             font-weight: bold;
             vertical-align: top;
-            padding: 2pt 8pt 2pt 0;
+            padding: 1.5pt 8pt 1.5pt 0;
         }
-        table.champs td { vertical-align: top; padding: 2pt 0; }
+        table.champs td { vertical-align: top; padding: 1.5pt 0; }
 
-        .mention-finale { margin-top: 14pt; font-size: 8.5pt; }
+        /*
+            `page-break-inside: avoid` n'est pas une coquetterie : sans lui, le
+            moteur a coupe le bloc entre son titre et son paragraphe, laissant
+            une seconde page presque vide sur un acte d'etat civil. Releve en
+            regardant le PDF produit par l'application, pas par un test.
+        */
+        .mention-finale {
+            margin-top: 12pt;
+            font-size: 8.5pt;
+            page-break-inside: avoid;
+        }
         .mention-finale strong { font-size: 10pt; }
+        .mention-finale p { margin: 4pt 0 0; }
+
+        /* Un bloc « titre + tableau » ne se coupe pas non plus. */
+        h2 { page-break-after: avoid; }
+        table.champs { page-break-inside: avoid; }
 
         .empreinte {
             font-family: 'DejaVu Sans Mono', monospace;

@@ -32,9 +32,9 @@
             <hr>
             <strong>{{ $mentionDemo }}</strong>
             <p>
-                Ce document a ete produit par un adaptateur de demonstration.
-                Aucun operateur de paiement n'a ete sollicite et aucune somme
-                n'a change de main. Il ne vaut ni quittance, ni preuve de paiement.
+                Ce document a été produit par un adaptateur de démonstration.
+                Aucun opérateur de paiement n'a été sollicité et aucune somme
+                n'a changé de main. Il ne vaut ni quittance, ni preuve de paiement.
             </p>
         </div>
     @endif

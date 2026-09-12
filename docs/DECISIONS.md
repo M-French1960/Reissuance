@@ -2610,6 +2610,27 @@ C'est ce qui sort correctement de n'importe quelle imprimante de mairie, y
 compris une imprimante à encre épuisée. Les filets prennent `currentColor`.
 Aucune exception n'a été ménagée à la règle.
 
+### Un défaut que seule l'inspection visuelle a montré
+
+Une fois la suite verte, j'ai signé une demande **dans l'application**, par le
+navigateur, et j'ai ouvert le PDF produit. Le bloc de mention finale était
+coupé : son titre restait en bas de la première page, son paragraphe partait
+seul sur une deuxième page presque blanche.
+
+**Aucun test ne le voyait.** Le texte extrait était complet, et c'est tout ce
+qu'ils regardaient. Un acte d'état civil accompagné d'une page blanche n'est
+pas un acte qu'une mairie remet à un citoyen.
+
+Corrigé par `page-break-inside: avoid` sur les blocs et un resserrement de la
+composition ; l'acte tient sur une page, avec ou sans la mention de
+démonstration. Deux gardes ajoutés : `countPages()` dans le trait de lecture,
+et un test qui exige une seule page. Éprouvé en portant le corps à 13pt : il
+tombe.
+
+C'est la troisième fois dans ce projet qu'un défaut réel sort d'un regard porté
+sur le produit fini plutôt que d'une assertion. La suite prouve ce qu'elle
+teste, jamais que l'application fonctionne.
+
 ### Trois outils de développement retirés des dépendances
 
 `larastan/larastan`, `pestphp/pest` et `pestphp/pest-plugin-laravel` figuraient

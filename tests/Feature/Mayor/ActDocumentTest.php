@@ -134,6 +134,31 @@ class ActDocumentTest extends TestCase
         }
     }
 
+    /**
+     * L'ACTE TIENT SUR UNE PAGE.
+     *
+     * CE QUE CE TEST A ATTRAPE (D-067), et qu'aucun autre ne voyait : le
+     * premier rendu par dompdf coupait le bloc de mention finale entre son
+     * titre et son paragraphe, et posait celui-ci seul sur une deuxieme page
+     * presque vide. Le texte extrait, lui, etait complet — les tests de
+     * contenu passaient tous. Il a fallu ouvrir le PDF et le regarder.
+     *
+     * Un acte d'etat civil accompagne d'une page blanche n'est pas un acte
+     * qu'une mairie remet a un citoyen.
+     */
+    #[Test]
+    public function l_acte_tient_sur_une_seule_page(): void
+    {
+        $signature = $this->issue();
+        $pdf = (string) Storage::disk('private')->get($signature->document_path);
+
+        $this->assertSame(
+            1,
+            $this->countPages($pdf),
+            "L'acte déborde sur une seconde page : un bloc a été coupé par la mise en page."
+        );
+    }
+
     #[Test]
     public function l_acte_produit_est_un_pdf_valide(): void
     {
@@ -162,7 +187,8 @@ class ActDocumentTest extends TestCase
 
         $this->assertStringContainsString(DocumentBuilder::DEMO_NOTICE, $texte);
         $this->assertStringContainsString('SANS VALEUR JURIDIQUE', $texte);
-        $this->assertStringContainsString('ne peut etre presente a aucune administration', $texte);
+        // Accentué depuis D-067 : le moteur compose le français correctement.
+        $this->assertStringContainsString('ne peut être présenté à aucune administration', $texte);
     }
 
     /** La mention figure AUSSI en haut de la première page : impossible à manquer. */

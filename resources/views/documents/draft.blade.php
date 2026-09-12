@@ -38,8 +38,8 @@
         <hr>
         <strong>{{ $mentionProjet }}</strong>
         <p>
-            Aucune signature n'a ete apposee. Ce projet n'a aucune valeur et ne peut etre
-            presente a aucune administration. Seule la decision du maire fait naitre l'acte.
+            Aucune signature n'a été apposée. Ce projet n'a aucune valeur et ne peut être
+            présenté à aucune administration. Seule la décision du maire fait naître l'acte.
         </p>
     </div>
 @endsection
