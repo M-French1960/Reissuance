@@ -17,6 +17,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\Support\ConfirmsSignature;
 use Tests\Support\WritesActDrafts;
 use Tests\TestCase;
 
@@ -30,6 +31,7 @@ use Tests\TestCase;
  */
 class PaymentGateTest extends TestCase
 {
+    use ConfirmsSignature;
     use WritesActDrafts;
 
     private CivilStatusCenter $centre;
@@ -264,7 +266,9 @@ class PaymentGateTest extends TestCase
             ->post(route('citizen.requests.payment.reconcile', $demande));
 
         $this->actingAs($this->maire)
-            ->post(route('mayor.sign', $demande->refresh()))
+            ->post(route('mayor.sign', $demande->refresh()), [
+                'confirmation_code' => $this->codeDeConfirmation($this->maire),
+            ])
             ->assertSessionHasNoErrors();
 
         $this->assertSame(RequestStatus::Signed, $demande->refresh()->status);

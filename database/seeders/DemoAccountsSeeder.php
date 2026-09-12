@@ -11,6 +11,7 @@ use App\Models\Commune;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Fortify\Fortify;
 
 /**
  * Comptes de demonstration pour les quatre roles.
@@ -81,6 +82,24 @@ class DemoAccountsSeeder extends Seeder
                 ['Citoyen', 'citoyen@phoenix.test', self::PASSWORD],
             ]
         );
+        /*
+         * Les codes d'authentification des comptes officiels.
+         *
+         * Affiches, jamais ecrits : depuis D-069, signer un acte exige de
+         * ressaisir son code, et sans ces secrets le maire de demonstration ne
+         * pourrait pas signer. Ils se collent dans une application
+         * d'authentification, ou se calculent avec `oathtool --totp -b <clef>`.
+         */
+        $this->command?->newLine();
+        $this->command?->info("Clefs d'authentification (à coller dans une application TOTP) :");
+        $this->command?->table(
+            ['Compte', 'Clef TOTP'],
+            array_map(
+                fn (string $courriel): array => [$courriel, self::demoSecret($courriel)],
+                ['admin@phoenix.test', 'officier@phoenix.test', 'officier2@phoenix.test', 'maire@phoenix.test'],
+            ),
+        );
+
         $this->command?->warn('Comptes de démonstration : à ne jamais déployer tels quels.');
 
         unset($admin);
@@ -98,6 +117,46 @@ class DemoAccountsSeeder extends Seeder
             // La contrainte users_official_2fa_check refuse un compte officiel
             // actif sans 2FA confirmee : les comptes de demo la satisfont.
             'two_factor_confirmed_at' => $role->requiresTwoFactor() ? now() : null,
+            /*
+             * ET UN VRAI SECRET, depuis D-069.
+             *
+             * Marquer la 2FA « confirmee » sans poser de secret produisait un
+             * compte incoherent : la contrainte etait satisfaite, mais aucun
+             * code n'existait. Depuis que signer exige de ressaisir son code,
+             * le maire de demonstration ne pouvait plus signer du tout.
+             *
+             * Chiffre comme Fortify le fait, parce que le cast `encrypted` du
+             * modele ajoute sa propre couche par-dessus.
+             */
+            'two_factor_secret' => $role->requiresTwoFactor()
+                ? Fortify::currentEncrypter()->encrypt(self::demoSecret($email))
+                : null,
         ], $extra));
+    }
+
+    /**
+     * Le secret TOTP d'un compte de demonstration.
+     *
+     * DERIVE DE APP_KEY, et non tire au hasard : le seeder est rejouable, et
+     * un secret different a chaque execution obligerait a reconfigurer
+     * l'application d'authentification a chaque `db:seed`. Derive de APP_KEY,
+     * il est stable pour une installation et different d'une installation a
+     * l'autre — donc rien d'exploitable n'entre dans le depot.
+     */
+    private static function demoSecret(string $email): string
+    {
+        $graine = hash_hmac('sha256', 'phoenix-demo-totp:'.$email, (string) config('app.key'), true);
+
+        // Base32 sur l'alphabet RFC 4648, 32 caracteres : le format attendu
+        // par les applications d'authentification.
+        $alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+        $secret = '';
+
+        foreach (str_split(substr($graine, 0, 20)) as $octet) {
+            $secret .= $alphabet[ord($octet) % 32];
+            $secret .= $alphabet[(ord($octet) >> 3) % 32];
+        }
+
+        return substr($secret, 0, 32);
     }
 }

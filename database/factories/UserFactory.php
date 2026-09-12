@@ -11,6 +11,8 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Laravel\Fortify\Fortify;
+use PragmaRX\Google2FA\Google2FA;
 
 /** @extends Factory<User> */
 class UserFactory extends Factory
@@ -40,6 +42,25 @@ class UserFactory extends Factory
     }
 
     /**
+     * Le secret TOTP d'un compte officiel de test.
+     *
+     * POSE PAR LES FABRIQUES DEPUIS D-069. Elles marquaient auparavant la 2FA
+     * « confirmee » sans secret — un etat que la contrainte en base acceptait
+     * alors, et que toute la suite tenait pour normal. Ce n'est plus le cas :
+     * une 2FA confirmee sans secret est refusee par MySQL, et un maire sans
+     * secret ne peut pas signer.
+     *
+     * Chiffre comme Fortify le chiffre, parce que le cast `encrypted` du
+     * modele ajoute sa propre couche par-dessus.
+     */
+    private static function secretDeuxFacteurs(): string
+    {
+        return Fortify::currentEncrypter()->encrypt(
+            app(Google2FA::class)->generateSecretKey()
+        );
+    }
+
+    /**
      * Un officier a toujours un centre : la contrainte users_role_scope_check
      * refuse toute autre combinaison.
      */
@@ -50,6 +71,7 @@ class UserFactory extends Factory
             'civil_status_center_id' => $center?->id ?? CivilStatusCenter::factory(),
             'commune_id' => null,
             'two_factor_confirmed_at' => now(),
+            'two_factor_secret' => self::secretDeuxFacteurs(),
         ]);
     }
 
@@ -60,6 +82,7 @@ class UserFactory extends Factory
             'commune_id' => $commune?->id ?? Commune::factory(),
             'civil_status_center_id' => null,
             'two_factor_confirmed_at' => now(),
+            'two_factor_secret' => self::secretDeuxFacteurs(),
         ]);
     }
 
@@ -68,6 +91,7 @@ class UserFactory extends Factory
         return $this->state(fn (): array => [
             'role' => UserRole::Admin->value,
             'two_factor_confirmed_at' => now(),
+            'two_factor_secret' => self::secretDeuxFacteurs(),
         ]);
     }
 

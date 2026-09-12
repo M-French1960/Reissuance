@@ -12,6 +12,7 @@ use App\Models\RequestDecision;
 use App\Services\ActIssuanceService;
 use App\Services\PaymentGate;
 use App\Services\RequestTransitionService;
+use App\Services\SignatureConfirmation;
 use App\Services\VerificationWorkflow;
 use DomainException;
 use Illuminate\Http\RedirectResponse;
@@ -37,6 +38,7 @@ class DecisionController extends Controller
         private readonly RequestTransitionService $transitions,
         private readonly VerificationWorkflow $workflow,
         private readonly PaymentGate $gate,
+        private readonly SignatureConfirmation $confirmation,
     ) {}
 
     /** T7 et T9 : la signature produit l'acte. */
@@ -52,6 +54,10 @@ class DecisionController extends Controller
             'reason' => $estEscaladee
                 ? ['required', 'string', 'min:10', 'max:1000']
                 : ['nullable', 'string', 'max:1000'],
+            // Le code de confirmation. Pas de `required` ici : le message
+            // utile est celui de SignatureConfirmation, qui distingue un champ
+            // vide d'un code faux et d'un compte bloqué.
+            'confirmation_code' => ['nullable', 'string', 'max:64'],
         ], [
             'reason.required' => "Approuver par exception une demande escaladée exige un motif : il figurera au dossier et au journal d'audit.",
             'reason.min' => 'Le motif doit être suffisamment explicite : au moins 10 caractères.',
@@ -84,12 +90,34 @@ class DecisionController extends Controller
             ])->withInput();
         }
 
+        /*
+         * LA CONFIRMATION D'IDENTITE, AVANT TOUT LE RESTE (D-069).
+         *
+         * Placee ici a dessein : avant la transition, avant la redaction du
+         * PDF, avant le moindre appel au prestataire de signature. Un document
+         * construit puis jete resterait un document construit sans decision du
+         * maire, et un appel a un prestataire resterait un appel.
+         */
+        try {
+            $methode = $this->confirmation->confirm(
+                $request->user(),
+                $validated['confirmation_code'] ?? null,
+                $request->ip(),
+            );
+        } catch (DomainException $e) {
+            return back()
+                ->withErrors(['confirmation_code' => $e->getMessage()])
+                // Le code n'est PAS renvoye a la vue : il vaut trente secondes
+                // et n'a aucune raison de revenir dans le HTML.
+                ->withInput($request->except('confirmation_code'));
+        }
+
         $depuis = $reissuanceRequest->status;
 
         try {
-            $signature = DB::transaction(function () use ($request, $reissuanceRequest, $validated, $depuis, $estEscaladee) {
+            $signature = DB::transaction(function () use ($request, $reissuanceRequest, $validated, $depuis, $estEscaladee, $methode) {
                 $signature = $this->issuance->issue(
-                    $reissuanceRequest, $request->user(), $validated['reason'] ?? null
+                    $reissuanceRequest, $request->user(), $validated['reason'] ?? null, $methode
                 );
 
                 RequestDecision::create([

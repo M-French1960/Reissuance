@@ -15,6 +15,7 @@ use App\Services\RequestTransitionService;
 use App\Services\VerificationWorkflow;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\Support\ConfirmsSignature;
 use Tests\Support\WritesActDrafts;
 use Tests\TestCase;
 
@@ -30,6 +31,7 @@ use Tests\TestCase;
  */
 class MassAssignmentTest extends TestCase
 {
+    use ConfirmsSignature;
     use WritesActDrafts;
 
     private CivilStatusCenter $centre;
@@ -211,6 +213,7 @@ class MassAssignmentTest extends TestCase
         $this->redigeLeProjet($demande, $officier);
 
         $this->actingAs($maire)->post(route('mayor.sign', $demande->refresh()), [
+            'confirmation_code' => $this->codeDeConfirmation($maire),
             'legally_binding' => 1,
             'document_hash' => str_repeat('0', 64),
             'provider' => 'autorite-de-certification-inventee',

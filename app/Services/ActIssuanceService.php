@@ -38,9 +38,17 @@ final class ActIssuanceService
         private readonly ActDraftService $drafts,
     ) {}
 
-    public function issue(ReissuanceRequest $request, User $mayor, ?string $reason = null): DocumentSignature
-    {
-        return DB::transaction(function () use ($request, $mayor, $reason): DocumentSignature {
+    /**
+     * @param  string|null  $confirmationMethod  comment le maire a confirme son
+     *                                           identite au moment de signer (D-069)
+     */
+    public function issue(
+        ReissuanceRequest $request,
+        User $mayor,
+        ?string $reason = null,
+        ?string $confirmationMethod = null,
+    ): DocumentSignature {
+        return DB::transaction(function () use ($request, $mayor, $reason, $confirmationMethod): DocumentSignature {
             // 1. La transition d'abord : si elle est refusée, aucun document
             //    n'est produit. L'ordre n'est pas anodin.
             $this->transitions->transition(
@@ -111,6 +119,7 @@ final class ActIssuanceService
                 'document_path' => $documentPath,
                 'proof_path' => $proofPath,
                 'provider' => $resultat->provider,
+                'confirmation_method' => $confirmationMethod,
                 'legally_binding' => $resultat->legallyBinding,
                 'signature_payload' => $proof,
                 'signed_at' => now(),

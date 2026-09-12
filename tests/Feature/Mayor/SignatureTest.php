@@ -16,11 +16,13 @@ use App\Services\RequestTransitionService;
 use App\Services\VerificationWorkflow;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\Support\ConfirmsSignature;
 use Tests\Support\WritesActDrafts;
 use Tests\TestCase;
 
 class SignatureTest extends TestCase
 {
+    use ConfirmsSignature;
     use WritesActDrafts;
 
     private CivilStatusCenter $centre;
@@ -105,7 +107,9 @@ class SignatureTest extends TestCase
         $this->toAwaitingSignature();
 
         $this->actingAs($this->maire)
-            ->post(route('mayor.sign', $this->demande))
+            ->post(route('mayor.sign', $this->demande), [
+                'confirmation_code' => $this->codeDeConfirmation($this->maire),
+            ])
             ->assertSessionHasNoErrors()
             ->assertRedirect(route('mayor.dashboard'));
 
@@ -165,6 +169,7 @@ class SignatureTest extends TestCase
         $this->actingAs($this->maire)
             ->post(route('mayor.sign', $this->demande), [
                 'reason' => 'Pièce complémentaire présentée en mairie et vérifiée ce jour.',
+                'confirmation_code' => $this->codeDeConfirmation($this->maire),
             ])->assertSessionHasNoErrors();
 
         $this->assertSame(RequestStatus::Signed, $this->demande->refresh()->status);
@@ -280,7 +285,9 @@ class SignatureTest extends TestCase
     public function un_acte_deja_signe_ne_peut_pas_etre_resigne(): void
     {
         $this->toAwaitingSignature();
-        $this->actingAs($this->maire)->post(route('mayor.sign', $this->demande))->assertSessionHasNoErrors();
+        $this->actingAs($this->maire)->post(route('mayor.sign', $this->demande), [
+            'confirmation_code' => $this->codeDeConfirmation($this->maire),
+        ])->assertSessionHasNoErrors();
 
         $this->actingAs($this->maire)
             ->post(route('mayor.sign', $this->demande->refresh()))

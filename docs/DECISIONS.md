@@ -2710,3 +2710,97 @@ journalise rien : un refus n'est pas une lecture.
 `acts.draft` rejoint les routes du cas **« Sign Certificate »** dans
 `UseCaseCoverageTest`. Ce n'est pas un écran hors diagramme : c'est ce qui rend
 le cas réel plutôt que nominal.
+
+## D-069 — Signer exige de reconfirmer son identité, et deux défauts que cela a révélés
+
+**Demandé par vous** : que le maire doive entrer un code à chaque signature.
+Première moitié construite ; la biométrie d'appareil (WebAuthn) vient ensuite,
+par-dessus celle-ci.
+
+### Le trou que cela ferme
+
+`DecisionController::sign()` vérifiait la Policy, l'état du dossier, la
+complétude de la vérification, la barrière de paiement — **et rien d'autre**.
+Signer ne demandait qu'une session ouverte. La session officielle dure trente
+minutes : un navigateur de maire laissé ouvert permettait à qui passait
+derrière lui de délivrer des actes d'état civil.
+
+Le §4.3 du brief exige une décision **explicite** du maire. Un clic dans une
+session déjà ouverte n'en est pas une.
+
+### Ce qui a été construit
+
+| | |
+|---|---|
+| `SignatureConfirmation` | vérifie le code TOTP ou un code de secours, limite les essais, journalise |
+| `DecisionController::sign()` | confirme **avant** la transition, avant le PDF, avant tout appel |
+| colonne `confirmation_method` | par quel moyen le maire a confirmé, pour qu'un contrôle puisse l'interroger |
+| champ encadré sur l'écran de revue | attaché visuellement au bouton qui signe |
+
+**Seulement la signature.** Retourner un dossier ou le rejeter laisse une trace
+et se corrige. Signer produit un acte d'état civil : c'est la seule action dont
+l'usurpation coûte un acte frauduleux.
+
+**Cinq essais par quart d'heure.** Un code à six chiffres se devine en un
+million d'essais ; sans limite, ce n'est pas une barrière. Un blocage et chaque
+échec entrent au journal d'audit — quelqu'un qui tente de signer sans savoir le
+code est un signal, pas un incident anodin.
+
+**Le code n'est jamais renvoyé à la vue.** Le motif, lui, survit au refus : le
+maire ne retape pas son texte parce qu'il s'est trompé de chiffre.
+
+### Premier défaut révélé : mon propre test était vert pour une fausse raison
+
+Ma première version du service lisait `$mayor->two_factor_secret` tel quel.
+**Les tests passaient.** Ils passaient parce que *mon fixture* écrivait le
+secret en clair.
+
+En production, la valeur porte **deux couches de chiffrement** : Fortify
+chiffre le secret avant de l'écrire, puis le cast `encrypted` du modèle chiffre
+le résultat. L'accesseur n'en retire qu'une. Tout le code de Fortify —
+connexion, QR code, confirmation — applique donc un `decrypt()` de plus, et
+s'en écarter aurait fait échouer **toute signature réelle**.
+
+J'avais même « corrigé » dans le mauvais sens en cours de route, après un essai
+où j'écrivais moi-même un secret en clair : la mesure confirmait ma lecture
+parce que la mesure était fausse.
+
+La correction porte sur les deux : le service décrypte comme Fortify, et le
+fixture écrit désormais le secret **exactement comme Fortify l'écrit**. S'y
+ajoute un test qui n'utilise pas le fixture du tout — il équipe le compte avec
+`EnableTwoFactorAuthentication`, l'action qu'exécute l'écran de sécurité, puis
+signe. Éprouvé en remettant la mauvaise lecture : il tombe.
+
+### Second défaut révélé : une 2FA « confirmée » sans secret
+
+La contrainte `users_official_2fa_check` exigeait
+`two_factor_confirmed_at IS NOT NULL`, **et rien de plus**. Une ligne portant
+une date de confirmation sans secret la satisfaisait : le compte était réputé
+protégé par une double authentification qui n'existait pas.
+
+Ce n'était pas théorique — **les comptes de démonstration et les fabriques de
+test étaient exactement dans cet état**. Le défaut est resté invisible tant que
+rien n'avait besoin de *vérifier* un code ; il est apparu le jour où signer l'a
+exigé.
+
+La contrainte exige désormais les deux. La migration **refuse de s'appliquer**
+et nomme le nombre de comptes incohérents plutôt que de réparer des comptes
+officiels à leur place — elle l'a fait sur la base de développement, sur trois
+comptes.
+
+Les comptes de démonstration reçoivent une vraie clef TOTP, **dérivée de
+`APP_KEY`** : stable d'une exécution du seeder à l'autre, différente d'une
+installation à l'autre, et rien d'exploitable n'entre dans le dépôt. Le seeder
+l'affiche à côté des mots de passe.
+
+### Ce que cela ne règle toujours pas
+
+**La question A1 reste entière.** Qu'un maire confirme son identité ne dit pas
+qu'un acte d'état civil signé électroniquement fait foi au Cameroun. Ce
+dispositif rend seulement la question plus facile à poser : elle ne porte plus
+sur l'agrément d'un prestataire étranger, mais sur un dispositif sous le
+contrôle de la commune.
+
+Et le sceau reste celui de l'installation (HMAC avec `APP_KEY`) : la
+confirmation prouve la **présence** du maire, pas encore que la clef qui scelle
+l'acte est la sienne. C'est ce que WebAuthn apportera.

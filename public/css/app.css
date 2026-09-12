@@ -183,6 +183,18 @@ th { background: var(--color-surface-sunken); font-size: var(--text-xs); text-tr
    remplace, ::before n'y rend pas — donc la case porte elle-meme la taille.
    Visuellement genereux, mais c'est un service public consulte sur mobile. */
 .field--inline { display: flex; align-items: center; gap: var(--space-3); min-height: var(--tap-target); }
+
+/*
+  Champ encadre : il attache visuellement une saisie au bouton qui la
+  consomme. Employe pour le code de confirmation de signature (D-069), que le
+  formulaire du maire porte a cote de deux autres boutons qui ne l'exigent pas.
+*/
+.field--framed {
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background: var(--color-surface);
+}
 .field__checkbox {
   width: var(--tap-target); height: var(--tap-target);
   accent-color: var(--color-brand-700);

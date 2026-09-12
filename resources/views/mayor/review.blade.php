@@ -191,6 +191,34 @@
                     @if ($errors->has('reason'))<p class="field__error">{{ $errors->first('reason') }}</p>@endif
                 </div>
 
+                {{--
+                    LA CONFIRMATION D'IDENTITE, ATTACHEE AU BOUTON QUI SIGNE.
+
+                    Sans attribut `required` : le formulaire porte trois
+                    boutons, et rendre ce champ obligatoire en HTML bloquerait
+                    aussi « Retourner » et « Rejeter », qui n'en ont pas
+                    besoin. C'est le serveur qui l'exige, pour la seule
+                    signature — voir DecisionController::sign().
+                --}}
+                <div class="field field--framed">
+                    <label class="field__label" for="confirmation_code">
+                        Code de confirmation <span aria-hidden="true">*</span>
+                        <span class="field__hint">
+                            Exigé pour signer, et pour cela seulement. Entrez le code affiché
+                            par votre application d'authentification, ou l'un de vos codes de
+                            secours. Signer engage votre responsabilité : ce code atteste que
+                            c'est bien vous qui délivrez cet acte.
+                        </span>
+                    </label>
+                    <input class="field__control" id="confirmation_code" name="confirmation_code"
+                           type="text" inputmode="numeric" autocomplete="one-time-code"
+                           maxlength="64" spellcheck="false"
+                           @if ($errors->has('confirmation_code')) aria-invalid="true" @endif>
+                    @if ($errors->has('confirmation_code'))
+                        <p class="field__error">{{ $errors->first('confirmation_code') }}</p>
+                    @endif
+                </div>
+
                 <div class="row-actions">
                     <x-button type="submit" variant="primary"
                               formaction="{{ route('mayor.sign', $demande) }}"

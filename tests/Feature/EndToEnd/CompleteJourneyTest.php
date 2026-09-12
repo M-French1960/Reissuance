@@ -12,6 +12,7 @@ use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\Support\ConfirmsSignature;
 use Tests\TestCase;
 
 /**
@@ -29,6 +30,8 @@ use Tests\TestCase;
  */
 class CompleteJourneyTest extends TestCase
 {
+    use ConfirmsSignature;
+
     private CivilStatusCenter $centre;
 
     private User $citoyen;
@@ -206,7 +209,9 @@ class CompleteJourneyTest extends TestCase
         $this->get(route('mayor.dashboard'))->assertOk()->assertSee($demande->reference);
         $this->get(route('mayor.review', $demande))->assertOk();
 
-        $this->post(route('mayor.sign', $demande))
+        $this->post(route('mayor.sign', $demande), [
+            'confirmation_code' => $this->codeDeConfirmation($this->maire),
+        ])
             ->assertSessionHasNoErrors()
             ->assertRedirect(route('mayor.dashboard'));
     }
