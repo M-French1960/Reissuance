@@ -104,9 +104,12 @@ Cette mention ne disparaîtra que le jour où un prestataire agréé sera branch
 Cameroun confirmée. Voir le bloc A de `docs/COMPLIANCE_OPEN_QUESTIONS.md` et la
 décision D-025.
 
-Le PDF est produit par un générateur écrit à la main (D-024), faute d'avoir pu
-installer dompdf depuis l'environnement de construction. Il gère du texte et
-rien d'autre ; `composer require dompdf/dompdf` doit le remplacer.
+Le PDF est produit par **dompdf**, à partir de gabarits Blade rangés sous
+`resources/views/documents/` (D-067). Le moteur est bridé en un seul endroit,
+`App\Support\Pdf\HtmlToPdf` : aucune ressource distante, aucun PHP embarqué,
+aucun JavaScript. Ces brides comptent — le contenu d'un acte vient d'un dossier
+citoyen, et un moteur de rendu HTML sans bride irait chercher ce qu'on lui
+indique, depuis l'intérieur du réseau de la mairie.
 
 ## Trois points à connaître avant de toucher au code
 
@@ -137,7 +140,7 @@ la décision D-015.
 ## Vérifications
 
 ```bash
-./vendor/bin/phpunit    # 485 tests, sur un vrai MySQL
+./vendor/bin/phpunit    # 746 tests, sur un vrai MySQL
 ./vendor/bin/pint       # formatage
 ```
 
@@ -160,9 +163,15 @@ n'est pas `testing` ou si le nom de la base ne se termine pas par `_test`.
 | `docs/STATE_MACHINE.md` | Les 12 transitions et leur application en base |
 | `docs/PERMISSIONS.md` | Matrice d'autorisation et tests de refus |
 | `docs/DATA_MODEL.md` | Schéma, diagramme, index aveugle |
-| `docs/INTEGRATIONS.md` | Les 4 dépendances externes et les questions à poser |
+| `docs/INTEGRATIONS.md` | Les 5 dépendances externes et les questions à poser |
 | `docs/COMPLIANCE_OPEN_QUESTIONS.md` | Questions juridiques ouvertes |
 | `docs/ARCHITECTURE_LOCAL.md` | Pile locale, sécurité, sauvegarde |
+| `docs/CAS_USAGE.md` | Les cas du diagramme, et ce qui en sort |
+| `docs/ACCESSIBILITE.md` | Audit d'accessibilité et ce qu'il ne couvre pas |
+| `docs/PERFORMANCE.md` | Budgets du §8.5, mesurés |
+| `docs/SAUVEGARDE.md` | Sauvegarde et restauration, éprouvées |
+| `docs/RLS.md` | Sécurité au niveau ligne : l'arbitrage et le risque accepté |
+| `docs/BIOMETRIE.md` | Reconnaissance faciale : ce qui est supposé |
 
 `legacy-prototype/` conserve le prototype HTML d'origine comme référence
 visuelle. Il n'est ni servi ni exécuté : voir l'audit avant d'y reprendre

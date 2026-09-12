@@ -2520,3 +2520,104 @@ exigeants, dont celui qui vérifie qu'aucune requête n'est émise.
 | Le compte dispose-t-il d'un sceau électronique provisionné ? | Contractuelle | Client |
 
 Les quatre premières lignes du §4 de `docs/INTEGRATIONS.md` restent ouvertes.
+
+## D-067 — Le générateur PDF écrit à la main tronquait les actes ; dompdf le remplace
+
+**D-024 disait « dès que le réseau le permet ».** Il le permet : packagist et
+GitHub sont joignables depuis cet environnement. `composer require
+dompdf/dompdf` est fait, et les 233 lignes de générateur PDF écrit à la main
+sont supprimées.
+
+### Ce que l'ancien générateur cassait, mesuré
+
+Il ne savait pas revenir à la ligne : il posait le texte à une abscisse
+calculée et n'en vérifiait jamais la largeur. Une adresse de parents de 88
+caractères — une adresse camerounaise ordinaire, avec quartier, rue, repère et
+boîte postale — sortait de la page. Relevé avec `pdftotext` sur les deux
+moteurs, même chaîne :
+
+```
+AVANT   Adresse des parents :   Quartier Nkolbisson, rue des Manguiers,
+                                derriere ecole publique, BP 15243 Yaound
+
+APRÈS   Adresse des parents     Quartier Nkolbisson, rue des Manguiers, derriere ecole
+                                publique, BP 15243 Yaounde Centre
+```
+
+Le nom de la ville était coupé en deux, et rien ne le signalait. **Sur un acte
+d'état civil, ce n'est pas un défaut d'affichage : c'est un document faux.** Un
+test le couvre désormais (`une_adresse_longue_tient_entierement_dans_l_acte`).
+
+Deuxième gain, gratuit : les documents portent enfin les accents français. Le
+reçu s'intitulait `RECU DE REGLEMENT` parce que l'ancien moteur encodait en
+WinAnsi ; il s'intitule `REÇU DE RÈGLEMENT`.
+
+### Ce qui a été construit
+
+| | |
+|---|---|
+| `App\Support\Pdf\HtmlToPdf` | le moteur, bridé en un seul endroit |
+| `resources/views/documents/` | quatre gabarits : acte, projet, preuve, reçu — plus un corps partagé |
+| `App\Support\Pdf\PdfDocument` | **supprimé** |
+
+Le corps de l'acte est un **gabarit partagé** entre l'acte et le projet : ils
+doivent imprimer exactement les mêmes champs, sans quoi le maire ne signerait
+pas ce qu'il a lu (D-064).
+
+### Trois brides, et ce qu'elles empêchent
+
+Un moteur de rendu HTML qui traite du contenu venu d'un dossier citoyen est une
+surface d'attaque. Les options sont posées dans `HtmlToPdf`, pas dispersées :
+
+1. **`isRemoteEnabled` à faux.** Sans cela, un `<img src="http://…">` glissé
+   dans une donnée de dossier ferait émettre au serveur de la mairie une
+   requête sortante choisie par un tiers, **depuis l'intérieur de son réseau**.
+2. **`isPhpEnabled` à faux.** dompdf exécute `<script type="text/php">` quand
+   l'option est ouverte — vérifié, le code s'exécute réellement.
+3. **`isJavascriptEnabled` à faux.** Pas de JavaScript embarqué dans le PDF
+   produit : un lecteur qui l'exécuterait le ferait chez le citoyen.
+
+`chroot` limite en outre les chemins locaux lisibles au dossier des gabarits.
+
+**Éprouvé en desserrant les deux premières :** le rendu passe de moins d'une
+seconde à **15,1 secondes** (le temps d'un appel réseau vers une adresse
+RFC 5737 qui ne répond pas), et le PHP du gabarit s'exécute pour de bon. Les
+deux tests tombent.
+
+### Ce que ce changement a révélé dans les tests existants
+
+**Trois tests cherchaient une chaîne dans les OCTETS du PDF.** Ils passaient
+par accident : l'ancien générateur n'écrivait pas de flux comprimé, de sorte
+que le texte se lisait en clair dans le fichier. dompdf comprime, et ils sont
+tombés.
+
+Ils avaient raison de tomber. Chercher une chaîne dans des octets ne prouve pas
+qu'elle est **rendue** : elle pouvait aussi bien s'y trouver dans un titre de
+document ou un fragment jamais dessiné. Le seul test qui se relisait déjà avec
+`pdftotext` est passé sans broncher. L'outil indépendant est désormais un trait
+partagé, `Tests\Support\ReadsPdfText`.
+
+Le test qui garde l'empreinte de contenu — *tout champ imprimé sur l'acte est
+couvert par l'empreinte* — lisait le source de `body()`. Cette méthode n'existe
+plus : il lit maintenant le gabarit. Éprouvé en ajoutant `reason` au gabarit
+sans l'ajouter à l'empreinte : le test tombe en nommant le champ.
+
+### Aucune couleur en dur, et ce n'est pas une concession
+
+Le §8.3 du brief interdit les couleurs en dur dans une vue. Les gabarits PDF
+n'en portent aucune : **un acte d'état civil s'imprime en noir sur blanc.**
+C'est ce qui sort correctement de n'importe quelle imprimante de mairie, y
+compris une imprimante à encre épuisée. Les filets prennent `currentColor`.
+Aucune exception n'a été ménagée à la règle.
+
+### Trois outils de développement retirés des dépendances
+
+`larastan/larastan`, `pestphp/pest` et `pestphp/pest-plugin-laravel` figuraient
+dans `require-dev` sans jamais avoir été installés et **sans être référencés
+nulle part** : ni `phpstan.neon`, ni `tests/Pest.php`, ni configuration
+d'intégration continue. Ils bloquaient l'installation de dompdf, parce que
+composer refusait de résoudre `phpstan/phpstan` — seule dépendance que cet
+environnement ne peut récupérer que par archive, ce que le mandataire refuse.
+
+La suite tourne sur PHPUnit et Pint, qui restent. Si l'analyse statique est
+souhaitée, elle se réajoute avec une décision explicite.

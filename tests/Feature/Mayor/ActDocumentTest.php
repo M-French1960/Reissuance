@@ -16,6 +16,7 @@ use App\Services\RequestTransitionService;
 use App\Services\VerificationWorkflow;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\Support\ReadsPdfText;
 use Tests\Support\WritesActDrafts;
 use Tests\TestCase;
 
@@ -28,9 +29,12 @@ use Tests\TestCase;
  */
 class ActDocumentTest extends TestCase
 {
+    use ReadsPdfText;
     use WritesActDrafts;
 
     private User $maire;
+
+    private User $officier;
 
     private User $citoyen;
 
@@ -43,7 +47,7 @@ class ActDocumentTest extends TestCase
 
         $centre = CivilStatusCenter::factory()->create();
         $this->maire = User::factory()->mayor($centre->commune)->create();
-        $officier = User::factory()->officer($centre)->create();
+        $this->officier = User::factory()->officer($centre)->create();
 
         $this->citoyen = User::factory()->citizen()->create();
         $this->citoyen->profile()->create([
@@ -67,17 +71,17 @@ class ActDocumentTest extends TestCase
 
         $transitions = app(RequestTransitionService::class);
         $transitions->transition($this->demande, RequestStatus::Pending, $this->citoyen);
-        $transitions->transition($this->demande, RequestStatus::UnderReview, $officier);
+        $transitions->transition($this->demande, RequestStatus::UnderReview, $this->officier);
 
         $workflow = app(VerificationWorkflow::class);
         foreach ([1, 2, 3, 4, 5] as $n) {
-            $workflow->record($this->demande, $n, $officier, VerificationResult::Match);
+            $workflow->record($this->demande, $n, $this->officier, VerificationResult::Match);
         }
 
-        $transitions->transition($this->demande->refresh(), RequestStatus::AwaitingSignature, $officier);
+        $transitions->transition($this->demande->refresh(), RequestStatus::AwaitingSignature, $this->officier);
 
         // Le maire signe un PROJET établi par l'officier (D-064).
-        $this->redigeLeProjet($this->demande, $officier);
+        $this->redigeLeProjet($this->demande, $this->officier);
         $this->demande->refresh();
     }
 
@@ -87,23 +91,47 @@ class ActDocumentTest extends TestCase
     }
 
     /**
-     * Relit le PDF avec pdftotext, un outil INDÉPENDANT de notre générateur.
-     * Se contenter de chercher la chaîne dans les octets bruts ne prouverait
-     * pas qu'elle est réellement rendue.
+     * UNE ADRESSE LONGUE TIENT DANS LA PAGE.
+     *
+     * CE QUE CE TEST A ATTRAPE (D-067). L'ancien generateur PDF, ecrit a la
+     * main faute d'avoir pu installer dompdf, ne savait pas revenir a la
+     * ligne : il posait le texte a une abscisse calculee et n'en verifiait
+     * jamais la largeur. Une adresse de parents de 88 caracteres — une adresse
+     * camerounaise ordinaire, avec quartier, rue, repere et boite postale —
+     * sortait de la page et disparaissait a l'impression. Releve avant
+     * correction, sur ce meme libelle, pdftotext rendait :
+     *
+     *     Adresse des parents :   Quartier Nkolbisson, rue des Manguiers,
+     *     derriere ecole publique, BP 15243 Yaound
+     *
+     * Le nom de la ville etait coupe en deux. Sur un acte d'etat civil, ce
+     * n'est pas un defaut d'affichage : c'est un document faux.
+     *
+     * L'adresse est posee AVANT la redaction du projet, sinon l'empreinte de
+     * contenu refuserait la signature — a juste titre.
      */
-    private function extractText(string $pdf): string
+    #[Test]
+    public function une_adresse_longue_tient_entierement_dans_l_acte(): void
     {
-        $chemin = tempnam(sys_get_temp_dir(), 'phoenix-pdf').'.pdf';
-        file_put_contents($chemin, $pdf);
+        $adresse = 'Quartier Nkolbisson, rue des Manguiers, derriere ecole publique, '
+            .'BP 15243 Yaounde Centre';
 
-        $sortie = shell_exec('pdftotext '.escapeshellarg($chemin).' - 2>/dev/null');
-        @unlink($chemin);
+        $this->demande->forceFill(['parents_address' => $adresse])->save();
+        $this->redigeLeProjet($this->demande->refresh(), $this->officier);
 
-        if ($sortie === null || trim((string) $sortie) === '') {
-            $this->markTestSkipped('pdftotext indisponible : la vérification indépendante du PDF est impossible.');
+        $signature = $this->issue();
+        $texte = $this->extractText((string) Storage::disk('private')->get($signature->document_path));
+
+        // Le texte extrait porte des retours a la ligne : on compare mot a
+        // mot plutot que sur la chaine entiere, qui est coupee par la mise en
+        // page et non par la page.
+        foreach (['Nkolbisson', 'Manguiers', 'publique', '15243', 'Yaounde', 'Centre'] as $mot) {
+            $this->assertStringContainsString(
+                $mot,
+                $texte,
+                "« {$mot} » manque a l'acte : l'adresse deborde encore de la page."
+            );
         }
-
-        return (string) $sortie;
     }
 
     #[Test]

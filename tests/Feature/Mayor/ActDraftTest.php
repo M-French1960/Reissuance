@@ -17,6 +17,7 @@ use App\Services\VerificationWorkflow;
 use DomainException;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\Support\ReadsPdfText;
 use Tests\Support\WritesActDrafts;
 use Tests\TestCase;
 
@@ -42,6 +43,7 @@ use Tests\TestCase;
  */
 class ActDraftTest extends TestCase
 {
+    use ReadsPdfText;
     use WritesActDrafts;
 
     private CivilStatusCenter $centre;
@@ -104,16 +106,16 @@ class ActDraftTest extends TestCase
     {
         $projet = $this->redigeLeProjet($this->demande, $this->officier);
 
-        $pdf = Storage::disk('private')->get($projet->document_path);
+        // RELU AVEC pdftotext, et non cherche dans les octets (D-067) : une
+        // chaine presente dans le fichier ne prouve pas qu'elle est dessinee
+        // sur la page. Elle pourrait n'etre qu'une metadonnee.
+        $texte = $this->extractText((string) Storage::disk('private')->get($projet->document_path));
 
-        // Les assertions portent sur des chaines ASCII : le PDF encode les
-        // accents dans un jeu qui n'est pas UTF-8, et chercher « Rédigé » n'y
-        // trouverait rien — ma premiere version de ce test l'a appris.
-        $this->assertStringContainsString(DocumentBuilder::DRAFT_NOTICE, $pdf);
-        $this->assertStringContainsString($this->officier->name, $pdf);
+        $this->assertStringContainsString(DocumentBuilder::DRAFT_NOTICE, $texte);
+        $this->assertStringContainsString($this->officier->name, $texte);
         $this->assertStringNotContainsString(
             'signataire',
-            $pdf,
+            $texte,
             "Un projet n'a pas de signataire : il attend la décision du maire."
         );
     }
@@ -188,7 +190,7 @@ class ActDraftTest extends TestCase
         $this->redigeLeProjet($this->demande, $this->officier);
 
         $signature = app(ActIssuanceService::class)->issue($this->demande->refresh(), $this->maire);
-        $acte = Storage::disk('private')->get($signature->document_path);
+        $acte = $this->extractText((string) Storage::disk('private')->get($signature->document_path));
 
         $this->assertStringNotContainsString(DocumentBuilder::DRAFT_NOTICE, $acte);
         $this->assertStringContainsString('signataire', $acte);
@@ -224,13 +226,14 @@ class ActDraftTest extends TestCase
     #[Test]
     public function tout_champ_imprime_sur_l_acte_est_couvert_par_l_empreinte(): void
     {
-        $source = (string) file_get_contents(app_path('Services/DocumentBuilder.php'));
+        // Depuis D-067, le corps commun au projet et à l'acte est un gabarit
+        // Blade et non plus une méthode. Le test lit donc le gabarit — et
+        // c'est toujours la même question : quels champs sont imprimés ?
+        $corps = (string) file_get_contents(
+            resource_path('views/documents/partials/body.blade.php')
+        );
 
-        // Le corps commun au projet et à l'acte, entre body() et sa fermeture.
-        $debut = strpos($source, 'private function body(');
-        $corps = substr($source, $debut, strpos($source, 'public function appendProof') - $debut);
-
-        preg_match_all('/\$request->([a-z_]+)/', $corps, $trouves);
+        preg_match_all('/\$demande->([a-z_]+)/', $corps, $trouves);
 
         $imprimes = array_unique($trouves[1]);
         $couverts = DocumentBuilder::FINGERPRINTED_FIELDS;
