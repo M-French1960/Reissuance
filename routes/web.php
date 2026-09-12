@@ -26,6 +26,7 @@ use App\Http\Controllers\Officer\DecisionController;
 use App\Http\Controllers\Officer\QueueController;
 use App\Http\Controllers\Officer\VerificationController;
 use App\Http\Controllers\RequestMessageController;
+use App\Http\Controllers\SigningDeviceController;
 use App\Http\Controllers\TwoFactorSetupController;
 use Illuminate\Support\Facades\Route;
 
@@ -140,6 +141,9 @@ Route::middleware('auth')->group(function (): void {
         Route::middleware('role:mayor')->prefix('signature')->name('mayor.')->group(function (): void {
             Route::get('/tableau-de-bord', MayorDashboardController::class)->name('dashboard');
             Route::get('/dossiers/{reissuanceRequest}', ReviewController::class)->name('review');
+            // Le defi a presenter a l'appareil, lie a CE dossier (D-070).
+            Route::get('/dossiers/{reissuanceRequest}/defi', [SigningDeviceController::class, 'challenge'])
+                ->name('device-challenge');
             Route::post('/dossiers/{reissuanceRequest}/signer', [MayorDecisionController::class, 'sign'])->name('sign');
             Route::post('/dossiers/{reissuanceRequest}/rejeter', [MayorDecisionController::class, 'reject'])->name('reject');
             Route::post('/dossiers/{reissuanceRequest}/retourner', [MayorDecisionController::class, 'returnToOfficer'])->name('return');
@@ -181,6 +185,22 @@ Route::middleware('auth')->group(function (): void {
          * decide, et elle exclut le citoyen — un projet n'est pas son acte.
          */
         Route::get('/projets/{draft}', ActDraftController::class)->name('acts.draft');
+
+        /*
+         * Appareils de signature — WebAuthn (D-070).
+         *
+         * Reserve aux roles qui signent ou instruisent : un citoyen n'a rien a
+         * signer. Le defi de signature, lui, vit dans le prefixe du maire, a
+         * cote de l'action qu'il autorise.
+         */
+        Route::middleware('role:officer,mayor,admin')->group(function (): void {
+            Route::get('/securite/appareils/options', [SigningDeviceController::class, 'creationOptions'])
+                ->name('devices.options');
+            Route::post('/securite/appareils', [SigningDeviceController::class, 'store'])
+                ->name('devices.store');
+            Route::delete('/securite/appareils/{device}', [SigningDeviceController::class, 'destroy'])
+                ->name('devices.destroy');
+        });
 
         /*
          * Service des pieces d'identite.

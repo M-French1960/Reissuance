@@ -12,6 +12,9 @@
     {{-- Amelioration progressive : sans ce script, les formulaires
          fonctionnent toujours, mais sans compression cote navigateur. --}}
     <script src="{{ asset('js/identity-capture.js') }}" defer></script>
+    {{-- Signature par appareil (D-070). Meme principe : sans ce script, le
+         code d'authentification reste, et rien n'est bloque. --}}
+    <script src="{{ asset('js/signing-device.js') }}" defer></script>
 </head>
 <body>
     <a class="skip-link" href="#contenu">Aller au contenu principal</a>

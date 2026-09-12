@@ -48,6 +48,20 @@ return [
          */
         'login_max_attempts' => (int) env('PHOENIX_LOGIN_MAX_ATTEMPTS', 5),
         'login_lockout_seconds' => (int) env('PHOENIX_LOGIN_LOCKOUT_SECONDS', 60),
+
+        /*
+         * Domaine des appareils de signature (WebAuthn, D-070).
+         *
+         * Vide : deduit de APP_URL. A renseigner si l'application est servie
+         * sous plusieurs noms — une cle enrolee sous un domaine ne vaut pas
+         * sous un autre, c'est precisement ce qui rend WebAuthn resistant a
+         * l'hameconnage.
+         *
+         * RAPPEL : WebAuthn exige un contexte securise. Sans TLS — et hors
+         * `localhost` — la signature par appareil est indisponible, et le code
+         * d'authentification reste le seul moyen de signer.
+         */
+        'webauthn_rp_id' => env('PHOENIX_WEBAUTHN_RP_ID', ''),
     ],
 
     /*

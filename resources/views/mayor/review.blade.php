@@ -219,6 +219,29 @@
                     @endif
                 </div>
 
+                {{--
+                    SIGNER AVEC L'APPAREIL (D-070).
+
+                    `hidden` par defaut : le script ne montre ce bloc que si le
+                    navigateur connait WebAuthn et que la page est servie en
+                    contexte securise. Sinon le code ci-dessus reste le moyen
+                    de signer — une mairie ne cesse pas de delivrer des actes
+                    parce qu'un navigateur est ancien ou qu'un telephone est
+                    perdu.
+                --}}
+                <div data-webauthn hidden class="u-stack-top">
+                    <input type="hidden" name="device_assertion" id="device_assertion">
+                    <x-button type="button" variant="primary" id="bouton-signer-appareil"
+                              data-challenge-url="{{ route('mayor.device-challenge', $demande) }}"
+                              data-sign-url="{{ route('mayor.sign', $demande) }}"
+                              :disabled="! $complet">
+                        Signer avec cet appareil
+                    </x-button>
+                    <p id="message-signature" class="u-note">
+                        Face ID, empreinte ou déverrouillage habituel — sans taper de code.
+                    </p>
+                </div>
+
                 <div class="row-actions">
                     <x-button type="submit" variant="primary"
                               formaction="{{ route('mayor.sign', $demande) }}"

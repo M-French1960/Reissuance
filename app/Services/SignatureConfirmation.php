@@ -37,6 +37,15 @@ final class SignatureConfirmation
     public const METHOD_RECOVERY = 'recovery_code';
 
     /**
+     * Signature par appareil enrole (WebAuthn, D-070).
+     *
+     * Enregistree suffixee de l'identifiant de l'appareil — « device:12 » —
+     * parce qu'en cas de contestation, savoir QUEL appareil a signe compte
+     * autant que savoir qu'un appareil a signe.
+     */
+    public const METHOD_DEVICE = 'device';
+
+    /**
      * Tentatives permises avant blocage.
      *
      * Un code a six chiffres se devine en un million d'essais ; sans limite,

@@ -14,6 +14,7 @@ use App\Services\PaymentGate;
 use App\Services\RequestTransitionService;
 use App\Services\SignatureConfirmation;
 use App\Services\VerificationWorkflow;
+use App\Services\Webauthn\SigningDeviceService;
 use DomainException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -39,6 +40,7 @@ class DecisionController extends Controller
         private readonly VerificationWorkflow $workflow,
         private readonly PaymentGate $gate,
         private readonly SignatureConfirmation $confirmation,
+        private readonly SigningDeviceService $devices,
     ) {}
 
     /** T7 et T9 : la signature produit l'acte. */
@@ -58,6 +60,9 @@ class DecisionController extends Controller
             // utile est celui de SignatureConfirmation, qui distingue un champ
             // vide d'un code faux et d'un compte bloqué.
             'confirmation_code' => ['nullable', 'string', 'max:64'],
+            // La signature par appareil (D-070), quand le maire en a enrole
+            // un. C'est le navigateur qui la depose, en JSON.
+            'device_assertion' => ['nullable', 'string', 'max:20000'],
         ], [
             'reason.required' => "Approuver par exception une demande escaladée exige un motif : il figurera au dossier et au journal d'audit.",
             'reason.min' => 'Le motif doit être suffisamment explicite : au moins 10 caractères.',
@@ -99,11 +104,7 @@ class DecisionController extends Controller
          * maire, et un appel a un prestataire resterait un appel.
          */
         try {
-            $methode = $this->confirmation->confirm(
-                $request->user(),
-                $validated['confirmation_code'] ?? null,
-                $request->ip(),
-            );
+            $methode = $this->confirmeLeSignataire($request, $reissuanceRequest, $validated);
         } catch (DomainException $e) {
             return back()
                 ->withErrors(['confirmation_code' => $e->getMessage()])
@@ -224,5 +225,45 @@ class DecisionController extends Controller
                 'to_status' => $cible->value,
             ]);
         });
+    }
+
+    /**
+     * Confirme que c'est bien le maire qui signe.
+     *
+     * DEUX MOYENS, ET UN SEUL EST EXIGE. L'appareil enrole (WebAuthn, D-070)
+     * est le plus fort : la cle qui signe n'a jamais quitte l'appareil du
+     * maire, et le serveur ne peut pas signer a sa place. Le code
+     * d'authentification (D-069) reste le repli — sans lui, un telephone perdu
+     * ou une installation sans TLS empecherait une commune entiere de delivrer
+     * des actes.
+     *
+     * @param  array<string, mixed>  $validated
+     *
+     * @throws DomainException
+     */
+    private function confirmeLeSignataire(
+        Request $request,
+        ReissuanceRequest $reissuanceRequest,
+        array $validated,
+    ): string {
+        $assertion = trim((string) ($validated['device_assertion'] ?? ''));
+
+        if ($assertion !== '') {
+            $options = $this->devices->recallRequestOptions('signature', [
+                'request_id' => $reissuanceRequest->id,
+            ]);
+
+            $appareil = $this->devices->verify(
+                $request->user(), $assertion, $options, $request->getHost()
+            );
+
+            return SignatureConfirmation::METHOD_DEVICE.':'.$appareil->id;
+        }
+
+        return $this->confirmation->confirm(
+            $request->user(),
+            $validated['confirmation_code'] ?? null,
+            $request->ip(),
+        );
     }
 }

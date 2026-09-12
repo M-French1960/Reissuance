@@ -68,7 +68,32 @@ Un officier ou un maire ne peut pas s'inscrire lui-même. Le parcours est :
    qui part au journal d'audit.
 
 L'étape 3 n'est pas contournable : la contrainte `users_official_2fa_check`
-refuse en base tout compte officiel actif sans 2FA confirmée.
+refuse en base tout compte officiel actif sans 2FA confirmée **ni secret posé**.
+
+## Signer un acte
+
+**Le maire doit reconfirmer son identité à chaque signature** (D-069). Un clic
+dans une session déjà ouverte n'est pas une décision : la session officielle
+dure trente minutes, et un navigateur laissé ouvert suffirait sinon à délivrer
+des actes.
+
+Deux moyens, et un seul est exigé :
+
+| Moyen | Ce qu'il apporte | Quand il s'applique |
+|---|---|---|
+| **Appareil enrôlé** (D-070) — Face ID, Windows Hello, empreinte | la clé qui signe n'a jamais quitté l'appareil du maire ; le serveur ne peut pas signer à sa place | exige TLS (ou `localhost`) et un appareil enrôlé depuis la page Sécurité |
+| **Code d'authentification** (D-069) | prouve la présence du titulaire du compte | toujours — c'est le repli si l'appareil est perdu ou le service servi sans TLS |
+
+La biométrie **ne quitte jamais l'appareil** : elle y déverrouille une clé
+privée qui n'en sort pas davantage. La table `signing_devices` ne contient
+qu'une clé publique, jamais de gabarit biométrique.
+
+Cinq codes erronés par quart d'heure bloquent la signature, et chaque échec
+part au journal d'audit.
+
+`php artisan db:seed` affiche les clefs TOTP des comptes de démonstration à
+côté de leurs mots de passe : sans elles, le maire de démonstration ne peut pas
+signer.
 
 ## Exercer les cas dégradés
 

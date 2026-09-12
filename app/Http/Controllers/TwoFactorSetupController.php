@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\SigningDevice;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -31,6 +32,16 @@ class TwoFactorSetupController extends Controller
             'recoveryCodes' => $enabled && $confirmed && $request->session()->has('showRecoveryCodes')
                 ? $user->recoveryCodes()
                 : null,
+            /*
+             * Les appareils de signature (D-070). Un citoyen n'en enrole pas :
+             * il n'a rien a signer. La liste reste vide pour lui, et la carte
+             * ne s'affiche pas.
+             */
+            'peutEnrolerUnAppareil' => $user->role->requiresTwoFactor(),
+            'appareils' => SigningDevice::query()
+                ->where('user_id', $user->id)
+                ->latest('id')
+                ->get(),
         ]);
     }
 }

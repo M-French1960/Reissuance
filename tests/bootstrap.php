@@ -57,3 +57,29 @@ if ($code !== 0) {
     fwrite(STDERR, "Migration de la base d'essai impossible :\n".implode("\n", $sortie)."\n");
     exit(1);
 }
+
+/*
+ * ET LES DROITS, table par table.
+ *
+ * POURQUOI CETTE ETAPE A MANQUE SI LONGTEMPS SANS SE VOIR (D-070). MySQL ne
+ * revoque pas les droits d'une table quand on la supprime : apres un
+ * `migrate:fresh`, les droits accordes lors d'une execution precedente
+ * SURVIVENT. La base d'essai marchait donc sur des droits residuels, poses un
+ * jour a la main, et une table entierement neuve — `signing_devices` — n'en a
+ * recu aucun. Les tests sont tombes sur « SELECT command denied ».
+ *
+ * Rejouer les droits ici rend la base d'essai reproductible : elle ne depend
+ * plus de ce qu'une execution passee a laisse derriere elle.
+ */
+$droits = sprintf(
+    '%s %s phoenix:droits 2>&1',
+    escapeshellarg(PHP_BINARY),
+    escapeshellarg(__DIR__.'/../artisan'),
+);
+
+exec($droits, $sortieDroits, $codeDroits);
+
+if ($codeDroits !== 0) {
+    fwrite(STDERR, "Application des droits impossible :\n".implode("\n", $sortieDroits)."\n");
+    exit(1);
+}

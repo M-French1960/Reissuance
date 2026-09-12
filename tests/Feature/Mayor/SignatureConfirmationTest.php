@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Services\RequestTransitionService;
 use App\Services\SignatureConfirmation;
 use App\Services\VerificationWorkflow;
+use App\Services\Webauthn\SigningDeviceService;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
@@ -23,6 +24,7 @@ use Laravel\Fortify\Fortify;
 use PHPUnit\Framework\Attributes\Test;
 use PragmaRX\Google2FA\Google2FA;
 use Tests\Support\ConfirmsSignature;
+use Tests\Support\SimulatedAuthenticator;
 use Tests\Support\WritesActDrafts;
 use Tests\TestCase;
 
@@ -326,6 +328,107 @@ class SignatureConfirmationTest extends TestCase
     /* L'écran */
     /* ------------------------------------------------------------------ */
 
+    /* --- Signature par appareil (D-070) ------------------------------- */
+
+    /**
+     * LE parcours complet : le maire signe avec son appareil, par HTTP.
+     *
+     * Le defi est demande a la route qui le delivre, l'appareil simule y
+     * repond, et la reponse part avec le formulaire de signature. Aucun code
+     * d'authentification n'est fourni.
+     */
+    #[Test]
+    public function le_maire_signe_avec_son_appareil(): void
+    {
+        config(['app.url' => 'http://localhost', 'phoenix.security.webauthn_rp_id' => 'localhost']);
+
+        $appareil = $this->enroleUnAppareil();
+
+        $defi = $this->actingAs($this->maire)
+            ->getJson(route('mayor.device-challenge', $this->demande))
+            ->assertOk()
+            ->json();
+
+        $assertion = $appareil->assert($this->fromB64($defi['challenge']), $this->handleWebauthn());
+
+        $this->actingAs($this->maire)
+            ->post(route('mayor.sign', $this->demande), ['device_assertion' => $assertion])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('mayor.dashboard'));
+
+        $this->assertSame(RequestStatus::Signed, $this->demande->refresh()->status);
+
+        // La methode enregistree NOMME l'appareil : en cas de contestation,
+        // savoir lequel a signe compte autant que savoir qu'un appareil a signe.
+        $this->assertStringStartsWith(
+            SignatureConfirmation::METHOD_DEVICE.':',
+            (string) DocumentSignature::first()->confirmation_method
+        );
+    }
+
+    /** Un défi obtenu pour un dossier ne signe pas un autre dossier. */
+    #[Test]
+    public function un_defi_ne_vaut_que_pour_le_dossier_demande(): void
+    {
+        config(['app.url' => 'http://localhost', 'phoenix.security.webauthn_rp_id' => 'localhost']);
+
+        $appareil = $this->enroleUnAppareil();
+        $autre = $this->deuxiemeDossierPret();
+
+        // Le défi est demandé pour l'AUTRE dossier…
+        $defi = $this->actingAs($this->maire)
+            ->getJson(route('mayor.device-challenge', $autre))
+            ->assertOk()
+            ->json();
+
+        $assertion = $appareil->assert($this->fromB64($defi['challenge']), $this->handleWebauthn());
+
+        // …et présenté pour celui-ci.
+        $this->actingAs($this->maire)
+            ->post(route('mayor.sign', $this->demande), ['device_assertion' => $assertion])
+            ->assertSessionHasErrors('confirmation_code');
+
+        $this->assertRienProduit();
+    }
+
+    /** Un défi ne sert qu'une fois. */
+    #[Test]
+    public function un_defi_ne_se_rejoue_pas(): void
+    {
+        config(['app.url' => 'http://localhost', 'phoenix.security.webauthn_rp_id' => 'localhost']);
+
+        $appareil = $this->enroleUnAppareil();
+        $autre = $this->deuxiemeDossierPret();
+
+        $defi = $this->actingAs($this->maire)
+            ->getJson(route('mayor.device-challenge', $this->demande))->json();
+
+        $assertion = $appareil->assert($this->fromB64($defi['challenge']), $this->handleWebauthn());
+
+        $this->actingAs($this->maire)
+            ->post(route('mayor.sign', $this->demande), ['device_assertion' => $assertion])
+            ->assertSessionHasNoErrors();
+
+        // Rejoué sur un second dossier : refusé, le défi a été consommé.
+        $this->actingAs($this->maire)
+            ->post(route('mayor.sign', $autre), ['device_assertion' => $assertion])
+            ->assertSessionHasErrors('confirmation_code');
+
+        $this->assertSame(RequestStatus::AwaitingSignature, $autre->refresh()->status);
+    }
+
+    /** Sans appareil enrôlé, la route du défi le dit au lieu d'échouer sèchement. */
+    #[Test]
+    public function sans_appareil_le_defi_repond_par_un_message_utile(): void
+    {
+        $this->actingAs($this->maire)
+            ->getJson(route('mayor.device-challenge', $this->demande))
+            ->assertStatus(422)
+            ->assertJsonPath('message', fn (string $m): bool => str_contains($m, "Aucun appareil n'est enrôlé"));
+    }
+
+    /* --- L'écran ------------------------------------------------------ */
+
     #[Test]
     public function l_ecran_de_revue_demande_le_code(): void
     {
@@ -418,5 +521,70 @@ class SignatureConfirmationTest extends TestCase
 
         $this->assertNotNull($erreur, 'La confirmation aurait dû être refusée.');
         $this->assertStringContainsString('double authentification', $erreur);
+    }
+
+    private function enroleUnAppareil(): SimulatedAuthenticator
+    {
+        $appareil = new SimulatedAuthenticator('localhost', 'http://localhost');
+        $service = app(SigningDeviceService::class);
+        $options = $service->creationOptions($this->maire);
+
+        $service->register(
+            $this->maire,
+            $appareil->register($options->challenge),
+            $options,
+            'Téléphone du maire',
+            'localhost',
+        );
+
+        return $appareil;
+    }
+
+    private function handleWebauthn(): string
+    {
+        return hash_hmac(
+            'sha256',
+            'phoenix-webauthn-user:'.$this->maire->id,
+            (string) config('app.key'),
+            true
+        );
+    }
+
+    private function fromB64(string $valeur): string
+    {
+        return (string) base64_decode(strtr($valeur, '-_', '+/'), true);
+    }
+
+    /** Un second dossier, prêt à signer, pour les tests de rejeu. */
+    private function deuxiemeDossierPret(): ReissuanceRequest
+    {
+        $demande = ReissuanceRequest::withoutGlobalScopes()->create([
+            'reference' => ReissuanceRequest::generateReference(),
+            'user_id' => $this->citoyen->id,
+            'civil_status_center_id' => $this->demande->civil_status_center_id,
+            'commune_id' => $this->demande->commune_id,
+            'reason' => 'lost',
+            'full_name_at_birth' => 'Personne DE TEST',
+            'date_of_birth' => '1990-01-15', 'place_of_birth' => 'Ville de test',
+            'registration_year' => 1990,
+            'father_name' => 'Père DE TEST', 'father_nationality' => 'Camerounaise',
+            'mother_name' => 'Mère DE TEST', 'mother_nationality' => 'Camerounaise',
+            'parents_address' => 'Adresse de test',
+        ]);
+        $demande->forceFill(['submitted_at' => now()])->save();
+
+        $transitions = app(RequestTransitionService::class);
+        $transitions->transition($demande->refresh(), RequestStatus::Pending, $this->citoyen);
+        $transitions->transition($demande->refresh(), RequestStatus::UnderReview, $this->officier);
+
+        $workflow = app(VerificationWorkflow::class);
+        foreach ([1, 2, 3, 4, 5] as $n) {
+            $workflow->record($demande, $n, $this->officier, VerificationResult::Match);
+        }
+
+        $transitions->transition($demande->refresh(), RequestStatus::AwaitingSignature, $this->officier);
+        $this->redigeLeProjet($demande, $this->officier);
+
+        return $demande->refresh();
     }
 }

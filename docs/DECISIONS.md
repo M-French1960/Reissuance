@@ -2804,3 +2804,100 @@ contrôle de la commune.
 Et le sceau reste celui de l'installation (HMAC avec `APP_KEY`) : la
 confirmation prouve la **présence** du maire, pas encore que la clef qui scelle
 l'acte est la sienne. C'est ce que WebAuthn apportera.
+
+## D-070 — Signer avec son appareil : Face ID, Windows Hello, empreinte
+
+**Demandé par vous**, seconde moitié de D-069. Le code d'authentification
+prouvait la **présence** du maire ; la clé de son appareil prouve que **c'est
+lui**, et le serveur ne peut plus signer à sa place.
+
+### Ce qui a été construit
+
+| | |
+|---|---|
+| table `signing_devices` | identifiant, clé **publique**, libellé, compteur |
+| `SigningDeviceService` | enrôlement, défi, vérification d'assertion |
+| `SigningDeviceController` | enrôler, révoquer, délivrer le défi |
+| `public/js/signing-device.js` | 7 Ko de JavaScript simple, sans dépendance |
+| carte sur la page Sécurité | enrôler et révoquer ses appareils |
+| bouton sur l'écran de revue | « Signer avec cet appareil » |
+
+Bibliothèque `web-auth/webauthn-lib`. **Je n'ai pas écrit le décodage COSE et
+CBOR à la main** : sur le chemin qui produit des actes d'état civil, une
+implémentation cryptographique maison serait le pire endroit pour apprendre.
+
+### Aucune donnée biométrique, et c'est vérifié plutôt qu'affirmé
+
+Le visage — ou le doigt — **ne quitte jamais l'appareil**. Il y déverrouille
+localement une clé privée qui, elle non plus, n'en sort jamais. Le serveur ne
+reçoit qu'une signature et ne connaît que la clé **publique**.
+
+C'est la différence de fond avec la comparaison faciale du demandeur
+(`docs/BIOMETRIE.md`), qui envoie des photographies à un service. Ici, rien
+n'est envoyé et rien n'est conservé. Un test parcourt les colonnes de la table
+et échoue si l'une d'elles suggère une donnée biométrique.
+
+### Les quatre refus, chacun éprouvé
+
+| Ce qui est refusé | Pourquoi |
+|---|---|
+| une signature faite avec **une autre clé** | c'est la clé publique enrôlée qui vérifie, pas la simple présentation d'un identifiant |
+| une signature portant sur **un autre défi** | sans quoi une réponse capturée se rejouerait |
+| une signature obtenue depuis **une autre origine** | c'est ce qui rend WebAuthn résistant à l'hameçonnage |
+| l'appareil **d'un autre maire** | le refus ne dit pas « cet appareil n'est pas le vôtre » : la réponse ne doit pas apprendre quels appareils existent |
+
+S'y ajoute le lien au dossier : **un défi obtenu pour un dossier ne signe pas
+un autre dossier**, et ne sert qu'une fois. Éprouvé en retirant la vérification
+du contexte : le test tombe, et le défi d'un dossier signe l'autre.
+
+La vérification de l'utilisateur est exigée à l'enrôlement comme à la signature
+(`userVerification: required`) : sans elle, un appareil simplement déverrouillé
+suffirait, et on retomberait sur le défaut que D-069 corrige.
+
+### Le code d'authentification reste, et ce n'est pas un reliquat
+
+WebAuthn exige un **contexte sécurisé** — TLS, ou `localhost`. Sans TLS, la
+signature par appareil est indisponible. Un téléphone peut aussi être perdu,
+cassé, ou simplement resté à la maison.
+
+Une commune ne doit pas cesser de délivrer des actes pour l'une de ces
+raisons. Le code de D-069 reste donc le **repli**, et le JavaScript retire les
+boutons quand le navigateur ne sait pas faire — proposer une action impossible
+est pire que ne pas la proposer.
+
+La méthode retenue est enregistrée **suffixée de l'identifiant de l'appareil**
+(`device:12`) : en cas de contestation, savoir *lequel* a signé compte autant
+que savoir qu'un appareil a signé.
+
+### Ce que ces tests ne prouvent pas
+
+**Que Face ID fonctionne.** L'authentificateur simulé pose le bit « utilisateur
+vérifié » comme le ferait un appareil après une biométrie réussie ; aucun test
+automatisé ne peut établir qu'un vrai capteur reconnaît un vrai visage. Ce qui
+est vérifié, c'est que le serveur **exige** ce bit et refuse tout le reste.
+L'essai sur un vrai iPhone et un vrai poste Windows reste à faire.
+
+### Un défaut d'exploitation que cela a révélé
+
+Les tests sont tombés sur `SELECT command denied to user 'phoenix_app'` : la
+table neuve n'avait aucun droit — le comportement MySQL que ce projet documente
+depuis D-051.
+
+**Mais la cause profonde était ailleurs.** MySQL ne révoque pas les droits
+d'une table quand on la supprime : après un `migrate:fresh`, les droits d'une
+exécution précédente **survivent**. La base d'essai marchait donc sur des
+droits résiduels, posés un jour à la main, et le test censé vérifier qu'aucune
+table n'a été oubliée passait pour cette raison. Seule une table entièrement
+neuve pouvait le montrer.
+
+`tests/bootstrap.php` rejoue désormais `phoenix:droits` après la migration. La
+base d'essai ne dépend plus de ce qu'une exécution passée a laissé derrière
+elle.
+
+### Ce que cela ne règle toujours pas
+
+**La question A1.** Qu'un maire signe avec une clé qui n'a jamais quitté son
+téléphone ne dit pas qu'un acte d'état civil signé ainsi fait foi au Cameroun.
+Le dispositif est désormais entièrement sous le contrôle de la commune — aucun
+prestataire, aucune donnée qui sort du pays — ce qui rend la question plus
+simple à porter devant la tutelle. Elle reste à poser.

@@ -85,4 +85,74 @@
             </form>
         </x-card>
     @endif
+
+    @if ($confirmed && $peutEnrolerUnAppareil)
+        <x-card title="Signer avec cet appareil">
+            <p>
+                Vous pouvez enrôler un appareil — téléphone ou ordinateur — pour signer
+                d'un simple Face&nbsp;ID, d'une empreinte ou du déverrouillage habituel,
+                sans taper de code.
+            </p>
+            <p class="u-note">
+                <strong>Votre visage et votre empreinte ne quittent jamais l'appareil.</strong>
+                Ils y déverrouillent une clé qui, elle non plus, n'en sort jamais : le service
+                ne reçoit qu'une signature, et ne conserve aucune donnée biométrique.
+                Votre code d'authentification continue de fonctionner — gardez-le pour le
+                jour où cet appareil ne sera pas disponible.
+            </p>
+
+            @if ($appareils->isNotEmpty())
+                <table>
+                    <caption class="visually-hidden">Vos appareils de signature</caption>
+                    <thead><tr>
+                        <th scope="col">Appareil</th>
+                        <th scope="col">Enrôlé le</th>
+                        <th scope="col">Dernière signature</th>
+                        <th scope="col">Action</th>
+                    </tr></thead>
+                    <tbody>
+                        @foreach ($appareils as $appareil)
+                            <tr>
+                                <td>{{ $appareil->label }}</td>
+                                <td>{{ $appareil->created_at?->translatedFormat('d/m/Y') }}</td>
+                                <td>{{ $appareil->last_used_at?->translatedFormat('d/m/Y à H:i') ?? 'jamais' }}</td>
+                                <td>
+                                    <form method="POST" action="{{ route('devices.destroy', $appareil) }}">
+                                        @csrf
+                                        @method('DELETE')
+                                        <x-button type="submit" variant="danger">Révoquer</x-button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @else
+                <p class="u-note">Aucun appareil enrôlé pour l'instant.</p>
+            @endif
+
+            {{--
+                `hidden` par defaut : le script ne l'affiche que si le navigateur
+                connait WebAuthn ET que la page est servie en contexte securise.
+                Proposer une action impossible est pire que ne pas la proposer.
+            --}}
+            <div data-webauthn hidden class="u-stack-top">
+                <form method="POST" action="{{ route('devices.store') }}" id="form-enrolement-appareil">
+                    @csrf
+                    <input type="hidden" name="credential" id="credential">
+
+                    <x-field name="label" label="Nom de cet appareil"
+                             hint="Par exemple : « iPhone du maire » ou « Poste de la mairie ». Il vous servira à le révoquer."
+                             :value="old('label')"
+                             :error="$errors->first('label')" />
+
+                    <x-button type="button" variant="primary" id="bouton-enroler-appareil"
+                              data-options-url="{{ route('devices.options') }}">
+                        Enrôler cet appareil
+                    </x-button>
+                </form>
+                <p id="message-appareil" class="u-note"></p>
+            </div>
+        </x-card>
+    @endif
 @endsection

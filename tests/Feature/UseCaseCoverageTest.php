@@ -170,7 +170,7 @@ class UseCaseCoverageTest extends TestCase
             // cette route, la garantie « il signe ce qu'il a lu » n'est qu'une
             // empreinte — elle prouve que le contenu n'a pas bouge, pas qu'il
             // a ete lu.
-            'Sign Certificate' => ['mayor', ['mayor.sign', 'acts.draft'], null],
+            'Sign Certificate' => ['mayor', ['mayor.sign', 'acts.draft', 'mayor.device-challenge'], null],
             'Send Certificate to Officer' => ['mayor', ['mayor.return'], null],
             'Manage Accounts' => ['admin', ['admin.users.index', 'admin.users.store', 'admin.users.status', 'admin.users.reassign'], 'admin.users.index'],
         ];
@@ -692,6 +692,11 @@ class UseCaseCoverageTest extends TestCase
             // Le journal d'audit sert le 4.4 du brief, pas un cas du diagramme.
             'admin.audit.index' => "Journal d'audit (§4.4 du brief)",
             // Exploitation, hors parcours metier.
+            // Appareils de signature (D-070) : ils servent « Sign Certificate »
+            // sans etre un cas a eux seuls. Le defi, lui, est rattache au cas.
+            'devices.options' => 'Enrôlement d’un appareil de signature (D-070)',
+            'devices.store' => 'Enrôlement d’un appareil de signature (D-070)',
+            'devices.destroy' => 'Révocation d’un appareil de signature (D-070)',
             'health' => 'Page de santé',
             'dev.ui' => 'Galerie de composants, hors production',
             'webhooks.hrskills' => "Rappel signé de l'agrégateur de paiement",
