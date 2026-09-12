@@ -165,7 +165,12 @@ class UseCaseCoverageTest extends TestCase
             'Reject Request' => ['officer', ['officer.decision.store'], null],
             'Escalate Request' => ['officer', ['officer.decision.store'], null],
             'Review Escalated Request' => ['mayor', ['mayor.dashboard', 'mayor.review'], 'mayor.dashboard'],
-            'Sign Certificate' => ['mayor', ['mayor.sign'], null],
+            // `acts.draft` fait partie du cas depuis D-068 : le maire signe le
+            // PROJET redige par l'officier, et il doit pouvoir l'ouvrir. Sans
+            // cette route, la garantie « il signe ce qu'il a lu » n'est qu'une
+            // empreinte — elle prouve que le contenu n'a pas bouge, pas qu'il
+            // a ete lu.
+            'Sign Certificate' => ['mayor', ['mayor.sign', 'acts.draft'], null],
             'Send Certificate to Officer' => ['mayor', ['mayor.return'], null],
             'Manage Accounts' => ['admin', ['admin.users.index', 'admin.users.store', 'admin.users.status', 'admin.users.reassign'], 'admin.users.index'],
         ];

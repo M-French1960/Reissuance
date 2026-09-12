@@ -100,6 +100,36 @@
         </div>
     </x-card>
 
+    {{--
+        LE PROJET QUE LE MAIRE VA SIGNER (D-068).
+
+        Place AVANT le detail du dossier, et non en annexe : le maire signe le
+        PROJET redige par l'officier, pas les champs affiches ci-dessous. Tant
+        qu'aucun ecran ne le lui donnait a ouvrir, il signait un document qu'il
+        n'avait jamais vu — l'empreinte de contenu prouvait que le texte n'avait
+        pas bouge, elle ne prouvait pas qu'il avait ete lu.
+    --}}
+    @if ($projet)
+        <x-card title="Le projet d'acte à signer">
+            <p>
+                Rédigé par {{ $projet->officer?->name ?? 'un officier' }}
+                le {{ $projet->created_at?->translatedFormat('d F Y à H:i') }}.
+                <strong>C'est ce document que votre signature rendra définitif.</strong>
+            </p>
+            <div class="row-actions">
+                <x-button href="{{ route('acts.draft', $projet) }}" variant="primary">
+                    Lire le projet d'acte
+                </x-button>
+            </div>
+        </x-card>
+    @else
+        <x-alert variant="attention" title="Aucun projet d'acte">
+            L'officier n'a pas encore rédigé le projet. La signature sera refusée
+            tant qu'il n'existe pas : le maire signe un projet établi par l'officier,
+            il ne rédige pas l'acte.
+        </x-alert>
+    @endif
+
     <x-card title="L'acte demandé">
         <dl class="review">
             <div class="review__row"><dt>Nom à la naissance</dt><dd>{{ $demande->full_name_at_birth }}</dd></div>

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\ActDocumentController;
+use App\Http\Controllers\ActDraftController;
 use App\Http\Controllers\Admin\AssignmentController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\SettingController;
@@ -171,6 +172,15 @@ Route::middleware('auth')->group(function (): void {
          */
         Route::get('/actes/{signature}', [ActDocumentController::class, 'document'])->name('acts.document');
         Route::get('/actes/{signature}/preuve', [ActDocumentController::class, 'proof'])->name('acts.proof');
+
+        /*
+         * Projet d'acte, a lire AVANT de signer (D-068).
+         *
+         * Hors du prefixe maire, comme l'acte : l'officier relit ce qu'il a
+         * redige, le maire lit ce qu'il va signer. La Policy `viewDraft`
+         * decide, et elle exclut le citoyen — un projet n'est pas son acte.
+         */
+        Route::get('/projets/{draft}', ActDraftController::class)->name('acts.draft');
 
         /*
          * Service des pieces d'identite.

@@ -168,6 +168,28 @@ class ReissuanceRequestPolicy
     }
 
     /**
+     * Lire le PROJET d'acte — officier du centre et maire de la commune.
+     *
+     * NI LE CITOYEN, NI L'ADMINISTRATEUR. Le citoyen n'a rien a faire avec un
+     * projet : il n'est pas un acte, il porte le bandeau qui le dit, et le lui
+     * montrer reviendrait a lui remettre un document qui ressemble a son acte
+     * avant que le maire n'ait decide. L'administrateur ne voit aucun dossier.
+     *
+     * POURQUOI CETTE CAPACITE EXISTE (D-068). D-064 garantit que « le maire
+     * signe ce que l'officier a redige », et le fait tenir par une empreinte
+     * de contenu. Mais tant qu'aucun ecran ne lui donne le projet a ouvrir, le
+     * maire signe un document qu'il n'a jamais vu : l'empreinte prouve que le
+     * contenu n'a pas bouge, elle ne prouve pas qu'il a ete lu.
+     *
+     * `view` ne suffit donc pas : elle est vraie pour le citoyen proprietaire.
+     */
+    public function viewDraft(User $user, ReissuanceRequest $request): bool
+    {
+        return in_array($user->role, [UserRole::Officer, UserRole::Mayor], true)
+            && $this->view($user, $request);
+    }
+
+    /**
      * Liberer une affectation bloquee — administrateur uniquement (D-057).
      *
      * L'administrateur ne voit aucun dossier et n'en decide aucun. Il agit ici

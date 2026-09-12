@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Mayor;
 use App\Enums\RequestStatus;
 use App\Http\Controllers\Controller;
 use App\Models\ReissuanceRequest;
+use App\Services\ActDraftService;
 use App\Services\VerificationWorkflow;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -20,7 +21,10 @@ use Illuminate\View\View;
  */
 class ReviewController extends Controller
 {
-    public function __construct(private readonly VerificationWorkflow $workflow) {}
+    public function __construct(
+        private readonly VerificationWorkflow $workflow,
+        private readonly ActDraftService $drafts,
+    ) {}
 
     public function __invoke(Request $request, ReissuanceRequest $reissuanceRequest): View
     {
@@ -38,6 +42,9 @@ class ReviewController extends Controller
             'reservations' => $this->workflow->reservations($reissuanceRequest),
             'messages' => $reissuanceRequest->messages()->with('author:id,name')->oldest()->get(),
             'estEscaladee' => $reissuanceRequest->status === RequestStatus::Escalated,
+            // Le projet que le maire va signer (D-068). Le meme que celui
+            // qu'ActIssuanceService relira au moment de signer.
+            'projet' => $this->drafts->latest($reissuanceRequest)?->load('officer:id,name'),
         ]);
     }
 }

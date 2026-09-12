@@ -2642,3 +2642,71 @@ environnement ne peut récupérer que par archive, ce que le mandataire refuse.
 
 La suite tourne sur PHPUnit et Pint, qui restent. Si l'analyse statique est
 souhaitée, elle se réajoute avec une décision explicite.
+
+## D-068 — Le maire signait un projet qu'il n'avait jamais ouvert
+
+**Trouvé en regardant l'écran, pas en lisant le code.** Après avoir signé une
+demande dans le navigateur, j'ai relu la page de revue du maire : elle affiche
+le résultat des vérifications, les pièces, les champs du dossier, le fil
+d'échanges, et deux boutons — *Signer l'acte*, *Retourner à l'officier*.
+
+**Nulle part le projet d'acte.** Aucune route ne le servait, aucun lien n'y
+menait.
+
+### Pourquoi c'est grave
+
+D-064 a confié la rédaction de l'acte à l'officier et la signature au maire, et
+a scellé le lien par une **empreinte de contenu** : si le dossier change entre
+la rédaction et la signature, la signature est refusée. Toute la justification
+de cette lecture tenait en une phrase — *« le maire signe ce que l'officier a
+rédigé »*.
+
+Or l'empreinte prouve que **le contenu n'a pas bougé**. Elle ne prouve pas
+qu'il a été **lu**. Sans écran pour l'ouvrir, le maire apposait sa signature
+sur un document qu'il n'avait jamais vu, et la garantie était creuse.
+
+C'est le genre de trou qu'une suite verte ne montre jamais : chaque test
+vérifiait sa propre affirmation, et aucun ne demandait *« le maire peut-il
+seulement lire ce qu'il signe ? »*.
+
+### Ce qui a été construit
+
+| | |
+|---|---|
+| `ReissuanceRequestPolicy::viewDraft` | officier du centre et maire de la commune, **et personne d'autre** |
+| `ActDraftController` | sert le PDF, `inline`, hors de `public/`, consultation journalisée |
+| route `acts.draft` | `GET /projets/{draft}` |
+| carte « Le projet d'acte à signer » | **avant** le détail du dossier, sur l'écran de revue |
+
+`inline` et non `attachment` : le maire doit **lire** ce projet avant de
+décider, pas le ranger dans ses téléchargements.
+
+Quand aucun projet n'existe, l'écran le dit — au lieu de laisser croire qu'on
+peut signer. La signature serait refusée de toute façon, mais après coup.
+
+### Le refus qui compte le plus est celui du citoyen
+
+`view` ne suffisait pas comme critère : elle est **vraie pour le citoyen
+propriétaire du dossier**. Un projet n'est pas son acte. Le lui montrer
+reviendrait à lui remettre un document qui ressemble à son acte avant même que
+le maire n'ait décidé — exactement ce que le §4.3 du brief interdit.
+
+D'où une capacité distincte. Éprouvée en la ramenant à `view` : le test du
+citoyen tombe, celui de l'administrateur non — parce que `view` exclut déjà
+l'administrateur, qui ne voit aucun dossier. Chaque moitié de la condition est
+donc couverte par un test différent, et je sais laquelle par laquelle.
+
+Un refus renvoie **404 et non 403** : les identifiants de projet sont
+séquentiels, et un 403 apprendrait combien de dossiers ont été instruits.
+
+### La lecture est journalisée
+
+`act.draft_read` entre au journal d'audit. C'est elle qui permettra d'établir,
+plus tard, que le maire avait bien le projet sous les yeux. Un refus, lui, ne
+journalise rien : un refus n'est pas une lecture.
+
+### Rattaché au diagramme
+
+`acts.draft` rejoint les routes du cas **« Sign Certificate »** dans
+`UseCaseCoverageTest`. Ce n'est pas un écran hors diagramme : c'est ce qui rend
+le cas réel plutôt que nominal.
