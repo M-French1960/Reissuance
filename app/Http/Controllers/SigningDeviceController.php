@@ -31,7 +31,11 @@ class SigningDeviceController extends Controller
     /** Les options que le navigateur remet a l'appareil. */
     public function creationOptions(Request $request): JsonResponse
     {
-        $options = $this->devices->creationOptions($request->user());
+        try {
+            $options = $this->devices->creationOptions($request->user(), $request->getHost());
+        } catch (DomainException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
 
         $this->devices->rememberChallenge('enrolement', $options);
 
@@ -99,7 +103,7 @@ class SigningDeviceController extends Controller
         $this->authorize('sign', $reissuanceRequest);
 
         try {
-            $options = $this->devices->requestOptions($request->user());
+            $options = $this->devices->requestOptions($request->user(), $request->getHost());
         } catch (DomainException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }

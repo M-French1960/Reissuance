@@ -2894,6 +2894,28 @@ neuve pouvait le montrer.
 base d'essai ne dépend plus de ce qu'une exécution passée a laissé derrière
 elle.
 
+### Éprouvé dans un vrai navigateur, et un défaut trouvé là
+
+La suite prouve le serveur ; elle ne prouve pas mon JavaScript. J'ai donc
+enrôlé un appareil et signé un acte dans Chrome, avec l'authentificateur
+virtuel du protocole DevTools — un appareil qui « vérifie l'utilisateur »
+comme le ferait un Face ID réussi.
+
+Le parcours complet passe : mot de passe, code 2FA, enrôlement, puis
+**signature sans taper de code**. `Acte délivré pour la demande
+PHX-WTHE-S18Y`, méthode enregistrée `device:2`, aucune erreur de console.
+
+**Et un défaut qu'aucun test serveur ne pouvait voir.** Servie sur
+`127.0.0.1` alors que `APP_URL` annonçait `localhost`, la page recevait du
+navigateur un `This is an invalid domain` — en anglais, sans dire quoi
+corriger. Le serveur, lui, était parfaitement cohérent avec lui-même : c'est
+le navigateur qui refusait.
+
+Un agent de mairie devant cet écran n'a aucun moyen de deviner qu'il s'agit
+d'un réglage. Le service vérifie désormais que le domaine déclaré est bien
+celui qui sert la page, et le dit en français en nommant le réglage à
+corriger. Un sous-domaine reste accepté, comme la spécification l'autorise.
+
 ### Ce que cela ne règle toujours pas
 
 **La question A1.** Qu'un maire signe avec une clé qui n'a jamais quitté son

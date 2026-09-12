@@ -212,6 +212,37 @@ class SigningDeviceTest extends TestCase
         $this->service->verify($autre, $reponse, $options, 'localhost');
     }
 
+    /**
+     * LE DOMAINE DECLARE DOIT ETRE CELUI QUI SERT LA PAGE.
+     *
+     * CE QUE CE CONTROLE A EVITE. Servie sur `127.0.0.1` alors que APP_URL
+     * annoncait `localhost`, la page recevait du navigateur un « This is an
+     * invalid domain » — en anglais, sans dire quoi corriger. Trouve en
+     * enrolant un appareil dans un vrai navigateur ; aucun test cote serveur
+     * ne pouvait le voir, puisque le serveur, lui, etait coherent avec
+     * lui-meme.
+     */
+    #[Test]
+    public function un_domaine_qui_ne_correspond_pas_a_la_page_est_signale(): void
+    {
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage('127.0.0.1');
+
+        $this->service->creationOptions($this->maire, '127.0.0.1');
+    }
+
+    #[Test]
+    public function un_sous_domaine_du_domaine_declare_est_accepte(): void
+    {
+        config(['phoenix.security.webauthn_rp_id' => 'phoenix.cm']);
+
+        // Pas d'exception : `mairie.phoenix.cm` est un sous-domaine de
+        // `phoenix.cm`, ce que la spécification autorise.
+        $options = $this->service->creationOptions($this->maire, 'mairie.phoenix.cm');
+
+        $this->assertSame('phoenix.cm', $options->rp->id);
+    }
+
     #[Test]
     public function sans_appareil_enrole_la_demande_de_signature_est_refusee(): void
     {

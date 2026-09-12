@@ -60,9 +60,49 @@ final class SigningDeviceService
     /* Enrôlement */
     /* ------------------------------------------------------------------ */
 
-    /** Les options a remettre au navigateur pour enroler un appareil. */
-    public function creationOptions(User $officiel): PublicKeyCredentialCreationOptions
+    /**
+     * Le domaine declare correspond-il a celui qui sert la page ?
+     *
+     * CE QUE CE CONTROLE A EVITE, et il l'a evite en production simulee, pas
+     * en theorie. Servie sur `127.0.0.1` alors que APP_URL annoncait
+     * `localhost`, la page recevait du navigateur un « This is an invalid
+     * domain » — en anglais, sans indiquer quoi corriger. Un agent de mairie
+     * devant cet ecran n'a aucun moyen de deviner qu'il s'agit d'un reglage.
+     *
+     * La regle WebAuthn : l'identifiant du domaine doit etre celui de la page,
+     * ou un suffixe enregistrable de celui-ci.
+     *
+     * @throws DomainException
+     */
+    public function assertDomainMatches(string $host): void
     {
+        $declare = $this->relyingParty()->id;
+
+        if ($declare === null || $declare === '') {
+            throw new DomainException(
+                "Le domaine des appareils de signature n'est pas configuré. "
+                .'Renseignez APP_URL, ou PHOENIX_WEBAUTHN_RP_ID.'
+            );
+        }
+
+        if ($host !== $declare && ! str_ends_with($host, '.'.$declare)) {
+            throw new DomainException(
+                "La signature par appareil est configurée pour le domaine « {$declare} », "
+                ."mais cette page est servie depuis « {$host} ». Une clé enrôlée sous un "
+                .'domaine ne vaut pas sous un autre — c’est ce qui la rend résistante à '
+                ."l'hameçonnage. Corrigez APP_URL ou PHOENIX_WEBAUTHN_RP_ID, ou accédez au "
+                ."service par « {$declare} »."
+            );
+        }
+    }
+
+    /** Les options a remettre au navigateur pour enroler un appareil. */
+    public function creationOptions(User $officiel, ?string $host = null): PublicKeyCredentialCreationOptions
+    {
+        if ($host !== null) {
+            $this->assertDomainMatches($host);
+        }
+
         $dejaEnroles = SigningDevice::query()
             ->where('user_id', $officiel->id)
             ->pluck('credential_id')
@@ -150,8 +190,12 @@ final class SigningDeviceService
     /* ------------------------------------------------------------------ */
 
     /** Les options a remettre au navigateur pour signer. */
-    public function requestOptions(User $officiel): PublicKeyCredentialRequestOptions
+    public function requestOptions(User $officiel, ?string $host = null): PublicKeyCredentialRequestOptions
     {
+        if ($host !== null) {
+            $this->assertDomainMatches($host);
+        }
+
         $appareils = SigningDevice::query()->where('user_id', $officiel->id)->get();
 
         if ($appareils->isEmpty()) {
