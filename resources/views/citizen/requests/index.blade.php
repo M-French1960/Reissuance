@@ -9,14 +9,28 @@
     @endif
 
     <x-card>
+        {{--
+            UN FORMULAIRE, PAS UN LIEN (D-071).
+
+            `citizen.requests.start` CREE un brouillon : la route est en POST,
+            et elle doit le rester — une route qui cree une ressource sur un
+            GET serait declenchee par un simple prechargement de navigateur.
+            Ces deux boutons etaient des <a href>, donc des GET : ils rendaient
+            404, et le citoyen ne pouvait pas commencer sa demande du tout.
+        --}}
         @if ($requests->isEmpty())
-            <x-empty-state title="Aucune demande pour l'instant"
-                           :action="route('citizen.requests.start')"
-                           action-label="Faire une demande">
-                Vous n'avez pas encore déposé de demande de réédition d'acte de naissance.
+            <x-empty-state title="Aucune demande pour l'instant">
+                <p>Vous n'avez pas encore déposé de demande de réédition d'acte de naissance.</p>
+                <form method="POST" action="{{ route('citizen.requests.start') }}">
+                    @csrf
+                    <x-button type="submit" variant="primary">Faire une demande</x-button>
+                </form>
             </x-empty-state>
         @else
-            <p><x-button href="{{ route('citizen.requests.start') }}" variant="primary">Faire une nouvelle demande</x-button></p>
+            <form method="POST" action="{{ route('citizen.requests.start') }}">
+                @csrf
+                <x-button type="submit" variant="primary">Faire une nouvelle demande</x-button>
+            </form>
 
             <div class="table-wrap" tabindex="0" role="group" aria-label="Liste de mes demandes">
                 <table>

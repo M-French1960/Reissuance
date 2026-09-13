@@ -7,9 +7,11 @@ namespace App\Services;
 use App\Models\AuditLog;
 use App\Models\User;
 use DomainException;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Laravel\Fortify\Contracts\TwoFactorAuthenticationProvider;
 use Laravel\Fortify\Fortify;
+use Throwable;
 
 /**
  * Confirmation d'identite au moment de signer un acte.
@@ -156,7 +158,36 @@ final class SignatureConfirmation
             return null;
         }
 
-        foreach ($mayor->recoveryCodes() as $secours) {
+        /*
+         * LA LECTURE DES CODES DE SECOURS NE DOIT PAS POUVOIR FAIRE TOMBER
+         * L'ECRAN (D-071).
+         *
+         * Trouve en signant dans un navigateur : un code errone faisait
+         * descendre la verification jusqu'ici, ou `recoveryCodes()` levait un
+         * DecryptException sur une colonne illisible. Le maire recevait une
+         * **erreur 500** au lieu de « Code incorrect » — et, en developpement,
+         * une page de debogage qui deballe le dossier du citoyen.
+         *
+         * Une colonne illisible est traitee comme « aucun code de secours » :
+         * la signature est refusee proprement. L'incident est journalise, sans
+         * le contenu de la colonne.
+         */
+        try {
+            $secoursDisponibles = $mayor->recoveryCodes();
+        } catch (Throwable $e) {
+            Log::warning('Codes de secours illisibles pour un compte officiel.', [
+                'user_id' => $mayor->id,
+                'exception' => $e::class,
+            ]);
+
+            return null;
+        }
+
+        if (! is_array($secoursDisponibles)) {
+            return null;
+        }
+
+        foreach ($secoursDisponibles as $secours) {
             if (hash_equals((string) $secours, $code)) {
                 // Consomme : un code de secours ne sert qu'une fois.
                 $mayor->replaceRecoveryCode($code);

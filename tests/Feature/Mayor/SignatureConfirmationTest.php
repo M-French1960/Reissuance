@@ -328,6 +328,48 @@ class SignatureConfirmationTest extends TestCase
     /* L'écran */
     /* ------------------------------------------------------------------ */
 
+    /**
+     * UNE COLONNE DE CODES DE SECOURS ILLISIBLE NE FAIT PAS TOMBER L'ECRAN.
+     *
+     * CE QUE CE TEST A ATTRAPE (D-071), et qu'aucun autre ne voyait. En
+     * signant dans un vrai navigateur, un code errone a fait descendre la
+     * verification jusqu'aux codes de secours, ou `recoveryCodes()` a leve un
+     * DecryptException sur une colonne illisible. Le maire a recu une
+     * **erreur 500** au lieu de « Code incorrect » — et, en developpement, une
+     * page de debogage affichant le dossier du citoyen.
+     *
+     * La suite ne pouvait pas le voir : ses fixtures ecrivent toujours des
+     * codes bien formes.
+     */
+    #[Test]
+    public function des_codes_de_secours_illisibles_ne_font_pas_tomber_la_signature(): void
+    {
+        // Une colonne que Fortify ne saura pas déchiffrer.
+        $this->maire->forceFill(['two_factor_recovery_codes' => 'ceci-n-est-pas-un-payload'])->save();
+
+        $this->signe(['confirmation_code' => '000000'])
+            ->assertSessionHasErrors('confirmation_code');
+
+        $this->assertStringContainsString(
+            'Code incorrect',
+            session('errors')->first('confirmation_code')
+        );
+
+        $this->assertRienProduit();
+    }
+
+    /** Et un code valide passe malgré la colonne illisible. */
+    #[Test]
+    public function un_code_valide_signe_malgre_des_codes_de_secours_illisibles(): void
+    {
+        $this->maire->forceFill(['two_factor_recovery_codes' => 'ceci-n-est-pas-un-payload'])->save();
+
+        $this->signe(['confirmation_code' => $this->codeDeConfirmation($this->maire)])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(RequestStatus::Signed, $this->demande->refresh()->status);
+    }
+
     /* --- Signature par appareil (D-070) ------------------------------- */
 
     /**

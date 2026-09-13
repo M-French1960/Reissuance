@@ -2923,3 +2923,80 @@ téléphone ne dit pas qu'un acte d'état civil signé ainsi fait foi au Camerou
 Le dispositif est désormais entièrement sous le contrôle de la commune — aucun
 prestataire, aucune donnée qui sort du pays — ce qui rend la question plus
 simple à porter devant la tutelle. Elle reste à poser.
+
+## D-071 — « L'application est-elle fonctionnelle ? » — deux défauts trouvés en la parcourant
+
+Question posée, réponse cherchée dans l'application elle-même : un parcours
+complet dans Chrome, d'un citoyen inscrit à l'instant jusqu'à l'acte
+téléchargé. **24 étapes. Deux défauts trouvés, dont un bloquant.**
+
+Aucun des deux n'était visible dans la suite. Tous deux le sont devenus.
+
+### Défaut n°1, bloquant : le citoyen ne pouvait pas commencer
+
+Les deux boutons « Faire une demande » de l'écran *Mes demandes* étaient des
+`<a href>` — donc des **GET** — vers `citizen.requests.start`, une route
+déclarée en **POST**. Ils rendaient **404**.
+
+**La première action du service était inaccessible.** Un citoyen arrivant sur
+son espace ne pouvait pas déposer de demande, quel que soit son parcours.
+
+Pourquoi la suite ne le voyait pas : les tests envoient un POST directement à
+la route ; ils ne cliquent jamais le lien. `UseCaseCoverageTest` vérifie que la
+route **existe** — pas qu'un utilisateur puisse l'atteindre avec le bon verbe.
+Entre « la route existe » et « on peut l'atteindre », il y avait la place pour
+un service inutilisable.
+
+Les deux boutons sont devenus des formulaires POST. La route, elle, **reste en
+POST** : elle crée un brouillon, et une route qui crée une ressource sur un GET
+serait déclenchée par un simple préchargement de navigateur.
+
+**Le vrai correctif est le test.** `LinkVerbsTest` parcourt tous les gabarits et
+échoue dès qu'un `<a>` ou un `<x-button href>` vise une route qui ne répond pas
+en GET. Éprouvé en remettant le lien : il tombe en le nommant. Un seul défaut de
+ce genre existait dans tout le projet ; il est maintenant impossible d'en
+ajouter un sans le voir.
+
+### Défaut n°2 : un code erroné pouvait rendre une erreur 500
+
+En signant dans le navigateur, un code incorrect a fait descendre la
+vérification jusqu'aux codes de secours, où `recoveryCodes()` a levé un
+`DecryptException` sur une colonne illisible. Le maire a reçu une **erreur
+500** au lieu de « Code incorrect ».
+
+Et en développement, cette erreur 500 affiche la page de débogage de Laravel —
+**qui déballe le dossier du citoyen** : nom de naissance, lieu, filiation,
+tout le corps de la requête. Sur l'écran de signature, c'est le pire endroit
+pour une trace d'exception.
+
+Une colonne illisible est désormais traitée comme « aucun code de secours » :
+la signature est refusée proprement, l'incident est journalisé sans le contenu
+de la colonne. Deux tests couvrent le cas, éprouvés en retirant le garde.
+
+*La colonne était illisible parce que je l'avais corrompue moi-même en
+expérimentant plus tôt dans la session. Le défaut, lui, n'a rien d'artificiel :
+n'importe quelle valeur que Fortify ne sait pas déchiffrer — reprise de données,
+changement d'`APP_KEY` mal mené — produit le même écran.*
+
+### Ce que le parcours a confirmé, et qui n'était pas acquis
+
+| | |
+|---|---|
+| Inscription, profil, assistant en 4 étapes, dépôt des deux photos, envoi | passe |
+| Le dossier arrive dans la file du **bon** centre | passe — et un dossier de Douala I reste invisible à l'officier de Yaoundé I |
+| Les 4 étapes de vérification, puis la décision | passe |
+| Le maire ouvre le **projet d'acte** avant de signer (D-068) | passe — `200 application/pdf` |
+| Il signe avec son code (D-069) | passe |
+| Le citoyen voit « Signée » et télécharge son acte | passe — 24 348 octets, une page |
+
+Deux refus rencontrés en chemin étaient **l'application qui fonctionne**, pas
+des défauts : une phrase de passe contenant « passe » rejetée par
+`NotAWeakPassword`, et un code TOTP réutilisé refusé par la protection contre
+le rejeu de Fortify — le même code ne sert pas deux fois.
+
+### Une vérification au passage : la politique de sécurité du contenu
+
+Les violations de CSP relevées pendant l'incident venaient de la page de
+débogage de Laravel, qui emploie des styles et scripts en ligne. Sur les écrans
+de l'application, **aucune** : `style-src 'self'` et `script-src 'self'` sont
+respectés partout.
