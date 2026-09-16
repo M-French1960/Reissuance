@@ -111,7 +111,7 @@ class ActDraftTest extends TestCase
         // sur la page. Elle pourrait n'etre qu'une metadonnee.
         $texte = $this->extractText((string) Storage::disk('private')->get($projet->document_path));
 
-        $this->assertStringContainsString(DocumentBuilder::DRAFT_NOTICE, $texte);
+        $this->assertStringContainsString(DocumentBuilder::draftNotice(), $texte);
         $this->assertStringContainsString($this->officier->name, $texte);
         $this->assertStringNotContainsString(
             'signataire',
@@ -192,7 +192,7 @@ class ActDraftTest extends TestCase
         $signature = app(ActIssuanceService::class)->issue($this->demande->refresh(), $this->maire);
         $acte = $this->extractText((string) Storage::disk('private')->get($signature->document_path));
 
-        $this->assertStringNotContainsString(DocumentBuilder::DRAFT_NOTICE, $acte);
+        $this->assertStringNotContainsString(DocumentBuilder::draftNotice(), $acte);
         $this->assertStringContainsString('signataire', $acte);
     }
 

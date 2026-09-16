@@ -12,7 +12,7 @@ return [
     'demo_mention' => 'sans valeur juridique',
 
     'apply_title' => 'Faire une demande',
-    'apply_body' => "Créez votre compte, puis suivez les quatre étapes du formulaire. Vous pourrez revenir plus tard, chaque étape est enregistrée.",
+    'apply_body' => 'Créez votre compte, puis suivez les quatre étapes du formulaire. Vous pourrez revenir plus tard, chaque étape est enregistrée.',
     'have_account' => "J'ai déjà un compte",
 
     'bring_title' => "Ce qu'il faut avoir sous la main",

@@ -79,20 +79,14 @@ final class SigningDeviceService
         $declare = $this->relyingParty()->id;
 
         if ($declare === null || $declare === '') {
-            throw new DomainException(
-                "Le domaine des appareils de signature n'est pas configuré. "
-                .'Renseignez APP_URL, ou PHOENIX_WEBAUTHN_RP_ID.'
-            );
+            throw new DomainException(__('flash.device.domain_missing'));
         }
 
         if ($host !== $declare && ! str_ends_with($host, '.'.$declare)) {
-            throw new DomainException(
-                "La signature par appareil est configurée pour le domaine « {$declare} », "
-                ."mais cette page est servie depuis « {$host} ». Une clé enrôlée sous un "
-                .'domaine ne vaut pas sous un autre — c’est ce qui la rend résistante à '
-                ."l'hameçonnage. Corrigez APP_URL ou PHOENIX_WEBAUTHN_RP_ID, ou accédez au "
-                ."service par « {$declare} »."
-            );
+            throw new DomainException(__('flash.device.domain_mismatch', [
+                'declared' => $declare,
+                'actual' => $host,
+            ]));
         }
     }
 
@@ -155,7 +149,7 @@ final class SigningDeviceService
         $reponse = $credential->response;
 
         if (! $reponse instanceof AuthenticatorAttestationResponse) {
-            throw new DomainException("La réponse de l'appareil n'est pas une réponse d'enrôlement.");
+            throw new DomainException(__('flash.device.not_enrolment'));
         }
 
         try {
@@ -164,14 +158,14 @@ final class SigningDeviceService
             )->check($reponse, $options, $host);
         } catch (Throwable $e) {
             throw new DomainException(
-                "L'appareil n'a pas pu être enrôlé : ".$e->getMessage()
+                __('flash.device.enrolment_failed', ['reason' => $e->getMessage()])
             );
         }
 
         $identifiant = $this->encode($record->publicKeyCredentialId);
 
         if (SigningDevice::query()->where('credential_id', $identifiant)->exists()) {
-            throw new DomainException('Cet appareil est déjà enrôlé.');
+            throw new DomainException(__('flash.device.already_enrolled'));
         }
 
         return SigningDevice::create([
@@ -200,8 +194,7 @@ final class SigningDeviceService
 
         if ($appareils->isEmpty()) {
             throw new DomainException(
-                "Aucun appareil n'est enrôlé sur votre compte. Utilisez votre code "
-                ."d'authentification, ou enrôlez un appareil depuis la page Sécurité."
+                __('flash.device.none_enrolled')
             );
         }
 

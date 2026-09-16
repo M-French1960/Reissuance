@@ -5,7 +5,7 @@ declare(strict_types=1);
 return [
     'heading' => 'Demande de réédition',
     'reference_line' => 'Référence :reference. Le brouillon est enregistré à chaque étape.',
-    'finish_step_first' => "Terminez cette étape avant de passer à la suivante.",
+    'finish_step_first' => 'Terminez cette étape avant de passer à la suivante.',
     'settle_fee_first' => 'Réglez les frais pour envoyer votre demande.',
     'submitted' => "Votre demande :reference a été transmise au centre d'état civil.",
     'errors_one' => 'Un champ doit être corrigé',
@@ -84,7 +84,7 @@ return [
 
     'step4' => [
         'check_title' => 'Vérifiez votre demande',
-        'check_intro' => "Relisez ces informations. Une fois envoyée, votre demande ne pourra plus être modifiée : il faudrait en déposer une nouvelle.",
+        'check_intro' => 'Relisez ces informations. Une fois envoyée, votre demande ne pourra plus être modifiée : il faudrait en déposer une nouvelle.',
         'your_request' => 'Votre demande',
         'reason_lost' => 'Acte perdu',
         'reason_damaged' => 'Acte détérioré',

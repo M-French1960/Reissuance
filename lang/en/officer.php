@@ -29,12 +29,12 @@ return [
     ],
 
     'rejection_reasons' => [
-        "The photographs do not match the identity document presented.",
-        "The identity document is not readable on the photograph supplied.",
-        "The identity document is not recognised by the police records.",
-        "No matching record was found in the civil status register.",
-        "The details declared do not match those in the register.",
-        "This application belongs to another civil status centre.",
+        'The photographs do not match the identity document presented.',
+        'The identity document is not readable on the photograph supplied.',
+        'The identity document is not recognised by the police records.',
+        'No matching record was found in the civil status register.',
+        'The details declared do not match those in the register.',
+        'This application belongs to another civil status centre.',
     ],
 
     'action_impossible' => 'Action not possible',

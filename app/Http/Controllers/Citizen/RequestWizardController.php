@@ -10,6 +10,7 @@ use App\Models\CivilStatusCenter;
 use App\Models\ReissuanceRequest;
 use App\Services\PaymentGate;
 use App\Services\RequestTransitionService;
+use App\Support\ActLanguage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -58,7 +59,7 @@ class RequestWizardController extends Controller
         if ($user->profile?->completed_at === null) {
             return redirect()->route('citizen.profile.edit')->with(
                 'status',
-                'Complétez votre profil avant de déposer une demande.'
+                __('flash.citizen.complete_profile_first')
             );
         }
 
@@ -95,7 +96,7 @@ class RequestWizardController extends Controller
             ])
                 // Un renvoi en arriere n'est pas un succes : le vert felicitait
                 // le citoyen de s'etre fait refuser l'acces a l'etape suivante.
-                ->with('status', 'Terminez cette étape avant de passer à la suivante.')
+                ->with('status', __('wizard.finish_step_first'))
                 ->with('statusTone', 'attention');
         }
 
@@ -145,11 +146,15 @@ class RequestWizardController extends Controller
         // Le prototype permettait d'aller jusqu'au bout sans aucune photo.
         $kinds = $draft->attachments()->pluck('kind')->all();
 
-        foreach (['selfie' => 'un selfie', 'id_document' => "une photo de votre pièce d'identité"] as $kind => $label) {
+        foreach (['selfie', 'id_document'] as $kind) {
             if (! in_array($kind, $kinds, true)) {
                 return redirect()
                     ->route('citizen.requests.step', ['reissuanceRequest' => $draft, 'step' => 3])
-                    ->withErrors(['attachments' => "Votre demande ne peut pas être envoyée sans {$label}."]);
+                    ->withErrors(['attachments' => __('flash.citizen.missing_attachment', [
+                        'label' => $kind === 'selfie'
+                            ? __('flash.citizen.selfie_label')
+                            : __('flash.citizen.id_label'),
+                    ])]);
             }
         }
 
@@ -162,13 +167,22 @@ class RequestWizardController extends Controller
             return redirect()
                 ->route('citizen.requests.payment', $draft)
                 // L'envoi N'A PAS eu lieu : il reste une condition a remplir.
-                ->with('status', 'Réglez les frais pour envoyer votre demande.')
+                ->with('status', __('wizard.settle_fee_first'))
                 ->with('statusTone', 'attention');
         }
 
         $draft->forceFill([
             'submitted_at' => now(),
             'consent_given_at' => now(),
+            /*
+             * THE LANGUAGE OF THE CERTIFICATE, FROZEN HERE (D-076).
+             *
+             * Not read at download time: the signature binds a content
+             * fingerprint to the exact text, so a certificate that came back
+             * in French for one reader and English for another would no longer
+             * match what the mayor signed.
+             */
+            'act_language' => ActLanguage::forNewRequest(),
         ])->save();
 
         app(RequestTransitionService::class)->transition(
@@ -181,7 +195,7 @@ class RequestWizardController extends Controller
 
         return redirect()
             ->route('citizen.requests.show', $draft)
-            ->with('status', "Votre demande {$draft->reference} a été transmise au centre d'état civil.");
+            ->with('status', __('wizard.submitted', ['reference' => $draft->reference]));
     }
 
     /** @return array<string, mixed> */
@@ -216,10 +230,10 @@ class RequestWizardController extends Controller
     private function messagesFor(int $step): array
     {
         return [
-            'registration_year.min' => "L'année d'enregistrement doit comporter quatre chiffres, par exemple 1990.",
-            'registration_year.max' => "L'année d'enregistrement ne peut pas être dans le futur.",
-            'date_of_birth.before' => 'La date de naissance doit être antérieure à aujourd\'hui.',
-            'civil_status_center_id.required' => "Choisissez le centre d'état civil où l'acte a été enregistré.",
+            'registration_year.min' => __('flash.citizen.registration_year_min'),
+            'registration_year.max' => __('flash.citizen.registration_year_max'),
+            'date_of_birth.before' => __('flash.citizen.birth_date_before'),
+            'civil_status_center_id.required' => __('flash.citizen.centre_required'),
         ];
     }
 

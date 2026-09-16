@@ -22,7 +22,10 @@ use App\Support\Pdf\HtmlToPdf;
  */
 final class PaymentReceipt
 {
-    public const DEMO_NOTICE = 'RECU DE DEMONSTRATION - AUCUNE SOMME N\'A ETE ENCAISSEE';
+    public static function demoNotice(): string
+    {
+        return __('documents.receipt_demo_notice');
+    }
 
     public function __construct(private readonly HtmlToPdf $pdf) {}
 
@@ -33,25 +36,24 @@ final class PaymentReceipt
         $profil = $demande?->citizen?->profile;
 
         $elements = [
-            'Référence de la demande' => (string) $demande?->reference,
-            'Demandeur' => (string) ($profil?->fullName() ?? '-'),
-            'Montant réglé' => $payment->money()->format(),
-            // 'a' est le marqueur am/pm de PHP : il imprimait « 10/09/2026 pm
-            // 13:55 ».
-            'Date du règlement' => $payment->settled_at?->format('d/m/Y H:i') ?? '-',
-            'Moyen de paiement' => $payment->operator?->label() ?? $payment->provider,
-            'Référence de transaction' => (string) ($payment->provider_reference ?? '-'),
+            __('documents.receipt_fields.request_reference') => (string) $demande?->reference,
+            __('documents.receipt_fields.applicant') => (string) ($profil?->fullName() ?? '-'),
+            __('documents.receipt_fields.amount_paid') => $payment->money()->format(),
+            // 'a' is PHP's am/pm marker: it printed "10/09/2026 pm 13:55".
+            __('documents.receipt_fields.payment_date') => $payment->settled_at?->format('d/m/Y H:i') ?? '-',
+            __('documents.receipt_fields.payment_method') => $payment->operator?->label() ?? $payment->provider,
+            __('documents.receipt_fields.transaction_reference') => (string) ($payment->provider_reference ?? '-'),
         ];
 
         $base = trim((string) config('phoenix.payments.legal_basis', ''));
 
         if ($base !== '') {
-            $elements['Base réglementaire'] = $base;
+            $elements[__('documents.receipt_fields.legal_basis')] = $base;
         }
 
         return $this->pdf->render('documents.receipt', [
             'simule' => $simule,
-            'mentionDemo' => self::DEMO_NOTICE,
+            'mentionDemo' => self::demoNotice(),
             'elements' => $elements,
         ]);
     }

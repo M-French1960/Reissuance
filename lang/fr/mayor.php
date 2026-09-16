@@ -78,7 +78,7 @@ return [
         'issued_title' => 'Acte délivré',
         'issued_body' => 'Signé le :date par :mayor.',
         'no_legal_value_title' => 'Sans valeur juridique',
-        'no_legal_value_body' => "Ce document a été produit par un adaptateur de démonstration.",
+        'no_legal_value_body' => 'Ce document a été produit par un adaptateur de démonstration.',
         'download' => "Télécharger l'acte",
         'signature_proof' => 'Preuve de signature',
         'by_on' => 'par :name (:role) le :date',

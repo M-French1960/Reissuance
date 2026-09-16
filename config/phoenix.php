@@ -189,6 +189,33 @@ return [
     ],
 
     /*
+     * LA LANGUE DE L'ACTE DELIVRE.
+     *
+     * Le Cameroun a deux langues officielles d'egale valeur (Constitution du
+     * 18 janvier 1996), et la loi du 24 decembre 2019 portant promotion des
+     * langues officielles impose l'egalite d'usage de l'anglais et du francais
+     * dans les administrations publiques ET les collectivites territoriales
+     * decentralisees, c'est-a-dire les communes qui delivrent ces actes.
+     *
+     * CE QUE NOUS N'AVONS PAS PU VERIFIER : si un acte de naissance individuel
+     * s'etablit dans une seule langue, de facon bilingue, ou au choix du
+     * demandeur. Aucune source consultable ne le dit, et §10 interdit de coder
+     * une hypothese juridique. La regle est donc un REGLAGE de deploiement,
+     * que l'administration tranche, et la question part au bloc A de
+     * docs/COMPLIANCE_OPEN_QUESTIONS.md.
+     *
+     *   requester : la langue choisie par le demandeur au depot (defaut)
+     *   en | fr   : tous les actes dans cette langue
+     *
+     * Dans tous les cas la langue est FIGEE au depot et inscrite au dossier :
+     * un acte signe ne change jamais de langue apres coup, et deux
+     * telechargements du meme acte rendent le meme document.
+     */
+    'documents' => [
+        'language' => env('PHOENIX_ACT_LANGUAGE', 'requester'),
+    ],
+
+    /*
      * Cible de compression cote navigateur avant envoi (D-008).
      */
     'uploads' => [

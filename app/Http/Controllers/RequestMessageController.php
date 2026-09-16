@@ -27,8 +27,8 @@ class RequestMessageController extends Controller
         $validated = $request->validate([
             'body' => ['required', 'string', 'min:2', 'max:2000'],
         ], [
-            'body.required' => 'Écrivez votre message avant de l\'envoyer.',
-            'body.max' => 'Votre message est trop long : 2 000 caractères au maximum.',
+            'body.required' => __('flash.messages.body_required'),
+            'body.max' => __('flash.messages.body_max'),
         ]);
 
         $auteur = $request->user();
@@ -58,6 +58,6 @@ class RequestMessageController extends Controller
             ? route('citizen.requests.show', $reissuanceRequest)
             : url()->previous();
 
-        return redirect($retour)->with('status', 'Votre message a été envoyé.');
+        return redirect($retour)->with('status', __('messages.sent'));
     }
 }

@@ -64,8 +64,8 @@ class DecisionController extends Controller
             // un. C'est le navigateur qui la depose, en JSON.
             'device_assertion' => ['nullable', 'string', 'max:20000'],
         ], [
-            'reason.required' => "Approuver par exception une demande escaladée exige un motif : il figurera au dossier et au journal d'audit.",
-            'reason.min' => 'Le motif doit être suffisamment explicite : au moins 10 caractères.',
+            'reason.required' => __('flash.mayor.reason_required_exception'),
+            'reason.min' => __('flash.mayor.reason_min'),
         ]);
 
         // Barrière du §4.3 : un acte signé exige une vérification complète.
@@ -79,9 +79,7 @@ class DecisionController extends Controller
             );
 
             return back()->withErrors([
-                'reason' => 'Cette demande ne peut pas être signée : la vérification est incomplète. Il manque — '
-                    .implode(' ; ', $libelles)
-                    .". Retournez le dossier à l'officier.",
+                'reason' => __('flash.mayor.cannot_sign_incomplete', ['steps' => implode(', ', $libelles)]),
             ])->withInput();
         }
 
@@ -90,8 +88,7 @@ class DecisionController extends Controller
         // pas non plus a savoir OU la barriere est posee.
         if (! $this->gate->allows($reissuanceRequest, PaymentGate::BEFORE_SIGNATURE)) {
             return back()->withErrors([
-                'reason' => 'Cette demande ne peut pas être signée : les frais ne sont pas acquittés. '
-                    .'Le demandeur doit régler avant la signature.',
+                'reason' => __('flash.mayor.cannot_sign_unpaid'),
             ])->withInput();
         }
 
@@ -139,13 +136,11 @@ class DecisionController extends Controller
             return back()->withErrors(['reason' => $e->getMessage()])->withInput();
         }
 
-        $avis = $signature->legally_binding
-            ? ''
-            : ' Attention : le document produit porte la mention « sans valeur juridique ».';
+        $avis = $signature->legally_binding ? '' : ' '.__('flash.mayor.demo_warning');
 
         return redirect()->route('mayor.dashboard')->with(
             'status',
-            "Acte délivré pour la demande {$reissuanceRequest->reference}.".$avis
+            __('flash.mayor.issued', ['reference' => $reissuanceRequest->reference]).$avis
         );
     }
 
@@ -159,7 +154,7 @@ class DecisionController extends Controller
         $validated = $request->validate([
             'reason' => ['required', 'string', 'min:10', 'max:1000'],
         ], [
-            'reason.required' => 'Un motif de rejet est obligatoire : il sera communiqué au citoyen.',
+            'reason.required' => __('flash.mayor.reject_reason_required'),
         ]);
 
         $this->applyDecision(
@@ -168,7 +163,7 @@ class DecisionController extends Controller
         );
 
         return redirect()->route('mayor.dashboard')->with(
-            'status', "Demande {$reissuanceRequest->reference} rejetée."
+            'status', __('flash.mayor.rejected', ['reference' => $reissuanceRequest->reference])
         );
     }
 
@@ -185,7 +180,7 @@ class DecisionController extends Controller
         $validated = $request->validate([
             'reason' => ['required', 'string', 'min:10', 'max:1000'],
         ], [
-            'reason.required' => "Indiquez à l'officier ce qui doit être repris : ce motif est sa seule consigne.",
+            'reason.required' => __('flash.mayor.return_reason_required'),
         ]);
 
         DB::transaction(function () use ($request, $reissuanceRequest, $validated): void {
@@ -199,7 +194,7 @@ class DecisionController extends Controller
 
         return redirect()->route('mayor.dashboard')->with(
             'status',
-            "Demande {$reissuanceRequest->reference} retournée à l'officier pour une nouvelle vérification."
+            __('flash.mayor.returned', ['reference' => $reissuanceRequest->reference])
         );
     }
 

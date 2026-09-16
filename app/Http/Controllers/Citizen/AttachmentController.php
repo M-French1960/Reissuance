@@ -32,9 +32,9 @@ class AttachmentController extends Controller
                 'max:'.(int) (config('phoenix.uploads.max_bytes') / 1024),
             ],
         ], [
-            'file.mimetypes' => 'Le fichier doit être une image JPEG, PNG ou WebP.',
-            'file.max' => 'Le fichier est trop volumineux. Reprenez la photo : elle sera compressée automatiquement.',
-            'file.required' => "Aucun fichier n'a été reçu. Reprenez la photo puis réessayez.",
+            'file.mimetypes' => __('flash.citizen.file_mimetypes'),
+            'file.max' => __('flash.citizen.file_max'),
+            'file.required' => __('flash.citizen.file_required'),
         ]);
 
         try {
@@ -48,7 +48,7 @@ class AttachmentController extends Controller
             return back()->withErrors(['file' => $e->getMessage()]);
         }
 
-        return back()->with('status', 'La photo a été enregistrée.');
+        return back()->with('status', __('flash.citizen.photo_saved'));
     }
 
     /**

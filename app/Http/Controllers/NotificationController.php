@@ -35,6 +35,6 @@ class NotificationController extends Controller
     {
         $request->user()->unreadNotifications->markAsRead();
 
-        return back()->with('status', 'Toutes vos notifications sont marquées comme lues.');
+        return back()->with('status', __('notifications.all_marked_read'));
     }
 }

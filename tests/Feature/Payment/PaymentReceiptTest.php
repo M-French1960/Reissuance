@@ -115,7 +115,7 @@ class PaymentReceiptTest extends TestCase
             }
         }
 
-        $this->assertStringContainsString(PaymentReceipt::DEMO_NOTICE, $premiere);
+        $this->assertStringContainsString(PaymentReceipt::demoNotice(), $premiere);
     }
 
     #[Test]

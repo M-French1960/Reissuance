@@ -1,13 +1,12 @@
 @extends('documents.layout')
 
-@section('titre', 'Reçu de règlement')
+@section('titre', __('documents.receipt.heading'))
 
 @section('contenu')
     {{--
-        MEME REGLE QU'A L'ACTE (D-025) : tant que l'encaissement passe par
-        l'adaptateur factice, la mention est la PREMIERE chose du document. Un
-        recu de demonstration ne doit pouvoir etre confondu avec une quittance
-        par personne.
+        SAME RULE AS THE CERTIFICATE (D-025): while payments go through the
+        demonstration adapter, the notice is the FIRST thing in the document.
+        Nobody should be able to mistake a demonstration receipt for a real one.
     --}}
     @if ($simule)
         <div class="bandeau">
@@ -16,8 +15,8 @@
     @endif
 
     <div class="entete">
-        <h1>REÇU DE RÈGLEMENT</h1>
-        <div class="sous-titre">Réédition d'acte d'état civil</div>
+        <h1>{{ __('documents.receipt.heading') }}</h1>
+        <div class="sous-titre">{{ __('documents.receipt.subtitle') }}</div>
     </div>
     <hr>
 
@@ -31,11 +30,7 @@
         <div class="mention-finale">
             <hr>
             <strong>{{ $mentionDemo }}</strong>
-            <p>
-                Ce document a été produit par un adaptateur de démonstration.
-                Aucun opérateur de paiement n'a été sollicité et aucune somme
-                n'a changé de main. Il ne vaut ni quittance, ni preuve de paiement.
-            </p>
+            <p>{{ __('documents.receipt.final_notice') }}</p>
         </div>
     @endif
 @endsection

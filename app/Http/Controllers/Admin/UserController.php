@@ -94,7 +94,7 @@ class UserController extends Controller
                 'action' => 'account.created',
                 'auditable_type' => 'user',
                 'auditable_id' => $user->id,
-                'reason' => "Rôle : {$role->label()}",
+                'reason' => __('flash.admin.role_reason', ['role' => $role->label()]),
                 'ip_address' => $request->ip(),
             ]);
 
@@ -105,7 +105,7 @@ class UserController extends Controller
 
         return redirect()
             ->route('admin.users.index')
-            ->with('status', "Compte créé pour {$user->name}. Un lien d'activation lui a été envoyé.");
+            ->with('status', __('admin.users.created', ['name' => $user->name]));
     }
 
     public function changeStatus(Request $request, User $user): RedirectResponse
@@ -116,7 +116,7 @@ class UserController extends Controller
             'status' => ['required', 'in:pending,active,suspended,disabled'],
             'reason' => ['required', 'string', 'min:10', 'max:500'],
         ], [
-            'reason.min' => "Indiquez le motif de ce changement : il figurera au journal d'audit.",
+            'reason.min' => __('flash.admin.status_reason_min'),
         ]);
 
         // Un compte officiel ne peut etre active qu'une fois sa 2FA posee.
@@ -125,7 +125,7 @@ class UserController extends Controller
             && $user->role->requiresTwoFactor()
             && $user->two_factor_confirmed_at === null) {
             return back()->withErrors([
-                'status' => "Ce compte ne peut pas être activé tant que sa double authentification n'est pas configurée par son titulaire.",
+                'status' => __('flash.admin.cannot_activate_without_2fa'),
             ]);
         }
 
@@ -147,7 +147,7 @@ class UserController extends Controller
             ]);
         });
 
-        return back()->with('status', "Statut de {$user->name} mis à jour.");
+        return back()->with('status', __('admin.users.status_updated', ['name' => $user->name]));
     }
 
     public function sendPasswordReset(Request $request, User $user): RedirectResponse
@@ -221,6 +221,6 @@ class UserController extends Controller
             ]);
         });
 
-        return back()->with('status', "Rattachement de {$user->name} modifié.");
+        return back()->with('status', __('admin.users.attachment_updated', ['name' => $user->name]));
     }
 }

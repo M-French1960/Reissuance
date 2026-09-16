@@ -49,7 +49,7 @@ return [
         'my_certificate' => 'Mon acte',
         'signed_on' => 'Votre acte a été signé le :date par :mayor.',
         'demo_title' => 'Document de démonstration',
-        'demo_body' => "Ce document porte la mention « sans valeur juridique » et ne peut être présenté à aucune administration. La plateforme fonctionne avec un prestataire de signature factice.",
+        'demo_body' => 'Ce document porte la mention « sans valeur juridique » et ne peut être présenté à aucune administration. La plateforme fonctionne avec un prestataire de signature factice.',
         'download' => 'Télécharger mon acte',
         'signature_proof' => 'Preuve de signature',
 

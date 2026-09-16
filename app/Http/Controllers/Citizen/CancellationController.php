@@ -47,7 +47,7 @@ class CancellationController extends Controller
             return back()->withErrors(['reason' => $e->getMessage()]);
         }
 
-        $message = "Votre demande {$reissuanceRequest->reference} a été annulée.";
+        $message = __('citizen.tracking.cancelled', ['reference' => $reissuanceRequest->reference]);
 
         /*
          * Frais deja regles : on le DIT, on ne decide pas.
@@ -58,9 +58,7 @@ class CancellationController extends Controller
          * perdue. On informe, et un agent tranchera.
          */
         if ($this->payments->isPaid($reissuanceRequest)) {
-            $message .= ' Des frais ont été réglés pour cette demande : '
-                ."rapprochez-vous de votre centre d'état civil, la suite dépend "
-                .'des règles de remboursement en vigueur.';
+            $message .= ' '.__('citizen.tracking.cancelled_paid');
         }
 
         return redirect()

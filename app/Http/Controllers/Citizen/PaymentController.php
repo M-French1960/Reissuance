@@ -40,7 +40,7 @@ class PaymentController extends Controller
             return redirect()
                 ->route('citizen.requests.show', $reissuanceRequest)
                 // Une information, pas une reussite : rien n'a ete fait.
-                ->with('status', "Aucun frais n'est demandé pour cette démarche.")
+                ->with('status', __('payment.no_fee'))
                 ->with('statusTone', 'attention');
         }
 
@@ -64,8 +64,8 @@ class PaymentController extends Controller
             'operator' => ['required', Rule::enum(PaymentOperator::class)],
             'payer_reference' => ['required', 'string', 'max:64'],
         ], [
-            'operator.required' => 'Choisissez comment vous souhaitez régler.',
-            'payer_reference.required' => 'Indiquez le numéro depuis lequel vous réglez.',
+            'operator.required' => __('flash.payment.operator_required'),
+            'payer_reference.required' => __('flash.payment.payer_reference_required'),
         ]);
 
         try {
@@ -105,7 +105,7 @@ class PaymentController extends Controller
         $paiement = $this->payments->livePayment($reissuanceRequest);
 
         if ($paiement === null) {
-            return back()->withErrors(['payer_reference' => "Aucun règlement n'est en cours."]);
+            return back()->withErrors(['payer_reference' => __('flash.payment.none_running')]);
         }
 
         try {
@@ -115,7 +115,7 @@ class PaymentController extends Controller
         }
 
         return back()
-            ->with('status', 'État du règlement : '.$paiement->status->label().'.')
+            ->with('status', __('payment.status_line', ['status' => $paiement->status->label()]))
             ->with('statusTone', $paiement->status->tone());
     }
 

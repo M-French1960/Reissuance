@@ -48,7 +48,7 @@ class SigningDeviceController extends Controller
             'label' => ['required', 'string', 'min:2', 'max:80'],
             'credential' => ['required', 'string', 'max:20000'],
         ], [
-            'label.required' => 'Donnez un nom à cet appareil : vous devrez pouvoir le reconnaître pour le révoquer.',
+            'label.required' => __('flash.device.label_required'),
         ]);
 
         try {
@@ -67,7 +67,7 @@ class SigningDeviceController extends Controller
 
         $this->audit($request, 'signing_device.enrolled', $appareil->id);
 
-        return back()->with('status', "L'appareil « {$appareil->label} » peut désormais signer.");
+        return back()->with('status', __('flash.device.enrolled', ['label' => $appareil->label]));
     }
 
     /**
@@ -85,7 +85,7 @@ class SigningDeviceController extends Controller
 
         $this->audit($request, 'signing_device.revoked', $device->id);
 
-        return back()->with('status', "L'appareil « {$nom} » ne peut plus signer.");
+        return back()->with('status', __('flash.device.revoked', ['label' => $nom]));
     }
 
     /* ------------------------------------------------------------------ */

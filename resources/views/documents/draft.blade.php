@@ -1,45 +1,42 @@
 @extends('documents.layout')
 
-@section('titre', "Projet d'acte — {$demande->reference}")
+@section('titre', __('documents.draft.title', ['reference' => $demande->reference]))
 
 @section('contenu')
     {{--
-        UN PROJET N'EST PAS UN ACTE (D-064). Deux differences avec l'acte, et
-        elles sont structurelles :
-          - ce bandeau, en tete, que l'acte final n'a pas ;
-          - aucun bloc « Signe par » : un projet n'a pas de signataire. A sa
-            place, l'officier qui l'a redige, parce que la responsabilite du
-            contenu est desormais la sienne.
+        A DRAFT IS NOT A CERTIFICATE (D-064). Two differences from the act, and
+        both are structural:
+          - this banner, at the top, which the final act does not carry;
+          - no "Signed by" block: a draft has no signatory. In its place, the
+            officer who wrote it, because responsibility for the content is
+            now theirs.
     --}}
     <div class="bandeau">
         <strong>{{ $mentionProjet }}</strong>
-        <p>Ce document n’est pas un acte. Il attend la décision du maire.</p>
+        <p>{{ __('documents.draft.banner_awaiting') }}</p>
     </div>
 
     <div class="entete">
-        <div class="republique">REPUBLIQUE DU CAMEROUN</div>
-        <div class="devise">Paix - Travail - Patrie</div>
-        <h1>PROJET D'EXTRAIT D'ACTE DE NAISSANCE</h1>
-        <div class="sous-titre">Copie rééditée — projet soumis à la signature du maire</div>
+        <div class="republique">{{ __('documents.act.republic') }}</div>
+        <div class="devise">{{ __('documents.act.motto') }}</div>
+        <h1>{{ __('documents.draft.draft_heading') }}</h1>
+        <div class="sous-titre">{{ __('documents.draft.draft_subtitle') }}</div>
     </div>
     <hr>
 
     @include('documents.partials.body')
 
     <hr>
-    <h2>Rédigé par</h2>
+    <h2>{{ __('documents.draft.written_by') }}</h2>
     <table class="champs">
-        <tr><th>Officier d’état civil</th><td>{{ $redacteur }}</td></tr>
-        <tr><th>Centre</th><td>{{ $demande->center?->name ?? '—' }}</td></tr>
-        <tr><th>Rédigé le</th><td>{{ $delivreLe }}</td></tr>
+        <tr><th>{{ __('documents.draft.officer') }}</th><td>{{ $redacteur }}</td></tr>
+        <tr><th>{{ __('documents.draft.centre') }}</th><td>{{ $demande->center?->name }}</td></tr>
+        <tr><th>{{ __('documents.draft.written_on') }}</th><td>{{ $delivreLe }}</td></tr>
     </table>
 
     <div class="mention-finale">
         <hr>
         <strong>{{ $mentionProjet }}</strong>
-        <p>
-            Aucune signature n'a été apposée. Ce projet n'a aucune valeur et ne peut être
-            présenté à aucune administration. Seule la décision du maire fait naître l'acte.
-        </p>
+        <p>{{ __('documents.draft.final_notice') }}</p>
     </div>
 @endsection

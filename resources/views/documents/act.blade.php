@@ -1,48 +1,42 @@
 @extends('documents.layout')
 
-@section('titre', "Extrait d'acte de naissance — {$demande->reference}")
+@section('titre', __('documents.act.title', ['reference' => $demande->reference]))
 
 @section('contenu')
     {{--
-        LE BANDEAU EST LA PREMIERE CHOSE DU DOCUMENT. C'est ce qui garantit
-        qu'il est la premiere ligne non vide du texte extrait, donc impossible
-        a manquer et impossible a recadrer. Un test le relit avec pdftotext.
+        THE BANNER IS THE FIRST THING IN THE DOCUMENT. That is what guarantees
+        it is the first non-empty line of the extracted text, so impossible to
+        miss and impossible to crop out. A test reads it back with pdftotext.
     --}}
     @unless ($valeurJuridique)
         <div class="bandeau">
             <strong>{{ $mentionDemo }}</strong>
-            <p>Ce document ne peut être présenté à aucune administration.</p>
+            <p>{{ __('documents.act.banner_body') }}</p>
         </div>
     @endunless
 
     <div class="entete">
-        <div class="republique">REPUBLIQUE DU CAMEROUN</div>
-        <div class="devise">Paix - Travail - Patrie</div>
-        <h1>EXTRAIT D'ACTE DE NAISSANCE</h1>
-        <div class="sous-titre">Copie rééditée</div>
+        <div class="republique">{{ __('documents.act.republic') }}</div>
+        <div class="devise">{{ __('documents.act.motto') }}</div>
+        <h1>{{ __('documents.act.heading') }}</h1>
+        <div class="sous-titre">{{ __('documents.act.subtitle') }}</div>
     </div>
     <hr>
 
     @include('documents.partials.body')
 
     <hr>
-    <h2>Signé par</h2>
+    <h2>{{ __('documents.act.signed_by') }}</h2>
     <table class="champs">
-        <tr><th>Autorité signataire</th><td>{{ $signataire }}</td></tr>
-        <tr><th>Qualité</th><td>Maire de {{ $demande->commune?->name ?? '—' }}</td></tr>
+        <tr><th>{{ __('documents.act.signing_authority') }}</th><td>{{ $signataire }}</td></tr>
+        <tr><th>{{ __('documents.act.capacity') }}</th><td>{{ __('documents.act.mayor_of', ['commune' => $demande->commune?->name]) }}</td></tr>
     </table>
 
     @unless ($valeurJuridique)
         <div class="mention-finale">
             <hr>
             <strong>{{ $mentionDemo }}</strong>
-            <p>
-                Ce document a été produit par un adaptateur de signature de démonstration.
-                Il ne résulte d'aucune signature électronique agréée. La valeur légale d'un
-                acte d'état civil signé électroniquement au Cameroun, ainsi que les exigences
-                d'agrément du prestataire de signature, restent à confirmer : voir le bloc A
-                de docs/COMPLIANCE_OPEN_QUESTIONS.md.
-            </p>
+            <p>{{ __('documents.act.final_notice') }}</p>
         </div>
     @endunless
 @endsection

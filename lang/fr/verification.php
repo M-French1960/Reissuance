@@ -35,5 +35,5 @@ return [
     'summary_title' => 'Récapitulatif des vérifications',
     'incomplete_title' => 'Vérification incomplète',
     'incomplete_body' => "Vous ne pourrez pas accepter cette demande tant que les quatre vérifications n'ont pas de résultat. Il manque : :steps.",
-    'incomplete_note' => "Le rejet et la transmission au maire restent possibles.",
+    'incomplete_note' => 'Le rejet et la transmission au maire restent possibles.',
 ];

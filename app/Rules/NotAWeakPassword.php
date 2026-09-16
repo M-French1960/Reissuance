@@ -46,14 +46,14 @@ final class NotAWeakPassword implements ValidationRule
 
         foreach (self::FORBIDDEN as $term) {
             if (str_contains($normalised, $term)) {
-                $fail('Ce mot de passe contient un terme trop courant. Choisissez une suite de mots sans rapport avec le service.');
+                $fail(__('flash.password.too_common'));
 
                 return;
             }
         }
 
         if ($this->isRepeatedOrSequential($normalised)) {
-            $fail('Ce mot de passe suit une suite trop simple. Variez les caractères.');
+            $fail(__('flash.password.too_simple'));
         }
     }
 

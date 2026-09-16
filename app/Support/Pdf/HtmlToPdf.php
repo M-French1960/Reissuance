@@ -47,9 +47,34 @@ final class HtmlToPdf
      *
      * @param  array<string, mixed>  $donnees
      */
-    public function render(string $vue, array $donnees = []): string
+    /**
+     * @param  array<string, mixed>  $donnees
+     * @param  string|null  $langue  the language to render in, or the current one
+     */
+    public function render(string $vue, array $donnees = [], ?string $langue = null): string
     {
-        $html = view($vue, $donnees)->render();
+        /*
+         * THE DOCUMENT IS RENDERED IN ITS OWN LANGUAGE, NOT THE READER'S.
+         *
+         * A certificate is signed once, and its content fingerprint binds the
+         * signature to the exact text. Rendering it in whatever language the
+         * person downloading it happens to be browsing in would produce a
+         * document that no longer matches what the mayor signed.
+         *
+         * The locale is restored whatever happens: a PDF failure must not
+         * leave the rest of the response speaking the wrong language.
+         */
+        $precedente = app()->getLocale();
+
+        if ($langue !== null) {
+            app()->setLocale($langue);
+        }
+
+        try {
+            $html = view($vue, $donnees)->render();
+        } finally {
+            app()->setLocale($precedente);
+        }
 
         $options = new Options;
 

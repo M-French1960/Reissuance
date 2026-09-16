@@ -116,7 +116,7 @@ class VerificationController extends Controller
             ])],
             'note' => ['nullable', 'string', 'max:500'],
         ], [
-            'result.required' => 'Indiquez le résultat de votre contrôle avant de continuer.',
+            'result.required' => __('flash.officer.result_required'),
         ]);
 
         // Etape 3 : la comparaison faciale est OBLIGATOIRE avant que
@@ -129,7 +129,7 @@ class VerificationController extends Controller
 
             if ($avis === null) {
                 return back()->withErrors([
-                    'result' => 'Lancez la comparaison faciale avant de conclure sur les photographies.',
+                    'result' => __('flash.officer.run_facial_first'),
                 ])->withInput();
             }
         }

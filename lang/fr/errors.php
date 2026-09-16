@@ -18,7 +18,7 @@ return [
     '419' => [
         'title' => 'Votre session a expiré',
         'body' => "Vous êtes resté trop longtemps sur la page avant de l'envoyer. Par sécurité, les sessions des comptes officiels sont courtes.",
-        'note' => "Reconnectez-vous, puis recommencez. Ce que vous aviez déjà validé est enregistré.",
+        'note' => 'Reconnectez-vous, puis recommencez. Ce que vous aviez déjà validé est enregistré.',
     ],
     '500' => [
         'title' => 'Le service rencontre une difficulté',
@@ -27,6 +27,6 @@ return [
     ],
     '503' => [
         'title' => 'Service momentanément indisponible',
-        'body' => "Le service est en maintenance. Vos demandes en cours ne sont pas affectées, elles vous attendront.",
+        'body' => 'Le service est en maintenance. Vos demandes en cours ne sont pas affectées, elles vous attendront.',
     ],
 ];

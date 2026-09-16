@@ -81,29 +81,22 @@ final class SignatureConfirmation
 
             $secondes = RateLimiter::availableIn($cle);
 
-            throw new DomainException(
-                'Trop de codes erronés. La signature est bloquée pendant '
-                .ceil($secondes / 60).' minute(s). '
-                ."Si vous n'êtes pas à l'origine de ces tentatives, prévenez l'administrateur."
-            );
+            throw new DomainException(__('flash.signature.blocked', [
+                'minutes' => (int) ceil($secondes / 60),
+            ]));
         }
 
         $code = trim((string) $code);
 
         if ($code === '') {
-            throw new DomainException(
-                'Entrez le code de votre application d’authentification pour signer.'
-            );
+            throw new DomainException(__('flash.signature.code_required'));
         }
 
         if ($mayor->two_factor_secret === null || $mayor->two_factor_confirmed_at === null) {
             // Ne devrait pas arriver : la contrainte `users_official_2fa_check`
             // refuse en base un compte officiel actif sans 2FA confirmee. On
             // le verifie tout de meme plutot que de laisser passer.
-            throw new DomainException(
-                "Votre double authentification n'est pas configurée : la signature est "
-                .'impossible. Configurez-la depuis la page Sécurité.'
-            );
+            throw new DomainException(__('flash.signature.two_factor_missing'));
         }
 
         $methode = $this->matches($mayor, $code);
@@ -115,10 +108,7 @@ final class SignatureConfirmation
             // tente de signer un acte sans savoir le code. Il entre au journal.
             $this->audit($mayor, 'act.signature_confirmation_failed', $ip);
 
-            throw new DomainException(
-                'Code incorrect. Vérifiez le code affiché par votre application '
-                ."d'authentification, ou utilisez un code de secours."
-            );
+            throw new DomainException(__('flash.signature.code_incorrect'));
         }
 
         RateLimiter::clear($cle);

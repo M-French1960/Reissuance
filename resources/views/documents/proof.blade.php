@@ -1,18 +1,18 @@
 @extends('documents.layout')
 
-@section('titre', 'Preuve de signature')
+@section('titre', __('documents.proof.heading'))
 
 @section('contenu')
     <div class="entete">
-        <h1>PREUVE DE SIGNATURE</h1>
+        <h1>{{ __('documents.proof.heading') }}</h1>
     </div>
     <hr>
 
-    <h2>Empreinte du document (SHA-256)</h2>
-    {{-- Sur une ligne a elle, en chasse fixe : une empreinte se recopie. --}}
+    <h2>{{ __('documents.proof.fingerprint') }}</h2>
+    {{-- On a line of its own, in a fixed pitch: a fingerprint gets copied out. --}}
     <p class="empreinte">{{ $empreinte }}</p>
 
-    <h2>Éléments de la signature</h2>
+    <h2>{{ __('documents.proof.elements') }}</h2>
     <table class="champs">
         @foreach ($elements as $libelle => $valeur)
             <tr><th>{{ $libelle }}</th><td>{{ $valeur }}</td></tr>
@@ -20,7 +20,7 @@
     </table>
 
     @if ($sceau !== null)
-        <h2>Sceau</h2>
+        <h2>{{ __('documents.proof.seal') }}</h2>
         <p class="empreinte">{{ $sceau }}</p>
     @endif
 

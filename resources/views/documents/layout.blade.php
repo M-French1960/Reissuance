@@ -18,7 +18,7 @@
     en dur dans une vue — s'en trouve respectee sans exception a menager.
 --}}
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <title>@yield('titre')</title>

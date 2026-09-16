@@ -37,7 +37,7 @@ class ReissuanceRequest extends Model
      */
     protected $fillable = [
         'reference', 'user_id', 'civil_status_center_id', 'commune_id',
-        'document_type', 'reason', 'copies_requested',
+        'document_type', 'reason', 'act_language', 'copies_requested',
         'full_name_at_birth', 'date_of_birth', 'place_of_birth',
         'registration_year', 'original_certificate_number',
         'father_name', 'father_nationality', 'mother_name', 'mother_nationality',

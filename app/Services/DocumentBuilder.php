@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\ReissuanceRequest;
 use App\Models\User;
+use App\Support\ActLanguage;
 use App\Support\Pdf\HtmlToPdf;
 
 /**
@@ -21,10 +22,22 @@ final class DocumentBuilder
 {
     public function __construct(private readonly HtmlToPdf $pdf) {}
 
-    public const DEMO_NOTICE = 'DOCUMENT DE DEMONSTRATION - SANS VALEUR JURIDIQUE';
+    public static function demoNotice(): string
+    {
+        return __('documents.demo_notice');
+    }
+
+    /** The same notice, in a named language rather than the current one. */
+    public static function demoNoticeIn(string $langue): string
+    {
+        return trans('documents.demo_notice', [], $langue);
+    }
 
     /** Bandeau du projet : un projet ne doit jamais passer pour un acte. */
-    public const DRAFT_NOTICE = 'PROJET D\'ACTE - NON SIGNE - SANS VALEUR';
+    public static function draftNotice(): string
+    {
+        return __('documents.draft_notice');
+    }
 
     /**
      * Empreinte du CONTENU de l'acte, independamment de sa mise en page.
@@ -80,13 +93,15 @@ final class DocumentBuilder
 
     public function build(ReissuanceRequest $request, User $mayor, bool $legallyBinding): string
     {
+        $langue = ActLanguage::forRequest($request);
+
         return $this->pdf->render('documents.act', [
             'demande' => $request,
             'signataire' => $mayor->name,
             'valeurJuridique' => $legallyBinding,
-            'mentionDemo' => self::DEMO_NOTICE,
-            'delivreLe' => now()->translatedFormat('d F Y'),
-        ]);
+            'mentionDemo' => self::demoNoticeIn($langue),
+            'delivreLe' => now()->locale($langue)->translatedFormat('d F Y'),
+        ], $langue);
     }
 
     /**
@@ -106,12 +121,14 @@ final class DocumentBuilder
      */
     public function buildDraft(ReissuanceRequest $request, User $officer): string
     {
+        $langue = ActLanguage::forRequest($request);
+
         return $this->pdf->render('documents.draft', [
             'demande' => $request,
             'redacteur' => $officer->name,
-            'mentionProjet' => self::DRAFT_NOTICE,
-            'delivreLe' => now()->translatedFormat('d F Y'),
-        ]);
+            'mentionProjet' => trans('documents.draft_notice', [], $langue),
+            'delivreLe' => now()->locale($langue)->translatedFormat('d F Y'),
+        ], $langue);
     }
 
     /**
@@ -133,16 +150,18 @@ final class DocumentBuilder
         return $this->pdf->render('documents.proof', [
             'empreinte' => $hash,
             'valeurJuridique' => $valeurJuridique,
-            'mentionDemo' => self::DEMO_NOTICE,
+            'mentionDemo' => self::demoNotice(),
             'sceau' => isset($proof['seal']) ? (string) $proof['seal'] : null,
             'elements' => [
-                'Prestataire' => (string) ($proof['provider'] ?? '—'),
-                'Algorithme' => (string) ($proof['algorithm'] ?? '—'),
-                'Référence de signature' => (string) ($proof['signature_reference'] ?? '—'),
-                'Signé le' => (string) ($proof['signed_at'] ?? '—'),
-                'Signataire' => (string) ($proof['signatory'] ?? '—'),
-                'Commune' => (string) ($proof['commune'] ?? '—'),
-                'Valeur juridique' => $valeurJuridique ? 'Oui' : 'NON - demonstration',
+                __('documents.proof.provider') => (string) ($proof['provider'] ?? ''),
+                __('documents.proof.algorithm') => (string) ($proof['algorithm'] ?? ''),
+                __('documents.proof.signature_reference') => (string) ($proof['signature_reference'] ?? ''),
+                __('documents.proof.signed_on') => (string) ($proof['signed_at'] ?? ''),
+                __('documents.proof.signatory') => (string) ($proof['signatory'] ?? ''),
+                __('documents.proof.commune') => (string) ($proof['commune'] ?? ''),
+                __('documents.proof.legal_value') => $valeurJuridique
+                    ? __('documents.proof.legal_value_yes')
+                    : __('documents.proof.legal_value_no'),
             ],
         ]);
     }

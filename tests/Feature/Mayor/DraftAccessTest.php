@@ -125,7 +125,7 @@ class DraftAccessTest extends TestCase
 
         $texte = $this->extractText($reponse->streamedContent());
 
-        $this->assertStringContainsString(DocumentBuilder::DRAFT_NOTICE, $texte);
+        $this->assertStringContainsString(DocumentBuilder::draftNotice(), $texte);
         $this->assertStringContainsString($this->officier->name, $texte);
         $this->assertStringNotContainsString(
             'signataire',

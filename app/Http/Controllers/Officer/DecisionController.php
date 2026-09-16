@@ -79,12 +79,12 @@ class DecisionController extends Controller
             'reason' => $motifExige,
             'internal_notes' => ['nullable', 'string', 'max:1000'],
         ], [
-            'decision.required' => 'Choisissez une décision.',
-            'reason.required_unless' => 'Un motif est obligatoire pour rejeter ou escalader une demande. Il sera visible dans le dossier.',
+            'decision.required' => __('flash.officer.decision_required'),
+            'reason.required_unless' => __('flash.officer.reason_required'),
             'reason.required' => $reservations !== []
-                ? "Une vérification n'a pas abouti à une correspondance. Quelle que soit votre décision, un motif est obligatoire : il figurera au dossier et sera lu par le maire."
-                : 'Un motif est obligatoire pour rejeter ou escalader une demande. Il sera visible dans le dossier.',
-            'reason.min' => 'Le motif doit être suffisamment explicite : au moins 10 caractères.',
+                ? __('flash.officer.reason_required_reservation')
+                : __('flash.officer.reason_required'),
+            'reason.min' => __('flash.officer.reason_min'),
         ]);
 
         $decision = DecisionType::from($validated['decision']);
@@ -105,7 +105,7 @@ class DecisionController extends Controller
             );
 
             return back()->withErrors([
-                'decision' => "Vous ne pouvez pas accepter cette demande tant que les quatre vérifications n'ont pas de résultat. Il manque : ".implode(' — ', $libelles),
+                'decision' => __('flash.officer.cannot_accept_incomplete', ['steps' => implode(', ', $libelles)]),
             ])->withInput();
         }
 
@@ -165,12 +165,15 @@ class DecisionController extends Controller
             ->orderBy('submitted_at')
             ->first();
 
-        $message = "Demande {$reissuanceRequest->reference} : {$decision->label()}.";
+        $message = __('flash.officer.decision_recorded', [
+            'reference' => $reissuanceRequest->reference,
+            'decision' => $decision->label(),
+        ]);
 
         if ($suivante !== null) {
             return redirect()
                 ->route('officer.queue')
-                ->with('status', $message.' Une demande suivante est en attente de prise en charge.');
+                ->with('status', $message.' '.__('flash.officer.next_waiting'));
         }
 
         return redirect()->route('officer.queue')->with('status', $message);

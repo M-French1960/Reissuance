@@ -185,7 +185,7 @@ class ActDocumentTest extends TestCase
         $signature = $this->issue();
         $texte = $this->extractText((string) Storage::disk('private')->get($signature->document_path));
 
-        $this->assertStringContainsString(DocumentBuilder::DEMO_NOTICE, $texte);
+        $this->assertStringContainsString(DocumentBuilder::demoNotice(), $texte);
         $this->assertStringContainsString('SANS VALEUR JURIDIQUE', $texte);
         // Accentué depuis D-067 : le moteur compose le français correctement.
         $this->assertStringContainsString('ne peut être présenté à aucune administration', $texte);
@@ -201,7 +201,7 @@ class ActDocumentTest extends TestCase
         $lignes = array_values(array_filter(array_map('trim', explode("\n", $texte)), fn ($l) => $l !== ''));
 
         $this->assertSame(
-            DocumentBuilder::DEMO_NOTICE,
+            DocumentBuilder::demoNotice(),
             $lignes[0] ?? '',
             'La mention doit être la toute première ligne du document.'
         );
@@ -216,7 +216,7 @@ class ActDocumentTest extends TestCase
         $this->assertStringContainsString('PREUVE DE SIGNATURE', $texte);
         $this->assertStringContainsString($signature->document_hash, str_replace("\n", '', $texte));
         $this->assertStringContainsString('NON - demonstration', $texte);
-        $this->assertStringContainsString(DocumentBuilder::DEMO_NOTICE, $texte);
+        $this->assertStringContainsString(DocumentBuilder::demoNotice(), $texte);
     }
 
     /** L'empreinte porte sur le document tel qu'il est stocké. */

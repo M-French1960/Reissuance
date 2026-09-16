@@ -49,6 +49,6 @@ class ProfileController extends Controller
 
         return redirect()
             ->route('citizen.profile.edit')
-            ->with('status', 'Votre profil a été enregistré.');
+            ->with('status', __('citizen.profile.saved'));
     }
 }

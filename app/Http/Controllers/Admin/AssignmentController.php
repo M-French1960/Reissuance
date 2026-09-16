@@ -88,7 +88,7 @@ class AssignmentController extends Controller
                 'auditable_type' => 'reissuance_request',
                 'auditable_id' => $reissuanceRequest->id,
                 'reason' => $precedent !== null
-                    ? "Affectation libérée : {$precedent->name} ne peut plus traiter ce dossier."
+                    ? __('flash.admin.assignment_released', ['name' => $precedent->name])
                     : null,
                 'ip_address' => $request->ip(),
             ]);
@@ -98,7 +98,7 @@ class AssignmentController extends Controller
 
         return redirect()
             ->route('admin.assignments.index')
-            ->with('status', "Dossier {$reissuanceRequest->reference} libéré : un agent du centre peut le reprendre.");
+            ->with('status', __('admin.assignments.released', ['reference' => $reissuanceRequest->reference]));
     }
 
     /**
