@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Enums\DecisionType;
 use App\Enums\RequestStatus;
 use App\Enums\VerificationResult;
 use App\Models\CivilStatusCenter;
 use App\Models\ReissuanceRequest;
+use App\Models\RequestDecision;
 use App\Models\User;
 use App\Services\ActDraftService;
 use App\Services\RequestTransitionService;
@@ -105,7 +107,42 @@ class DemoRequestsSeeder extends Seeder
                     $request->refresh();
                 }
 
+                $depuis = $request->status;
+
                 $transitions->transition($request, $to, $actor, $reason);
+
+                /*
+                 * LA DECISION DE L'OFFICIER, ET PAS SEULEMENT SON EFFET
+                 * (D-074).
+                 *
+                 * Le jeu de demonstration ne posait que la transition. Il
+                 * produisait donc un dossier escalade SANS decision — un etat
+                 * que l'application ne sait pas creer : le controleur exige un
+                 * motif, et la contrainte
+                 * request_decisions_reason_required_check l'impose en base.
+                 *
+                 * Le maire voyait « Motif de l'escalade : — » sur sa file, et
+                 * un historique vide sur l'ecran d'arbitrage : la demonstration
+                 * lui cachait exactement ce qu'il doit lire avant de trancher.
+                 */
+                $decision = match ($to) {
+                    RequestStatus::AwaitingSignature => DecisionType::Accepted,
+                    RequestStatus::Rejected => DecisionType::Rejected,
+                    RequestStatus::Escalated => DecisionType::Escalated,
+                    default => null,
+                };
+
+                if ($decision !== null) {
+                    RequestDecision::create([
+                        'request_id' => $request->id,
+                        'actor_id' => $actor->id,
+                        'actor_role' => $actor->role->value,
+                        'decision' => $decision->value,
+                        'reason' => $reason,
+                        'from_status' => $depuis->value,
+                        'to_status' => $to->value,
+                    ]);
+                }
 
                 /*
                  * Le maire signe un PROJET etabli par l'officier (D-064). Sans

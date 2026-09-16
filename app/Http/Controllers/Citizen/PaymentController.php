@@ -39,7 +39,9 @@ class PaymentController extends Controller
         if (! $this->gate->isEnabled()) {
             return redirect()
                 ->route('citizen.requests.show', $reissuanceRequest)
-                ->with('status', "Aucun frais n'est demandé pour cette démarche.");
+                // Une information, pas une reussite : rien n'a ete fait.
+                ->with('status', "Aucun frais n'est demandé pour cette démarche.")
+                ->with('statusTone', 'attention');
         }
 
         return view('citizen.payment', [
@@ -80,9 +82,13 @@ class PaymentController extends Controller
             return back()->withErrors(['payer_reference' => $e->getMessage()]);
         }
 
+        // « Refusé », « Expiré sans réponse », « En attente de confirmation » :
+        // aucun n'est un succes, et tous s'affichaient en vert. Le ton suit
+        // l'etat du reglement.
         return redirect()
             ->route('citizen.requests.payment', $reissuanceRequest)
-            ->with('status', $paiement->status->label().'.');
+            ->with('status', $paiement->status->label().'.')
+            ->with('statusTone', $paiement->status->tone());
     }
 
     /**
@@ -108,7 +114,9 @@ class PaymentController extends Controller
             return back()->withErrors(['payer_reference' => $e->getMessage()]);
         }
 
-        return back()->with('status', 'État du règlement : '.$paiement->status->label().'.');
+        return back()
+            ->with('status', 'État du règlement : '.$paiement->status->label().'.')
+            ->with('statusTone', $paiement->status->tone());
     }
 
     /** Le recu, uniquement pour un encaissement acquis. */

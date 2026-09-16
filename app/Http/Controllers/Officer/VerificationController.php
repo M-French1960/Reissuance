@@ -11,6 +11,7 @@ use App\Models\AuditLog;
 use App\Models\ReissuanceRequest;
 use App\Services\RequestTransitionService;
 use App\Services\VerificationWorkflow;
+use App\Support\ProviderResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -163,7 +164,7 @@ class VerificationController extends Controller
             return back()->withErrors(['provider' => $e->getMessage()]);
         }
 
-        return back()->with('status', $reponse->message ?? $reponse->outcome->label());
+        return $this->annonce($reponse);
     }
 
     /**
@@ -183,7 +184,7 @@ class VerificationController extends Controller
             return back()->withErrors(['provider' => $e->getMessage()]);
         }
 
-        return back()->with('status', $reponse->message ?? $reponse->outcome->label());
+        return $this->annonce($reponse);
     }
 
     /** Étape 4 : recherche dans le registre. */
@@ -197,6 +198,25 @@ class VerificationController extends Controller
             return back()->withErrors(['provider' => $e->getMessage()]);
         }
 
-        return back()->with('status', $reponse->message ?? $reponse->outcome->label());
+        return $this->annonce($reponse);
+    }
+
+    /**
+     * Annonce le résultat d'un contrôle externe DANS SA COULEUR.
+     *
+     * Les trois contrôles renvoyaient leur résultat par la voie ordinaire des
+     * messages de succès, peinte en vert. « Aucune correspondance » — le
+     * résultat exact que produit une pièce volée — s'affichait donc à
+     * l'officier dans la couleur de ce qui s'est bien passé, au moment précis
+     * où il doit se méfier. « Service externe indisponible » aussi.
+     *
+     * VerificationResult porte déjà le ton juste : il suffisait de s'en
+     * servir.
+     */
+    private function annonce(ProviderResponse $reponse): RedirectResponse
+    {
+        return back()
+            ->with('status', $reponse->message ?? $reponse->outcome->label())
+            ->with('statusTone', $reponse->outcome->toVerificationResult()->tone());
     }
 }

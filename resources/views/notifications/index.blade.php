@@ -4,9 +4,7 @@
 @section('content')
     <h1>Notifications</h1>
 
-    @if (session('status'))
-        <x-alert variant="success">{{ session('status') }}</x-alert>
-    @endif
+    <x-flash />
     <p class="u-note">
         Le détail d'une demande — motif d'un refus compris — se lit sur la page
         de la demande. Ces messages ne le reprennent pas.
@@ -50,8 +48,28 @@
             @endisset
         </x-card>
     @empty
+        {{-- L'ETAT VIDE PARLAIT AU CITOYEN, A TOUT LE MONDE (D-074).
+
+             « Vous serez prévenu ici à chaque étape de VOS DEMANDES » etait
+             servi a l'officier, au maire et a l'administrateur — qui n'ont pas
+             de demandes. Il leur promettait en outre des messages qu'ils ne
+             recevront pas : seul le citoyen est notifie a chaque etape, et
+             l'officier uniquement quand le maire lui RETOURNE un dossier. --}}
         <x-card title="Aucune notification">
-            <p class="u-flush">Vous serez prévenu ici à chaque étape de vos demandes.</p>
+            <p class="u-flush">
+                @switch (auth()->user()->role)
+                    @case (\App\Enums\UserRole::Citizen)
+                        Vous serez prévenu ici à chaque étape de vos demandes.
+                        @break
+                    @case (\App\Enums\UserRole::Officer)
+                        Vous serez prévenu ici lorsque le maire vous retournera
+                        un dossier. Les demandes à traiter, elles, se suivent
+                        depuis la file de traitement.
+                        @break
+                    @default
+                        Rien ne vous a encore été signalé ici.
+                @endswitch
+            </p>
         </x-card>
     @endforelse
 

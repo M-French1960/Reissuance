@@ -4,9 +4,7 @@
 @section('content')
     <h1>Comptes</h1>
 
-    @if (session('status'))
-        <x-alert variant="success">{{ session('status') }}</x-alert>
-    @endif
+    <x-flash />
     @if ($errors->any())
         <x-alert variant="danger" title="Action impossible">
             <ul class="alert__list">

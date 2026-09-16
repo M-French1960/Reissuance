@@ -6,8 +6,8 @@
 
     @if (session('status') === 'two-factor-authentication-enabled')
         <x-alert variant="success" title="Secret généré">Scannez le code ci-dessous puis saisissez un code pour confirmer.</x-alert>
-    @elseif (session('status'))
-        <x-alert variant="success">{{ session('status') }}</x-alert>
+    @else
+        <x-flash />
     @endif
 
     @if ($errors->any())
@@ -102,6 +102,14 @@
             </p>
 
             @if ($appareils->isNotEmpty())
+                {{-- LE SEUL TABLEAU D'ECRAN SANS DEFILEMENT (D-074).
+
+                     Sur telephone, il debordait : la colonne « Action » — donc
+                     le bouton « Révoquer » — sortait de l'ecran, sans moyen d'y
+                     acceder. Un maire qui a PERDU son telephone et n'a que son
+                     telephone sous la main ne pouvait pas revoquer l'appareil
+                     perdu. C'est le geste d'urgence de cette page. --}}
+                <div class="table-wrap" tabindex="0" role="group" aria-label="Vos appareils de signature">
                 <table>
                     <caption class="visually-hidden">Vos appareils de signature</caption>
                     <thead><tr>
@@ -127,6 +135,7 @@
                         @endforeach
                     </tbody>
                 </table>
+                </div>
             @else
                 <p class="u-note">Aucun appareil enrôlé pour l'instant.</p>
             @endif

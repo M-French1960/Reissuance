@@ -3146,3 +3146,119 @@ Le script d'audit a classé « ok » les trois tableaux de bord qui mentaient : 
 vérifiait le code HTTP, le débordement, le vide et les erreurs de console — pas
 si le texte est **vrai**. Aucun outil ne fait cette vérification-là. Elle
 demande de lire.
+
+## D-074 — Deuxième passe sur les écrans : ce que la première n'avait pas vu
+
+Suite de D-073, même consigne : **regarder les écrans**. Cette passe a d'abord
+dû réparer la précédente.
+
+### Vingt captures montraient la page de connexion
+
+Le script de capture fabriquait les codes TOTP **au début du parcours**, puis
+enchaînait les cinq rôles. Quand il arrivait à l'officier, six minutes plus
+tard, le code avait expiré — la double authentification faisait son travail.
+Le script, lui, concluait au succès sur `! url.includes('/login')` : or le défi
+2FA vit sur `/two-factor-challenge`, qui ne contient pas `/login`. Il capturait
+donc consciencieusement vingt fois l'écran de connexion, pour l'officier, le
+maire et l'administrateur.
+
+Et je les ai regardées comme si elles montraient l'application.
+
+Le script exige désormais une **preuve de session** — le nom du compte dans
+l'en-tête — et fabrique le code à l'instant de la connexion. Les cinq étapes de
+vérification de l'officier étaient, jusque-là, **les seuls écrans du projet que
+personne n'avait jamais vus**.
+
+### L'indicateur de progression cochait ce qui n'avait pas eu lieu
+
+Il marquait « ✓ terminée » toute étape située **avant** l'étape courante. C'est
+juste dans l'assistant du citoyen : on ne peut pas y atteindre l'étape n+1 sans
+avoir complété la n, la position vaut preuve. Ce ne l'était pas dans la
+vérification de l'officier, dont les cinq étapes se parcourent librement.
+
+Un officier arrivé à l'étape 5 lisait donc **« ✓ ✓ ✓ ✓ »** — et, dix
+centimètres plus bas, le récapitulatif de la même page annonçait
+**« Non renseignée »** pour ces quatre étapes, sous un bandeau rouge les
+énumérant comme manquantes. Un lecteur d'écran, lui, entendait
+« Vérification de la pièce d'identité — terminée ».
+
+Sur l'écran où se décide la délivrance d'un acte d'état civil, un contrôle
+annoncé comme fait alors qu'il n'a pas eu lieu n'est pas un défaut d'affichage.
+Le composant accepte maintenant la liste des étapes **réellement enregistrées**
+et l'écran de l'officier la lui passe ; l'assistant du citoyen garde l'ordre,
+qui y vaut toujours preuve.
+
+### Un refus annoncé dans la couleur du succès
+
+Tous les messages passaient par une seule clé de session, rendue **en vert**
+dans les quinze vues qui l'affichaient. Le vert est la couleur de « c'est
+fait ». La même clé portait pourtant :
+
+| Message | Ce qui s'était réellement passé |
+|---|---|
+| « Terminez cette étape avant de passer à la suivante. » | Le citoyen venait d'être renvoyé en arrière |
+| « Réglez les frais pour envoyer votre demande. » | L'envoi n'a pas eu lieu |
+| **« Aucune correspondance »** | Le contrôle d'identité a **échoué** — la trace exacte d'une pièce volée |
+| « Service externe indisponible » | Aucune vérification n'a été faite |
+| « Refusé », « Expiré sans réponse » | Le règlement a échoué |
+
+Le cas de l'officier est le grave : au moment précis où il doit se méfier, la
+page le félicitait.
+
+Le ton accompagne désormais le message, et `VerificationResult` comme
+`PaymentStatus` portaient déjà le bon — il suffisait de s'en servir. Un
+composant `<x-flash>` remplace les quinze blocs recopiés. **Tout ce qui n'est
+pas explicitement un succès se replie sur l'attention** : un
+`default => 'success'` aurait repeint en vert « En attente de confirmation ».
+
+### Le maire ne pouvait pas révoquer un téléphone depuis un téléphone
+
+Le tableau des appareils de signature était le **seul tableau d'écran** hors
+d'une zone défilante. Sur téléphone il débordait, et la colonne « Action » —
+donc le bouton **« Révoquer »** — sortait de l'écran sans moyen d'y accéder.
+
+C'est le geste d'urgence de cette page : un maire dont le téléphone a été perdu
+ou volé n'avait, depuis son seul appareil restant, aucun moyen de retirer à
+l'appareil perdu le droit de signer des actes.
+
+Deux tests veillaient déjà sur les zones défilantes existantes — clavier, nom
+accessible. Aucun ne voyait un tableau qui n'en avait pas. La réciproque est
+maintenant vérifiée sur toutes les vues, les gabarits PDF exceptés.
+
+### L'état vide des notifications parlait au citoyen, à tout le monde
+
+« Vous serez prévenu ici à chaque étape de **vos demandes** » était servi à
+l'officier, au maire et à l'administrateur — qui n'ont pas de demandes. Il leur
+promettait de surcroît des messages qu'ils ne recevront pas : seul le citoyen
+est notifié à chaque étape, l'officier uniquement quand le maire lui **retourne**
+un dossier.
+
+**Ce qui n'a pas été fait, et pourquoi.** Le maire ne reçoit aujourd'hui aucune
+notification — pas même quand un dossier attend sa signature. Sa file tient ce
+rôle. L'ajouter serait une fonctionnalité, pas une correction : la question est
+posée, elle n'est pas tranchée ici.
+
+### Le jeu de démonstration produisait un état que l'application refuse
+
+Le dossier escaladé de la démonstration n'avait **aucune décision** : le
+seeder posait la transition sans écrire la ligne `request_decisions`. Or le
+contrôleur exige un motif, et la contrainte
+`request_decisions_reason_required_check` l'impose en base — l'application ne
+sait pas créer cet état.
+
+Le maire voyait donc « Motif de l'escalade : — » sur sa file, et un historique
+vide sur l'écran d'arbitrage : la démonstration lui cachait exactement ce qu'il
+doit lire avant de trancher. Le seeder enregistre désormais la décision de
+l'officier sur les trois chemins qui en produisent une.
+
+### Ce qui a été vérifié et ne l'était pas
+
+Le chargement `with(['decisions' => fn ($q) => $q->latest()->limit(1)])` avait
+tout d'un piège connu — un `limit` qui s'applique à la requête entière et non
+à chaque parent. **Il fonctionne.** Laravel 13 le compile en
+`row_number() over (partition by request_id …)`. Vérifié en lisant le SQL émis,
+pas en s'en souvenant ; rien n'a été « corrigé ».
+
+L'affichage `mm/dd/yyyy` des champs de date vient de la locale de l'interface
+du navigateur du conteneur, pas de l'application : `<html lang="fr">` est bien
+posé. Invérifiable ici, donc non corrigé.

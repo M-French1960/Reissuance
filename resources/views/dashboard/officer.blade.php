@@ -14,9 +14,7 @@
     <p>Centre de rattachement : <strong>{{ auth()->user()->center?->name ?? '—' }}</strong>.
     Vous ne voyez que les demandes de ce centre.</p>
 
-    @if (session('status'))
-        <x-alert variant="success">{{ session('status') }}</x-alert>
-    @endif
+    <x-flash />
 
     {{-- Chaque compteur OUVRE la file filtree sur son statut. --}}
     <div class="grid grid--3">

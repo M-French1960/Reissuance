@@ -6,9 +6,7 @@
     <p>Ces informations vous identifient auprès du centre d'état civil. Elles
     sont reprises automatiquement dans vos demandes.</p>
 
-    @if (session('status'))
-        <x-alert variant="success">{{ session('status') }}</x-alert>
-    @endif
+    <x-flash />
 
     @if ($errors->any())
         <div class="alert alert--danger" role="alert">

@@ -71,6 +71,43 @@ class AccessibilityTest extends TestCase
     }
 
     /**
+     * ET LA RECIPROQUE : tout tableau d'ecran VIT dans une zone defilante.
+     *
+     * Les deux tests ci-dessus veillaient sur les `.table-wrap` existantes.
+     * Aucun ne voyait un tableau qui n'en avait pas. C'est ce qui est arrive
+     * au tableau des appareils de signature : sur telephone, il debordait, et
+     * la colonne « Action » — donc le bouton « Révoquer » — sortait de
+     * l'ecran, hors d'atteinte. Un maire qui a PERDU son telephone et n'a que
+     * son telephone sous la main ne pouvait pas revoquer l'appareil perdu.
+     *
+     * Les gabarits de `documents/` en sont exclus : ils composent des PDF, ou
+     * il n'y a ni ecran, ni defilement, ni clavier.
+     */
+    #[Test]
+    public function tout_tableau_d_ecran_vit_dans_une_zone_defilante(): void
+    {
+        $fautifs = [];
+
+        foreach ($this->vues() as $vue) {
+            if (str_contains($vue, '/views/documents/')) {
+                continue;
+            }
+
+            $source = (string) file_get_contents($vue);
+
+            if (substr_count($source, '<table') > substr_count($source, 'class="table-wrap"')) {
+                $fautifs[] = str_replace(resource_path('views').'/', '', $vue);
+            }
+        }
+
+        $this->assertSame([], $fautifs, implode("\n", array_merge(
+            ['Ces tableaux ne sont pas dans une zone defilante et deborderont sur telephone :'],
+            $fautifs,
+            ['Enveloppez-les dans <div class="table-wrap" tabindex="0" role="group" aria-label="…">.'],
+        )));
+    }
+
+    /**
      * Une zone focalisable nommee : sans nom, un lecteur d'ecran annonce un
      * arret de tabulation sans dire sur quoi.
      */

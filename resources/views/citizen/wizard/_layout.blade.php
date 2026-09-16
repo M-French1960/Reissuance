@@ -7,9 +7,7 @@
 
     <x-step-indicator :steps="$steps" :current="$step" />
 
-    @if (session('status'))
-        <x-alert variant="success">{{ session('status') }}</x-alert>
-    @endif
+    <x-flash />
 
     @if ($errors->any())
         <div class="alert alert--danger" role="alert">

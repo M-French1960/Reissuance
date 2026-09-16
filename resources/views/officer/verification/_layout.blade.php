@@ -11,11 +11,12 @@
         @endif
     </p>
 
-    <x-step-indicator :steps="$steps" :current="$step" />
+    {{-- Les etapes REELLEMENT enregistrees, pas celles qu'on a depassees :
+         la verification se parcourt librement, la position ne prouve rien. --}}
+    <x-step-indicator :steps="$steps" :current="$step"
+                      :done="$etapes->filter(fn ($e) => $e->result !== null)->keys()->all()" />
 
-    @if (session('status'))
-        <x-alert variant="success">{{ session('status') }}</x-alert>
-    @endif
+    <x-flash />
     @if ($errors->any())
         <div class="alert alert--danger" role="alert">
             <p class="alert__title">Action impossible</p>

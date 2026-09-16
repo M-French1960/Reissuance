@@ -6,9 +6,7 @@
     <p>Commune : <strong>{{ auth()->user()->commune?->name ?? '—' }}</strong>.
     Vous ne voyez que les dossiers prêts à signer ou escaladés.</p>
 
-    @if (session('status'))
-        <x-alert variant="success">{{ session('status') }}</x-alert>
-    @endif
+    <x-flash />
 
     <x-alert variant="attention" title="Signature de démonstration">
         Le prestataire de signature configuré est un adaptateur factice. Tout

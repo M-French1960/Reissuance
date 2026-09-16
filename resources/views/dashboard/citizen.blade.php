@@ -13,9 +13,7 @@
     <h1>Mon espace</h1>
     <p>Suivez vos demandes de réédition d'acte de naissance.</p>
 
-    @if (session('status'))
-        <x-alert variant="success">{{ session('status') }}</x-alert>
-    @endif
+    <x-flash />
 
     @unless ($profilComplet)
         {{-- Dit avant qu'il ne s'y heurte : le depot exige un profil complet. --}}

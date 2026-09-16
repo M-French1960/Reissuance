@@ -6,9 +6,7 @@
     <p>Centre : <strong>{{ auth()->user()->center?->name ?? '—' }}</strong>.
     Vous ne voyez que les demandes de ce centre.</p>
 
-    @if (session('status'))
-        <x-alert variant="success">{{ session('status') }}</x-alert>
-    @endif
+    <x-flash />
     @if ($errors->any())
         <x-alert variant="danger" title="Action impossible">
             <ul class="alert__list">@foreach ($errors->all() as $m)<li>{{ $m }}</li>@endforeach</ul>

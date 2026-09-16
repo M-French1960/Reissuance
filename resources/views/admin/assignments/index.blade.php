@@ -9,9 +9,7 @@
         quel dossier</strong>, et rien de ce que le dossier contient.
     </p>
 
-    @if (session('status'))
-        <x-alert variant="success">{{ session('status') }}</x-alert>
-    @endif
+    <x-flash />
     @if ($errors->any())
         <x-alert variant="danger" title="Action impossible">
             <ul class="alert__list">

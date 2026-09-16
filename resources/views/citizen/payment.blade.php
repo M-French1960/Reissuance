@@ -5,9 +5,7 @@
     <h1>Règlement des frais</h1>
     <p class="u-note">Demande {{ $demande->reference }}</p>
 
-    @if (session('status'))
-        <x-alert variant="success">{{ session('status') }}</x-alert>
-    @endif
+    <x-flash />
 
     @if ($errors->any())
         <x-alert variant="danger" title="Le règlement n'a pas abouti">

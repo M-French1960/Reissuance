@@ -13,9 +13,7 @@
     <p>Commune : <strong>{{ auth()->user()->commune?->name ?? '—' }}</strong>.
     Vous ne voyez que les demandes prêtes à signer ou escaladées.</p>
 
-    @if (session('status'))
-        <x-alert variant="success">{{ session('status') }}</x-alert>
-    @endif
+    <x-flash />
 
     <div class="grid grid--2">
         @foreach ([\App\Enums\RequestStatus::AwaitingSignature, \App\Enums\RequestStatus::Escalated] as $status)

@@ -4,9 +4,7 @@
 @section('content')
     <h1>Mes demandes</h1>
 
-    @if (session('status'))
-        <x-alert variant="success">{{ session('status') }}</x-alert>
-    @endif
+    <x-flash />
 
     <x-card>
         {{--

@@ -79,7 +79,11 @@ class RequestWizardController extends Controller
             return redirect()->route('citizen.requests.step', [
                 'reissuanceRequest' => $reissuanceRequest,
                 'step' => $reissuanceRequest->last_completed_step + 1,
-            ])->with('status', 'Terminez cette étape avant de passer à la suivante.');
+            ])
+                // Un renvoi en arriere n'est pas un succes : le vert felicitait
+                // le citoyen de s'etre fait refuser l'acces a l'etape suivante.
+                ->with('status', 'Terminez cette étape avant de passer à la suivante.')
+                ->with('statusTone', 'attention');
         }
 
         return view("citizen.wizard.step-{$step}", [
@@ -144,7 +148,9 @@ class RequestWizardController extends Controller
         if (! $gate->allows($draft, PaymentGate::BEFORE_SUBMISSION)) {
             return redirect()
                 ->route('citizen.requests.payment', $draft)
-                ->with('status', 'Réglez les frais pour envoyer votre demande.');
+                // L'envoi N'A PAS eu lieu : il reste une condition a remplir.
+                ->with('status', 'Réglez les frais pour envoyer votre demande.')
+                ->with('statusTone', 'attention');
         }
 
         $draft->forceFill([

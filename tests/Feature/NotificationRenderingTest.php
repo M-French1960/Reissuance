@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Enums\RequestStatus;
+use App\Models\CivilStatusCenter;
 use App\Models\User;
 use App\Notifications\RequestStatusChanged;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -81,5 +82,36 @@ class NotificationRenderingTest extends TestCase
             ->toArray($destinataire);
 
         $this->assertNotSame($priseEnCharge['title'], $retour['title']);
+    }
+
+    /**
+     * L'ETAT VIDE NE PROMET PAS CE QU'IL NE TIENDRA PAS (D-074).
+     *
+     * « Vous serez prévenu ici à chaque étape de VOS DEMANDES » etait servi
+     * a l'officier, au maire et a l'administrateur — qui n'ont pas de
+     * demandes. Il leur promettait en outre des messages qu'ils ne recevront
+     * pas : seul le citoyen est notifie a chaque etape, et l'officier
+     * uniquement lorsque le maire lui RETOURNE un dossier.
+     */
+    #[Test]
+    public function l_etat_vide_des_notifications_parle_au_role_qui_le_lit(): void
+    {
+        $centre = CivilStatusCenter::factory()->create();
+
+        $citoyen = User::factory()->citizen()->create();
+        $this->actingAs($citoyen)->get(route('notifications.index'))
+            ->assertOk()
+            ->assertSee('à chaque étape de vos demandes');
+
+        $officier = User::factory()->officer($centre)->create();
+        $this->actingAs($officier)->get(route('notifications.index'))
+            ->assertOk()
+            ->assertDontSee('vos demandes')
+            ->assertSee('le maire vous retournera');
+
+        $maire = User::factory()->mayor($centre->commune)->create();
+        $this->actingAs($maire)->get(route('notifications.index'))
+            ->assertOk()
+            ->assertDontSee('vos demandes');
     }
 }
