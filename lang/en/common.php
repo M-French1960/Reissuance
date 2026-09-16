@@ -68,5 +68,7 @@ return [
     'by' => 'By',
     'role' => 'Role',
     'name' => 'Name',
+    'decimal_separator' => '.',
+    'thousands_separator' => ',',
     'date_and_time' => ':date at :time',
 ];

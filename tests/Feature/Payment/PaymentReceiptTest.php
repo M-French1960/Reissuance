@@ -123,7 +123,7 @@ class PaymentReceiptTest extends TestCase
     {
         $texte = $this->texte($this->recu());
 
-        $this->assertStringContainsString('1 500 XAF', $texte);
+        $this->assertStringContainsString('1,500 XAF', $texte);
         $this->assertStringContainsString($this->demande->reference, $texte);
     }
 

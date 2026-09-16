@@ -264,7 +264,7 @@ class PaymentLifecycleTest extends TestCase
         config(['phoenix.payments.amount_minor' => '9999']);
 
         $this->assertSame(1000, $paiement->refresh()->amount_minor);
-        $this->assertSame('1 000 XAF', $paiement->money()->format());
+        $this->assertSame('1,000 XAF', $paiement->money()->format());
     }
 
     /**

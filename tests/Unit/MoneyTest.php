@@ -15,14 +15,14 @@ class MoneyTest extends TestCase
     #[Test]
     public function un_montant_sans_subdivision_se_lit_sans_virgule(): void
     {
-        $this->assertSame('1 000 XAF', (new Money(1000, 'XAF'))->format());
+        $this->assertSame('1,000 XAF', (new Money(1000, 'XAF'))->format());
         $this->assertSame('0 XAF', (new Money(0, 'XAF'))->format());
     }
 
     #[Test]
     public function une_devise_a_subdivision_se_lit_avec_ses_decimales(): void
     {
-        $this->assertSame('12,34 EUR', (new Money(1234, 'EUR', 2))->format());
+        $this->assertSame('12.34 EUR', (new Money(1234, 'EUR', 2))->format());
     }
 
     #[Test]
@@ -86,7 +86,7 @@ class MoneyTest extends TestCase
         $montant = Money::fromConfig();
 
         $this->assertSame(1500, $montant->minorAmount);
-        $this->assertSame('1 500 XAF', $montant->format());
+        $this->assertSame('1,500 XAF', $montant->format());
     }
 
     /**

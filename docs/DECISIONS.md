@@ -3460,3 +3460,95 @@ La qualité de l'anglais et du français est celle d'un développeur, pas d'un
 traducteur assermenté. **Les libellés d'un acte d'état civil mériteraient une
 relecture par l'administration** avant toute mise en service : ce sont des
 mentions officielles, pas de l'interface.
+
+## D-077 — Les mêmes écrans, côte à côte, dans les deux langues
+
+Consigne : continuer l'audit d'écrans, **dans les deux langues**. 64 captures,
+chaque écran en anglais et en français. La méthode paie : mettre les deux
+versions côte à côte révèle des défauts qu'aucune des deux ne montre seule.
+
+### Une correction que j'avais écrite à l'envers, avec une mauvaise raison
+
+`SetLocale` donnait la priorité à la préférence du compte sur le choix de
+session. J'avais justifié cela ainsi : « un agent qui a choisi le français sur
+sa machine ne doit pas recevoir l'anglais à un guichet partagé ».
+
+Ce raisonnement était faux. La clé de session n'est écrite **que** par
+quelqu'un qui manipule le sélecteur : une session neuve à un guichet partagé
+n'en porte aucune, donc la préférence du compte s'y applique de toute façon.
+
+Ce que l'ordre inversé cassait, c'est le cas ordinaire : **un visiteur bascule
+la page de connexion en français, se connecte, et le service lui répond en
+anglais.** Un geste fait il y a trois secondes prime sur une préférence
+enregistrée il y a trois semaines. Trouvé en me connectant et en regardant.
+
+Le choix de session ne réécrit pas le compte : basculer pour une visite ne doit
+pas changer en silence ce que verront les autres appareils et les courriels.
+
+### Un format de date ne traduit pas les mots qu'on y met
+
+Une chaîne de format Carbon n'est pas traduite ; seuls les noms de mois et de
+jours qu'elle contient le sont. Une préposition écrite dans le motif survit
+donc à toutes les langues. La frise du citoyen portait `'d F Y à H:i'`, et
+l'écran anglais affichait :
+
+> 16 September 2026 **à** 01:03
+
+La date traduite, le mot entre la date et l'heure non. Un test refuse désormais
+tout format de date contenant une lettre qui n'est pas un caractère de format.
+
+Et à l'inverse, en retirant les « à » j'avais laissé des dates **sans aucun
+séparateur** : *« 16 September 2026 01:03 »*. Le mot vit maintenant dans les
+fichiers de langue, sous `common.date_and_time`.
+
+### Les montants étaient toujours écrits à la française
+
+`number_format(..., ',', ' ')` était écrit dans `Money::format()`. Un reçu en
+anglais imprimait donc **« 1 500 XAF »** là où un lecteur anglophone attend
+**« 1,500 XAF »**. Les séparateurs suivent maintenant la langue.
+
+**Un arbitrage à signaler.** La typographie française appelle une espace
+insécable entre les milliers. Le client a demandé que les insécables
+disparaissent des interfaces, et `TypographyTest` les refuse. L'espace ordinaire
+l'emporte donc : c'est ce qu'un développeur francophone tape, et le seul coût
+est qu'un montant pourrait se couper en fin de ligne. Sur des frais à quatre
+chiffres, le risque est cosmétique. **Si vous préférez l'insécable, la décision
+se change à deux endroits nommés dans le test.**
+
+Un test vérifie aussi que **la somme ne bouge pas** : un changement de
+séparateur qui modifierait le nombre serait un défaut de facturation, pas de
+typographie.
+
+### Trois répétitions et une ponctuation
+
+- *« Born on | Born on 15 January 1990 in Yaoundé »* : le libellé répété dans sa
+  propre valeur, la même famille que le nom du centre corrigé en D-075 ;
+- la ligne de contexte de la vérification avait perdu ses deux-points en même
+  temps que ses tirets longs, et lisait *« Applicant Citoyen DEMO. Status Being
+  checked. »* dans les deux langues ;
+- le journal d'audit affichait le rôle de l'acteur **brut** (`officer`), alors
+  que le même compte se lit « Officier d'état civil » partout ailleurs.
+
+**Ce qui reste brut au journal, et pourquoi.** L'action
+(`verification.step_1_recorded`) et la transition (`draft → pending`) sont les
+identifiants canoniques qu'un administrateur rapproche du code et de la base.
+Les traduire rendrait le journal plus difficile à lire contre l'un comme contre
+l'autre. C'est un choix, pas un oubli.
+
+### Ce que la passe n'a pas pu corriger
+
+Le motif d'un refus est du **texte libre saisi par un agent**. Un officier
+travaillant en français écrit un motif français, qu'un citoyen lisant l'anglais
+verra en français. Aucune correction n'est possible sans traduction automatique,
+que je n'ai pas introduite. **À signaler au client** : si le service doit servir
+un demandeur dans sa langue jusqu'au bout, les motifs pré-remplis pourraient
+être stockés comme clés plutôt que comme texte — au prix de ne plus pouvoir les
+amender librement.
+
+### Un détail de mon propre outillage, corrigé aussi
+
+La première passe bilingue a échoué à connecter l'officier, le maire et
+l'administrateur en français. Ce n'était **pas** l'application : mon script
+réutilisait un code TOTP dans la même fenêtre de 30 secondes, et la protection
+contre le rejeu le refusait. Vérifié avant de conclure, plutôt que porté au
+compte de l'application.

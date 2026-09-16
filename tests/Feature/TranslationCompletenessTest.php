@@ -115,7 +115,15 @@ class TranslationCompletenessTest extends TestCase
 
         foreach (array_keys(Locales::SUPPORTED) as $locale) {
             foreach ($this->cles($locale) as $cle => $valeur) {
-                if (trim($valeur) === '') {
+                /*
+                 * Un separateur de milliers PEUT etre une espace, et c'en est
+                 * une en francais. Une valeur qui n'est faite que d'espaces
+                 * reste un oubli partout ailleurs, donc l'exemption est
+                 * nommee plutot que la regle assouplie.
+                 */
+                $estSeparateur = str_ends_with($cle, '_separator');
+
+                if ($estSeparateur ? $valeur === '' : trim($valeur) === '') {
                     $vides[] = "{$locale}: {$cle}";
                 }
             }

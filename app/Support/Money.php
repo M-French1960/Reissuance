@@ -77,11 +77,26 @@ final readonly class Money
             && $this->minorUnit === $autre->minorUnit;
     }
 
-    /** Rendu lisible. La seule operation qui produit une virgule. */
+    /**
+     * Readable rendering, with the separators of the reader's language.
+     *
+     * THEY WERE THE FRENCH ONES, ALWAYS (D-077). `number_format(..., ',', ' ')`
+     * was written into the method, so an English receipt printed "1 500 XAF"
+     * where an English reader expects "1,500 XAF". Cameroon serves both
+     * official languages, so the number follows the language the page is in,
+     * and the separators live in the language files where a deployment can
+     * adjust them.
+     *
+     * THE AMOUNT ITSELF DOES NOT MOVE. Only how it is spelled does. A test
+     * checks the two languages render the same sum.
+     */
     public function format(): string
     {
+        $decimale = (string) __('common.decimal_separator');
+        $milliers = (string) __('common.thousands_separator');
+
         if ($this->minorUnit === 0) {
-            return number_format($this->minorAmount, 0, ',', ' ').' '.$this->currency;
+            return number_format($this->minorAmount, 0, $decimale, $milliers).' '.$this->currency;
         }
 
         $diviseur = 10 ** $this->minorUnit;
@@ -89,8 +104,8 @@ final readonly class Money
         return number_format(
             $this->minorAmount / $diviseur,
             $this->minorUnit,
-            ',',
-            ' ',
+            $decimale,
+            $milliers,
         ).' '.$this->currency;
     }
 
