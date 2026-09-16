@@ -193,7 +193,16 @@ class RequestTrackingController extends Controller
                  * se taisent plutot que d'annoncer un avenir qui n'existe pas.
                  */
                 'detail' => $etat === 'arrete' ? '' : $jalon['detail'],
-                'date' => $trace?->created_at?->translatedFormat('d F Y à H:i'),
+                /*
+                 * THE PREPOSITION IS PART OF THE LANGUAGE, NOT OF THE DATE
+                 * (D-077). The format string carried a literal « à », so the
+                 * English timeline read "16 September 2026 à 01:03": the date
+                 * translated, the word between it and the time did not.
+                 */
+                'date' => $trace?->created_at === null ? null : __('common.date_and_time', [
+                    'date' => $trace->created_at->translatedFormat('d F Y'),
+                    'time' => $trace->created_at->format('H:i'),
+                ]),
             ];
         }
 

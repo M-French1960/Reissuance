@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\CivilStatusCenter;
 use App\Models\User;
 use App\Support\Locales;
 use PHPUnit\Framework\Attributes\Test;
@@ -55,22 +56,61 @@ class LocaleTest extends TestCase
     }
 
     /**
-     * A SAVED PREFERENCE BEATS A STALE SESSION.
+     * THE ACCOUNT PREFERENCE APPLIES WHEN NOTHING WAS CHOSEN THIS SESSION.
      *
-     * The alternative means an agent who chose French on their own machine
-     * gets English at a shared counter whose session says so, with no clue
-     * why.
+     * That is the shared-counter case: a fresh session carries no choice, so
+     * an agent who set French once gets French.
      */
     #[Test]
-    public function la_preference_du_compte_l_emporte_sur_la_session(): void
+    public function la_preference_du_compte_sert_quand_la_session_n_a_rien_choisi(): void
     {
         $citoyen = User::factory()->citizen()->create(['locale' => 'fr']);
 
-        $this->withSession(['locale' => 'en'])
-            ->actingAs($citoyen)
+        $this->actingAs($citoyen)
             ->get(route('dashboard'))
             ->assertOk()
             ->assertSee('Mon espace');
+    }
+
+    /**
+     * BUT A CHOICE MADE IN THIS SESSION OUTRANKS IT (D-077).
+     *
+     * The precedence used to run the other way, and it broke the ordinary
+     * case: a visitor switches the sign-in page to French, signs in, and the
+     * service answers in English because the account was left on English.
+     * An action taken seconds ago outranks a preference saved weeks ago.
+     */
+    #[Test]
+    public function un_choix_fait_dans_la_session_l_emporte_sur_le_compte(): void
+    {
+        $officier = User::factory()->officer(
+            CivilStatusCenter::factory()->create()
+        )->create(['locale' => 'en']);
+
+        $this->withSession(['locale' => 'fr'])
+            ->actingAs($officier)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('Poste de vérification', false);
+    }
+
+    /**
+     * And the session choice does NOT overwrite the account.
+     *
+     * Someone switching for one visit should not silently change what their
+     * other devices, and their notification e-mails, will use.
+     */
+    #[Test]
+    public function un_choix_de_session_ne_reecrit_pas_la_preference_du_compte(): void
+    {
+        $citoyen = User::factory()->citizen()->create(['locale' => 'en']);
+
+        $this->withSession(['locale' => 'fr'])
+            ->actingAs($citoyen)
+            ->get(route('dashboard'))
+            ->assertOk();
+
+        $this->assertSame('en', $citoyen->refresh()->locale);
     }
 
     /** Switching while signed in writes the choice to the account. */

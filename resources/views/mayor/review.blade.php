@@ -126,7 +126,13 @@
             <p>
                 {{ __('mayor.review.draft_meta', [
                     'officer' => $projet->officer?->name ?? __('mayor.review.written_by_unknown'),
-                    'date' => $projet->created_at?->translatedFormat('d F Y H:i'),
+                    {{-- Le mot qui joint la date a l'heure vit dans les
+                         fichiers de langue : un format Carbon ne traduit ni
+                         « à » ni « at » (D-077). --}}
+                    'date' => $projet->created_at === null ? '' : __('common.date_and_time', [
+                        'date' => $projet->created_at->translatedFormat('d F Y'),
+                        'time' => $projet->created_at->format('H:i'),
+                    ]),
                 ]) }}
                 <strong>{{ __('mayor.review.draft_strong') }}</strong>
             </p>
@@ -145,7 +151,9 @@
     <x-card :title="__('mayor.review.certificate_title')">
         <dl class="review">
             <div class="review__row"><dt>{{ __('mayor.review.name_at_birth') }}</dt><dd>{{ $demande->full_name_at_birth }}</dd></div>
-            <div class="review__row"><dt>{{ __('wizard.step4.born_on') }}</dt><dd>{{ __('mayor.review.born_on', [
+            {{-- Le libelle ne se repete pas dans la valeur : la ligne lisait
+                 « Born on | Born on 15 January 1990 in Yaoundé » (D-077). --}}
+            <div class="review__row"><dt>{{ __('wizard.step4.born_on') }}</dt><dd>{{ __('mayor.review.born_on_value', [
                 'date' => $demande->date_of_birth?->translatedFormat('d F Y'),
                 'place' => $demande->place_of_birth,
             ]) }}</dd></div>
@@ -159,7 +167,10 @@
     @if ($demande->signature)
         <x-card :title="__('mayor.review.issued_title')">
             <p>{{ __('mayor.review.issued_body', [
-                'date' => $demande->signature->signed_at?->translatedFormat('d F Y H:i'),
+                'date' => $demande->signature->signed_at === null ? '' : __('common.date_and_time', [
+                    'date' => $demande->signature->signed_at->translatedFormat('d F Y'),
+                    'time' => $demande->signature->signed_at->format('H:i'),
+                ]),
                 'mayor' => $demande->signature->mayor?->name,
             ]) }}</p>
             @unless ($demande->signature->legally_binding)

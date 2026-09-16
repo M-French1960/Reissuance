@@ -42,7 +42,16 @@
                             <tr>
                                 <td>{{ $log->created_at?->format('d/m/Y H:i:s') }}</td>
                                 <td>{{ $log->actor?->name ?? __('admin.audit.unknown_actor') }}<br>
-                                    <span class="field__hint">{{ $log->actor_role }}</span></td>
+                                    {{-- The role through its label, like every other screen.
+                                         It was printed raw here, so the same account read
+                                         "officer" in the log and "Civil status officer"
+                                         everywhere else (D-077). The ACTION and the
+                                         TRANSITION stay raw on purpose: they are the
+                                         canonical identifiers an administrator correlates
+                                         with the code and the database, and translating
+                                         them would make the log harder to read against
+                                         either. --}}
+                                    <span class="field__hint">{{ \App\Enums\UserRole::tryFrom((string) $log->actor_role)?->label() ?? $log->actor_role }}</span></td>
                                 <td>{{ $log->action }}</td>
                                 <td>{{ $log->auditable_type }} @if ($log->auditable_id) #{{ $log->auditable_id }} @endif</td>
                                 <td>@if ($log->from_status) {{ $log->from_status }} &rarr; {{ $log->to_status }} @endif</td>

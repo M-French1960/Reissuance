@@ -14,7 +14,7 @@ return [
     'step_number' => 'Étape :number',
 
     'heading' => 'Vérification :reference',
-    'meta' => 'Demandeur :name. Statut :status.',
+    'meta' => 'Demandeur : :name. Statut : :status.',
     'pass_number' => 'Passe n° :number, dossier retourné par le maire',
     'shortcuts' => 'Raccourcis : :next ou n pour l\'étape suivante, :previous ou p pour la précédente.',
     'previous_step' => 'Étape précédente',

@@ -14,7 +14,7 @@ return [
     'step_number' => 'Step :number',
 
     'heading' => 'Verification :reference',
-    'meta' => 'Applicant :name. Status :status.',
+    'meta' => 'Applicant: :name. Status: :status.',
     'pass_number' => 'Pass :number, returned by the mayor',
     'shortcuts' => 'Shortcuts: :next or n for the next step, :previous or p for the previous one.',
     'previous_step' => 'Previous step',

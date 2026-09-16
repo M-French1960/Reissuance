@@ -47,6 +47,7 @@ return [
         'certificate_title' => 'The certificate applied for',
         'name_at_birth' => 'Name at birth',
         'born_on' => 'Born on :date in :place',
+        'born_on_value' => ':date in :place',
         'registration_year' => 'Year of registration',
         'father' => 'Father',
         'mother' => 'Mother',

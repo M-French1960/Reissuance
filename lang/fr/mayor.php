@@ -47,6 +47,7 @@ return [
         'certificate_title' => "L'acte demandé",
         'name_at_birth' => 'Nom à la naissance',
         'born_on' => 'Né(e) le :date à :place',
+        'born_on_value' => 'le :date, à :place',
         'registration_year' => "Année d'enregistrement",
         'father' => 'Père',
         'mother' => 'Mère',
