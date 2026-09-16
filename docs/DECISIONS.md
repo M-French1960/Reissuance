@@ -3056,3 +3056,74 @@ C'est le quatrième défaut de ce projet trouvé en **regardant** plutôt qu'en
 testant — après l'adresse tronquée, le maire aveugle et le bouton à 404. Et le
 seul que je n'aurais pas trouvé seul : je n'avais jamais ouvert la racine du
 site.
+
+## D-073 — Passe systématique sur tous les écrans : quatre défauts de plus
+
+Consigne donnée après D-072 : continuer à vérifier les écrans **en les
+regardant**. Passe complète — 41 écrans, cinq rôles, deux largeurs, états
+vides et refus compris.
+
+### Les trois tableaux de bord étaient restés des ébauches du jalon 2
+
+Le même défaut que l'accueil, **sur l'écran qui suit la connexion de chaque
+rôle** :
+
+| Écran | Ce qu'il affichait |
+|---|---|
+| Citoyen | *« Le dépôt d'une demande sera disponible au prochain jalon »* — dans l'état vide, c'est-à-dire à celui qui vient précisément déposer sa première demande |
+| Officier | *« Jalon 2 — La file de traitement et la vérification en 5 étapes arrivent au jalon 4 »* |
+| Maire | *« Jalon 2 — Les deux files et la signature électronique arrivent au jalon 5 »* |
+
+Tout cela existe depuis longtemps. Et aucun des trois n'offrait **la moindre
+action** : trois compteurs qu'on ne pouvait pas ouvrir, un tableau de demandes
+sans lien pour en ouvrir une, un état vide sans bouton.
+
+Les trois sont reconstruits. Chaque compteur de l'officier ouvre désormais la
+file **filtrée sur son statut** ; le citoyen peut déposer depuis son état vide
+et ouvrir chaque ligne de son tableau ; le maire accède à sa file et à
+l'enrôlement d'un appareil. Le tableau du citoyen prévient en outre qu'un
+profil incomplet bloque le dépôt, au lieu de le laisser s'y heurter.
+
+### Les pages d'erreur n'existaient pas
+
+`/une-adresse-inconnue` rendait la page par défaut de Laravel : **un écran
+blanc portant « Not Found »**, sans en-tête, sans pied de page, sans un mot de
+français, sans chemin de retour. Un citoyen qui se trompe d'adresse, ou qui
+suit un lien périmé, était abandonné là.
+
+Cinq pages écrites — 404, 403, 419, 500, 503 — dans la mise en page du service,
+avec un retour qui mène à l'espace du connecté ou à l'accueil du visiteur. La
+419 explique la session courte des comptes officiels plutôt que d'afficher
+« Page Expired ».
+
+**Ce qu'elles ne disent pas est aussi important** : le 404 servi à la place
+d'un 403 n'apprend ni qu'un dossier existe, ni pourquoi l'accès est refusé. Un
+test le vérifie sur une demande inexistante.
+
+### Un défaut que j'ai introduit en corrigeant, et vu en regardant
+
+La barre de navigation des visiteurs, ajoutée en D-072, portait un bouton
+« Créer un compte » **blanc sur blanc** : une boîte vide. `.site-nav a` peint
+tous les liens en blanc pour le fond violet de l'en-tête, et un
+`<a class="btn btn--secondary">` en héritait par-dessus son fond blanc.
+
+Corrigé des deux côtés : la feuille de style rend ses couleurs à un bouton
+placé dans la barre, et le lien d'inscription devient un lien comme ses
+voisins — l'accueil porte déjà le bouton bien visible.
+
+**Je ne l'aurais pas vu autrement.** La suite était verte, la page rendait 200,
+le texte était présent dans le HTML. Il était simplement invisible.
+
+### Ce que la passe a confirmé
+
+41 écrans ouverts au large et sur téléphone : **aucun débordement horizontal,
+aucune page vide, aucune erreur JavaScript**, et les refus rendent bien 404
+sans rien apprendre. L'administrateur qui ouvre le dossier d'un citoyen est
+refusé — R8 le couvrait déjà sur tous les statuts.
+
+### La limite de la méthode, dite franchement
+
+Le script d'audit a classé « ok » les trois tableaux de bord qui mentaient : il
+vérifiait le code HTTP, le débordement, le vide et les erreurs de console — pas
+si le texte est **vrai**. Aucun outil ne fait cette vérification-là. Elle
+demande de lire.

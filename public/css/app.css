@@ -214,6 +214,19 @@ th { background: var(--color-surface-sunken); font-size: var(--text-xs); text-tr
 .site-nav a:hover, .site-nav a[aria-current="page"] { background: var(--color-brand-600); }
 .site-nav form { margin: 0; }
 .site-nav .btn { padding: var(--space-1) var(--space-3); font-size: var(--text-sm); }
+
+/*
+  UN BOUTON DANS LA BARRE GARDE SES PROPRES COULEURS (D-073).
+
+  `.site-nav a` peint tous les liens en blanc, pour le fond violet de
+  l'en-tete. Un <a class="btn btn--secondary"> y heritait donc du blanc sur un
+  fond blanc : le bouton s'affichait comme une boite vide, texte invisible.
+  Constate en regardant la page d'erreur, pas en lisant la feuille de style.
+
+  Ces deux regles portent une classe de plus que `.site-nav a` : elles gagnent.
+*/
+.site-nav a.btn--primary { color: #fff; }
+.site-nav a.btn--secondary { color: var(--color-brand-700); }
 .identity { font-size: var(--text-sm); }
 .identity strong { display: block; }
 

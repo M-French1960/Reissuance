@@ -88,7 +88,11 @@
                        @if (request()->routeIs('home')) aria-current="page" @endif>Accueil</a>
                     <a href="{{ route('login') }}"
                        @if (request()->routeIs('login')) aria-current="page" @endif>Se connecter</a>
-                    <x-button href="{{ route('register') }}" variant="secondary">Créer un compte</x-button>
+                    {{-- Un lien, comme ses voisins : l'accueil porte deja le
+                         bouton bien visible. Uniformiser la barre evite au
+                         passage le piege du blanc sur blanc. --}}
+                    <a href="{{ route('register') }}"
+                       @if (request()->routeIs('register')) aria-current="page" @endif>Créer un compte</a>
                 </nav>
             @endguest
         </div>

@@ -27,6 +27,12 @@ class DashboardController extends Controller
         return match ($user->role) {
             UserRole::Citizen => view('dashboard.citizen', [
                 'requests' => ReissuanceRequest::query()->latest('id')->limit(10)->get(),
+                /*
+                 * Le depot exige un profil complet. L'ecran le DIT (D-073)
+                 * plutot que de laisser le citoyen s'y heurter a l'etape
+                 * suivante.
+                 */
+                'profilComplet' => $user->profile?->completed_at !== null,
             ]),
 
             UserRole::Officer => view('dashboard.officer', [
