@@ -28,6 +28,16 @@ final readonly class SystemSetting
         public string $variable,
         public bool $sensible,
         public ?string $alerte = null,
+        /*
+         * Whether a sensitive setting is actually configured.
+         *
+         * A boolean, not a comparison on the displayed text. The view used to
+         * ask `valeur === 'configuré'` to pick the badge colour, which only
+         * worked while the interface had exactly one language: in English the
+         * test never matched, and a configured secret showed the colour of a
+         * missing one.
+         */
+        public bool $configure = false,
     ) {}
 
     /** Un reglage ordinaire, dont la valeur s'affiche. */
@@ -40,8 +50,8 @@ final readonly class SystemSetting
         return new self(
             $label,
             match (true) {
-                $valeur === null, $valeur === '' => 'non défini',
-                is_bool($valeur) => $valeur ? 'activé' : 'désactivé',
+                $valeur === null, $valeur === '' => __('admin.settings.undefined'),
+                is_bool($valeur) => $valeur ? __('admin.settings.enabled') : __('admin.settings.disabled'),
                 default => (string) $valeur,
             },
             $variable,
@@ -62,10 +72,11 @@ final readonly class SystemSetting
 
         return new self(
             $label,
-            $configure ? 'configuré' : 'non configuré',
+            $configure ? __('admin.settings.configured') : __('admin.settings.not_configured'),
             $variable,
             true,
-            $configure ? null : 'Absent : la fonction qui en dépend ne peut pas servir.',
+            $configure ? null : __('admin.settings.absent'),
+            $configure,
         );
     }
 }

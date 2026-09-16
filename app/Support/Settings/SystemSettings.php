@@ -26,13 +26,18 @@ namespace App\Support\Settings;
  */
 final class SystemSettings
 {
-    /** Les prestataires, et ce qu'ils gardent. */
+    /**
+     * The providers, and the variable that pins each one.
+     *
+     * The label is a translation KEY, not a sentence: a constant is resolved
+     * once, at compile time, before any language has been chosen.
+     */
     public const PROVIDERS = [
-        'identity' => ["Vérification d'identité (DGSN)", 'PHOENIX_IDENTITY_PROVIDER'],
-        'registry' => ["Registre national d'état civil", 'PHOENIX_REGISTRY_PROVIDER'],
-        'signature' => ['Signature électronique', 'PHOENIX_SIGNATURE_PROVIDER'],
-        'payment' => ['Encaissement', 'PHOENIX_PAYMENT_PROVIDER'],
-        'facial' => ['Reconnaissance faciale', 'PHOENIX_FACIAL_PROVIDER'],
+        'identity' => ['identity', 'PHOENIX_IDENTITY_PROVIDER'],
+        'registry' => ['registry', 'PHOENIX_REGISTRY_PROVIDER'],
+        'signature' => ['signature', 'PHOENIX_SIGNATURE_PROVIDER'],
+        'payment' => ['payment', 'PHOENIX_PAYMENT_PROVIDER'],
+        'facial' => ['facial', 'PHOENIX_FACIAL_PROVIDER'],
     ];
 
     /**
@@ -43,10 +48,10 @@ final class SystemSettings
     public static function sections(): array
     {
         return [
-            'Intégrations' => self::integrations(),
-            'Encaissement' => self::encaissement(),
-            'Sécurité' => self::securite(),
-            'Envoi de pièces' => self::envois(),
+            __('admin.settings.sections.integrations') => self::integrations(),
+            __('admin.settings.sections.payments') => self::encaissement(),
+            __('admin.settings.sections.security') => self::securite(),
+            __('admin.settings.sections.uploads') => self::envois(),
         ];
     }
 
@@ -59,12 +64,10 @@ final class SystemSettings
             $choisi = (string) config("phoenix.providers.{$cle}", 'fake');
 
             $reglages[] = SystemSetting::ordinaire(
-                $label,
+                __('admin.settings.providers.'.$label),
                 $choisi,
                 $variable,
-                $choisi === 'fake'
-                    ? 'Adaptateur FACTICE : aucune vérification réelle n’est effectuée.'
-                    : null,
+                $choisi === 'fake' ? __('admin.settings.fake_adapter') : null,
             );
         }
 
@@ -79,52 +82,52 @@ final class SystemSettings
 
         return [
             SystemSetting::ordinaire(
-                'Moment du paiement',
+                __('admin.settings.labels.payment_moment'),
                 match ($porte) {
-                    'before_submission' => "avant l'envoi de la demande",
-                    'before_signature' => 'après acceptation par l’officier',
-                    default => 'aucun encaissement',
+                    'before_submission' => __('admin.settings.payment_gate.before_submission'),
+                    'before_signature' => __('admin.settings.payment_gate.before_signature'),
+                    default => __('admin.settings.payment_gate.none'),
                 },
                 'PHOENIX_PAYMENT_GATE',
             ),
             SystemSetting::ordinaire(
-                'Montant',
+                __('admin.settings.labels.amount'),
                 $montant === null || $montant === ''
                     ? null
                     : $montant.' '.config('phoenix.payments.currency'),
                 'PHOENIX_PAYMENT_AMOUNT_MINOR',
                 $porte !== 'none' && ($montant === null || $montant === '')
-                    ? "L'encaissement est activé sans tarif : la plateforme refusera de servir."
+                    ? __('admin.settings.warnings.no_amount')
                     : null,
             ),
             SystemSetting::ordinaire(
-                'Base légale du tarif',
+                __('admin.settings.labels.legal_basis'),
                 config('phoenix.payments.legal_basis'),
                 'PHOENIX_PAYMENT_LEGAL_BASIS',
                 blank(config('phoenix.payments.legal_basis')) && $porte !== 'none'
-                    ? 'Aucune base légale citable : question 1 de docs/INTEGRATIONS.md §5.'
+                    ? __('admin.settings.warnings.no_legal_basis')
                     : null,
             ),
             SystemSetting::ordinaire(
-                'HR-Skills Pay — bac à sable',
+                __('admin.settings.labels.hrskills_sandbox'),
                 (bool) config('phoenix.payments.hrskills.sandbox'),
                 'PHOENIX_HRSKILLS_SANDBOX',
                 (bool) config('phoenix.payments.hrskills.sandbox')
-                    ? 'Les paiements ne sont pas réels.'
+                    ? __('admin.settings.warnings.sandbox')
                     : null,
             ),
             SystemSetting::secret(
-                'HR-Skills Pay — clé publique',
+                __('admin.settings.labels.hrskills_public_key'),
                 config('phoenix.payments.hrskills.public_key'),
                 'PHOENIX_HRSKILLS_PUBLIC_KEY',
             ),
             SystemSetting::secret(
-                'HR-Skills Pay — clé secrète',
+                __('admin.settings.labels.hrskills_secret_key'),
                 config('phoenix.payments.hrskills.secret_key'),
                 'PHOENIX_HRSKILLS_SECRET_KEY',
             ),
             SystemSetting::secret(
-                'HR-Skills Pay — secret de signature des rappels',
+                __('admin.settings.labels.hrskills_webhook_secret'),
                 config('phoenix.payments.hrskills.webhook_secret'),
                 'PHOENIX_HRSKILLS_WEBHOOK_SECRET',
             ),
@@ -136,30 +139,30 @@ final class SystemSettings
     {
         return [
             SystemSetting::secret(
-                "Clé de l'index aveugle",
+                __('admin.settings.labels.blind_index_key'),
                 config('phoenix.blind_index_key'),
                 'PHOENIX_BLIND_INDEX_KEY',
             ),
             SystemSetting::ordinaire(
-                'Durée de session des rôles officiels',
-                config('phoenix.security.official_session_lifetime').' minutes',
+                __('admin.settings.labels.official_session_lifetime'),
+                __('admin.settings.units.minutes', ['count' => config('phoenix.security.official_session_lifetime')]),
                 'PHOENIX_OFFICIAL_SESSION_LIFETIME',
             ),
             SystemSetting::ordinaire(
-                'Tentatives de connexion avant blocage',
+                __('admin.settings.labels.login_max_attempts'),
                 config('phoenix.security.login_max_attempts'),
                 'PHOENIX_LOGIN_MAX_ATTEMPTS',
             ),
             SystemSetting::ordinaire(
-                'Durée de blocage de base',
-                config('phoenix.security.login_lockout_seconds').' secondes',
+                __('admin.settings.labels.login_lockout_seconds'),
+                __('admin.settings.units.seconds', ['count' => config('phoenix.security.login_lockout_seconds')]),
                 'PHOENIX_LOGIN_LOCKOUT_SECONDS',
             ),
             SystemSetting::ordinaire(
-                'Vérification des mots de passe compromis',
+                __('admin.settings.labels.check_compromised_passwords'),
                 (bool) config('phoenix.security.check_compromised_passwords'),
                 'PHOENIX_CHECK_COMPROMISED_PASSWORDS',
-                'Cette vérification interroge un service distant et LAISSE PASSER s’il est injoignable (D-015).',
+                __('admin.settings.warnings.compromised_check'),
             ),
         ];
     }
@@ -169,19 +172,19 @@ final class SystemSettings
     {
         return [
             SystemSetting::ordinaire(
-                'Taille maximale acceptée',
-                round(((int) config('phoenix.uploads.max_bytes')) / 1024).' Ko',
-                '—',
+                __('admin.settings.labels.max_upload_size'),
+                __('admin.settings.units.kilobytes', ['count' => round(((int) config('phoenix.uploads.max_bytes')) / 1024)]),
+                '',
             ),
             SystemSetting::ordinaire(
-                'Cible après compression',
-                round(((int) config('phoenix.uploads.target_bytes')) / 1024).' Ko',
-                '—',
+                __('admin.settings.labels.compression_target'),
+                __('admin.settings.units.kilobytes', ['count' => round(((int) config('phoenix.uploads.target_bytes')) / 1024)]),
+                '',
             ),
             SystemSetting::ordinaire(
-                'Formats acceptés',
+                __('admin.settings.labels.accepted_formats'),
                 implode(', ', (array) config('phoenix.uploads.accepted_mime')),
-                '—',
+                '',
             ),
         ];
     }
@@ -197,7 +200,7 @@ final class SystemSettings
 
         foreach (self::PROVIDERS as $cle => [$label, $_]) {
             if ((string) config("phoenix.providers.{$cle}", 'fake') === 'fake') {
-                $factices[] = $label;
+                $factices[] = __('admin.settings.providers.'.$label);
             }
         }
 

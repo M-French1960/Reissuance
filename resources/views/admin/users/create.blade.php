@@ -1,18 +1,16 @@
 @extends('layouts.app')
-@section('title', 'Créer un compte')
+@section('title', __('admin.users.create'))
 
 @section('content')
-    <h1>Créer un compte officiel</h1>
+    <h1>{{ __('admin.users.create_heading') }}</h1>
 
-    <x-alert variant="attention" title="Ce que fait ce formulaire">
-        Le compte est créé <strong>désactivé</strong>, sans mot de passe choisi par vous :
-        son titulaire reçoit un lien pour définir le sien. Il devra configurer sa
-        double authentification avant que vous puissiez l'activer.
+    <x-alert variant="attention" :title="__('admin.users.create_what_title')">
+        {!! __('admin.users.create_what_body', ['strong' => '<strong>'.e(__('admin.users.create_what_strong')).'</strong>']) !!}
     </x-alert>
 
     <x-card>
         @if ($errors->any())
-            <x-alert variant="danger" title="Le compte n'a pas été créé">
+            <x-alert variant="danger" :title="__('admin.users.not_created_title')">
                 <ul class="alert__list">
                     @foreach ($errors->all() as $message)<li>{{ $message }}</li>@endforeach
                 </ul>
@@ -22,24 +20,24 @@
         <form method="POST" action="{{ route('admin.users.store') }}">
             @csrf
 
-            <x-field name="name" label="Nom complet" required :error="$errors->first('name')" />
-            <x-field name="email" label="Adresse électronique" type="email" required
+            <x-field name="name" :label="__('admin.users.full_name')" required :error="$errors->first('name')" />
+            <x-field name="email" :label="__('admin.users.email')" type="email" required
                      :error="$errors->first('email')" />
 
             <div class="field">
-                <label class="field__label" for="role">Rôle <span aria-hidden="true">*</span></label>
+                <label class="field__label" for="role">{{ __('admin.users.role') }} <span aria-hidden="true">*</span></label>
                 <select class="field__control" id="role" name="role" required>
-                    <option value="officer" @selected(old('role') === 'officer')>Officier d'état civil</option>
-                    <option value="mayor" @selected(old('role') === 'mayor')>Maire</option>
-                    <option value="admin" @selected(old('role') === 'admin')>Administrateur</option>
+                    <option value="officer" @selected(old('role') === 'officer')>{{ __('enums.user_role.officer') }}</option>
+                    <option value="mayor" @selected(old('role') === 'mayor')>{{ __('enums.user_role.mayor') }}</option>
+                    <option value="admin" @selected(old('role') === 'admin')>{{ __('enums.user_role.admin') }}</option>
                 </select>
-                <span class="field__hint">Les comptes citoyens ne se créent pas ici : les citoyens s'inscrivent eux-mêmes.</span>
+                <span class="field__hint">{{ __('admin.users.role_hint') }}</span>
             </div>
 
             <div class="field">
-                <label class="field__label" for="civil_status_center_id">Centre d'état civil (officiers)</label>
+                <label class="field__label" for="civil_status_center_id">{{ __('admin.users.centre_for_officers') }}</label>
                 <select class="field__control" id="civil_status_center_id" name="civil_status_center_id">
-                    <option value="">—</option>
+                    <option value="">{{ __('admin.users.choose') }}</option>
                     @foreach ($centers as $center)
                         <option value="{{ $center->id }}" @selected(old('civil_status_center_id') == $center->id)>
                             {{ $center->situation() }}
@@ -52,9 +50,9 @@
             </div>
 
             <div class="field">
-                <label class="field__label" for="commune_id">Commune (maires)</label>
+                <label class="field__label" for="commune_id">{{ __('admin.users.commune_for_mayors') }}</label>
                 <select class="field__control" id="commune_id" name="commune_id">
-                    <option value="">—</option>
+                    <option value="">{{ __('admin.users.choose') }}</option>
                     @foreach ($communes as $commune)
                         <option value="{{ $commune->id }}" @selected(old('commune_id') == $commune->id)>{{ $commune->name }}</option>
                     @endforeach
@@ -64,8 +62,8 @@
                 @endif
             </div>
 
-            <x-button type="submit" variant="primary">Créer le compte</x-button>
-            <x-button href="{{ route('admin.users.index') }}" variant="secondary">Annuler</x-button>
+            <x-button type="submit" variant="primary">{{ __('admin.users.create_button') }}</x-button>
+            <x-button href="{{ route('admin.users.index') }}" variant="secondary">{{ __('common.cancel') }}</x-button>
         </form>
     </x-card>
 @endsection

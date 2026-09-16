@@ -1,41 +1,43 @@
 @extends('layouts.app')
-@section('title', 'État du service')
+@section('title', __('admin.health.title'))
 
 @section('content')
-    <h1>État du service</h1>
+    <h1>{{ __('admin.health.title') }}</h1>
 
     <x-card>
         <p>
             <span class="badge badge--{{ $healthy ? 'success' : 'danger' }}">
-                {{ $healthy ? 'Service opérationnel' : 'Service dégradé' }}
+                {{ $healthy ? __('admin.health.operational') : __('admin.health.degraded') }}
             </span>
         </p>
 
         {{--
-            Le detail n'est pas public : il renseignait un visiteur anonyme sur
-            la version du serveur de base, le compte applicatif et l'etat des
-            droits du journal d'audit (D-058).
+            The detail is not public: it told an anonymous visitor the database
+            server version, the application account and the state of the audit
+            log privileges (D-058).
         --}}
         @unless ($detaille)
-            <p class="u-note">
-                Le détail des vérifications est réservé à l'administration.
-            </p>
+            <p class="u-note">{{ __('admin.health.detail_restricted') }}</p>
         @endunless
     </x-card>
 
     @if ($detaille)
         <x-card>
-            <div class="table-wrap" tabindex="0" role="group" aria-label="Vérifications de santé">
+            <div class="table-wrap" tabindex="0" role="group" aria-label="{{ __('admin.health.checks_aria') }}">
                 <table>
-                    <caption class="visually-hidden">Vérifications de santé</caption>
-                    <thead><tr><th scope="col">Vérification</th><th scope="col">État</th><th scope="col">Détail</th></tr></thead>
+                    <caption class="visually-hidden">{{ __('admin.health.checks_aria') }}</caption>
+                    <thead><tr>
+                        <th scope="col">{{ __('admin.health.check') }}</th>
+                        <th scope="col">{{ __('admin.health.state') }}</th>
+                        <th scope="col">{{ __('admin.health.detail') }}</th>
+                    </tr></thead>
                     <tbody>
                         @foreach ($checks as $check)
                             <tr>
                                 <td>{{ $check['label'] }}</td>
                                 <td>
                                     <span class="badge badge--{{ $check['ok'] ? 'success' : 'danger' }}">
-                                        {{ $check['ok'] ? 'OK' : 'En échec' }}
+                                        {{ $check['ok'] ? __('admin.health.ok') : __('admin.health.failing') }}
                                     </span>
                                 </td>
                                 <td>{{ $check['detail'] }}</td>

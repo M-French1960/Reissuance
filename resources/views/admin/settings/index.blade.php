@@ -1,29 +1,23 @@
 @extends('layouts.app')
-@section('title', 'Réglages')
+@section('title', __('admin.settings.title'))
 
 @section('content')
-    <h1>Réglages</h1>
+    <h1>{{ __('admin.settings.title') }}</h1>
 
     <p class="u-note">
-        Ces réglages sont <strong>consultables ici, modifiables au déploiement</strong>.
-        Les rendre modifiables depuis un navigateur permettrait de basculer un
-        prestataire sur un adaptateur factice — donc de faire délivrer des actes
-        sans vérification réelle.
+        {!! __('admin.settings.intro', ['strong' => '<strong>'.e(__('admin.settings.intro_strong')).'</strong>']) !!}
     </p>
 
     @if ($factices !== [])
-        <x-alert variant="danger" title="Ce système ne vérifie rien de réel">
-            <p>
-                {{ count($factices) }} intégration(s) tournent sur un
-                <strong>adaptateur factice</strong> :
-            </p>
+        <x-alert variant="danger" :title="__('admin.settings.fake_title')">
+            <p>{!! __('admin.settings.fake_body', [
+                'count' => count($factices),
+                'strong' => '<strong>'.e(__('admin.settings.fake_strong')).'</strong>',
+            ]) !!}</p>
             <ul class="alert__list">
                 @foreach ($factices as $nom)<li>{{ $nom }}</li>@endforeach
             </ul>
-            <p>
-                Les décisions rendues ici n'ont <strong>aucune valeur</strong>.
-                Cette installation est une démonstration, pas un service.
-            </p>
+            <p>{!! __('admin.settings.fake_note', ['strong' => '<strong>'.e(__('admin.settings.fake_note_strong')).'</strong>']) !!}</p>
         </x-alert>
     @endif
 
@@ -31,14 +25,14 @@
         <x-card>
             <h2 class="card__title">{{ $titre }}</h2>
 
-            <div class="table-wrap" tabindex="0" role="group" aria-label="Réglages — {{ $titre }}">
+            <div class="table-wrap" tabindex="0" role="group" aria-label="{{ __('admin.settings.title') }}: {{ $titre }}">
                 <table>
-                    <caption class="visually-hidden">Réglages — {{ $titre }}</caption>
+                    <caption class="visually-hidden">{{ __('admin.settings.title') }}: {{ $titre }}</caption>
                     <thead>
                         <tr>
-                            <th scope="col">Réglage</th>
-                            <th scope="col">Valeur</th>
-                            <th scope="col">Où le changer</th>
+                            <th scope="col">{{ __('admin.settings.setting') }}</th>
+                            <th scope="col">{{ __('admin.settings.value') }}</th>
+                            <th scope="col">{{ __('admin.settings.where_to_change') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -52,7 +46,7 @@
                                 </td>
                                 <td>
                                     @if ($reglage->sensible)
-                                        <span class="badge badge--{{ $reglage->valeur === 'configuré' ? 'success' : 'attention' }}">
+                                        <span class="badge badge--{{ $reglage->configure ? 'success' : 'attention' }}">
                                             {{ $reglage->valeur }}
                                         </span>
                                     @else
@@ -69,11 +63,7 @@
     @endforeach
 
     <x-card>
-        <h2 class="card__title">Ce qui n'est jamais affiché ici</h2>
-        <p>
-            Aucune valeur de secret — clés, mots de passe, secrets de signature.
-            L'écran indique seulement si un secret <strong>est configuré</strong> :
-            sa valeur n'entre pas dans les objets que cette page manipule.
-        </p>
+        <h2 class="card__title">{{ __('admin.settings.never_shown_title') }}</h2>
+        <p>{!! __('admin.settings.never_shown_body', ['strong' => '<strong>'.e(__('admin.settings.never_shown_strong')).'</strong>']) !!}</p>
     </x-card>
 @endsection
