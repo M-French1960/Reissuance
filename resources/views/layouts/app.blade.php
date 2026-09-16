@@ -73,6 +73,24 @@
                     </form>
                 </nav>
             @endauth
+
+            {{--
+                ET POUR UN VISITEUR ANONYME (D-072).
+
+                L'en-tete ne portait de navigation que pour les personnes
+                connectees : depuis n'importe quelle page publique — l'etat du
+                service, une page d'erreur — un visiteur n'avait aucun chemin
+                vers la connexion, sinon la barre d'adresse.
+            --}}
+            @guest
+                <nav class="site-nav" aria-label="Navigation principale">
+                    <a href="{{ route('home') }}"
+                       @if (request()->routeIs('home')) aria-current="page" @endif>Accueil</a>
+                    <a href="{{ route('login') }}"
+                       @if (request()->routeIs('login')) aria-current="page" @endif>Se connecter</a>
+                    <x-button href="{{ route('register') }}" variant="secondary">Créer un compte</x-button>
+                </nav>
+            @endguest
         </div>
     </header>
 

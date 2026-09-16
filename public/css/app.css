@@ -289,6 +289,19 @@ th { background: var(--color-surface-sunken); font-size: var(--text-xs); text-tr
 /* Empile des blocs autonomes avec un espacement constant. */
 .u-stack > * + * { margin-top: var(--space-3); }
 .u-stack { margin-bottom: var(--space-4); }
+/*
+  Chapeau de page : la phrase qui dit, en une fois, ce que le service fait.
+  Employe sur l'accueil (D-072), ou un citoyen doit comprendre avant de lire.
+*/
+.lede { font-size: var(--text-lg); max-width: 62ch; }
+
+/*
+  Liste numerotee sans habillage : les quatre temps d'une demande, racontes.
+  Distincte de .steps, qui est l'indicateur d'avancement de l'assistant.
+*/
+.steps-plain { margin: 0 0 var(--space-3); padding-left: var(--space-5); }
+.steps-plain li { margin-bottom: var(--space-2); }
+
 .u-note { font-size: var(--text-sm); color: var(--color-ink-500); }
 .u-note--tight { margin: var(--space-1) 0 0; }
 .u-note--loose { margin-top: var(--space-3); }

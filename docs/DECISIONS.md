@@ -3000,3 +3000,59 @@ Les violations de CSP relevées pendant l'incident venaient de la page de
 débogage de Laravel, qui emploie des styles et scripts en ligne. Sur les écrans
 de l'application, **aucune** : `style-src 'self'` et `script-src 'self'` sont
 respectés partout.
+
+## D-072 — La page d'accueil annonçait encore le jalon 1
+
+**Trouvé parce que vous m'avez montré votre écran.** Sur `127.0.0.1:8000`,
+l'accueil affichait :
+
+> **Socle technique — jalon 1**
+> L'authentification et les parcours métier arrivent aux jalons suivants.
+> Cette page confirme que le socle fonctionne.
+
+Ce n'était pas une copie locale périmée : le fichier était **celui du dépôt à
+jour**. La première page du service disait donc au citoyen que le service
+n'existait pas encore — six jalons après qu'il eut été construit.
+
+### Trois défauts sur un seul écran
+
+1. **Elle annonçait un produit inachevé**, en vocabulaire de conduite de projet
+   — « socle », « jalon » — devant un citoyen à qui ces mots ne disent rien.
+2. **Elle n'offrait aucun moyen d'entrer.** Ni « Créer un compte », ni « Se
+   connecter ». Les deux seuls boutons menaient à l'état du service et à la
+   galerie de composants : deux écrans d'exploitation.
+3. **L'en-tête ne portait de navigation que pour les personnes connectées.**
+   Depuis n'importe quelle page publique, un visiteur n'avait d'autre chemin
+   vers la connexion que la barre d'adresse.
+
+### Ce que l'accueil dit désormais
+
+Dans cet ordre, parce que c'est l'ordre des questions d'un demandeur : ce que
+le service fait, **ce qu'il faut avoir sous la main avant de commencer**, les
+quatre temps d'une demande, puis — en dernier — l'entrée des agents.
+
+**Et l'avertissement est donné dès l'accueil.** Tant que le prestataire de
+signature est l'adaptateur de démonstration, l'acte délivré porte « sans valeur
+juridique ». Laisser un citoyen traverser tout le parcours pour recevoir un
+document inutilisable serait le tromper (D-025, §10 du brief). L'avertissement
+disparaît de lui-même le jour où un prestataire réel est configuré — un test
+vérifie les deux cas.
+
+`Route::view` est remplacé par un contrôleur : passer la valeur à `Route::view`
+la figerait au moment de la mise en cache des routes, et l'avertissement
+mentirait dès que la configuration changerait.
+
+### Pourquoi la suite ne le voyait pas
+
+Elle vérifiait que l'accueil rend **200**. Une page peut rendre 200 et ne servir
+à personne.
+
+`HomePageTest` vérifie maintenant ce qui compte : qu'un citoyen y trouve un
+moyen d'entrer, qu'on lui dise quoi préparer, que l'avertissement soit présent
+quand il doit l'être et absent sinon, et qu'aucun mot de conduite de projet n'y
+figure. Ce dernier test tomberait si la bannière revenait.
+
+C'est le quatrième défaut de ce projet trouvé en **regardant** plutôt qu'en
+testant — après l'adresse tronquée, le maire aveugle et le bouton à 404. Et le
+seul que je n'aurais pas trouvé seul : je n'avais jamais ouvert la racine du
+site.
