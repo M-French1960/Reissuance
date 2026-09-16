@@ -3114,6 +3114,25 @@ voisins — l'accueil porte déjà le bouton bien visible.
 **Je ne l'aurais pas vu autrement.** La suite était verte, la page rendait 200,
 le texte était présent dans le HTML. Il était simplement invisible.
 
+### La page de suivi parlait mal au demandeur
+
+Deux défauts de texte, sur l'écran que le citoyen consulte le plus souvent —
+celui où il vient voir si son acte est prêt.
+
+Le premier jalon annonçait : *« Transmise au centre d'état civil de **Centre
+d'état civil de Yaoundé I** »*. Le libellé préfixait un nom qui porte déjà son
+propre préfixe. Le nom du centre se suffit : *« Transmise à : Centre d'état
+civil de Yaoundé I. »*
+
+Le dernier jalon, marqué **« — terminé »**, affichait dessous *« Vous pourrez
+télécharger votre acte »* : le futur sous un fait accompli, à quelques
+centimètres du bouton de téléchargement. Il parle maintenant au présent dès que
+la signature existe — *« Votre acte est prêt : téléchargez-le ci-dessous. »*
+
+Aucun des deux n'était une erreur technique : la page rendait 200, la frise
+était juste, le lien fonctionnait. Ce sont des phrases fausses ou maladroites
+adressées à quelqu'un qui attend un document d'état civil.
+
 ### Ce que la passe a confirmé
 
 41 écrans ouverts au large et sur téléphone : **aucun débordement horizontal,

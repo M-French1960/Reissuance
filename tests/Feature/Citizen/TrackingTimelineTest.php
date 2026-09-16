@@ -7,6 +7,7 @@ namespace Tests\Feature\Citizen;
 use App\Enums\RequestStatus;
 use App\Http\Controllers\Citizen\RequestTrackingController;
 use App\Models\CivilStatusCenter;
+use App\Models\DocumentSignature;
 use App\Models\ReissuanceRequest;
 use App\Models\User;
 use App\Services\RequestTransitionService;
@@ -177,5 +178,67 @@ class TrackingTimelineTest extends TestCase
         $service->transition($demande->refresh(), RequestStatus::UnderReview, $officier);
 
         $this->assertSame(['fait', 'fait', 'a_venir', 'a_venir'], $this->frise($demande));
+    }
+
+    /**
+     * LE NOM DU CENTRE NE BEGAIE PAS (D-073).
+     *
+     * Les centres s'appellent « Centre d'état civil de Yaoundé I ». Prefixer
+     * le libelle donnait « Transmise au centre d'état civil de Centre d'état
+     * civil de Yaoundé I ». Trouve en regardant l'ecran, pas en le testant.
+     */
+    #[Test]
+    public function le_nom_du_centre_n_est_pas_repete(): void
+    {
+        $this->centre->forceFill(['name' => "Centre d'état civil de Yaoundé I"])->save();
+
+        $contenu = (string) $this->actingAs($this->citoyen)
+            ->get(route('citizen.requests.show', $this->demande()))
+            ->getContent();
+
+        $this->assertStringNotContainsString(
+            "centre d'état civil de Centre d'état civil",
+            $contenu,
+            'Le libellé répète le mot « centre d’état civil ».'
+        );
+    }
+
+    /**
+     * ET LE TEMPS SUIT L'ETAT.
+     *
+     * « Vous pourrez télécharger votre acte » s'affichait sous une etape
+     * marquee « terminé » : le futur sous un fait accompli.
+     */
+    #[Test]
+    public function le_dernier_jalon_parle_au_present_quand_l_acte_existe(): void
+    {
+        $demande = $this->demande();
+
+        $detail = $this->detailDuDernierJalon($demande);
+        $this->assertStringContainsString('Vous pourrez', $detail);
+
+        // Une fois l'acte signé, le même jalon parle au présent.
+        DocumentSignature::create([
+            'request_id' => $demande->id,
+            'mayor_id' => User::factory()->mayor($this->centre->commune)->create()->id,
+            'document_hash' => str_repeat('a', 64),
+            'provider' => 'fake-signature',
+            'legally_binding' => false,
+            'signed_at' => now(),
+        ]);
+
+        $detail = $this->detailDuDernierJalon($demande->refresh());
+        $this->assertStringContainsString('Votre acte est prêt', $detail);
+    }
+
+    private function detailDuDernierJalon(ReissuanceRequest $demande): string
+    {
+        $controleur = app(RequestTrackingController::class);
+        $methode = new \ReflectionMethod($controleur, 'timeline');
+        $methode->setAccessible(true);
+
+        $jalons = $methode->invoke($controleur, $demande->refresh());
+
+        return (string) end($jalons)['detail'];
     }
 }

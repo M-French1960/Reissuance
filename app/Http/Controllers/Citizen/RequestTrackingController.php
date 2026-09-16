@@ -64,7 +64,15 @@ class RequestTrackingController extends Controller
             [
                 'titre' => 'Demande envoyée',
                 'statut' => RequestStatus::Pending,
-                'detail' => "Transmise au centre d'état civil".($demande->center ? " de {$demande->center->name}" : ''),
+                /*
+                 * LE NOM DU CENTRE SE SUFFIT (D-073). Les centres s'appellent
+                 * deja « Centre d'état civil de Yaoundé I » : prefixer donnait
+                 * « Transmise au centre d'état civil de Centre d'état civil de
+                 * Yaoundé I ». Releve en regardant l'ecran de suivi.
+                 */
+                'detail' => $demande->center
+                    ? "Transmise à : {$demande->center->name}."
+                    : "Transmise au centre d'état civil.",
             ],
             [
                 'titre' => "Vérification par l'officier",
@@ -79,7 +87,14 @@ class RequestTrackingController extends Controller
             [
                 'titre' => 'Acte disponible',
                 'statut' => RequestStatus::Signed,
-                'detail' => 'Vous pourrez télécharger votre acte.',
+                /*
+                 * AU TEMPS QUI CONVIENT (D-073). « Vous pourrez télécharger »
+                 * s'affichait sous une etape marquee « terminé » : le futur
+                 * sous un fait accompli. Le present des que l'acte existe.
+                 */
+                'detail' => $demande->signature !== null
+                    ? 'Votre acte est prêt : téléchargez-le ci-dessous.'
+                    : 'Vous pourrez télécharger votre acte.',
             ],
         ];
 
