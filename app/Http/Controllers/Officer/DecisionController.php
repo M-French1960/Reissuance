@@ -95,7 +95,7 @@ class DecisionController extends Controller
         if ($decision === DecisionType::Accepted && ! $this->workflow->isComplete($reissuanceRequest)) {
             $manquantes = $this->workflow->missingSteps($reissuanceRequest);
             $libelles = array_map(
-                fn (int $n): string => "{$n}. ".VerificationWorkflow::STEPS[$n],
+                fn (int $n): string => "{$n}. ".VerificationWorkflow::stepNames()[$n],
                 $manquantes,
             );
 

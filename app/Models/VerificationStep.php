@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\VerificationResult;
+use App\Services\VerificationWorkflow;
 use Database\Factories\VerificationStepFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,14 +15,6 @@ class VerificationStep extends Model
 {
     /** @use HasFactory<VerificationStepFactory> */
     use HasFactory;
-
-    public const STEPS = [
-        1 => 'Consultation des informations de la demande',
-        2 => "Vérification de la pièce d'identité",
-        3 => 'Examen des photographies',
-        4 => "Recherche dans la base d'état civil",
-        5 => 'Décision',
-    ];
 
     protected $fillable = [
         'request_id', 'cycle', 'step', 'officer_id', 'result',
@@ -50,6 +43,7 @@ class VerificationStep extends Model
 
     public function label(): string
     {
-        return self::STEPS[$this->step] ?? "Étape {$this->step}";
+        return VerificationWorkflow::stepNames()[$this->step]
+            ?? __('verification.step_number', ['number' => $this->step]);
     }
 }

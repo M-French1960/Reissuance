@@ -36,7 +36,7 @@ class ReviewController extends Controller
                 'decisions.actor', 'signature'
             ),
             'etapes' => $this->workflow->steps($reissuanceRequest),
-            'steps' => VerificationWorkflow::STEPS,
+            'steps' => VerificationWorkflow::stepNames(),
             'complet' => $this->workflow->isComplete($reissuanceRequest),
             'manquantes' => $this->workflow->missingSteps($reissuanceRequest),
             'reservations' => $this->workflow->reservations($reissuanceRequest),

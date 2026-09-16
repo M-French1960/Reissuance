@@ -23,6 +23,7 @@ class User extends Authenticatable
         'name', 'email', 'password', 'role', 'status',
         'civil_status_center_id', 'commune_id',
         'email_verified_at', 'two_factor_confirmed_at',
+        'locale',
     ];
 
     protected $hidden = [

@@ -38,16 +38,7 @@ enum RequestStatus: string
      */
     public function label(): string
     {
-        return match ($this) {
-            self::Draft => 'Brouillon — non envoyée',
-            self::Pending => 'Envoyée — en attente de traitement',
-            self::UnderReview => 'En cours de vérification',
-            self::AwaitingSignature => 'En attente de signature du maire',
-            self::Escalated => 'Transmise au maire pour arbitrage',
-            self::Signed => 'Signée — acte disponible',
-            self::Rejected => 'Refusée',
-            self::Cancelled => 'Annulée par le demandeur',
-        };
+        return __('enums.request_status.'.$this->value);
     }
 
     public function isTerminal(): bool

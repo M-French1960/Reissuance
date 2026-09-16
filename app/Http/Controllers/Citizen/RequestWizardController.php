@@ -30,12 +30,25 @@ use Illuminate\View\View;
  */
 class RequestWizardController extends Controller
 {
-    public const STEPS = [
-        1 => 'Vos informations',
-        2 => "Détails de l'acte",
-        3 => 'Centre et pièces',
-        4 => 'Vérification et envoi',
-    ];
+    /**
+     * The four steps, translated on read.
+     *
+     * A constant cannot hold a translated string: it is resolved once, at
+     * compile time, before any language is chosen. The names of the steps
+     * therefore live in the language files and are fetched per request.
+     */
+    public const STEP_COUNT = 4;
+
+    /** @return array<int, string> */
+    public static function steps(): array
+    {
+        return [
+            1 => __('wizard.steps.1'),
+            2 => __('wizard.steps.2'),
+            3 => __('wizard.steps.3'),
+            4 => __('wizard.steps.4'),
+        ];
+    }
 
     /** Cree ou reprend le brouillon en cours, et renvoie a la bonne etape. */
     public function start(Request $request): RedirectResponse
@@ -89,7 +102,7 @@ class RequestWizardController extends Controller
         return view("citizen.wizard.step-{$step}", [
             'draft' => $reissuanceRequest->load('attachments', 'center'),
             'step' => $step,
-            'steps' => self::STEPS,
+            'steps' => self::steps(),
             'centers' => $step === 3
                 ? CivilStatusCenter::with('commune:id,name')->where('is_active', true)->orderBy('name')->get()
                 : collect(),

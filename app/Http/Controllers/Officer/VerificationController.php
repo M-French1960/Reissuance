@@ -86,7 +86,7 @@ class VerificationController extends Controller
         return view("officer.verification.step-{$step}", [
             'demande' => $reissuanceRequest->load('citizen.profile', 'attachments', 'center', 'commune'),
             'step' => $step,
-            'steps' => VerificationWorkflow::STEPS,
+            'steps' => VerificationWorkflow::stepNames(),
             'etapes' => $this->workflow->steps($reissuanceRequest),
             'manquantes' => $this->workflow->missingSteps($reissuanceRequest),
             'complet' => $this->workflow->isComplete($reissuanceRequest),

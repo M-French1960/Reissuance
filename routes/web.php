@@ -18,6 +18,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DevUiController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\HrSkillsWebhookController;
 use App\Http\Controllers\Mayor\DashboardController as MayorDashboardController;
 use App\Http\Controllers\Mayor\DecisionController as MayorDecisionController;
@@ -34,6 +35,16 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', HomeController::class)->name('home');
 
 Route::get('/sante', HealthController::class)->name('health');
+
+/*
+ * Switching language, open to visitors as well as to signed-in accounts.
+ *
+ * A POST, because it writes to the session and to the account: a link that
+ * changed someone's language would be followed by crawlers and by link
+ * prefetchers. Outside the `auth` group on purpose, since the first person who
+ * needs it is a visitor reading the sign-in page in the wrong language.
+ */
+Route::post('/langue', LocaleController::class)->name('locale.update');
 
 /*
  * Rappel de l'operateur de paiement.
@@ -260,3 +271,17 @@ Route::middleware('auth')->group(function (): void {
 if (! app()->environment('production')) {
     Route::get('/dev/ui', DevUiController::class)->name('dev.ui');
 }
+
+/*
+ * An unknown URL, rendered in the visitor's own language.
+ *
+ * Without this, a 404 on an unmatched URI never enters the `web` group: the
+ * session never starts, SetLocale never runs, and the error page comes back in
+ * the platform default rather than the language the visitor picked. Someone
+ * reading the service in French mistypes an address and is answered in
+ * English, with no clue why.
+ *
+ * A fallback route is matched by the router, so it carries the group's
+ * middleware, and abort(404) then renders the ordinary error page.
+ */
+Route::fallback(fn () => abort(404));

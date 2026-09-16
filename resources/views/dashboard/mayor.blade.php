@@ -1,17 +1,16 @@
 @extends('layouts.app')
-@section('title', 'Espace du maire')
+@section('title', __('dashboard.mayor.title'))
 
 @section('content')
     {{--
-        L'ECRAN QUI SUIT LA CONNEXION D'UN MAIRE (D-073).
+        THE SCREEN A MAYOR LANDS ON AFTER SIGNING IN (D-073).
 
-        Il est reste une ebauche du jalon 2 : deux compteurs, puis « Jalon 2 —
-        Les deux files et la signature électronique arrivent au jalon 5 ». Les
-        deux existent. Et aucun compteur ne menait a la file de signature.
+        It stayed a milestone 2 sketch: two counters, then "Milestone 2, both
+        queues and the electronic signature arrive at milestone 5". Both exist.
+        And no counter led to the signing queue.
     --}}
-    <h1>Signature des actes</h1>
-    <p>Commune : <strong>{{ auth()->user()->commune?->name ?? '—' }}</strong>.
-    Vous ne voyez que les demandes prêtes à signer ou escaladées.</p>
+    <h1>{{ __('dashboard.mayor.heading') }}</h1>
+    <p>{{ __('dashboard.mayor.commune_line', ['commune' => auth()->user()->commune?->name ?? __('common.none')]) }}</p>
 
     <x-flash />
 
@@ -24,15 +23,11 @@
         @endforeach
     </div>
 
-    <x-card title="Signer un acte">
-        <p>
-            Vous signez le <strong>projet d'acte rédigé par l'officier</strong>&nbsp;:
-            ouvrez-le avant de décider. Chaque signature demande votre code
-            d'authentification, ou votre appareil si vous en avez enrôlé un.
-        </p>
+    <x-card :title="__('dashboard.mayor.sign_title')">
+        <p>{!! __('dashboard.mayor.sign_body', ['strong' => '<strong>'.e(__('dashboard.mayor.sign_body_strong')).'</strong>']) !!}</p>
         <div class="row-actions">
-            <x-button href="{{ route('mayor.dashboard') }}" variant="primary">Ouvrir la file de signature</x-button>
-            <x-button href="{{ route('two-factor.setup') }}" variant="secondary">Enrôler un appareil pour signer</x-button>
+            <x-button href="{{ route('mayor.dashboard') }}" variant="primary">{{ __('dashboard.mayor.open_signing_queue') }}</x-button>
+            <x-button href="{{ route('two-factor.setup') }}" variant="secondary">{{ __('dashboard.mayor.enrol_device') }}</x-button>
         </div>
     </x-card>
 @endsection

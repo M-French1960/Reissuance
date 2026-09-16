@@ -1,27 +1,27 @@
 @extends('citizen.wizard._layout')
 
 @section('wizard')
-    <x-card title="Vos informations">
-        <p>Ces informations viennent de votre profil. Vérifiez-les avant de continuer.</p>
+    <x-card :title="__('wizard.step1.your_details')">
+        <p>{{ __('wizard.step1.from_profile') }}</p>
 
         <dl class="review">
-            <div class="review__row"><dt>Nom</dt><dd>{{ $profile->fullName() }}</dd></div>
-            <div class="review__row"><dt>Date de naissance</dt><dd>{{ $profile->birth_date?->translatedFormat('d F Y') ?? '—' }}</dd></div>
-            <div class="review__row"><dt>Lieu de naissance</dt><dd>{{ $profile->birth_place ?? '—' }}</dd></div>
-            <div class="review__row"><dt>Téléphone</dt><dd>{{ $profile->phone ?? '—' }}</dd></div>
-            <div class="review__row"><dt>Adresse</dt><dd>{{ $profile->address ?? '—' }}</dd></div>
+            <div class="review__row"><dt>{{ __('common.name') }}</dt><dd>{{ $profile->fullName() }}</dd></div>
+            <div class="review__row"><dt>{{ __('wizard.step1.date_of_birth') }}</dt><dd>{{ $profile->birth_date?->translatedFormat('d F Y') }}</dd></div>
+            <div class="review__row"><dt>{{ __('wizard.step1.place_of_birth') }}</dt><dd>{{ $profile->birth_place }}</dd></div>
+            <div class="review__row"><dt>{{ __('wizard.step1.phone') }}</dt><dd>{{ $profile->phone }}</dd></div>
+            <div class="review__row"><dt>{{ __('wizard.step1.address') }}</dt><dd>{{ $profile->address }}</dd></div>
         </dl>
 
-        <p><a href="{{ route('citizen.profile.edit') }}">Corriger mon profil</a></p>
+        <p><a href="{{ route('citizen.profile.edit') }}">{{ __('wizard.step1.fix_profile') }}</a></p>
     </x-card>
 
-    <x-card title="Motif de la demande">
+    <x-card :title="__('wizard.step1.reason_title')">
         <form method="POST" action="{{ route('citizen.requests.save', ['reissuanceRequest' => $draft, 'step' => 1]) }}">
             @csrf
 
             <fieldset class="fieldset">
-                <legend class="field__label">Pourquoi demandez-vous une réédition ? <span aria-hidden="true">*</span></legend>
-                @foreach (['lost' => 'J\'ai perdu mon acte de naissance', 'damaged' => 'Mon acte est détérioré ou illisible'] as $value => $label)
+                <legend class="field__label">{{ __('wizard.step1.reason_legend') }} <span aria-hidden="true">*</span></legend>
+                @foreach (['lost' => __('wizard.step1.reason_lost'), 'damaged' => __('wizard.step1.reason_damaged')] as $value => $label)
                     <div class="field--inline">
                         <input type="radio" id="reason-{{ $value }}" name="reason" value="{{ $value }}"
                                class="field__checkbox" required
@@ -31,11 +31,11 @@
                 @endforeach
             </fieldset>
 
-            <x-field name="copies_requested" label="Nombre d'exemplaires souhaités" type="number"
+            <x-field name="copies_requested" :label="__('wizard.step1.copies')" type="number"
                      :value="$draft->copies_requested ?? 1" required min="1" max="10"
-                     hint="Entre 1 et 10." :error="$errors->first('copies_requested')" />
+                     :hint="__('wizard.step1.copies_hint')" :error="$errors->first('copies_requested')" />
 
-            <x-button type="submit" variant="primary">Continuer</x-button>
+            <x-button type="submit" variant="primary">{{ __('common.continue') }}</x-button>
         </form>
     </x-card>
 @endsection

@@ -25,11 +25,6 @@ enum UserRole: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::Citizen => 'Citoyen',
-            self::Officer => "Officier d'état civil",
-            self::Mayor => 'Maire',
-            self::Admin => 'Administrateur',
-        };
+        return __('enums.user_role.'.$this->value);
     }
 }

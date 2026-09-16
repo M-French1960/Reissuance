@@ -24,12 +24,7 @@ enum ProviderOutcome: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::Match => 'Correspondance trouvée',
-            self::NoMatch => 'Aucune correspondance',
-            self::Inconclusive => 'Résultat non concluant',
-            self::Unavailable => 'Service indisponible',
-        };
+        return $this->toVerificationResult()->label();
     }
 
     /** Correspondance avec l'enumeration persistee en base. */

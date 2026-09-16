@@ -1,44 +1,39 @@
 @extends('layouts.app')
-@section('title', "Poste de l'officier")
+@section('title', __('dashboard.officer.title'))
 
 @section('content')
     {{--
-        L'ECRAN QUI SUIT LA CONNEXION D'UN OFFICIER (D-073).
+        THE SCREEN AN OFFICER LANDS ON AFTER SIGNING IN (D-073).
 
-        Il est reste une ebauche du jalon 2 : trois compteurs, puis « Jalon 2 —
-        La file de traitement et la vérification en 5 étapes arrivent au jalon
-        4 ». Les deux existent depuis longtemps. Et aucun des compteurs ne
-        menait a la file : l'agent lisait un chiffre sans pouvoir l'ouvrir.
+        It stayed a milestone 2 sketch: three counters, then "Milestone 2, the
+        processing queue and the five-step verification arrive at milestone 4".
+        Both had existed for a long time. And none of the counters led to the
+        queue: the agent read a number with no way to open it.
     --}}
-    <h1>Poste de vérification</h1>
-    <p>Centre de rattachement : <strong>{{ auth()->user()->center?->name ?? '—' }}</strong>.
-    Vous ne voyez que les demandes de ce centre.</p>
+    <h1>{{ __('dashboard.officer.heading') }}</h1>
+    <p>{{ __('dashboard.officer.centre_line', ['centre' => auth()->user()->center?->name ?? __('common.none')]) }}</p>
 
     <x-flash />
 
-    {{-- Chaque compteur OUVRE la file filtree sur son statut. --}}
+    {{-- Each counter OPENS the queue filtered on its status. --}}
     <div class="grid grid--3">
         @foreach ([\App\Enums\RequestStatus::Pending, \App\Enums\RequestStatus::UnderReview, \App\Enums\RequestStatus::AwaitingSignature] as $status)
             <x-card>
                 <p class="stat__label">{{ $status->label() }}</p>
                 <p class="stat__value">{{ $counts[$status->value] }}</p>
-                {{-- Le filtre s'appelle `statut` cote controleur, pas `status`. --}}
+                {{-- The query parameter is `statut`, not `status`. --}}
                 <x-button href="{{ route('officer.queue', ['statut' => $status->value]) }}" variant="secondary">
-                    Ouvrir
+                    {{ __('common.open') }}
                 </x-button>
             </x-card>
         @endforeach
     </div>
 
-    <x-card title="Votre file de traitement">
-        <p>
-            Prenez un dossier en charge, puis conduisez les cinq étapes de
-            vérification&nbsp;: informations, pièce d'identité, photographies,
-            registre d'état civil, puis votre décision.
-        </p>
+    <x-card :title="__('dashboard.officer.queue_title')">
+        <p>{{ __('dashboard.officer.queue_body') }}</p>
         <div class="row-actions">
-            <x-button href="{{ route('officer.queue') }}" variant="primary">Ouvrir la file</x-button>
-            <x-button href="{{ route('notifications.index') }}" variant="secondary">Mes notifications</x-button>
+            <x-button href="{{ route('officer.queue') }}" variant="primary">{{ __('dashboard.officer.open_queue') }}</x-button>
+            <x-button href="{{ route('notifications.index') }}" variant="secondary">{{ __('common.notifications') }}</x-button>
         </div>
     </x-card>
 @endsection

@@ -7,24 +7,22 @@
     @endphp
 
     <div class="alert alert--danger" role="alert" data-offline-banner hidden>
-        <p class="alert__title">Connexion perdue</p>
-        Vos étapes déjà validées sont enregistrées. Attendez le retour de la
-        connexion avant d'envoyer une photo.
+        <p class="alert__title">{{ __('wizard.step3.offline_title') }}</p>
+        {{ __('wizard.step3.offline_body') }}
     </div>
 
-    <x-card title="Centre d'état civil">
-        <p>Choisissez le centre où votre naissance a été enregistrée. C'est lui
-        qui instruira votre demande.</p>
+    <x-card :title="__('wizard.step3.centre_title')">
+        <p>{{ __('wizard.step3.centre_intro') }}</p>
 
         <form method="POST" action="{{ route('citizen.requests.save', ['reissuanceRequest' => $draft, 'step' => 3]) }}" id="centre-form">
             @csrf
             <div class="field">
                 <label class="field__label" for="civil_status_center_id">
-                    Centre d'état civil <span aria-hidden="true">*</span>
+                    {{ __('wizard.step3.centre_title') }} <span aria-hidden="true">*</span>
                 </label>
                 <select class="field__control" id="civil_status_center_id" name="civil_status_center_id" required
                         @if ($errors->has('civil_status_center_id')) aria-invalid="true" @endif>
-                    <option value="">Choisissez un centre</option>
+                    <option value="">{{ __('wizard.step3.centre_choose') }}</option>
                     @foreach ($centers as $center)
                         <option value="{{ $center->id }}" @selected(old('civil_status_center_id', $draft->civil_status_center_id) == $center->id)>
                             {{ $center->situation() }}
@@ -38,39 +36,28 @@
         </form>
     </x-card>
 
-    <x-card title="Vos pièces justificatives">
-        <p>Deux photos sont nécessaires. Elles servent à l'officier d'état civil
-        pour vérifier que vous êtes bien la personne concernée par l'acte.</p>
+    <x-card :title="__('wizard.step3.documents_title')">
+        <p>{{ __('wizard.step3.documents_intro') }}</p>
 
         @if ($errors->has('file') || $errors->has('attachments'))
-            <x-alert variant="danger" title="La photo n'a pas été enregistrée">
+            <x-alert variant="danger" :title="__('wizard.step3.upload_failed')">
                 {{ $errors->first('file') ?: $errors->first('attachments') }}
             </x-alert>
         @endif
 
-        {{-- Information sur le traitement biometrique. Le rapprochement est
-             obligatoire (D-045) : il n'y a donc pas de case a cocher, mais la
-             personne doit savoir ce qui sera fait de sa photographie, et que
-             la decision reste humaine. --}}
-        <x-alert variant="attention" title="Vos deux photographies seront comparées">
-            <p>
-                Un rapprochement automatique sera fait entre votre photo et celle
-                de votre pièce d'identité, afin de vérifier que la pièce est bien
-                la vôtre. <strong>Cette comparaison ne décide pas :</strong> elle
-                donne un avis à l'officier d'état civil, qui examine lui-même les
-                deux photographies et reste seul à décider.
-            </p>
-            <p class="u-flush">
-                Si la comparaison échoue ou n'aboutit pas, votre demande
-                <strong>n'est pas refusée pour autant</strong> : l'officier
-                poursuit l'examen et doit motiver sa décision.
-            </p>
+        {{-- Notice on the biometric processing. The match is compulsory
+             (D-045), so there is no box to tick, but the person has to know
+             what will be done with their photograph, and that the decision
+             stays a human one. --}}
+        <x-alert variant="attention" :title="__('wizard.step3.comparison_title')">
+            <p>{!! __('wizard.step3.comparison_body', ['strong' => '<strong>'.e(__('wizard.step3.comparison_strong')).'</strong>']) !!}</p>
+            <p class="u-flush">{!! __('wizard.step3.comparison_failure', ['strong' => '<strong>'.e(__('wizard.step3.comparison_failure_strong')).'</strong>']) !!}</p>
         </x-alert>
 
         <div class="grid grid--2">
             @foreach ([
-                ['selfie', 'Votre photo', $selfie, "Prenez-vous en photo, visage bien visible et de face. C'est ce qui permet de vérifier que la pièce est bien la vôtre.", 'user'],
-                ['id_document', "Votre pièce d'identité", $piece, "Photographiez votre carte nationale d'identité ou votre passeport, en entier et bien lisible.", 'environment'],
+                ['selfie', __('wizard.step3.selfie_title'), $selfie, __('wizard.step3.selfie_help'), 'user'],
+                ['id_document', __('wizard.step3.id_title'), $piece, __('wizard.step3.id_help'), 'environment'],
             ] as [$kind, $titre, $existant, $aide, $facing])
                 <div class="capture" data-capture data-capture-noscript>
                     <h3>{{ $titre }}</h3>
@@ -86,26 +73,27 @@
 
                         @if ($existant)
                             <p class="capture__state">
-                                <span class="badge badge--success">Enregistrée</span>
-                                <span class="field__hint">{{ round($existant->size_bytes / 1024) }} Ko — {{ $existant->captured_at?->translatedFormat('d/m/Y à H:i') }}</span>
+                                <span class="badge badge--success">{{ __('wizard.step3.saved') }}</span>
+                                <span class="field__hint">{{ __('wizard.step3.size_and_date', [
+                                    'size' => round($existant->size_bytes / 1024),
+                                    'date' => $existant->captured_at?->translatedFormat('d/m/Y H:i'),
+                                ]) }}</span>
                             </p>
                         @endif
 
                         <div class="field">
                             <label class="field__label" for="file-{{ $kind }}">
-                                {{ $existant ? 'Reprendre la photo' : 'Prendre la photo' }}
+                                {{ $existant ? __('wizard.step3.retake_photo') : __('wizard.step3.take_photo') }}
                             </label>
                             <input class="field__control" type="file" id="file-{{ $kind }}" name="file"
                                    accept="image/jpeg,image/png,image/webp"
                                    capture="{{ $facing }}"
                                    data-capture-input required>
-                            <span class="field__hint" data-capture-feedback>
-                                La photo est réduite sur votre téléphone avant l'envoi, pour consommer moins de données.
-                            </span>
+                            <span class="field__hint" data-capture-feedback>{{ __('wizard.step3.compression_note') }}</span>
                         </div>
 
                         <x-button type="submit" variant="secondary" data-capture-submit>
-                            {{ $existant ? 'Remplacer' : 'Envoyer la photo' }}
+                            {{ $existant ? __('wizard.step3.replace') : __('wizard.step3.send_photo') }}
                         </x-button>
                     </form>
                 </div>
@@ -114,7 +102,7 @@
     </x-card>
 
     <div class="actions">
-        <x-button href="{{ route('citizen.requests.step', ['reissuanceRequest' => $draft, 'step' => 2]) }}" variant="secondary">Retour</x-button>
-        <x-button type="submit" variant="primary" form="centre-form">Continuer</x-button>
+        <x-button href="{{ route('citizen.requests.step', ['reissuanceRequest' => $draft, 'step' => 2]) }}" variant="secondary">{{ __('common.back') }}</x-button>
+        <x-button type="submit" variant="primary" form="centre-form">{{ __('common.continue') }}</x-button>
     </div>
 @endsection

@@ -2,97 +2,101 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
-    {{-- Le prototype omettait cette balise sur 3 pages sur 6 : les navigateurs
-         mobiles les rendaient dans une fenetre virtuelle de ~980 px. --}}
+    {{-- The prototype left this out on 3 pages in 6, so mobile browsers laid
+         them out in a ~980px virtual viewport. --}}
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="referrer" content="same-origin">
-    <title>@yield('title', 'PHOENIX') — PHOENIX</title>
+    <title>@yield('title', __('common.brand')) | {{ __('common.brand') }}</title>
     <link rel="stylesheet" href="{{ asset('css/tokens.css') }}">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
-    {{-- Amelioration progressive : sans ce script, les formulaires
-         fonctionnent toujours, mais sans compression cote navigateur. --}}
+    {{-- Progressive enhancement: without these scripts the forms still work,
+         they just lose in-browser compression, device signing and the
+         submit-on-change of the language picker. --}}
     <script src="{{ asset('js/identity-capture.js') }}" defer></script>
-    {{-- Signature par appareil (D-070). Meme principe : sans ce script, le
-         code d'authentification reste, et rien n'est bloque. --}}
     <script src="{{ asset('js/signing-device.js') }}" defer></script>
+    <script src="{{ asset('js/language-switch.js') }}" defer></script>
 </head>
 <body>
-    <a class="skip-link" href="#contenu">Aller au contenu principal</a>
+    <a class="skip-link" href="#contenu">{{ __('common.skip_to_content') }}</a>
 
     <header class="site-header">
         <div class="container">
             <span class="brand">
-                <span class="brand__name">PHOENIX</span>
-                <span class="brand__tag">Réédition d'actes d'état civil</span>
+                <span class="brand__name">{{ __('common.brand') }}</span>
+                <span class="brand__tag">{{ __('common.tagline') }}</span>
             </span>
             @auth
-                <nav class="site-nav" aria-label="Navigation principale">
+                @php
+                    $utilisateur = auth()->user();
+                    $nonLues = $utilisateur->unreadNotifications()->count();
+                @endphp
+                <nav class="site-nav" aria-label="{{ __('common.main_navigation') }}">
                     <span class="identity">
-                        <strong>{{ auth()->user()->name }}</strong>
-                        {{ auth()->user()->role->label() }}
+                        <strong>{{ $utilisateur->name }}</strong>
+                        {{ $utilisateur->role->label() }}
                     </span>
                     <a href="{{ route('dashboard') }}"
-                       @if (request()->routeIs('dashboard')) aria-current="page" @endif>Tableau de bord</a>
-                    @if (auth()->user()->role === \App\Enums\UserRole::Admin)
+                       @if (request()->routeIs('dashboard')) aria-current="page" @endif>{{ __('common.dashboard') }}</a>
+                    @if ($utilisateur->role === \App\Enums\UserRole::Admin)
                         <a href="{{ route('admin.users.index') }}"
-                           @if (request()->routeIs('admin.users.*')) aria-current="page" @endif>Comptes</a>
+                           @if (request()->routeIs('admin.users.*')) aria-current="page" @endif>{{ __('common.accounts') }}</a>
                         <a href="{{ route('admin.assignments.index') }}"
-                           @if (request()->routeIs('admin.assignments.*')) aria-current="page" @endif>Affectations</a>
+                           @if (request()->routeIs('admin.assignments.*')) aria-current="page" @endif>{{ __('common.assignments') }}</a>
                         <a href="{{ route('admin.audit.index') }}"
-                           @if (request()->routeIs('admin.audit.*')) aria-current="page" @endif>Journal</a>
+                           @if (request()->routeIs('admin.audit.*')) aria-current="page" @endif>{{ __('common.audit_log') }}</a>
                         <a href="{{ route('admin.settings.index') }}"
-                           @if (request()->routeIs('admin.settings.*')) aria-current="page" @endif>Réglages</a>
+                           @if (request()->routeIs('admin.settings.*')) aria-current="page" @endif>{{ __('common.settings') }}</a>
                     @endif
-                    @if (auth()->user()->role === \App\Enums\UserRole::Officer)
+                    @if ($utilisateur->role === \App\Enums\UserRole::Officer)
                         <a href="{{ route('officer.queue') }}"
-                           @if (request()->routeIs('officer.*')) aria-current="page" @endif>File de traitement</a>
+                           @if (request()->routeIs('officer.*')) aria-current="page" @endif>{{ __('common.processing_queue') }}</a>
                     @endif
-                    @if (auth()->user()->role === \App\Enums\UserRole::Mayor)
+                    @if ($utilisateur->role === \App\Enums\UserRole::Mayor)
                         <a href="{{ route('mayor.dashboard') }}"
-                           @if (request()->routeIs('mayor.*')) aria-current="page" @endif>Signatures</a>
+                           @if (request()->routeIs('mayor.*')) aria-current="page" @endif>{{ __('common.signatures') }}</a>
                     @endif
-                    @if (auth()->user()->role === \App\Enums\UserRole::Citizen)
+                    @if ($utilisateur->role === \App\Enums\UserRole::Citizen)
                         <a href="{{ route('citizen.requests.index') }}"
-                           @if (request()->routeIs('citizen.requests.*')) aria-current="page" @endif>Mes demandes</a>
+                           @if (request()->routeIs('citizen.requests.*')) aria-current="page" @endif>{{ __('common.my_requests') }}</a>
                         <a href="{{ route('citizen.profile.edit') }}"
-                           @if (request()->routeIs('citizen.profile.*')) aria-current="page" @endif>Mon profil</a>
+                           @if (request()->routeIs('citizen.profile.*')) aria-current="page" @endif>{{ __('common.my_profile') }}</a>
                     @endif
-                    @php $nonLues = auth()->user()->unreadNotifications()->count(); @endphp
                     <a href="{{ route('notifications.index') }}"
                        @if (request()->routeIs('notifications.*')) aria-current="page" @endif>
-                        Notifications
+                        {{ __('common.notifications') }}
                         @if ($nonLues > 0)
                             <span class="badge badge--progress">{{ $nonLues }}</span>
-                            <span class="visually-hidden">{{ $nonLues > 1 ? 'non lues' : 'non lue' }}</span>
+                            <span class="visually-hidden">{{ trans_choice('notifications.unread_count', $nonLues) }}</span>
                         @endif
                     </a>
-                    <a href="{{ route('two-factor.setup') }}">Sécurité</a>
+                    <a href="{{ route('two-factor.setup') }}">{{ __('common.security') }}</a>
+                    <x-language-switcher />
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <x-button type="submit" variant="secondary">Se déconnecter</x-button>
+                        <x-button type="submit" variant="secondary">{{ __('common.sign_out') }}</x-button>
                     </form>
                 </nav>
             @endauth
 
             {{--
-                ET POUR UN VISITEUR ANONYME (D-072).
+                AND FOR AN ANONYMOUS VISITOR (D-072).
 
-                L'en-tete ne portait de navigation que pour les personnes
-                connectees : depuis n'importe quelle page publique — l'etat du
-                service, une page d'erreur — un visiteur n'avait aucun chemin
-                vers la connexion, sinon la barre d'adresse.
+                The header only carried navigation for signed-in people, so
+                from any public page, the service status or an error page,
+                a visitor had no route to sign in but the address bar.
             --}}
             @guest
-                <nav class="site-nav" aria-label="Navigation principale">
+                <nav class="site-nav" aria-label="{{ __('common.main_navigation') }}">
                     <a href="{{ route('home') }}"
-                       @if (request()->routeIs('home')) aria-current="page" @endif>Accueil</a>
+                       @if (request()->routeIs('home')) aria-current="page" @endif>{{ __('common.home') }}</a>
                     <a href="{{ route('login') }}"
-                       @if (request()->routeIs('login')) aria-current="page" @endif>Se connecter</a>
-                    {{-- Un lien, comme ses voisins : l'accueil porte deja le
-                         bouton bien visible. Uniformiser la barre evite au
-                         passage le piege du blanc sur blanc. --}}
+                       @if (request()->routeIs('login')) aria-current="page" @endif>{{ __('common.sign_in') }}</a>
+                    {{-- A link like its neighbours: the home page already
+                         carries the prominent button, and a uniform bar avoids
+                         the white-on-white trap of D-072. --}}
                     <a href="{{ route('register') }}"
-                       @if (request()->routeIs('register')) aria-current="page" @endif>Créer un compte</a>
+                       @if (request()->routeIs('register')) aria-current="page" @endif>{{ __('common.create_account') }}</a>
+                    <x-language-switcher />
                 </nav>
             @endguest
         </div>
@@ -106,7 +110,7 @@
 
     <footer class="site-footer">
         <div class="container">
-            <p class="u-flush">République du Cameroun — service de réédition d'actes d'état civil</p>
+            <p class="u-flush">{{ __('common.footer') }}</p>
         </div>
     </footer>
 </body>

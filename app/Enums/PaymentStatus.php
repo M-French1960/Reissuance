@@ -34,14 +34,7 @@ enum PaymentStatus: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::Pending => 'En attente de confirmation',
-            self::Authorised => 'Autorisé, fonds non acquis',
-            self::Settled => 'Payé',
-            self::Failed => 'Refusé',
-            self::Expired => 'Expiré sans réponse',
-            self::Refunded => 'Remboursé',
-        };
+        return __('enums.payment_status.'.$this->value);
     }
 
     public function tone(): string

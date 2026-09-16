@@ -3,17 +3,16 @@
 
 @section('content')
     {{--
-        LES PAGES D'ERREUR SONT DES PAGES DU SERVICE (D-073).
+        ERROR PAGES ARE PAGES OF THE SERVICE (D-073).
 
-        Elles n'existaient pas : Laravel rendait sa page par defaut, sans
-        en-tete, sans pied de page et sans un mot de francais — un ecran blanc
-        portant « Not Found ». Un citoyen qui se trompe d'adresse, ou qui suit
-        un lien peri, se retrouvait sans rien : ni explication, ni chemin de
-        retour.
+        They did not exist: Laravel rendered its own default, with no header,
+        no footer and not a word of the service's language, a blank screen
+        reading "Not Found". A citizen who mistyped an address, or followed a
+        stale link, was left with nothing: no explanation and no way back.
 
-        CE QU'ELLES NE DISENT PAS, et c'est delibere : pourquoi l'acces est
-        refuse. Un 404 servi a la place d'un 403 ne doit rien apprendre — ni
-        qu'un dossier existe, ni combien. Voir ActDocumentController.
+        WHAT THEY DO NOT SAY, deliberately: why access was refused. A 404
+        served in place of a 403 must teach nothing, neither that a file
+        exists nor how many. See ActDocumentController.
     --}}
     <h1>{{ $titre }}</h1>
 
@@ -23,10 +22,10 @@
 
         <div class="row-actions u-stack-top">
             @auth
-                <x-button href="{{ route('dashboard') }}" variant="primary">Retour à mon espace</x-button>
+                <x-button href="{{ route('dashboard') }}" variant="primary">{{ __('errors.back_to_account') }}</x-button>
             @else
-                <x-button href="{{ route('home') }}" variant="primary">Retour à l'accueil</x-button>
-                <x-button href="{{ route('login') }}" variant="secondary">Se connecter</x-button>
+                <x-button href="{{ route('home') }}" variant="primary">{{ __('errors.back_home') }}</x-button>
+                <x-button href="{{ route('login') }}" variant="secondary">{{ __('common.sign_in') }}</x-button>
             @endauth
         </div>
     </x-card>

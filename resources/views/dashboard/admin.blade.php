@@ -1,30 +1,31 @@
 @extends('layouts.app')
-@section('title', 'Administration')
+@section('title', __('dashboard.admin.title'))
 
 @section('content')
-    <h1>Administration</h1>
+    <h1>{{ __('dashboard.admin.heading') }}</h1>
 
-    <x-alert variant="attention" title="Périmètre de ce compte">
-        Votre rôle donne accès à la gestion des comptes et aux métadonnées du
-        journal d'audit. Il ne donne accès à <strong>aucun</strong> dossier de
-        citoyen : ni pièce d'identité, ni photographie, ni numéro de pièce.
+    <x-alert variant="attention" title="{{ __('dashboard.admin.scope_title') }}">
+        {!! __('dashboard.admin.scope_body', ['strong' => '<strong>'.e(__('dashboard.admin.scope_strong')).'</strong>']) !!}
     </x-alert>
 
-    <x-card title="Comptes par rôle et statut">
-        <div class="table-wrap" tabindex="0" role="group" aria-label="Répartition des comptes">
+    <x-card :title="__('dashboard.admin.accounts_by_role')">
+        <div class="table-wrap" tabindex="0" role="group" aria-label="{{ __('dashboard.admin.accounts_distribution') }}">
             <table>
-                <caption class="visually-hidden">Répartition des comptes</caption>
-                <thead><tr><th scope="col">Rôle</th><th scope="col">Statut</th><th scope="col">Nombre</th></tr></thead>
+                <caption class="visually-hidden">{{ __('dashboard.admin.accounts_distribution') }}</caption>
+                <thead><tr>
+                    <th scope="col">{{ __('common.role') }}</th>
+                    <th scope="col">{{ __('common.status') }}</th>
+                    <th scope="col">{{ __('dashboard.admin.count') }}</th>
+                </tr></thead>
                 <tbody>
                     @foreach ($accounts as $row)
                         <tr>
-                            {{-- $row est un modele User : `role` et `status`
-                                 sortent deja convertis par les casts du
-                                 modele, meme derriere un selectRaw. Les
-                                 reconvertir levait une TypeError, et cet
-                                 ecran renvoyait 500 depuis le jalon 2. --}}
+                            {{-- $row is a User model: `role` and `status` already come
+                                 back converted by the model casts, even behind a
+                                 selectRaw. Converting them again raised a TypeError,
+                                 and this screen returned 500 from milestone 2 on. --}}
                             <td>{{ $row->role->label() }}</td>
-                            <td>{{ $row->status }}</td>
+                            <td>{{ __('enums.account_status.'.$row->status) }}</td>
                             <td>{{ $row->total }}</td>
                         </tr>
                     @endforeach
@@ -34,13 +35,13 @@
     </x-card>
 
     <div class="grid grid--2">
-        <x-card title="Gérer les comptes">
-            <p>Créer, activer, suspendre ou réaffecter un officier ou un maire.</p>
-            <x-button href="{{ route('admin.users.index') }}" variant="secondary">Ouvrir</x-button>
+        <x-card :title="__('dashboard.admin.manage_accounts')">
+            <p>{{ __('dashboard.admin.manage_accounts_body') }}</p>
+            <x-button href="{{ route('admin.users.index') }}" variant="secondary">{{ __('common.open') }}</x-button>
         </x-card>
-        <x-card title="Journal d'audit">
-            <p>Qui a consulté quel dossier et quand. Le contenu des dossiers reste inaccessible.</p>
-            <x-button href="{{ route('admin.audit.index') }}" variant="secondary">Consulter</x-button>
+        <x-card :title="__('common.audit_log')">
+            <p>{{ __('dashboard.admin.audit_body') }}</p>
+            <x-button href="{{ route('admin.audit.index') }}" variant="secondary">{{ __('dashboard.admin.view') }}</x-button>
         </x-card>
     </div>
 @endsection

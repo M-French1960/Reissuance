@@ -22,12 +22,7 @@ enum VerificationResult: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::Match => 'Correspondance trouvée',
-            self::NoMatch => 'Aucune correspondance',
-            self::Inconclusive => 'Résultat non concluant',
-            self::ProviderUnavailable => 'Service externe indisponible',
-        };
+        return __('enums.verification_result.'.$this->value);
     }
 
     public function tone(): string

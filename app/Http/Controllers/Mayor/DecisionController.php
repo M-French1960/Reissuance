@@ -74,7 +74,7 @@ class DecisionController extends Controller
         // vérification elle-même.
         if (! $this->workflow->isComplete($reissuanceRequest)) {
             $libelles = array_map(
-                fn (int $n): string => "{$n}. ".VerificationWorkflow::STEPS[$n],
+                fn (int $n): string => "{$n}. ".VerificationWorkflow::stepNames()[$n],
                 $this->workflow->missingSteps($reissuanceRequest)
             );
 

@@ -1,8 +1,5 @@
-@extends('errors.layout', ['titre' => 'Service momentanément indisponible'])
+@extends('errors.layout', ['titre' => __('errors.503.title')])
 
 @section('explication')
-    <p>
-        Le service est en maintenance. Vos demandes en cours ne sont pas
-        affectées&nbsp;: elles vous attendront.
-    </p>
+    <p>{{ __('errors.503.body') }}</p>
 @endsection

@@ -21,13 +21,6 @@ enum DecisionType: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::Accepted => 'Acceptée',
-            self::Rejected => 'Rejetée',
-            self::Escalated => 'Escaladée',
-            self::Signed => 'Signée',
-            self::ApprovedByException => 'Approuvée par exception',
-            self::Returned => "Retournée à l'officier",
-        };
+        return __('enums.decision.'.$this->value);
     }
 }

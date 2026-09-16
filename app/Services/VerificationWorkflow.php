@@ -32,13 +32,23 @@ use Illuminate\Support\Facades\DB;
 final class VerificationWorkflow
 {
     /** Les cinq écrans du poste de vérification. */
-    public const STEPS = [
-        1 => 'Informations de la demande',
-        2 => "Vérification de la pièce d'identité",
-        3 => 'Examen des photographies',
-        4 => "Recherche dans le registre d'état civil",
-        5 => 'Décision',
-    ];
+    /**
+     * The five steps, translated on read.
+     *
+     * A constant is resolved once, at compile time, before any language has
+     * been chosen for the request, so these names live in the language files.
+     * The step NUMBERS stay constants: they are the domain, not wording.
+     */
+    public static function stepNames(): array
+    {
+        return [
+            1 => __('verification.steps.1'),
+            2 => __('verification.steps.2'),
+            3 => __('verification.steps.3'),
+            4 => __('verification.steps.4'),
+            5 => __('verification.steps.5'),
+        ];
+    }
 
     /**
      * Les étapes qui doivent porter un résultat avant toute acceptation.

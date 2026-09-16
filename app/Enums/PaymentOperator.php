@@ -26,19 +26,15 @@ enum PaymentOperator: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::OrangeMoney => 'Orange Money',
-            self::MtnMobileMoney => 'MTN Mobile Money',
-        };
+        // Brand names, identical in both languages, but they go through the
+        // translator anyway so nothing about a provider is hard-coded here.
+        return __('enums.payment_operator.'.$this->value);
     }
 
     /** Ce que le demandeur doit saisir, dit dans ses mots. */
     public function hint(): string
     {
-        return match ($this) {
-            self::OrangeMoney => 'Le numéro Orange depuis lequel vous réglez.',
-            self::MtnMobileMoney => 'Le numéro MTN depuis lequel vous réglez.',
-        };
+        return __('enums.payment_operator.'.$this->value.'_hint');
     }
 
     /** @return list<self> */

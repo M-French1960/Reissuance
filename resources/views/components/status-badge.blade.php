@@ -1,9 +1,9 @@
 @props(['status'])
 
 {{--
-    Affiche toujours le libelle en francais, jamais la valeur technique.
-    Le prototype affichait « escalated » brut (docs/AUDIT_FRONTEND.md 8.3).
-    La couleur ne porte aucune information a elle seule : le texte suffit.
+    Always the translated label, never the technical value. The prototype
+    printed a raw "escalated" (docs/AUDIT_FRONTEND.md 8.3). Colour carries no
+    information on its own here; the text is enough.
 --}}
 <span {{ $attributes->merge(['class' => 'badge badge--'.$status->tone()]) }}>
     {{ $status->label() }}

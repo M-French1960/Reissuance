@@ -20,7 +20,7 @@
         {{ $label }}
         @if ($required)
             <span aria-hidden="true">*</span>
-            <span class="visually-hidden">(obligatoire)</span>
+            <span class="visually-hidden">({{ __('common.required_field') }})</span>
         @endif
     </label>
 
@@ -40,8 +40,8 @@
         {{ $attributes->except('id') }}
     >
 
-    {{-- Lie a l'input par aria-describedby : un lecteur d'ecran annonce
-         l'erreur au moment ou l'utilisateur atteint le champ (8.4). --}}
+    {{-- Tied to the input through aria-describedby, so a screen reader
+         announces the error as the user reaches the field (8.4). --}}
     @if ($error)
         <p class="field__error" id="{{ $errorId }}">{{ $error }}</p>
     @endif
