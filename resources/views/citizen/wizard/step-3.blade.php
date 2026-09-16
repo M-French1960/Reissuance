@@ -27,7 +27,7 @@
                     <option value="">Choisissez un centre</option>
                     @foreach ($centers as $center)
                         <option value="{{ $center->id }}" @selected(old('civil_status_center_id', $draft->civil_status_center_id) == $center->id)>
-                            {{ $center->name }} — {{ $center->commune?->name }}
+                            {{ $center->situation() }}
                         </option>
                     @endforeach
                 </select>

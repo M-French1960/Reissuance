@@ -361,8 +361,27 @@ main > p > a:only-child,
 /* --- Motifs pré-remplis ---------------------------------------------------- */
 .reasons { margin-bottom: var(--space-4); }
 /* Un <summary> est une commande : 43 px mesures au jalon 6, un pixel sous la
-   cible du projet. Le rendre franchement atteignable au doigt. */
-summary { min-height: 44px; display: flex; align-items: center; padding: var(--space-2) 0; cursor: pointer; }
+   cible du projet. Le rendre franchement atteignable au doigt.
+
+   ET IL DOIT RESSEMBLER A UNE COMMANDE (D-075). `display: flex` supprime le
+   triangle que le navigateur dessine tout seul — la regle ci-dessus l'avait
+   emporte sans le vouloir. Sur l'ecran des comptes, « Changer le statut » ne
+   se distinguait plus d'une etiquette : le seul moyen de suspendre un compte
+   compromis avait l'air d'un simple texte. Le triangle est donc redessine, et
+   le libelle prend la couleur des commandes. */
+summary {
+  min-height: 44px; display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) 0; cursor: pointer;
+  color: var(--color-brand-700); font-weight: 600;
+}
+summary::-webkit-details-marker { display: none; }
+summary::before {
+  content: "▸"; display: inline-block; transition: transform 120ms ease-out;
+}
+details[open] > summary::before { transform: rotate(90deg); }
+@media (prefers-reduced-motion: reduce) {
+  summary::before { transition: none; }
+}
 .reasons__list { list-style: none; margin: var(--space-3) 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
 .reasons__pick { text-align: left; font-weight: 400; font-size: var(--text-sm); width: 100%; }
 

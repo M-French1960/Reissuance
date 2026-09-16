@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Citizen;
 
+use App\Enums\DecisionType;
 use App\Enums\RequestStatus;
 use App\Http\Controllers\Citizen\RequestTrackingController;
 use App\Models\CivilStatusCenter;
 use App\Models\DocumentSignature;
 use App\Models\ReissuanceRequest;
+use App\Models\RequestDecision;
 use App\Models\User;
 use App\Services\RequestTransitionService;
 use PHPUnit\Framework\Attributes\Test;
@@ -240,5 +242,112 @@ class TrackingTimelineTest extends TestCase
         $jalons = $methode->invoke($controleur, $demande->refresh());
 
         return (string) end($jalons)['detail'];
+    }
+
+    /**
+     * ET L'EN-TETE NE BEGAIE PAS DAVANTAGE (D-075).
+     *
+     * La correction precedente n'avait touche que la frise. L'en-tete du meme
+     * ecran affichait « Centre d'état civil : Centre d'état civil de Yaoundé I
+     * — commune de Yaoundé I » : deux repetitions sur une seule ligne. Trouve
+     * en REGARDANT l'ecran deja corrige, pas en le testant.
+     */
+    #[Test]
+    public function l_en_tete_ne_repete_ni_le_libelle_ni_la_commune(): void
+    {
+        $this->centre->commune->forceFill(['name' => 'Yaoundé I'])->save();
+        $this->centre->forceFill(['name' => "Centre d'état civil de Yaoundé I"])->save();
+
+        $contenu = (string) $this->actingAs($this->citoyen)
+            ->get(route('citizen.requests.show', $this->demande()))
+            ->getContent();
+
+        $this->assertStringNotContainsString("Centre d'état civil : Centre", $contenu);
+        $this->assertStringNotContainsString('commune de Yaoundé I', $contenu);
+        $this->assertStringContainsString('Centre d&#039;état civil de Yaoundé I', $contenu);
+    }
+
+    /**
+     * MAIS LA COMMUNE RESTE DITE QUAND LE NOM NE LA PORTE PAS : une commune
+     * peut avoir plusieurs centres, et « Centre annexe de Tsinga » ne dit pas
+     * ou il se trouve.
+     */
+    #[Test]
+    public function la_commune_est_precisee_quand_le_nom_du_centre_ne_la_porte_pas(): void
+    {
+        $this->centre->commune->forceFill(['name' => 'Yaoundé II'])->save();
+        $this->centre->forceFill(['name' => 'Centre annexe de Tsinga'])->save();
+
+        $this->actingAs($this->citoyen)
+            ->get(route('citizen.requests.show', $this->demande()))
+            ->assertSee('Centre annexe de Tsinga — commune de Yaoundé II');
+    }
+
+    /**
+     * LE MOTIF DU REFUS EST DIT AU DEMANDEUR (D-075).
+     *
+     * Il ne l'etait nulle part. Le motif est OBLIGATOIRE pour refuser — le
+     * controleur l'exige, une contrainte l'impose en base — et l'agent qui le
+     * saisit lit « Il sera visible dans le dossier ». L'ecran de suivi
+     * affichait « Refusée » et rien d'autre, tandis que la page des
+     * notifications renvoyait ici en promettant « le détail d'une demande,
+     * motif d'un refus compris ».
+     *
+     * Refuser a quelqu'un un acte d'etat civil sans lui en donner la raison
+     * n'est pas un defaut d'affichage.
+     */
+    #[Test]
+    public function un_refus_dit_son_motif_au_demandeur(): void
+    {
+        $demande = $this->demande();
+        $service = app(RequestTransitionService::class);
+        $officier = User::factory()->officer($this->centre)->create();
+
+        $service->transition($demande, RequestStatus::Pending, $this->citoyen);
+        $service->transition($demande->refresh(), RequestStatus::UnderReview, $officier);
+        $service->transition($demande->refresh(), RequestStatus::Rejected, $officier);
+
+        RequestDecision::create([
+            'request_id' => $demande->id,
+            'actor_id' => $officier->id,
+            'actor_role' => $officier->role->value,
+            'decision' => DecisionType::Rejected->value,
+            'reason' => 'Les photographies ne correspondent pas à la pièce fournie.',
+            'internal_notes' => 'NOTE INTERNE QUI NE DOIT PAS SORTIR',
+            'from_status' => RequestStatus::UnderReview->value,
+            'to_status' => RequestStatus::Rejected->value,
+        ]);
+
+        $this->actingAs($this->citoyen)
+            ->get(route('citizen.requests.show', $demande))
+            ->assertOk()
+            ->assertSee('Pourquoi cette demande a été refusée')
+            ->assertSee('Les photographies ne correspondent pas')
+            // Et ce qui reste entre agents y reste.
+            ->assertDontSee('NOTE INTERNE QUI NE DOIT PAS SORTIR');
+    }
+
+    /**
+     * ET UN JALON NON ATTEINT NE PROMET PLUS RIEN.
+     *
+     * « Acte disponible — non atteint » s'affichait au-dessus de « Vous
+     * pourrez télécharger votre acte », sur un dossier refuse.
+     */
+    #[Test]
+    public function un_jalon_non_atteint_n_annonce_aucun_avenir(): void
+    {
+        $demande = $this->demande();
+        $service = app(RequestTransitionService::class);
+        $officier = User::factory()->officer($this->centre)->create();
+
+        $service->transition($demande, RequestStatus::Pending, $this->citoyen);
+        $service->transition($demande->refresh(), RequestStatus::UnderReview, $officier);
+        $service->transition($demande->refresh(), RequestStatus::Rejected, $officier);
+
+        $this->actingAs($this->citoyen)
+            ->get(route('citizen.requests.show', $demande))
+            ->assertOk()
+            ->assertSee('non atteint')
+            ->assertDontSee('Vous pourrez télécharger votre acte');
     }
 }

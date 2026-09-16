@@ -14,10 +14,26 @@
             @endif
         </p>
         <p class="field__hint">
-            Centre d'état civil : {{ $demande->center?->name ?? '—' }}
-            @if ($demande->center?->commune) — commune de {{ $demande->center->commune->name }} @endif
+            {{-- Le nom du centre porte deja « Centre d'état civil de … » et,
+                 le plus souvent, le nom de la commune (D-075). --}}
+            Établi par : {{ $demande->center?->situation() ?? '—' }}
         </p>
     </x-card>
+
+    @if ($refus !== null)
+        {{-- LE MOTIF DU REFUS, DIT (D-075).
+
+             La page affichait « Refusée » et rien d'autre. L'agent qui saisit
+             ce motif lit pourtant « Il sera visible dans le dossier », et la
+             page des notifications renvoie ici en promettant « le détail d'une
+             demande — motif d'un refus compris ». Elle renvoyait vers une page
+             qui se taisait.
+
+             Placé AVANT la frise : c'est ce que le demandeur vient lire. --}}
+        <x-alert variant="danger" title="Pourquoi cette demande a été refusée">
+            <p class="u-flush">{{ $refus }}</p>
+        </x-alert>
+    @endif
 
     <x-card title="Où en est ma demande">
         <ol class="timeline">
@@ -51,8 +67,13 @@
         </ol>
 
         {{-- Aucun délai chiffré : la question D8 de COMPLIANCE_OPEN_QUESTIONS.md
-             est ouverte, et inventer un délai serait pire que ne rien annoncer. --}}
-        <p class="field__hint">Vous serez averti à chaque changement d'étape.</p>
+             est ouverte, et inventer un délai serait pire que ne rien annoncer.
+
+             Et sur un dossier refusé ou annulé, on ne promet pas d'avertir
+             d'un changement qui n'aura pas lieu (D-075). --}}
+        @unless ($demande->status->isStopped() || $demande->signature)
+            <p class="field__hint">Vous serez averti à chaque changement d'étape.</p>
+        @endunless
     </x-card>
 
     @if ($demande->signature)

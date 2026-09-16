@@ -3262,3 +3262,100 @@ pas en s'en souvenant ; rien n'a été « corrigé ».
 L'affichage `mm/dd/yyyy` des champs de date vient de la locale de l'interface
 du navigateur du conteneur, pas de l'application : `<html lang="fr">` est bien
 posé. Invérifiable ici, donc non corrigé.
+
+## D-075 — Troisième passe : ce qu'on ne disait pas au demandeur
+
+Même consigne, écrans restants — l'assistant, le suivi, le profil, les comptes,
+l'inscription, la santé, les affectations. Le défaut dominant de cette passe
+n'est plus une phrase fausse, mais **une phrase absente**.
+
+### Un refus sans motif
+
+Un dossier refusé affichait « Refusée » et **rien d'autre**. Pas un mot sur la
+raison.
+
+Le motif existe pourtant, et il est obligatoire : le contrôleur l'exige, la
+contrainte `request_decisions_reason_required_check` l'impose en base, et
+l'agent qui le saisit lit à l'écran « **Il sera visible dans le dossier** ».
+Pire, la page des notifications renvoie explicitement ici :
+
+> « Le détail d'une demande — **motif d'un refus compris** — se lit sur la page
+> de la demande. »
+
+Elle renvoyait le demandeur vers une page qui se taisait. Refuser à quelqu'un
+un acte d'état civil sans lui en donner la raison n'est pas un défaut
+d'affichage.
+
+Le motif s'affiche désormais **avant la frise** : c'est ce que le demandeur
+vient lire. `internal_notes` — le champ prévu pour ce qui reste entre agents —
+n'est jamais montré, et un test le vérifie.
+
+**Ce qui n'est pas montré, et pourquoi.** L'escalade n'est pas une décision
+défavorable mais une étape interne : le dossier est encore en instruction.
+Annoncer « doute sur l'authenticité de la pièce » à quelqu'un dont le dossier
+est en arbitrage renseignerait aussi une fraude en cours. La frise dit déjà
+« Transmise au maire pour arbitrage ». **C'est un arbitrage à confirmer avec le
+client, pas une évidence.**
+
+### La frise promettait un avenir à un dossier refusé
+
+Sous « Acte disponible — **non atteint** » se lisait « Vous pourrez télécharger
+votre acte ». Et sous la frise entière : « Vous serez averti à chaque
+changement d'étape » — sur un dossier définitivement clos. Les jalons non
+atteints se taisent maintenant, et la promesse d'avertissement ne s'affiche que
+tant qu'il reste quelque chose à annoncer.
+
+### Le bégaiement, deuxième round
+
+D-074 avait corrigé la frise. L'en-tête du **même écran** affichait encore :
+
+> Centre d'état civil : Centre d'état civil de Yaoundé I — commune de Yaoundé I
+
+Deux répétitions sur une ligne. Le même défaut vivait dans le choix du centre
+de l'assistant et dans le rattachement d'un compte.
+
+La règle vit maintenant à un seul endroit, `CivilStatusCenter::situation()` :
+le nom du centre se suffit, **et la commune n'est ajoutée que lorsque le nom ne
+la porte pas déjà** — une commune peut avoir plusieurs centres, et « Centre
+annexe de Tsinga » ne dit pas où il se trouve. Comparaison insensible à la
+casse et aux accents.
+
+### La seule commande pour bloquer un compte avait l'air d'une étiquette
+
+Sur l'écran des comptes, « Changer le statut » s'affichait en texte gris, sans
+triangle, sans rien qui dise qu'on peut cliquer. C'est pourtant un `<details>`,
+et le seul moyen de **suspendre ou désactiver un compte compromis**.
+
+La cause : `summary { display: flex }`, ajouté au jalon 6 pour porter la cible
+tactile à 44 px, **supprime le marqueur que le navigateur dessine tout seul**.
+Une correction d'accessibilité en avait cassé une autre, silencieusement.
+
+Le triangle est redessiné (`::before`, pivoté à l'ouverture, figé si
+`prefers-reduced-motion`), et le libellé prend la couleur des commandes.
+
+### Une case à cocher que personne ne pouvait comprendre
+
+L'inscription faisait cocher « J'accepte que mes données soient traitées pour
+instruire ma demande » — **sans un mot** sur quelles données, vues par qui, ni
+combien de temps.
+
+Le projet savait que ce texte n'était pas rédigé : c'est la question **B5** de
+`COMPLIANCE_OPEN_QUESTIONS.md`. L'écran, lui, ne le disait pas : il présentait
+une phrase comme si elle était la notice complète.
+
+Un dépliant énonce désormais ce qui est **vérifiable dans le code** — qui voit
+quoi, ce qui est chiffré, où vivent les photographies, ce que le journal
+retient — et **dit franchement que la durée de conservation et la notice
+complète restent à arrêter**. Rien de juridique n'est affirmé (§10).
+
+### Vérifié, et laissé tel quel
+
+Le libellé du profil affirme que le numéro de pièce « n'est lisible ni dans la
+base, ni par l'administration du service ». **C'est vrai** : chiffré à
+l'enregistrement, absent de la sérialisation, jamais affiché sur un écran
+d'agent, absent du journal d'audit, et seulement transmis à la base de la
+police au moment du contrôle. Vérifié en suivant le champ dans le code, pas en
+s'y fiant. Rien corrigé.
+
+Le maire ne reçoit toujours aucune notification (relevé en D-074) : c'est une
+fonctionnalité à décider, pas un défaut à corriger seul.

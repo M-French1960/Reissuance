@@ -156,7 +156,7 @@ d'avancer sans réponse.**
 | Tarif | Aucun montant nulle part |
 | Délai indicatif au citoyen | Aucun chiffre affiché |
 | Bases externes | Adaptateurs factices, aucune forme d'API présupposée |
-| Consentement | Champ `consent_given_at` présent ; **le texte du consentement n'est pas rédigé** — il relève de B5 |
+| Consentement | Champ `consent_given_at` présent ; **le texte du consentement n'est pas rédigé** — il relève de B5. Depuis D-075, l'écran d'inscription **dit ce qui est vérifiable dans le code** (qui voit quoi, ce qui est chiffré, ce que le journal retient) et **annonce que la notice complète et la durée de conservation restent à arrêter** : il ne présente plus une phrase comme si elle était la notice |
 
 Aucun de ces choix n'est un contournement : ce sont des emplacements réservés,
 visibles, qui échouent bruyamment plutôt que de produire silencieusement

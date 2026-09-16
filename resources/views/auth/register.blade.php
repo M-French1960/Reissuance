@@ -37,6 +37,42 @@
                 <p class="field__error" id="accepts_terms-error">{{ $errors->first('accepts_terms') }}</p>
             @endif
 
+            {{--
+                ON NE FAIT PAS COCHER UNE CASE A L'AVEUGLE (D-075).
+
+                La case etait seule : « J'accepte que mes données soient
+                traitées » — sans un mot sur QUELLES donnees, vues par QUI, ni
+                pour combien de temps. Le projet sait pourtant que le texte de
+                consentement n'est pas redige : c'est la question B5 de
+                docs/COMPLIANCE_OPEN_QUESTIONS.md. L'ecran, lui, ne le disait
+                pas ; il presentait une phrase comme si elle etait la notice
+                complete.
+
+                Ce qui suit n'affirme RIEN de juridique (§10) : ce sont les
+                faits verifiables dans le code. Et la derniere ligne dit
+                franchement ce qui manque, plutot que de l'inventer.
+            --}}
+            <details class="field">
+                <summary>Ce que le service fait de vos données</summary>
+                <ul>
+                    <li>Vos informations et vos photographies ne sont vues que par
+                        <strong>l'officier du centre d'état civil que vous choisissez</strong>
+                        et par <strong>le maire de sa commune</strong>.</li>
+                    <li>Votre <strong>numéro de pièce d'identité est chiffré</strong> : il
+                        n'est lisible ni dans la base, ni par l'administration du service.
+                        Il ne sert qu'au contrôle auprès de la base de la police.</li>
+                    <li>Vos <strong>photographies sont stockées hors du site web</strong> et
+                        ne sont accessibles par aucune adresse publique.</li>
+                    <li>Le <strong>journal d'audit</strong> retient qui a fait quoi et quand.
+                        Il ne contient ni photographie, ni numéro de pièce.</li>
+                </ul>
+                <p class="u-note">
+                    <strong>Ce qui n'est pas encore arrêté :</strong> la durée de conservation
+                    de vos données et la notice complète relèvent de règles qui restent à
+                    confirmer avec l'administration. Elles seront publiées ici.
+                </p>
+            </details>
+
             <x-button type="submit" variant="primary" block>Créer mon compte</x-button>
         </form>
 
