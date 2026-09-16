@@ -10,6 +10,7 @@ return [
         4 => 'Civil status register search',
         5 => 'Decision',
     ],
+    'step_navigation' => 'Navigation between steps',
     'step_number' => 'Step :number',
 
     'heading' => 'Verification :reference',
@@ -30,6 +31,7 @@ return [
 
     'not_recorded' => 'Not recorded',
     'in_progress' => 'In progress',
+    'step_column' => 'Step',
     'summary_title' => 'Summary of the checks',
     'incomplete_title' => 'Verification incomplete',
     'incomplete_body' => 'You cannot accept this request until all four checks have a result. Missing: :steps.',

@@ -2,73 +2,72 @@
 @section('title', $steps[$step])
 
 @section('content')
-    <h1>Vérification — {{ $demande->reference }}</h1>
+    <h1>{{ __('verification.heading', ['reference' => $demande->reference]) }}</h1>
     <p class="u-note">
-        Demandeur : {{ $demande->full_name_at_birth ?? '—' }} ·
-        Statut : {{ $demande->status->label() }}
+        {{ __('verification.meta', [
+            'name' => $demande->full_name_at_birth ?? '',
+            'status' => $demande->status->label(),
+        ]) }}
         @if ($demande->verification_cycle > 1)
-            · <strong>Passe n°{{ $demande->verification_cycle }}</strong> (dossier retourné par le maire)
+            <strong>{{ __('verification.pass_number', ['number' => $demande->verification_cycle]) }}</strong>
         @endif
     </p>
 
-    {{-- Les etapes REELLEMENT enregistrees, pas celles qu'on a depassees :
-         la verification se parcourt librement, la position ne prouve rien. --}}
+    {{-- The steps ACTUALLY recorded, not the ones we walked past: verification
+         is freely navigable, so position proves nothing (D-074). --}}
     <x-step-indicator :steps="$steps" :current="$step"
                       :done="$etapes->filter(fn ($e) => $e->result !== null)->keys()->all()" />
 
     <x-flash />
+
     @if ($errors->any())
         <div class="alert alert--danger" role="alert">
-            <p class="alert__title">Action impossible</p>
+            <p class="alert__title">{{ __('officer.action_impossible') }}</p>
             <ul class="alert__list">@foreach ($errors->all() as $m)<li>{{ $m }}</li>@endforeach</ul>
         </div>
     @endif
 
     {{--
-        Trois raisons distinctes de ne pas pouvoir décider, et trois messages
-        distincts. La version précédente repliait tout sur « pris en charge par
-        un autre agent », y compris quand PERSONNE ne l'avait pris : elle
-        affirmait une chose fausse et masquait la seule action possible
-        (D-055).
+        Three distinct reasons for not being able to decide, and three distinct
+        messages. The earlier version folded everything into "taken on by
+        another agent", including when NOBODY had taken it: it stated something
+        false and hid the only possible action (D-055).
     --}}
     @unless ($peutDecider)
         @if ($peutPrendreEnCharge)
-            <x-alert variant="attention" title="Dossier à prendre en charge">
-                Personne ne traite ce dossier. Prenez-le en charge pour pouvoir
-                le vérifier et décider.
+            <x-alert variant="attention" :title="__('verification.claim_title')">
+                {{ __('verification.claim_body') }}
                 <form method="POST" action="{{ route('officer.verification.claim', $demande) }}" class="alert__action">
                     @csrf
-                    <x-button type="submit">Prendre en charge</x-button>
+                    <x-button type="submit">{{ __('verification.claim_action') }}</x-button>
                 </form>
             </x-alert>
         @elseif ($demande->assignedOfficer !== null)
-            <x-alert variant="attention" title="Lecture seule">
-                Ce dossier est pris en charge par
-                {{ $demande->assignedOfficer->name }}.
-                Vous pouvez le consulter — la consultation est journalisée — mais
-                la décision lui revient.
+            <x-alert variant="attention" :title="__('verification.read_only_title')">
+                {{ __('verification.read_only_body', ['name' => $demande->assignedOfficer->name]) }}
             </x-alert>
         @else
-            <x-alert variant="attention" title="Dossier sans agent affecté">
-                Ce dossier est à l'état « {{ $demande->status->label() }} » et
-                n'est affecté à personne : il ne peut être ni pris en charge ni
-                décidé en l'état. Signalez-le à l'administrateur.
+            <x-alert variant="attention" :title="__('verification.unassigned_title')">
+                {{ __('verification.unassigned_body', ['status' => $demande->status->label()]) }}
             </x-alert>
         @endif
     @endunless
 
     @yield('etape')
 
-    <p class="u-note">Raccourcis : <kbd>→</kbd> ou <kbd>n</kbd> pour l'étape suivante, <kbd>←</kbd> ou <kbd>p</kbd> pour la précédente.</p>
+    <p class="u-note">{!! __('verification.shortcuts', [
+        'next' => '<kbd>&rarr;</kbd>',
+        'previous' => '<kbd>&larr;</kbd>',
+    ]) !!}</p>
 
-    <nav class="actions" aria-label="Navigation entre les étapes" data-step-nav>
+    <nav class="actions" aria-label="{{ __('verification.step_navigation') }}" data-step-nav>
         @if ($step > 1)
-            <x-button href="{{ route('officer.verification.step', ['reissuanceRequest' => $demande, 'step' => $step - 1]) }}" variant="secondary" data-step-prev>Étape précédente</x-button>
+            <x-button href="{{ route('officer.verification.step', ['reissuanceRequest' => $demande, 'step' => $step - 1]) }}" variant="secondary" data-step-prev>{{ __('verification.previous_step') }}</x-button>
         @else
-            <x-button href="{{ route('officer.queue') }}" variant="secondary">Retour à la file</x-button>
+            <x-button href="{{ route('officer.queue') }}" variant="secondary">{{ __('verification.back_to_queue') }}</x-button>
         @endif
         @if ($step < 5)
-            <x-button href="{{ route('officer.verification.step', ['reissuanceRequest' => $demande, 'step' => $step + 1]) }}" variant="secondary" data-step-next>Étape suivante</x-button>
+            <x-button href="{{ route('officer.verification.step', ['reissuanceRequest' => $demande, 'step' => $step + 1]) }}" variant="secondary" data-step-next>{{ __('verification.next_step') }}</x-button>
         @endif
     </nav>
 @endsection

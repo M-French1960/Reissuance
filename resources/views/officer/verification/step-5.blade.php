@@ -1,15 +1,18 @@
 @extends('officer.verification._layout')
 @section('etape')
-    <x-card title="Récapitulatif des vérifications">
-        <div class="table-wrap" tabindex="0" role="group" aria-label="Résultat de chaque étape">
+    <x-card :title="__('verification.summary_title')">
+        <div class="table-wrap" tabindex="0" role="group" aria-label="{{ __('verification.summary_title') }}">
             <table>
-                <caption class="visually-hidden">Résultat de chaque étape</caption>
-                <thead><tr><th scope="col">Étape</th><th scope="col">Résultat</th><th scope="col">Enregistré</th></tr></thead>
+                <caption class="visually-hidden">{{ __('verification.summary_title') }}</caption>
+                <thead><tr>
+                    <th scope="col">{{ __('verification.step_column') }}</th>
+                    <th scope="col">{{ __('common.result') }}</th>
+                    <th scope="col">{{ __('common.recorded') }}</th>
+                </tr></thead>
                 <tbody>
-                    {{-- Les quatre vérifications. La cinquième étape est la
-                         décision ci-dessous : elle n'a pas de résultat à
-                         renseigner ici, et l'exiger rendait l'acceptation
-                         inatteignable (D-027). --}}
+                    {{-- The four checks. Step five is the decision below: it has
+                         no result to record here, and requiring one made
+                         acceptance unreachable (D-027). --}}
                     @foreach (\App\Services\VerificationWorkflow::VERIFICATION_STEPS as $numero)
                         @php $e = $etapes->get($numero); @endphp
                         <tr>
@@ -18,42 +21,38 @@
                                 @if ($e?->result)
                                     <span class="badge badge--{{ $e->result->tone() }}">{{ $e->result->label() }}</span>
                                 @else
-                                    <span class="badge badge--danger">Non renseignée</span>
+                                    <span class="badge badge--danger">{{ __('verification.not_recorded') }}</span>
                                 @endif
                             </td>
-                            <td>{{ $e?->completed_at?->translatedFormat('d/m/Y H:i') ?? '—' }}</td>
+                            <td>{{ $e?->completed_at?->translatedFormat('d/m/Y H:i') }}</td>
                         </tr>
                     @endforeach
                     <tr>
                         <td>5. {{ $steps[5] }}</td>
-                        <td><span class="badge badge--neutral">En cours</span></td>
-                        <td>—</td>
+                        <td><span class="badge badge--neutral">{{ __('verification.in_progress') }}</span></td>
+                        <td></td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
         @if ($reservations !== [])
-            <x-alert variant="attention" title="Une vérification n'a pas abouti">
+            <x-alert variant="attention" :title="__('officer.step5.reservations_title')">
                 <ul class="reasons__list">
                     @foreach ($reservations as $numero => $resultat)
-                        <li><strong>{{ $numero }}. {{ $steps[$numero] }}</strong> — {{ $resultat->label() }}</li>
+                        <li><strong>{{ $numero }}. {{ $steps[$numero] }}</strong> {{ $resultat->label() }}</li>
                     @endforeach
                 </ul>
-                Vous pouvez malgré tout accepter la demande : la décision vous
-                appartient. Le motif devient alors <strong>obligatoire</strong>,
-                il figurera au dossier et le maire le lira avant de signer.
+                {{ __('officer.step5.reservations_body') }}
             </x-alert>
         @endif
 
         @unless ($complet)
-            <x-alert variant="danger" title="Vérification incomplète">
-                Vous ne pourrez pas accepter cette demande tant que les quatre
-                vérifications n'ont pas de résultat. Il manque :
-                @foreach ($manquantes as $n)
-                    <strong>{{ $n }}. {{ $steps[$n] }}</strong>@if (! $loop->last), @endif
-                @endforeach.
-                <br>Le rejet et l'escalade restent possibles.
+            <x-alert variant="danger" :title="__('verification.incomplete_title')">
+                {{ __('verification.incomplete_body', [
+                    'steps' => collect($manquantes)->map(fn ($n) => "{$n}. {$steps[$n]}")->implode(', '),
+                ]) }}
+                <br>{{ __('verification.incomplete_note') }}
             </x-alert>
         @endunless
     </x-card>
@@ -61,19 +60,18 @@
     <x-message-thread :demande="$demande" :messages="$messages" />
 
     @if ($peutDecider)
-        <x-card title="Votre décision">
+        <x-card :title="__('officer.step5.decision_title')">
             <form method="POST" action="{{ route('officer.decision.store', $demande) }}">
                 @csrf
 
                 <fieldset class="fieldset">
-                    {{-- Aucune valeur présélectionnée : dans le prototype,
-                         « Accepter » était le choix par défaut du menu et un
-                         clic accidentel valait acceptation. --}}
-                    <legend class="field__label">Décision <span aria-hidden="true">*</span></legend>
+                    {{-- Nothing preselected: in the prototype "Accept" was the
+                         menu default and a stray click meant acceptance. --}}
+                    <legend class="field__label">{{ __('officer.step5.decision_legend') }} <span aria-hidden="true">*</span></legend>
                     @foreach ([
-                        'accepted' => ["Accepter et transmettre au maire", "La demande passera en attente de signature."],
-                        'rejected' => ['Rejeter la demande', 'Décision définitive. Le citoyen devra déposer une nouvelle demande.'],
-                        'escalated' => ['Escalader au maire', "Pour un dossier douteux ou hors de votre compétence."],
+                        'accepted' => [__('officer.step5.accept'), __('officer.step5.accept_help')],
+                        'rejected' => [__('officer.step5.reject'), __('officer.step5.reject_help')],
+                        'escalated' => [__('officer.step5.escalate'), __('officer.step5.escalate_help')],
                     ] as $valeur => [$libelle, $aide])
                         <div class="field--inline">
                             <input type="radio" id="d-{{ $valeur }}" name="decision" value="{{ $valeur }}"
@@ -82,9 +80,9 @@
                                    @if ($valeur === 'accepted' && ! $complet) disabled @endif>
                             <label for="d-{{ $valeur }}">
                                 {{ $libelle }}
-                                <span class="u-note">— {{ $aide }}</span>
+                                <span class="u-note">{{ $aide }}</span>
                                 @if ($valeur === 'accepted' && ! $complet)
-                                    <span class="u-note">(indisponible : vérification incomplète)</span>
+                                    <span class="u-note">({{ __('officer.step5.accept_unavailable') }})</span>
                                 @endif
                             </label>
                         </div>
@@ -93,14 +91,10 @@
 
                 <div class="field">
                     <label class="field__label" for="reason">
-                        Motif <span aria-hidden="true">*</span>
+                        {{ __('officer.step5.reason') }} <span aria-hidden="true">*</span>
                         <span class="field__hint">
-                            @if ($reservations !== [])
-                                Obligatoire ici : une vérification n'a pas abouti à une correspondance.
-                            @else
-                                Obligatoire pour un rejet ou une escalade.
-                            @endif
-                            Il figurera au dossier et au journal d'audit.
+                            {{ $reservations !== [] ? __('officer.step5.reason_required_reservation') : __('officer.step5.reason_required_normal') }}
+                            {{ __('officer.step5.reason_note') }}
                         </span>
                     </label>
                     <textarea class="field__control" id="reason" name="reason" rows="4"
@@ -110,24 +104,24 @@
                     @endif
                 </div>
 
-                {{-- Motifs pré-remplis : on optimise pour la répétition (§8.2). --}}
+                {{-- Prefilled reasons: optimising for repetition (§8.2). --}}
                 <details class="reasons">
-                    <summary>Motifs fréquents</summary>
+                    <summary>{{ __('officer.step5.common_reasons') }}</summary>
                     <ul class="reasons__list">
-                        @foreach (\App\Http\Controllers\Officer\DecisionController::REJECTION_REASONS as $motif)
+                        @foreach (\App\Http\Controllers\Officer\DecisionController::rejectionReasons() as $motif)
                             <li><button type="button" class="btn btn--secondary reasons__pick" data-reason="{{ $motif }}">{{ $motif }}</button></li>
                         @endforeach
                     </ul>
-                    <p class="u-note">Sans JavaScript, recopiez le motif voulu dans le champ ci-dessus.</p>
+                    <p class="u-note">{{ __('officer.step5.no_js_note') }}</p>
                 </details>
 
                 <div class="field">
-                    <label class="field__label" for="internal_notes">Notes internes</label>
-                    <span class="field__hint">Facultatives. Non communiquées au citoyen.</span>
+                    <label class="field__label" for="internal_notes">{{ __('officer.step5.internal_notes') }}</label>
+                    <span class="field__hint">{{ __('officer.step5.internal_notes_hint') }}</span>
                     <textarea class="field__control" id="internal_notes" name="internal_notes" rows="3">{{ old('internal_notes') }}</textarea>
                 </div>
 
-                <x-button type="submit" variant="primary">Enregistrer ma décision</x-button>
+                <x-button type="submit" variant="primary">{{ __('officer.step5.save_decision') }}</x-button>
             </form>
         </x-card>
     @endif

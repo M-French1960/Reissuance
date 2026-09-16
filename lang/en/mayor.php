@@ -1,0 +1,90 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'queue' => [
+        'title' => 'Signing certificates',
+        'commune_line' => 'Your commune is :commune. You only see files ready to sign or referred to you.',
+        'demo_title' => 'Demonstration signature',
+        'demo_body' => 'The signature provider configured here is a demonstration adapter. Every certificate issued carries the words :strong in plain sight. Whether a civil status certificate signed electronically has legal force in Cameroon is still to be confirmed.',
+        'demo_strong' => 'no legal value',
+
+        'ready_title' => 'Ready to sign (:count)',
+        'ready_empty_title' => 'No file awaiting signature',
+        'ready_empty_body' => 'Files approved by an officer of your commune will appear here.',
+        'ready_aria' => 'Files ready to sign',
+        'examine' => 'Examine',
+
+        'referred_title' => 'Referred to you (:count)',
+        'referred_note' => 'Files the officer did not settle and that call for your ruling.',
+        'referred_empty_title' => 'No referred file',
+        'referred_empty_body' => 'Nothing calls for your ruling at the moment.',
+        'referred_aria' => 'Referred files',
+        'referral_reason' => 'Reason for the referral',
+        'rule' => 'Rule on it',
+    ],
+
+    'review' => [
+        'title' => 'File :reference',
+        'meta' => ':centre, submitted on :date',
+        'verification_title' => 'Result of the verification',
+        'each_step_aria' => 'Result of each step',
+        'incomplete_title' => 'Verification incomplete',
+        'incomplete_body' => 'This file cannot be signed: :steps missing. Send it back to the officer.',
+
+        'documents_title' => 'Applicant documents',
+        'selfie' => 'Selfie',
+        'id_document' => 'Identity document',
+        'missing_document' => 'Missing document',
+
+        'draft_title' => 'The draft certificate to sign',
+        'draft_meta' => 'Written by :officer on :date.',
+        'draft_strong' => 'This is the document your signature makes final.',
+        'read_draft' => 'Read the draft certificate',
+        'no_draft' => 'No draft has been written for this file yet.',
+
+        'certificate_title' => 'The certificate applied for',
+        'name_at_birth' => 'Name at birth',
+        'born_on' => 'Born on :date in :place',
+        'registration_year' => 'Year of registration',
+        'father' => 'Father',
+        'mother' => 'Mother',
+        'copies' => 'Copies',
+
+        'decision_title' => 'Your decision',
+        'escalated_intro' => 'This file was referred to you by the officer. Three outcomes are open to you.',
+        'ready_intro' => 'Sign the certificate, or send the file back to the officer.',
+        'reason' => 'Reason',
+        'reason_required_escalated' => 'Compulsory whatever your decision: you are ruling on a flagged file.',
+        'reason_required_return' => 'Compulsory to send the file back or to reject it.',
+
+        'confirmation_code' => 'Confirmation code',
+        'confirmation_hint' => 'Required to sign, and only to sign. Enter the code shown by your authentication app, or one of your recovery codes. Signing commits you: the code attests that you are the one issuing this certificate.',
+        'sign_with_device' => 'Sign with this device',
+        'device_note' => 'Face ID, fingerprint or your usual unlock, with no code to type.',
+        'sign' => 'Sign the certificate',
+        'sign_by_exception' => 'Approve by exception and sign',
+        'return_to_officer' => 'Return to the officer',
+        'reject' => 'Reject the request',
+        'signature_unavailable' => 'Signing is unavailable while the verification is incomplete.',
+        'back_to_dashboard' => 'Back to the dashboard',
+
+        'pass_number' => 'pass :number',
+        'reservation_title' => 'The officer accepted despite a reservation',
+        'reservation_body' => 'Read the reason the officer had to give before you sign.',
+        'no_draft_title' => 'No draft certificate',
+        'no_draft_body' => 'The officer has not written the draft yet. Signing will be refused while none exists: the mayor signs a draft drawn up by the officer, the mayor does not write the certificate.',
+        'issued_title' => 'Certificate issued',
+        'issued_body' => 'Signed on :date by :mayor.',
+        'no_legal_value_title' => 'No legal value',
+        'no_legal_value_body' => 'This document was produced by a demonstration adapter.',
+        'download' => 'Download the certificate',
+        'signature_proof' => 'Proof of signature',
+        'by_on' => 'by :name (:role) on :date',
+        'ready_for_signature' => 'This file was approved by the officer and awaits your signature.',
+        'written_by_unknown' => 'an officer',
+        'open_larger' => ':title, open larger',
+        'history_title' => 'Decisions on this file',
+    ],
+];

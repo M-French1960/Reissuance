@@ -1,31 +1,39 @@
 @extends('layouts.app')
-@section('title', 'Dossier '.$demande->reference)
+@section('title', __('mayor.review.title', ['reference' => $demande->reference]))
 
 @section('content')
-    <h1>Dossier {{ $demande->reference }}</h1>
+    <h1>{{ __('mayor.review.title', ['reference' => $demande->reference]) }}</h1>
     <p class="u-note">
         <x-status-badge :status="$demande->status" />
-        · {{ $demande->center?->name }} · déposée le {{ $demande->submitted_at?->translatedFormat('d/m/Y') }}
-        @if ($demande->verification_cycle > 1) · passe n°{{ $demande->verification_cycle }} @endif
+        {{ __('mayor.review.meta', [
+            'centre' => $demande->center?->name,
+            'date' => $demande->submitted_at?->translatedFormat('d/m/Y'),
+        ]) }}
+        @if ($demande->verification_cycle > 1)
+            {{ __('mayor.review.pass_number', ['number' => $demande->verification_cycle]) }}
+        @endif
     </p>
 
     @if ($errors->any())
         <div class="alert alert--danger" role="alert">
-            <p class="alert__title">Action impossible</p>
+            <p class="alert__title">{{ __('officer.action_impossible') }}</p>
             <ul class="alert__list">@foreach ($errors->all() as $m)<li>{{ $m }}</li>@endforeach</ul>
         </div>
     @endif
 
-    {{-- L'essentiel d'abord : ce qui décide, sans défilement (§8.2). --}}
-    <x-card title="Résultat de la vérification">
-        <div class="table-wrap" tabindex="0" role="group" aria-label="Résultat de chaque étape">
+    {{-- What decides, first and without scrolling (§8.2). --}}
+    <x-card :title="__('mayor.review.verification_title')">
+        <div class="table-wrap" tabindex="0" role="group" aria-label="{{ __('mayor.review.each_step_aria') }}">
             <table>
-                <caption class="visually-hidden">Résultat de chaque étape</caption>
-                <thead><tr><th scope="col">Étape</th><th scope="col">Résultat</th><th scope="col">Par</th></tr></thead>
+                <caption class="visually-hidden">{{ __('mayor.review.each_step_aria') }}</caption>
+                <thead><tr>
+                    <th scope="col">{{ __('verification.step_column') }}</th>
+                    <th scope="col">{{ __('common.result') }}</th>
+                    <th scope="col">{{ __('common.by') }}</th>
+                </tr></thead>
                 <tbody>
-                    {{-- Les quatre vérifications. La cinquième étape est la
-                         décision de l'officier, reprise plus bas dans le
-                         récapitulatif des décisions (D-027). --}}
+                    {{-- The four checks. Step five is the officer's decision,
+                         shown lower down in the decision history (D-027). --}}
                     @foreach (\App\Services\VerificationWorkflow::VERIFICATION_STEPS as $numero)
                         @php $e = $etapes->get($numero); @endphp
                         <tr>
@@ -34,10 +42,10 @@
                                 @if ($e?->result)
                                     <span class="badge badge--{{ $e->result->tone() }}">{{ $e->result->label() }}</span>
                                 @else
-                                    <span class="badge badge--danger">Non renseignée</span>
+                                    <span class="badge badge--danger">{{ __('verification.not_recorded') }}</span>
                                 @endif
                             </td>
-                            <td>{{ $e?->officer?->name ?? '—' }}</td>
+                            <td>{{ $e?->officer?->name }}</td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -45,35 +53,38 @@
         </div>
 
         @if ($reservations !== [])
-            <x-alert variant="attention" title="L'officier a accepté malgré une réserve">
+            <x-alert variant="attention" :title="__('mayor.review.reservation_title')">
                 <ul class="alert__list">
                     @foreach ($reservations as $numero => $resultat)
-                        <li><strong>{{ $numero }}. {{ $steps[$numero] }}</strong> — {{ $resultat->label() }}</li>
+                        <li><strong>{{ $numero }}. {{ $steps[$numero] }}</strong> {{ $resultat->label() }}</li>
                     @endforeach
                 </ul>
-                Lisez le motif que l'officier a dû fournir avant de signer.
+                {{ __('mayor.review.reservation_body') }}
             </x-alert>
         @endif
 
         @unless ($complet)
-            <x-alert variant="danger" title="Vérification incomplète">
-                Ce dossier ne peut pas être signé : il manque
-                @foreach ($manquantes as $n)<strong>{{ $n }}. {{ $steps[$n] }}</strong>@if (! $loop->last), @endif @endforeach.
-                Retournez-le à l'officier.
+            <x-alert variant="danger" :title="__('mayor.review.incomplete_title')">
+                {{ __('mayor.review.incomplete_body', [
+                    'steps' => collect($manquantes)->map(fn ($n) => "{$n}. {$steps[$n]}")->implode(', '),
+                ]) }}
             </x-alert>
         @endunless
     </x-card>
 
     @if ($demande->decisions->isNotEmpty())
-        <x-card title="Décisions prises sur ce dossier">
+        <x-card :title="__('mayor.review.history_title')">
             <ol class="timeline">
                 @foreach ($demande->decisions->sortBy('created_at') as $d)
                     <li class="timeline__item timeline__item--fait">
                         <span class="timeline__marker" aria-hidden="true">{{ $loop->iteration }}</span>
                         <div>
                             <strong>{{ $d->decision->label() }}</strong>
-                            <span class="u-note">par {{ $d->actor?->name }} ({{ $d->actor_role->label() }})
-                            le {{ $d->created_at?->translatedFormat('d/m/Y à H:i') }}</span>
+                            <span class="u-note">{{ __('mayor.review.by_on', [
+                                'name' => $d->actor?->name,
+                                'role' => $d->actor_role->label(),
+                                'date' => $d->created_at?->translatedFormat('d/m/Y H:i'),
+                            ]) }}</span>
                             @if ($d->reason)<br><span class="u-note">{{ $d->reason }}</span>@endif
                         </div>
                     </li>
@@ -82,18 +93,19 @@
         </x-card>
     @endif
 
-    <x-card title="Pièces du demandeur">
+    <x-card :title="__('mayor.review.documents_title')">
         <div class="compare">
-            @foreach ([['Selfie', 'selfie'], ["Pièce d'identité", 'id_document']] as [$titre, $kind])
+            @foreach ([[__('mayor.review.selfie'), 'selfie'], [__('mayor.review.id_document'), 'id_document']] as [$titre, $kind])
                 @php $piece = $demande->attachments->firstWhere('kind', $kind); @endphp
                 <figure class="compare__pane">
                     <figcaption>{{ $titre }}</figcaption>
                     @if ($piece)
                         <a href="{{ route('citizen.attachments.show', $piece) }}" target="_blank" rel="noopener">
-                            <img class="compare__image" src="{{ route('citizen.attachments.show', $piece) }}" alt="{{ $titre }} — ouvrir en grand">
+                            <img class="compare__image" src="{{ route('citizen.attachments.show', $piece) }}"
+                                 alt="{{ __('mayor.review.open_larger', ['title' => $titre]) }}">
                         </a>
                     @else
-                        <p class="badge badge--danger">Pièce manquante</p>
+                        <p class="badge badge--danger">{{ __('mayor.review.missing_document') }}</p>
                     @endif
                 </figure>
             @endforeach
@@ -101,89 +113,86 @@
     </x-card>
 
     {{--
-        LE PROJET QUE LE MAIRE VA SIGNER (D-068).
+        THE DRAFT THE MAYOR IS ABOUT TO SIGN (D-068).
 
-        Place AVANT le detail du dossier, et non en annexe : le maire signe le
-        PROJET redige par l'officier, pas les champs affiches ci-dessous. Tant
-        qu'aucun ecran ne le lui donnait a ouvrir, il signait un document qu'il
-        n'avait jamais vu — l'empreinte de contenu prouvait que le texte n'avait
-        pas bouge, elle ne prouvait pas qu'il avait ete lu.
+        Placed BEFORE the file details, not in an appendix: the mayor signs the
+        DRAFT written by the officer, not the fields shown below. While no
+        screen offered it to open, they signed a document they had never seen.
+        The content fingerprint proved the text had not moved; it did not prove
+        it had been read.
     --}}
     @if ($projet)
-        <x-card title="Le projet d'acte à signer">
+        <x-card :title="__('mayor.review.draft_title')">
             <p>
-                Rédigé par {{ $projet->officer?->name ?? 'un officier' }}
-                le {{ $projet->created_at?->translatedFormat('d F Y à H:i') }}.
-                <strong>C'est ce document que votre signature rendra définitif.</strong>
+                {{ __('mayor.review.draft_meta', [
+                    'officer' => $projet->officer?->name ?? __('mayor.review.written_by_unknown'),
+                    'date' => $projet->created_at?->translatedFormat('d F Y H:i'),
+                ]) }}
+                <strong>{{ __('mayor.review.draft_strong') }}</strong>
             </p>
             <div class="row-actions">
                 <x-button href="{{ route('acts.draft', $projet) }}" variant="primary">
-                    Lire le projet d'acte
+                    {{ __('mayor.review.read_draft') }}
                 </x-button>
             </div>
         </x-card>
     @else
-        <x-alert variant="attention" title="Aucun projet d'acte">
-            L'officier n'a pas encore rédigé le projet. La signature sera refusée
-            tant qu'il n'existe pas : le maire signe un projet établi par l'officier,
-            il ne rédige pas l'acte.
+        <x-alert variant="attention" :title="__('mayor.review.no_draft_title')">
+            {{ __('mayor.review.no_draft_body') }}
         </x-alert>
     @endif
 
-    <x-card title="L'acte demandé">
+    <x-card :title="__('mayor.review.certificate_title')">
         <dl class="review">
-            <div class="review__row"><dt>Nom à la naissance</dt><dd>{{ $demande->full_name_at_birth }}</dd></div>
-            <div class="review__row"><dt>Né(e) le</dt><dd>{{ $demande->date_of_birth?->translatedFormat('d F Y') }} à {{ $demande->place_of_birth }}</dd></div>
-            <div class="review__row"><dt>Année d'enregistrement</dt><dd>{{ $demande->registration_year }}</dd></div>
-            <div class="review__row"><dt>Père</dt><dd>{{ $demande->father_name }}</dd></div>
-            <div class="review__row"><dt>Mère</dt><dd>{{ $demande->mother_name }}</dd></div>
-            <div class="review__row"><dt>Exemplaires</dt><dd>{{ $demande->copies_requested }}</dd></div>
+            <div class="review__row"><dt>{{ __('mayor.review.name_at_birth') }}</dt><dd>{{ $demande->full_name_at_birth }}</dd></div>
+            <div class="review__row"><dt>{{ __('wizard.step4.born_on') }}</dt><dd>{{ __('mayor.review.born_on', [
+                'date' => $demande->date_of_birth?->translatedFormat('d F Y'),
+                'place' => $demande->place_of_birth,
+            ]) }}</dd></div>
+            <div class="review__row"><dt>{{ __('mayor.review.registration_year') }}</dt><dd>{{ $demande->registration_year }}</dd></div>
+            <div class="review__row"><dt>{{ __('mayor.review.father') }}</dt><dd>{{ $demande->father_name }}</dd></div>
+            <div class="review__row"><dt>{{ __('mayor.review.mother') }}</dt><dd>{{ $demande->mother_name }}</dd></div>
+            <div class="review__row"><dt>{{ __('mayor.review.copies') }}</dt><dd>{{ $demande->copies_requested }}</dd></div>
         </dl>
     </x-card>
 
     @if ($demande->signature)
-        <x-card title="Acte délivré">
-            <p>Signé le {{ $demande->signature->signed_at?->translatedFormat('d F Y à H:i') }}
-            par {{ $demande->signature->mayor?->name }}.</p>
+        <x-card :title="__('mayor.review.issued_title')">
+            <p>{{ __('mayor.review.issued_body', [
+                'date' => $demande->signature->signed_at?->translatedFormat('d F Y H:i'),
+                'mayor' => $demande->signature->mayor?->name,
+            ]) }}</p>
             @unless ($demande->signature->legally_binding)
-                <x-alert variant="attention" title="Sans valeur juridique">
-                    Ce document a été produit par un adaptateur de démonstration.
+                <x-alert variant="attention" :title="__('mayor.review.no_legal_value_title')">
+                    {{ __('mayor.review.no_legal_value_body') }}
                 </x-alert>
             @endunless
             <div class="row-actions">
-                <x-button href="{{ route('acts.document', $demande->signature) }}" variant="secondary">Télécharger l'acte</x-button>
-                <x-button href="{{ route('acts.proof', $demande->signature) }}" variant="secondary">Preuve de signature</x-button>
+                <x-button href="{{ route('acts.document', $demande->signature) }}" variant="secondary">{{ __('mayor.review.download') }}</x-button>
+                <x-button href="{{ route('acts.proof', $demande->signature) }}" variant="secondary">{{ __('mayor.review.signature_proof') }}</x-button>
             </div>
         </x-card>
     @else
-    <x-message-thread :demande="$demande" :messages="$messages" />
+        <x-message-thread :demande="$demande" :messages="$messages" />
 
-        <x-card title="Votre décision">
-            @if ($estEscaladee)
-                <p>Ce dossier a été escaladé par l'officier. Trois issues vous sont ouvertes.</p>
-            @else
-                <p>Ce dossier a été validé par l'officier et attend votre signature.</p>
-            @endif
+        <x-card :title="__('mayor.review.decision_title')">
+            <p>{{ $estEscaladee ? __('mayor.review.escalated_intro') : __('mayor.review.ready_for_signature') }}</p>
 
             {{--
-                Un SEUL formulaire, trois boutons d'envoi distingués par
-                formaction. Sans cela, le motif saisi ne suivrait pas le
-                bouton choisi : le maire taperait une consigne, cliquerait
-                « Retourner », et l'officier recevrait un motif vide.
-                HTML pur, aucun JavaScript nécessaire.
+                ONE form, three submit buttons told apart by formaction.
+                Without that, the reason typed would not follow the button
+                chosen: the mayor would type an instruction, click "Return",
+                and the officer would receive an empty reason. Plain HTML, no
+                JavaScript needed.
             --}}
             <form method="POST" action="{{ route('mayor.sign', $demande) }}">
                 @csrf
 
                 <div class="field">
                     <label class="field__label" for="reason">
-                        Motif
+                        {{ __('mayor.review.reason') }}
                         <span class="field__hint">
-                            @if ($estEscaladee)
-                                Obligatoire quelle que soit votre décision : vous statuez sur un dossier signalé.
-                            @else
-                                Obligatoire pour retourner le dossier à l'officier.
-                            @endif
+                            {{ $estEscaladee ? __('mayor.review.reason_required_escalated') : __('mayor.review.reason_required_return') }}
                         </span>
                     </label>
                     <textarea class="field__control" id="reason" name="reason" rows="4"
@@ -192,23 +201,17 @@
                 </div>
 
                 {{--
-                    LA CONFIRMATION D'IDENTITE, ATTACHEE AU BOUTON QUI SIGNE.
+                    IDENTITY CONFIRMATION, TIED TO THE BUTTON THAT SIGNS.
 
-                    Sans attribut `required` : le formulaire porte trois
-                    boutons, et rendre ce champ obligatoire en HTML bloquerait
-                    aussi « Retourner » et « Rejeter », qui n'en ont pas
-                    besoin. C'est le serveur qui l'exige, pour la seule
-                    signature — voir DecisionController::sign().
+                    No `required` attribute: the form carries three buttons, and
+                    making this field required in HTML would also block "Return"
+                    and "Reject", which do not need it. The server demands it,
+                    for the signature alone. See DecisionController::sign().
                 --}}
                 <div class="field field--framed">
                     <label class="field__label" for="confirmation_code">
-                        Code de confirmation <span aria-hidden="true">*</span>
-                        <span class="field__hint">
-                            Exigé pour signer, et pour cela seulement. Entrez le code affiché
-                            par votre application d'authentification, ou l'un de vos codes de
-                            secours. Signer engage votre responsabilité : ce code atteste que
-                            c'est bien vous qui délivrez cet acte.
-                        </span>
+                        {{ __('mayor.review.confirmation_code') }} <span aria-hidden="true">*</span>
+                        <span class="field__hint">{{ __('mayor.review.confirmation_hint') }}</span>
                     </label>
                     <input class="field__control" id="confirmation_code" name="confirmation_code"
                            type="text" inputmode="numeric" autocomplete="one-time-code"
@@ -220,14 +223,13 @@
                 </div>
 
                 {{--
-                    SIGNER AVEC L'APPAREIL (D-070).
+                    SIGNING WITH THE DEVICE (D-070).
 
-                    `hidden` par defaut : le script ne montre ce bloc que si le
-                    navigateur connait WebAuthn et que la page est servie en
-                    contexte securise. Sinon le code ci-dessus reste le moyen
-                    de signer — une mairie ne cesse pas de delivrer des actes
-                    parce qu'un navigateur est ancien ou qu'un telephone est
-                    perdu.
+                    `hidden` by default: the script only reveals this block if
+                    the browser knows WebAuthn and the page is served in a
+                    secure context. Otherwise the code above stays the way to
+                    sign. A town hall does not stop issuing certificates
+                    because a browser is old or a phone was lost.
                 --}}
                 <div data-webauthn hidden class="u-stack-top">
                     <input type="hidden" name="device_assertion" id="device_assertion">
@@ -235,39 +237,37 @@
                               data-challenge-url="{{ route('mayor.device-challenge', $demande) }}"
                               data-sign-url="{{ route('mayor.sign', $demande) }}"
                               :disabled="! $complet">
-                        Signer avec cet appareil
+                        {{ __('mayor.review.sign_with_device') }}
                     </x-button>
-                    <p id="message-signature" class="u-note">
-                        Face ID, empreinte ou déverrouillage habituel — sans taper de code.
-                    </p>
+                    <p id="message-signature" class="u-note">{{ __('mayor.review.device_note') }}</p>
                 </div>
 
                 <div class="row-actions">
                     <x-button type="submit" variant="primary"
                               formaction="{{ route('mayor.sign', $demande) }}"
                               :disabled="! $complet">
-                        {{ $estEscaladee ? 'Approuver par exception et signer' : "Signer l'acte" }}
+                        {{ $estEscaladee ? __('mayor.review.sign_by_exception') : __('mayor.review.sign') }}
                     </x-button>
 
                     <x-button type="submit" variant="secondary"
                               formaction="{{ route('mayor.return', $demande) }}">
-                        Retourner à l'officier
+                        {{ __('mayor.review.return_to_officer') }}
                     </x-button>
 
                     @if ($estEscaladee)
                         <x-button type="submit" variant="danger"
                                   formaction="{{ route('mayor.reject', $demande) }}">
-                            Rejeter la demande
+                            {{ __('mayor.review.reject') }}
                         </x-button>
                     @endif
                 </div>
             </form>
 
             @unless ($complet)
-                <p class="u-note">La signature est indisponible tant que la vérification est incomplète.</p>
+                <p class="u-note">{{ __('mayor.review.signature_unavailable') }}</p>
             @endunless
         </x-card>
     @endif
 
-    <p class="u-return"><a href="{{ route('mayor.dashboard') }}">Retour au tableau de bord</a></p>
+    <p class="u-return"><a href="{{ route('mayor.dashboard') }}">{{ __('mayor.review.back_to_dashboard') }}</a></p>
 @endsection

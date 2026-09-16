@@ -1,41 +1,40 @@
 @extends('layouts.app')
-@section('title', 'Signature des actes')
+@section('title', __('mayor.queue.title'))
 
 @section('content')
-    <h1>Signature des actes</h1>
-    <p>Commune : <strong>{{ auth()->user()->commune?->name ?? '—' }}</strong>.
-    Vous ne voyez que les dossiers prêts à signer ou escaladés.</p>
+    <h1>{{ __('mayor.queue.title') }}</h1>
+    <p>{{ __('mayor.queue.commune_line', ['commune' => auth()->user()->commune?->name ?? __('common.none')]) }}</p>
 
     <x-flash />
 
-    <x-alert variant="attention" title="Signature de démonstration">
-        Le prestataire de signature configuré est un adaptateur factice. Tout
-        acte délivré porte en clair la mention <strong>« sans valeur
-        juridique »</strong>. La valeur légale d'un acte d'état civil signé
-        électroniquement au Cameroun reste à confirmer.
+    <x-alert variant="attention" :title="__('mayor.queue.demo_title')">
+        {!! __('mayor.queue.demo_body', ['strong' => '<strong>'.e(__('mayor.queue.demo_strong')).'</strong>']) !!}
     </x-alert>
 
-    <x-card title="Prêtes à signer ({{ $aSigner->total() }})">
+    <x-card :title="__('mayor.queue.ready_title', ['count' => $aSigner->total()])">
         @if ($aSigner->isEmpty())
-            <x-empty-state title="Aucun dossier en attente de signature">
-                Les dossiers validés par un officier de votre commune apparaîtront ici.
+            <x-empty-state :title="__('mayor.queue.ready_empty_title')">
+                {{ __('mayor.queue.ready_empty_body') }}
             </x-empty-state>
         @else
-            <div class="table-wrap" tabindex="0" role="group" aria-label="Dossiers prêts à signer">
+            <div class="table-wrap" tabindex="0" role="group" aria-label="{{ __('mayor.queue.ready_aria') }}">
                 <table>
-                    <caption class="visually-hidden">Dossiers prêts à signer</caption>
+                    <caption class="visually-hidden">{{ __('mayor.queue.ready_aria') }}</caption>
                     <thead><tr>
-                        <th scope="col">Référence</th><th scope="col">Demandeur</th>
-                        <th scope="col">Centre</th><th scope="col">Déposée le</th><th scope="col">Action</th>
+                        <th scope="col">{{ __('common.reference') }}</th>
+                        <th scope="col">{{ __('common.applicant') }}</th>
+                        <th scope="col">{{ __('common.centre') }}</th>
+                        <th scope="col">{{ __('common.submitted_on') }}</th>
+                        <th scope="col">{{ __('common.action') }}</th>
                     </tr></thead>
                     <tbody>
                         @foreach ($aSigner as $demande)
                             <tr>
                                 <td>{{ $demande->reference }}</td>
-                                <td>{{ $demande->full_name_at_birth ?? '—' }}</td>
-                                <td>{{ $demande->center?->name ?? '—' }}</td>
-                                <td>{{ $demande->submitted_at?->translatedFormat('d/m/Y') ?? '—' }}</td>
-                                <td><a href="{{ route('mayor.review', $demande) }}">Examiner</a></td>
+                                <td>{{ $demande->full_name_at_birth }}</td>
+                                <td>{{ $demande->center?->name }}</td>
+                                <td>{{ $demande->submitted_at?->translatedFormat('d/m/Y') }}</td>
+                                <td><a href="{{ route('mayor.review', $demande) }}">{{ __('mayor.queue.examine') }}</a></td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -45,28 +44,30 @@
         @endif
     </x-card>
 
-    <x-card title="Escaladées ({{ $escaladees->total() }})">
-        <p class="u-note">Dossiers que l'officier n'a pas tranchés et qui appellent votre arbitrage.</p>
+    <x-card :title="__('mayor.queue.referred_title', ['count' => $escaladees->total()])">
+        <p class="u-note">{{ __('mayor.queue.referred_note') }}</p>
 
         @if ($escaladees->isEmpty())
-            <x-empty-state title="Aucun dossier escaladé">
-                Rien n'appelle votre arbitrage pour l'instant.
+            <x-empty-state :title="__('mayor.queue.referred_empty_title')">
+                {{ __('mayor.queue.referred_empty_body') }}
             </x-empty-state>
         @else
-            <div class="table-wrap" tabindex="0" role="group" aria-label="Dossiers escaladés">
+            <div class="table-wrap" tabindex="0" role="group" aria-label="{{ __('mayor.queue.referred_aria') }}">
                 <table>
-                    <caption class="visually-hidden">Dossiers escaladés</caption>
+                    <caption class="visually-hidden">{{ __('mayor.queue.referred_aria') }}</caption>
                     <thead><tr>
-                        <th scope="col">Référence</th><th scope="col">Demandeur</th>
-                        <th scope="col">Motif de l'escalade</th><th scope="col">Action</th>
+                        <th scope="col">{{ __('common.reference') }}</th>
+                        <th scope="col">{{ __('common.applicant') }}</th>
+                        <th scope="col">{{ __('mayor.queue.referral_reason') }}</th>
+                        <th scope="col">{{ __('common.action') }}</th>
                     </tr></thead>
                     <tbody>
                         @foreach ($escaladees as $demande)
                             <tr>
                                 <td>{{ $demande->reference }}</td>
-                                <td>{{ $demande->full_name_at_birth ?? '—' }}</td>
-                                <td>{{ $demande->decisions->first()?->reason ?? '—' }}</td>
-                                <td><a href="{{ route('mayor.review', $demande) }}">Arbitrer</a></td>
+                                <td>{{ $demande->full_name_at_birth }}</td>
+                                <td>{{ $demande->decisions->first()?->reason }}</td>
+                                <td><a href="{{ route('mayor.review', $demande) }}">{{ __('mayor.queue.rule') }}</a></td>
                             </tr>
                         @endforeach
                     </tbody>

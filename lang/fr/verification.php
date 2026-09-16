@@ -10,6 +10,7 @@ return [
         4 => "Recherche dans le registre d'état civil",
         5 => 'Décision',
     ],
+    'step_navigation' => 'Navigation entre les étapes',
     'step_number' => 'Étape :number',
 
     'heading' => 'Vérification :reference',
@@ -30,6 +31,7 @@ return [
 
     'not_recorded' => 'Non renseignée',
     'in_progress' => 'En cours',
+    'step_column' => 'Étape',
     'summary_title' => 'Récapitulatif des vérifications',
     'incomplete_title' => 'Vérification incomplète',
     'incomplete_body' => "Vous ne pourrez pas accepter cette demande tant que les quatre vérifications n'ont pas de résultat. Il manque : :steps.",

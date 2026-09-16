@@ -103,39 +103,40 @@ class RequestTrackingController extends Controller
 
         $jalons = [
             [
-                'titre' => 'Demande envoyée',
+                'titre' => __('citizen.tracking.milestone_submitted'),
                 'statut' => RequestStatus::Pending,
                 /*
-                 * LE NOM DU CENTRE SE SUFFIT (D-073). Les centres s'appellent
-                 * deja « Centre d'état civil de Yaoundé I » : prefixer donnait
-                 * « Transmise au centre d'état civil de Centre d'état civil de
-                 * Yaoundé I ». Releve en regardant l'ecran de suivi.
+                 * THE CENTRE'S NAME SPEAKS FOR ITSELF (D-073/D-075). Centres
+                 * are already called "Civil status centre of Yaounde I", so
+                 * prefixing produced "Sent to the civil status centre of Civil
+                 * status centre of Yaounde I". Found by looking at the screen.
                  */
                 'detail' => $demande->center
-                    ? "Transmise à : {$demande->center->name}."
-                    : "Transmise au centre d'état civil.",
+                    ? __('citizen.tracking.milestone_submitted_detail', ['centre' => $demande->center->name])
+                    : __('citizen.tracking.milestone_submitted_detail_generic'),
             ],
             [
-                'titre' => "Vérification par l'officier",
+                'titre' => __('citizen.tracking.milestone_checked'),
                 'statut' => RequestStatus::UnderReview,
-                'detail' => "Contrôle de votre identité et recherche de l'acte d'origine.",
+                'detail' => __('citizen.tracking.milestone_checked_detail'),
             ],
             [
-                'titre' => 'Décision du maire',
+                'titre' => __('citizen.tracking.milestone_mayor'),
                 'statut' => RequestStatus::AwaitingSignature,
-                'detail' => 'Signature de votre acte réédité.',
+                'detail' => __('citizen.tracking.milestone_mayor_detail'),
             ],
             [
-                'titre' => 'Acte disponible',
+                'titre' => __('citizen.tracking.milestone_available'),
                 'statut' => RequestStatus::Signed,
                 /*
-                 * AU TEMPS QUI CONVIENT (D-073). « Vous pourrez télécharger »
-                 * s'affichait sous une etape marquee « terminé » : le futur
-                 * sous un fait accompli. Le present des que l'acte existe.
+                 * IN THE RIGHT TENSE (D-073). "You will be able to download
+                 * your certificate" was showing under a step marked "done":
+                 * the future under an accomplished fact. Present tense as soon
+                 * as the certificate exists.
                  */
                 'detail' => $demande->signature !== null
-                    ? 'Votre acte est prêt : téléchargez-le ci-dessous.'
-                    : 'Vous pourrez télécharger votre acte.',
+                    ? __('citizen.tracking.milestone_available_ready')
+                    : __('citizen.tracking.milestone_available_pending'),
             ],
         ];
 

@@ -38,14 +38,19 @@ class DecisionController extends Controller
      *
      * @var list<string>
      */
-    public const REJECTION_REASONS = [
-        "Les photographies ne correspondent pas à la pièce d'identité présentée.",
-        "La pièce d'identité n'est pas lisible sur la photographie fournie.",
-        "La pièce d'identité n'est pas reconnue par la base de la police.",
-        "Aucun acte correspondant n'a été trouvé dans le registre d'état civil.",
-        'Les informations déclarées ne correspondent pas à celles du registre.',
-        "La demande relève d'un autre centre d'état civil.",
-    ];
+    /**
+     * Prefilled reasons, in the agent's language.
+     *
+     * A method rather than a constant: a constant is resolved at compile time,
+     * before any language has been chosen for the request, so it could only
+     * ever hold one language.
+     *
+     * @return list<string>
+     */
+    public static function rejectionReasons(): array
+    {
+        return array_values((array) __('officer.rejection_reasons'));
+    }
 
     public function __construct(
         private readonly VerificationWorkflow $workflow,

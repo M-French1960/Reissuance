@@ -1,0 +1,90 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'queue' => [
+        'title' => 'Signature des actes',
+        'commune_line' => 'Votre commune est :commune. Vous ne voyez que les dossiers prêts à signer ou transmis pour arbitrage.',
+        'demo_title' => 'Signature de démonstration',
+        'demo_body' => "Le prestataire de signature configuré est un adaptateur factice. Tout acte délivré porte en clair la mention :strong. La valeur légale d'un acte d'état civil signé électroniquement au Cameroun reste à confirmer.",
+        'demo_strong' => '« sans valeur juridique »',
+
+        'ready_title' => 'Prêtes à signer (:count)',
+        'ready_empty_title' => 'Aucun dossier en attente de signature',
+        'ready_empty_body' => 'Les dossiers validés par un officier de votre commune apparaîtront ici.',
+        'ready_aria' => 'Dossiers prêts à signer',
+        'examine' => 'Examiner',
+
+        'referred_title' => 'Transmises pour arbitrage (:count)',
+        'referred_note' => "Dossiers que l'officier n'a pas tranchés et qui appellent votre arbitrage.",
+        'referred_empty_title' => 'Aucun dossier transmis',
+        'referred_empty_body' => "Rien n'appelle votre arbitrage pour l'instant.",
+        'referred_aria' => 'Dossiers transmis pour arbitrage',
+        'referral_reason' => 'Motif de la transmission',
+        'rule' => 'Arbitrer',
+    ],
+
+    'review' => [
+        'title' => 'Dossier :reference',
+        'meta' => ':centre, déposée le :date',
+        'verification_title' => 'Résultat de la vérification',
+        'each_step_aria' => 'Résultat de chaque étape',
+        'incomplete_title' => 'Vérification incomplète',
+        'incomplete_body' => "Ce dossier ne peut pas être signé : il manque :steps. Retournez-le à l'officier.",
+
+        'documents_title' => 'Pièces du demandeur',
+        'selfie' => 'Selfie',
+        'id_document' => "Pièce d'identité",
+        'missing_document' => 'Pièce manquante',
+
+        'draft_title' => "Le projet d'acte à signer",
+        'draft_meta' => 'Rédigé par :officer le :date.',
+        'draft_strong' => "C'est ce document que votre signature rendra définitif.",
+        'read_draft' => "Lire le projet d'acte",
+        'no_draft' => "Aucun projet n'a encore été rédigé pour ce dossier.",
+
+        'certificate_title' => "L'acte demandé",
+        'name_at_birth' => 'Nom à la naissance',
+        'born_on' => 'Né(e) le :date à :place',
+        'registration_year' => "Année d'enregistrement",
+        'father' => 'Père',
+        'mother' => 'Mère',
+        'copies' => 'Exemplaires',
+
+        'decision_title' => 'Votre décision',
+        'escalated_intro' => "Ce dossier vous a été transmis par l'officier. Trois issues vous sont ouvertes.",
+        'ready_intro' => "Signez l'acte, ou retournez le dossier à l'officier.",
+        'reason' => 'Motif',
+        'reason_required_escalated' => 'Obligatoire quelle que soit votre décision : vous statuez sur un dossier signalé.',
+        'reason_required_return' => 'Obligatoire pour retourner le dossier ou le rejeter.',
+
+        'confirmation_code' => 'Code de confirmation',
+        'confirmation_hint' => "Exigé pour signer, et pour cela seulement. Entrez le code affiché par votre application d'authentification, ou l'un de vos codes de secours. Signer engage votre responsabilité : ce code atteste que c'est bien vous qui délivrez cet acte.",
+        'sign_with_device' => 'Signer avec cet appareil',
+        'device_note' => 'Face ID, empreinte ou déverrouillage habituel, sans taper de code.',
+        'sign' => "Signer l'acte",
+        'sign_by_exception' => 'Approuver par exception et signer',
+        'return_to_officer' => "Retourner à l'officier",
+        'reject' => 'Rejeter la demande',
+        'signature_unavailable' => 'La signature est indisponible tant que la vérification est incomplète.',
+        'back_to_dashboard' => 'Retour au tableau de bord',
+
+        'pass_number' => 'passe n° :number',
+        'reservation_title' => "L'officier a accepté malgré une réserve",
+        'reservation_body' => "Lisez le motif que l'officier a dû fournir avant de signer.",
+        'no_draft_title' => "Aucun projet d'acte",
+        'no_draft_body' => "L'officier n'a pas encore rédigé le projet. La signature sera refusée tant qu'il n'existe pas : le maire signe un projet établi par l'officier, il ne rédige pas l'acte.",
+        'issued_title' => 'Acte délivré',
+        'issued_body' => 'Signé le :date par :mayor.',
+        'no_legal_value_title' => 'Sans valeur juridique',
+        'no_legal_value_body' => "Ce document a été produit par un adaptateur de démonstration.",
+        'download' => "Télécharger l'acte",
+        'signature_proof' => 'Preuve de signature',
+        'by_on' => 'par :name (:role) le :date',
+        'ready_for_signature' => "Ce dossier a été validé par l'officier et attend votre signature.",
+        'written_by_unknown' => 'un officier',
+        'open_larger' => ':title, ouvrir en grand',
+        'history_title' => 'Décisions sur ce dossier',
+    ],
+];

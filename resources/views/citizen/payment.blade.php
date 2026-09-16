@@ -1,96 +1,79 @@
 @extends('layouts.app')
-@section('title', 'Règlement des frais')
+@section('title', __('payment.title'))
 
 @section('content')
-    <h1>Règlement des frais</h1>
-    <p class="u-note">Demande {{ $demande->reference }}</p>
+    <h1>{{ __('payment.title') }}</h1>
+    <p class="u-note">{{ __('payment.request_line', ['reference' => $demande->reference]) }}</p>
 
     <x-flash />
 
     @if ($errors->any())
-        <x-alert variant="danger" title="Le règlement n'a pas abouti">
+        <x-alert variant="danger" :title="__('payment.failed_title')">
             <ul class="alert__list">@foreach ($errors->all() as $m)<li>{{ $m }}</li>@endforeach</ul>
         </x-alert>
     @endif
 
-    <x-card title="Montant à régler">
+    <x-card :title="__('payment.amount_title')">
         <dl class="review">
             <div class="review__row">
-                <dt>Montant</dt>
-                <dd><strong>{{ $montant?->format() ?? '—' }}</strong></dd>
+                <dt>{{ __('payment.amount') }}</dt>
+                <dd><strong>{{ $montant?->format() }}</strong></dd>
             </div>
             @if ($baseLegale)
                 <div class="review__row">
-                    <dt>Base réglementaire</dt>
+                    <dt>{{ __('payment.legal_basis') }}</dt>
                     <dd>{{ $baseLegale }}</dd>
                 </div>
             @endif
         </dl>
 
         @unless ($baseLegale)
-            {{-- On n'invente pas un fondement juridique (§10 du brief). Tant
-                 qu'il n'est pas configuré, on dit qu'on ne l'affiche pas. --}}
-            <p class="u-note">
-                La référence du texte fixant ce tarif n'est pas encore
-                renseignée dans le service.
-            </p>
+            {{-- No legal basis is invented (§10 of the brief). While none is
+                 configured, the screen says it is not showing one. --}}
+            <p class="u-note">{{ __('payment.legal_basis_missing') }}</p>
         @endunless
 
-        <p>
-            @if ($avantEnvoi)
-                Votre demande sera transmise au centre d'état civil dès que le
-                règlement sera confirmé.
-            @else
-                Votre acte sera signé par le maire dès que le règlement sera
-                confirmé.
-            @endif
-        </p>
+        <p>{{ $avantEnvoi ? __('payment.after_payment_before_send') : __('payment.after_payment_before_sign') }}</p>
     </x-card>
 
     @if ($paiement && $paiement->isPaid())
-        <x-card title="Règlement confirmé">
-            <p>
-                <span class="badge badge--{{ $paiement->status->tone() }}">{{ $paiement->status->label() }}</span>
-            </p>
+        <x-card :title="__('payment.confirmed_title')">
+            <p><span class="badge badge--{{ $paiement->status->tone() }}">{{ $paiement->status->label() }}</span></p>
             <dl class="review">
-                <div class="review__row"><dt>Montant</dt><dd>{{ $paiement->money()->format() }}</dd></div>
-                <div class="review__row"><dt>Date</dt><dd>{{ $paiement->settled_at?->translatedFormat('d/m/Y à H:i') }}</dd></div>
-                <div class="review__row"><dt>Moyen</dt><dd>{{ $paiement->operator?->label() ?? '—' }}</dd></div>
-                <div class="review__row"><dt>Référence</dt><dd>{{ $paiement->provider_reference ?? '—' }}</dd></div>
+                <div class="review__row"><dt>{{ __('payment.amount') }}</dt><dd>{{ $paiement->money()->format() }}</dd></div>
+                <div class="review__row"><dt>{{ __('payment.date') }}</dt><dd>{{ $paiement->settled_at?->translatedFormat('d/m/Y H:i') }}</dd></div>
+                <div class="review__row"><dt>{{ __('payment.method') }}</dt><dd>{{ $paiement->operator?->label() }}</dd></div>
+                <div class="review__row"><dt>{{ __('common.reference') }}</dt><dd>{{ $paiement->provider_reference }}</dd></div>
             </dl>
             <x-button :href="route('citizen.requests.payment.receipt', $demande)" variant="secondary">
-                Télécharger le reçu
+                {{ __('payment.download_receipt') }}
             </x-button>
         </x-card>
     @elseif ($paiement)
-        <x-card title="Règlement en cours">
-            <p>
-                <span class="badge badge--{{ $paiement->status->tone() }}">{{ $paiement->status->label() }}</span>
-            </p>
+        <x-card :title="__('payment.in_progress_title')">
+            <p><span class="badge badge--{{ $paiement->status->tone() }}">{{ $paiement->status->label() }}</span></p>
 
             @if ($paiement->status === \App\Enums\PaymentStatus::Authorised)
-                <x-alert variant="attention" title="Les fonds ne sont pas encore acquis">
-                    L'opérateur a bien pris votre ordre, mais le règlement n'est
-                    pas terminé. Validez-le sur votre téléphone si ce n'est pas
-                    fait, puis actualisez ci-dessous.
+                <x-alert variant="attention" :title="__('payment.not_settled_title')">
+                    {{ __('payment.not_settled_body') }}
                 </x-alert>
             @endif
 
             <form method="POST" action="{{ route('citizen.requests.payment.reconcile', $demande) }}">
                 @csrf
-                <x-button type="submit" variant="secondary">Actualiser l'état du règlement</x-button>
+                <x-button type="submit" variant="secondary">{{ __('payment.refresh') }}</x-button>
             </form>
         </x-card>
     @endif
 
     @if (! $paiement || ! $paiement->isPaid())
-        <x-card title="Payer">
+        <x-card :title="__('payment.pay_title')">
             <form method="POST" action="{{ route('citizen.requests.payment.store', $demande) }}">
                 @csrf
 
                 <fieldset class="fieldset">
                     <legend class="field__label">
-                        Comment souhaitez-vous régler ? <span aria-hidden="true">*</span>
+                        {{ __('payment.how_to_pay') }} <span aria-hidden="true">*</span>
                     </legend>
                     @foreach ($operateurs as $operateur)
                         <div class="field--inline">
@@ -100,7 +83,7 @@
                                    @checked(old('operator', $paiement?->operator?->value) === $operateur->value)>
                             <label for="op-{{ $operateur->value }}">
                                 {{ $operateur->label() }}
-                                <span class="u-note">— {{ $operateur->hint() }}</span>
+                                <span class="u-note">{{ $operateur->hint() }}</span>
                             </label>
                         </div>
                     @endforeach
@@ -111,11 +94,8 @@
 
                 <div class="field">
                     <label class="field__label" for="payer_reference">
-                        Numéro de règlement <span aria-hidden="true">*</span>
-                        <span class="field__hint">
-                            Le numéro de téléphone depuis lequel vous payez, par
-                            exemple +237 6 XX XX XX XX.
-                        </span>
+                        {{ __('payment.payer_number') }} <span aria-hidden="true">*</span>
+                        <span class="field__hint">{{ __('payment.payer_number_hint') }}</span>
                     </label>
                     <input class="field__control" id="payer_reference" name="payer_reference"
                            type="tel" inputmode="tel" autocomplete="tel" required
@@ -127,13 +107,13 @@
                 </div>
 
                 <x-button type="submit" variant="primary">
-                    Régler {{ $montant?->format() }}
+                    {{ __('payment.pay_amount', ['amount' => $montant?->format()]) }}
                 </x-button>
             </form>
         </x-card>
     @endif
 
     <p class="u-note">
-        <a href="{{ route('citizen.requests.show', $demande) }}">Revenir à ma demande</a>
+        <a href="{{ route('citizen.requests.show', $demande) }}">{{ __('payment.back_to_request') }}</a>
     </p>
 @endsection
