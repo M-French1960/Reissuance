@@ -258,7 +258,7 @@ class CancellationTest extends TestCase
         $this->actingAs($this->citoyen)
             ->get(route('citizen.requests.show', $demande->refresh()))
             ->assertOk()
-            ->assertSee('Annulée par le demandeur');
+            ->assertSee('Cancelled by the applicant');
     }
 
     #[Test]
@@ -269,7 +269,7 @@ class CancellationTest extends TestCase
         $this->actingAs($this->citoyen)
             ->get(route('citizen.requests.show', $demande))
             ->assertOk()
-            ->assertSee('Annuler ma demande');
+            ->assertSee('Cancel my request');
     }
 
     #[Test]
@@ -285,6 +285,6 @@ class CancellationTest extends TestCase
         $this->actingAs($this->citoyen)
             ->get(route('citizen.requests.show', $demande->refresh()))
             ->assertOk()
-            ->assertDontSee('Annuler ma demande');
+            ->assertDontSee('Cancel my request');
     }
 }

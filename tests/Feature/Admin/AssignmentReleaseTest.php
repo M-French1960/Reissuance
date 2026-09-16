@@ -86,7 +86,7 @@ class AssignmentReleaseTest extends TestCase
         $this->actingAs($this->admin)
             ->get(route('admin.assignments.index'))
             ->assertOk()
-            ->assertSee('Aucune affectation bloquée')
+            ->assertSee('No stuck assignment')
             ->assertSee($this->demande->reference);
     }
 
@@ -98,9 +98,9 @@ class AssignmentReleaseTest extends TestCase
         $this->actingAs($this->admin)
             ->get(route('admin.assignments.index'))
             ->assertOk()
-            ->assertSee("Ces dossiers n'avancent plus")
+            ->assertSee('These files have stopped moving')
             ->assertSee($this->demande->reference)
-            ->assertSee('Compte inactif');
+            ->assertSee('Account inactive');
     }
 
     #[Test]
@@ -113,7 +113,7 @@ class AssignmentReleaseTest extends TestCase
         $this->actingAs($this->admin)
             ->get(route('admin.assignments.index'))
             ->assertOk()
-            ->assertSee('Rattaché ailleurs');
+            ->assertSee('Attached elsewhere');
     }
 
     /** Le coeur : liberer rend le dossier reprenable, sans changer son etat. */

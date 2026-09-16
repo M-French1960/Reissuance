@@ -74,6 +74,23 @@ class ExposedRoutesTest extends TestCase
                 continue;
             }
 
+            /*
+             * LA ROUTE DE REPLI, ET POURQUOI ELLE EST PUBLIQUE (D-076).
+             *
+             * Elle ne sert qu'a `abort(404)`. Elle existe pour que la page
+             * d'erreur traverse le groupe `web` : sans elle, la session ne
+             * demarre pas, le choix de langue n'est pas lu, et un visiteur qui
+             * lit le service en francais recoit sa page « introuvable » en
+             * anglais.
+             *
+             * Elle DOIT rester joignable sans session : une page d'erreur
+             * inaccessible aux visiteurs anonymes n'a aucun sens. Elle ne rend
+             * aucun contenu metier, et le 404 qu'elle sert n'apprend rien.
+             */
+            if ($route->isFallback) {
+                continue;
+            }
+
             $ouvertes[] = ($nom ?? '(sans nom)').' — /'.$route->uri();
         }
 

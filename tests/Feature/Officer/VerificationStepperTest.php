@@ -108,7 +108,7 @@ class VerificationStepperTest extends TestCase
         );
 
         // La page se contredisait elle-meme : elle disait les deux a la fois.
-        $reponse->assertSee('Non renseignée');
+        $reponse->assertSee('Not recorded');
     }
 
     /** Une etape enregistree, et une seule, est cochee. */
@@ -120,7 +120,7 @@ class VerificationStepperTest extends TestCase
         );
 
         $this->assertSame(
-            ["Vérification de la pièce d'identité"],
+            ['Identity document check'],
             $this->etapesCochees($this->ecran(5)->assertOk()),
         );
     }
@@ -147,7 +147,7 @@ class VerificationStepperTest extends TestCase
         $brouillon->forceFill(['last_completed_step' => 1])->save();
 
         $this->assertSame(
-            ['Vos informations'],
+            ['Your details'],
             $this->etapesCochees(
                 $this->actingAs($citoyen)->get(route('citizen.requests.step', [
                     'reissuanceRequest' => $brouillon, 'step' => 2,

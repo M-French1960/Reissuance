@@ -274,11 +274,11 @@ class RequestWizardTest extends TestCase
 
         $reponse = $this->get(route('citizen.requests.show', $draft))->assertOk();
 
-        $reponse->assertSee('Demande envoyée');
-        $reponse->assertSee('Envoyée — en attente de traitement');
+        $reponse->assertSee('Request submitted');
+        $reponse->assertSee('Submitted, awaiting processing');
         // L'etat n'est jamais porte par la seule couleur.
-        $reponse->assertSee('— terminé');
+        $reponse->assertSee('done');
         // Aucun delai chiffre tant que la question D8 est ouverte.
-        $reponse->assertDontSee('jours ouvrés');
+        $reponse->assertDontSee('working days');
     }
 }

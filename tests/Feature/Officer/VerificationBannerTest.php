@@ -79,10 +79,10 @@ class VerificationBannerTest extends TestCase
     {
         $this->ecran($this->officier)
             ->assertOk()
-            ->assertSee('Dossier à prendre en charge')
-            ->assertSee('Prendre en charge')
+            ->assertSee('File to take on')
+            ->assertSee('Take this file on')
             ->assertSee(route('officer.verification.claim', $this->demande))
-            ->assertDontSee('pris en charge par');
+            ->assertDontSee('is being handled by');
     }
 
     /** Dossier tenu par un collegue : on le NOMME, et on n'offre pas l'action. */
@@ -97,10 +97,10 @@ class VerificationBannerTest extends TestCase
 
         $this->ecran($this->officier)
             ->assertOk()
-            ->assertSee('Lecture seule')
+            ->assertSee('Read only')
             ->assertSee('Agent OCCUPANT')
             ->assertDontSee('un autre agent')
-            ->assertDontSee('Dossier à prendre en charge');
+            ->assertDontSee('File to take on');
     }
 
     /**
@@ -125,9 +125,9 @@ class VerificationBannerTest extends TestCase
 
         $this->ecran($this->officier)
             ->assertOk()
-            ->assertSee('Dossier à prendre en charge')
+            ->assertSee('File to take on')
             ->assertDontSee('un autre agent')
-            ->assertDontSee('Dossier sans agent affecté');
+            ->assertDontSee('File with no agent');
 
         // Et la reprise fonctionne vraiment, sans changer l'etat du dossier.
         $this->actingAs($this->officier)
@@ -168,9 +168,9 @@ class VerificationBannerTest extends TestCase
 
         $this->ecran($this->officier)
             ->assertOk()
-            ->assertSee('Dossier sans agent affecté')
+            ->assertSee('File with no agent')
             ->assertDontSee('un autre agent')
-            ->assertDontSee('Dossier à prendre en charge');
+            ->assertDontSee('File to take on');
     }
 
     /** L'agent qui tient le dossier ne voit aucun bandeau de blocage. */
@@ -183,8 +183,8 @@ class VerificationBannerTest extends TestCase
 
         $this->ecran($this->officier)
             ->assertOk()
-            ->assertDontSee('Lecture seule')
-            ->assertDontSee('Dossier à prendre en charge')
-            ->assertDontSee('Dossier sans agent affecté');
+            ->assertDontSee('Read only')
+            ->assertDontSee('File to take on')
+            ->assertDontSee('File with no agent');
     }
 }

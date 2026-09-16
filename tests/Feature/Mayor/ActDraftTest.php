@@ -193,7 +193,7 @@ class ActDraftTest extends TestCase
         $acte = $this->extractText((string) Storage::disk('private')->get($signature->document_path));
 
         $this->assertStringNotContainsString(DocumentBuilder::draftNotice(), $acte);
-        $this->assertStringContainsString('signataire', $acte);
+        $this->assertStringContainsString('Signed by', $acte);
     }
 
     /**

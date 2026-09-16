@@ -52,7 +52,7 @@ class ErrorPagesTest extends TestCase
         $reponse = $this->get('/cette-adresse-nexiste-pas');
 
         $reponse->assertNotFound();
-        $reponse->assertSee('Page introuvable');
+        $reponse->assertSee('Page not found');
         $reponse->assertSee(route('home'));
         // L'en-tête et le pied de page du service, pour ne pas sortir du site.
         $reponse->assertSee('PHOENIX');

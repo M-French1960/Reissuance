@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Galerie de composants')
+@section('title', __('common.component_gallery'))
 
 @section('content')
     <x-alert variant="attention" title="Page de développement">
@@ -7,7 +7,7 @@
         composant dans tous ses états et sert de référence visuelle et de test.
     </x-alert>
 
-    <h1>Galerie de composants</h1>
+    <h1>{{ __('common.component_gallery') }}</h1>
 
     <x-card title="Jetons de couleur">
         <p>Chaque valeur vient de <code>tokens.css</code>. Aucune vue ne contient
@@ -20,7 +20,7 @@
                 <div>
                     <span class="badge badge--{{ $tone }}">{{ $tone }}</span>
                     <p class="u-note u-note--tight">
-                        {{ $ratio }} — conforme AA
+                        {{ $ratio }}, conforme AA
                     </p>
                 </div>
             @endforeach
@@ -116,9 +116,9 @@
                     @foreach ($requests as $request)
                         <tr>
                             <td>{{ $request->reference }}</td>
-                            <td>{{ $request->center?->name ?? '—' }}</td>
+                            <td>{{ $request->center?->name }}</td>
                             <td><x-status-badge :status="$request->status" /></td>
-                            <td>{{ $request->submitted_at?->translatedFormat('d/m/Y') ?? '—' }}</td>
+                            <td>{{ $request->submitted_at?->translatedFormat('d/m/Y') }}</td>
                         </tr>
                     @endforeach
                 </tbody>

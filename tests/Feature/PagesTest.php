@@ -28,11 +28,11 @@ class PagesTest extends TestCase
 
         $labels = collect($response->json('checks'))->pluck('label');
 
-        $this->assertTrue($labels->contains('Déclencheur de machine à états'));
-        $this->assertTrue($labels->contains("Journal d'audit en ajout seul"));
+        $this->assertTrue($labels->contains('State machine trigger'));
+        $this->assertTrue($labels->contains('Audit log is append only'));
 
         foreach ($response->json('checks') as $check) {
-            $this->assertTrue($check['ok'], "Vérification en échec : {$check['label']} — {$check['detail']}");
+            $this->assertTrue($check['ok'], "Check failing: {$check['label']}, {$check['detail']}");
         }
     }
 
@@ -53,8 +53,8 @@ class PagesTest extends TestCase
 
         $html = $this->get('/sante')->assertOk();
 
-        $html->assertSee('Service opérationnel');
-        $html->assertDontSee("Journal d'audit en ajout seul");
+        $html->assertSee('Service operational');
+        $html->assertDontSee('Audit log is append only');
         $html->assertDontSee('MariaDB');
         $html->assertDontSee('MySQL');
         $html->assertDontSee(config('database.connections.mysql.username'));
@@ -70,7 +70,7 @@ class PagesTest extends TestCase
     #[Test]
     public function la_galerie_est_accessible_hors_production(): void
     {
-        $this->get('/dev/ui')->assertOk()->assertSee('Galerie de composants');
+        $this->get('/dev/ui')->assertOk()->assertSee('Component gallery');
     }
 
     /**
@@ -97,7 +97,9 @@ class PagesTest extends TestCase
     {
         $html = $this->get('/')->getContent();
 
-        $this->assertStringContainsString('<html lang="fr"', $html);
+        // The platform default. A visitor who switches language gets that
+        // language's tag, which the locale test covers.
+        $this->assertStringContainsString('<html lang="en"', $html);
         $this->assertStringContainsString('name="viewport"', $html);
     }
 }

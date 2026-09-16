@@ -3359,3 +3359,104 @@ s'y fiant. Rien corrigé.
 
 Le maire ne reçoit toujours aucune notification (relevé en D-074) : c'est une
 fonctionnalité à décider, pas un défaut à corriger seul.
+
+## D-076 — La plateforme devient bilingue, et le texte cesse d'avoir l'air écrit par une machine
+
+Deux demandes du client, très différentes, traitées ensemble parce qu'elles
+touchent les mêmes fichiers : **servir l'anglais et le français**, l'anglais par
+défaut, et **retirer des interfaces les marqueurs d'écriture automatique**.
+
+### Une règle du projet change, et je le signale
+
+La règle en vigueur disait « code et identifiants en anglais, **interface en
+français** ». Le client demande l'inverse pour l'interface. La règle devient :
+**code et identifiants en anglais, interface bilingue anglais/français, anglais
+par défaut**. Ce n'est pas une dérive, c'est une décision du client, mais elle
+méritait d'être dite plutôt qu'appliquée en silence.
+
+### Pourquoi les deux langues, et pas seulement l'anglais
+
+Le Cameroun a deux langues officielles **d'égale valeur** (Constitution du
+18 janvier 1996), et la loi du 24 décembre 2019 portant promotion des langues
+officielles impose l'égalité d'usage de l'anglais et du français dans les
+administrations publiques **et les collectivités territoriales décentralisées**
+— c'est-à-dire les communes, qui délivrent précisément ces actes. Servir une
+seule langue mettrait la plateforme en porte-à-faux avec cela.
+
+### La langue de l'acte : ce que je n'ai pas inventé
+
+Le client a répondu « en fonction de ce qui existe dans la vie réelle au
+Cameroun ». C'est la bonne question, et je n'ai **pas** trouvé de source
+consultable disant si un acte de naissance individuel s'établit dans une seule
+langue, de façon bilingue, ou au choix du demandeur. Le §10 interdit de coder
+une hypothèse juridique.
+
+Donc : la règle est un **réglage de déploiement** (`PHOENIX_ACT_LANGUAGE` :
+`requester` par défaut, ou `en`, ou `fr`), et la question part au bloc A des
+points ouverts, **avec les sources trouvées et la limite de ce qu'elles
+disent**.
+
+**Dans tous les cas, la langue est figée au dépôt et inscrite au dossier.** Ce
+n'est pas un détail : la signature lie une **empreinte de contenu** au texte
+exact. Un acte rendu dans la langue du lecteur se lirait en français pour l'un
+et en anglais pour l'autre, et ne correspondrait plus à ce que le maire a signé.
+Même raison pour les notifications, écrites une fois dans la langue du compte :
+un travail en file d'attente n'a aucune session à consulter.
+
+### Ce que la traduction a fait apparaître
+
+**Un bug latent, invisible tant qu'il n'y avait qu'une langue.** L'écran des
+réglages choisissait la couleur d'un badge en comparant le texte affiché :
+`$reglage->valeur === 'configuré'`. En anglais le test ne correspondait plus, et
+un secret **correctement configuré** s'affichait dans la couleur d'un secret
+manquant. C'est maintenant un booléen sur l'objet.
+
+**Une page d'erreur qui ne suivait pas la langue.** Un 404 sur une adresse
+inconnue n'entre jamais dans le groupe `web` : la session ne démarre pas, le
+choix de langue n'est pas lu. Quelqu'un lisant le service en français se
+trompait d'adresse et recevait sa page en anglais, sans comprendre pourquoi. Une
+route de repli, matchée par le routeur, porte désormais les filtres du groupe.
+
+**Des constantes qui ne peuvent pas être traduites.** `STEPS`, `REJECTION_REASONS`,
+`DEMO_NOTICE` : une constante PHP est résolue à la compilation, avant qu'aucune
+langue n'ait été choisie. Toutes sont devenues des méthodes.
+
+### La typographie
+
+Deux marqueurs, assez mécaniques pour être interdits par un test :
+
+- le **tiret long**, « — », employé comme pause en milieu de phrase. Il y en
+  avait partout : *« Signée — acte disponible »*, *« Transmise au centre —
+  commune de Yaoundé I »*, *« enregistré le 12/09 — par Officier »*. Un
+  développeur qui écrit une interface met une virgule, un deux-points ou un
+  point ;
+- l'**espace insécable**, écrite `&nbsp;` ou déposée telle quelle en U+00A0,
+  semée devant quelques deux-points et points d'interrogation. La typographie
+  française l'appelle bien, mais elle était appliquée à une poignée de chaînes
+  et pas au reste : c'est exactement ce qui fait « collé » plutôt que « tapé ».
+
+**Ce que le test ne police pas**, et c'est délibéré : les commentaires du code,
+que personne ne lit à l'écran, et les guillemets « » du français, qui sont la
+typographie correcte et ce qu'un développeur francophone écrirait.
+
+### Trois tests qui tiennent l'ensemble
+
+- **`TranslationCompletenessTest`** : une clé oubliée dans une langue ne lève
+  aucune erreur, Laravel affiche la clé elle-même. Un citoyen francophone
+  lirait `citizen.tracking.rejected_title` à l'endroit où devrait figurer le
+  motif du refus de son acte. Le test vérifie la parité des clés dans les deux
+  sens, l'absence de valeur vide, et que les mêmes variables sont attendues
+  partout.
+- **`TypographyTest`** : les deux marqueurs ci-dessus, sur les fichiers de
+  langue et sur les gabarits hors commentaires.
+- **`LocaleTest`** : la bascule tient d'une page à l'autre, la préférence du
+  compte l'emporte sur une session périmée, la langue du navigateur sert à la
+  première visite, un code inconnu est refusé, et aucun écran public n'affiche
+  de clé brute.
+
+### Ce qui reste
+
+La qualité de l'anglais et du français est celle d'un développeur, pas d'un
+traducteur assermenté. **Les libellés d'un acte d'état civil mériteraient une
+relecture par l'administration** avant toute mise en service : ce sont des
+mentions officielles, pas de l'interface.

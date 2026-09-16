@@ -241,7 +241,7 @@ class DraftAccessTest extends TestCase
         $reponse->assertSee(route('acts.draft', $this->projet));
         // Sans apostrophe dans le motif : Blade l'echappe a certains
         // endroits et pas a d'autres, et un test ne doit pas tomber la-dessus.
-        $reponse->assertSee('Lire le projet');
+        $reponse->assertSee('Read the draft');
         $reponse->assertSee($this->officier->name);
     }
 
@@ -254,7 +254,7 @@ class DraftAccessTest extends TestCase
         $reponse = $this->actingAs($this->maire)->get(route('mayor.review', $this->demande));
 
         $reponse->assertOk();
-        $reponse->assertSee('Aucun projet');
-        $reponse->assertDontSee('Lire le projet');
+        $reponse->assertSee('No draft');
+        $reponse->assertDontSee('Read the draft');
     }
 }

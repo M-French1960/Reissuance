@@ -53,7 +53,7 @@ class SettingsConsoleTest extends TestCase
         $this->actingAs($this->admin())
             ->get(route('admin.settings.index'))
             ->assertOk()
-            ->assertSee('Réglages')
+            ->assertSee('Settings')
             ->assertSee('PHOENIX_PAYMENT_GATE');
     }
 
@@ -74,7 +74,7 @@ class SettingsConsoleTest extends TestCase
         }
 
         // Mais la PRESENCE du secret, elle, doit être visible.
-        $reponse->assertSee('configuré');
+        $reponse->assertSee('configured');
     }
 
     /**
@@ -91,7 +91,7 @@ class SettingsConsoleTest extends TestCase
         $serialise = json_encode(get_object_vars($reglage), JSON_THROW_ON_ERROR);
 
         $this->assertStringNotContainsString('SECRET-NE-DOIT-PAS-FUIR', $serialise);
-        $this->assertSame('configuré', $reglage->valeur);
+        $this->assertSame('configured', $reglage->valeur);
         $this->assertTrue($reglage->sensible);
     }
 
@@ -100,7 +100,7 @@ class SettingsConsoleTest extends TestCase
     {
         $reglage = SystemSetting::secret('Essai', '', 'PHOENIX_ESSAI');
 
-        $this->assertSame('non configuré', $reglage->valeur);
+        $this->assertSame('not configured', $reglage->valeur);
         $this->assertNotNull($reglage->alerte);
     }
 
@@ -119,11 +119,11 @@ class SettingsConsoleTest extends TestCase
         $this->actingAs($this->admin())
             ->get(route('admin.settings.index'))
             ->assertOk()
-            ->assertSee('Ce système ne vérifie rien de réel')
-            ->assertSee("Vérification d'identité (DGSN)")
-            ->assertSee('aucune valeur');
+            ->assertSee('This system checks nothing real')
+            ->assertSee('Identity check (DGSN)')
+            ->assertSee('no value');
 
-        $this->assertContains("Vérification d'identité (DGSN)", SystemSettings::fakeProviders());
+        $this->assertContains('Identity check (DGSN)', SystemSettings::fakeProviders());
     }
 
     #[Test]
@@ -137,7 +137,7 @@ class SettingsConsoleTest extends TestCase
         $this->actingAs($this->admin())
             ->get(route('admin.settings.index'))
             ->assertOk()
-            ->assertDontSee('Ce système ne vérifie rien de réel');
+            ->assertDontSee('This system checks nothing real');
     }
 
     /** Un encaissement active sans tarif doit sauter aux yeux. */
@@ -149,7 +149,7 @@ class SettingsConsoleTest extends TestCase
         $this->actingAs($this->admin())
             ->get(route('admin.settings.index'))
             ->assertOk()
-            ->assertSee('refusera de servir');
+            ->assertSee('will refuse to serve');
     }
 
     #[Test]

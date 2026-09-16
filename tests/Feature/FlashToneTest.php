@@ -51,7 +51,7 @@ class FlashToneTest extends TestCase
             ->followingRedirects()
             ->get(route('citizen.requests.step', ['reissuanceRequest' => $brouillon, 'step' => 3]))
             ->assertOk()
-            ->assertSee('Terminez cette étape avant de passer à la suivante.')
+            ->assertSee('Finish this step before moving on to the next one.')
             ->getContent();
 
         $this->assertStringNotContainsString(
@@ -109,7 +109,7 @@ class FlashToneTest extends TestCase
             ->followingRedirects()
             ->post(route('officer.verification.identity', $demande))
             ->assertOk()
-            ->assertSee('Aucune correspondance')
+            ->assertSee('No match')
             ->getContent();
 
         $this->assertStringContainsString(

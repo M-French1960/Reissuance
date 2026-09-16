@@ -41,9 +41,9 @@
                 <span class="stepper__label">
                     {{ $label }}
                     <span class="visually-hidden">
-                        @if ($state === 'done') — terminée
-                        @elseif ($state === 'current') — étape en cours
-                        @else — à venir
+                        @if ($state === 'done'){{ __('common.step_done') }}
+                        @elseif ($state === 'current'){{ __('common.step_current') }}
+                        @else{{ __('common.step_upcoming') }}
                         @endif
                     </span>
                 </span>

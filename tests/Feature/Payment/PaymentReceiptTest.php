@@ -92,7 +92,7 @@ class PaymentReceiptTest extends TestCase
         // Accentue : depuis D-067 le recu est rendu par dompdf, qui compose
         // le francais correctement. L'ancien generateur imposait un titre
         // sans accents a un document officiel.
-        $this->assertStringContainsString('REÇU DE RÈGLEMENT', $this->texte($pdf));
+        $this->assertStringContainsString('PAYMENT RECEIPT', $this->texte($pdf));
     }
 
     /**
@@ -135,7 +135,7 @@ class PaymentReceiptTest extends TestCase
 
         // Sans deux-points : les champs sont desormais un tableau, et le
         // libelle est separe de sa valeur par la mise en page.
-        $this->assertMatchesRegularExpression('#Date du règlement\s+\d{2}/\d{2}/\d{4} \d{2}:\d{2}#u', $texte);
+        $this->assertMatchesRegularExpression('#Date of payment\s+\d{2}/\d{2}/\d{4} \d{2}:\d{2}#u', $texte);
         $this->assertStringNotContainsString(' pm ', $texte);
         $this->assertStringNotContainsString(' am ', $texte);
     }
@@ -151,7 +151,7 @@ class PaymentReceiptTest extends TestCase
         $texte = $this->texte($this->recu());
 
         $this->assertStringNotContainsString('Base reglementaire', $texte);
-        $this->assertStringNotContainsString('Base réglementaire', $texte);
+        $this->assertStringNotContainsString('Regulatory basis', $texte);
     }
 
     #[Test]
@@ -161,7 +161,7 @@ class PaymentReceiptTest extends TestCase
 
         $texte = $this->texte($this->recu());
 
-        $this->assertStringContainsString('Base réglementaire', $texte);
+        $this->assertStringContainsString('Regulatory basis', $texte);
         $this->assertStringContainsString('du 1er janvier 2000', $texte);
     }
 }

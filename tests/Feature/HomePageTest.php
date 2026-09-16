@@ -30,7 +30,7 @@ class HomePageTest extends TestCase
         $reponse->assertOk();
         $reponse->assertSee(route('register'));
         $reponse->assertSee(route('login'));
-        $reponse->assertSee('Créer un compte');
+        $reponse->assertSee('Create an account');
     }
 
     /** Elle dit ce qu'il faut avoir sous la main AVANT de commencer. */
@@ -39,8 +39,8 @@ class HomePageTest extends TestCase
     {
         $reponse = $this->get(route('home'));
 
-        $reponse->assertSee('pièce d', false);
-        $reponse->assertSee('photo de vous', false);
+        $reponse->assertSee('identity document', false);
+        $reponse->assertSee('photo of yourself', false);
     }
 
     /**
@@ -78,8 +78,8 @@ class HomePageTest extends TestCase
 
         $reponse = $this->get(route('home'));
 
-        $reponse->assertSee('démonstration', false);
-        $reponse->assertSee('sans valeur juridique', false);
+        $reponse->assertSee('Demonstration', false);
+        $reponse->assertSee('no legal value', false);
     }
 
     /** Et l'avertissement disparaît le jour où un prestataire réel est branché. */
@@ -91,7 +91,7 @@ class HomePageTest extends TestCase
         $reponse = $this->get(route('home'));
 
         $reponse->assertOk();
-        $reponse->assertDontSee('Service de démonstration', false);
+        $reponse->assertDontSee('Service de Demonstration', false);
     }
 
     /**
@@ -109,7 +109,7 @@ class HomePageTest extends TestCase
 
             $reponse->assertOk();
             $reponse->assertSee(route('login'));
-            $reponse->assertSee('Se connecter');
+            $reponse->assertSee('Sign in');
         }
     }
 

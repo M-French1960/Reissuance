@@ -412,3 +412,29 @@ th a:hover { color: var(--color-brand-700); text-decoration: underline; }
 .thread__item--agent { background: var(--color-surface-sunken); }
 .thread__meta { margin: 0 0 var(--space-2); font-size: var(--text-sm); display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: baseline; }
 .thread__body { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
+
+/* --- Sélecteur de langue -------------------------------------------------- */
+/* Dans la barre de navigation, il doit se lire sur le fond violet sans crier
+   plus fort que les liens voisins : c'est un réglage, pas une action. */
+.lang-switch { display: flex; align-items: center; gap: var(--space-2); }
+
+.lang-switch__select {
+  min-height: 44px;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid rgb(255 255 255 / 0.5);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+/* Les options se dessinent par le système : sans cette règle elles héritent
+   du blanc sur blanc dans plusieurs navigateurs. */
+.lang-switch__select option { color: var(--color-ink); background: #fff; }
+
+.lang-switch__select:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}

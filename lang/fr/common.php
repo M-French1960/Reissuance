@@ -25,6 +25,9 @@ return [
     'previous' => 'Précédent',
     'next' => 'Suivant',
     'page_of' => 'Page :current sur :last',
+    'step_done' => 'terminée',
+    'step_current' => 'étape en cours',
+    'step_upcoming' => 'à venir',
     'required_field' => 'Champ obligatoire',
     'optional' => 'Facultatif',
 

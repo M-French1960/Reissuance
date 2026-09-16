@@ -247,7 +247,7 @@ class VerificationWorkflowTest extends TestCase
         $this->actingAs($collegue)
             ->get(route('officer.verification.step', ['reissuanceRequest' => $this->demande, 'step' => 1]))
             ->assertOk()
-            ->assertSee('Lecture seule');
+            ->assertSee('Read only');
     }
 
     #[Test]

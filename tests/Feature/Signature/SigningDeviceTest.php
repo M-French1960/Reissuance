@@ -116,7 +116,7 @@ class SigningDeviceTest extends TestCase
         $this->enrole();
 
         $this->expectException(DomainException::class);
-        $this->expectExceptionMessage('déjà enrôlé');
+        $this->expectExceptionMessage('already enrolled');
 
         $this->enrole();
     }
@@ -247,7 +247,7 @@ class SigningDeviceTest extends TestCase
     public function sans_appareil_enrole_la_demande_de_signature_est_refusee(): void
     {
         $this->expectException(DomainException::class);
-        $this->expectExceptionMessage("Aucun appareil n'est enrôlé");
+        $this->expectExceptionMessage('No device is enrolled');
 
         $this->service->requestOptions($this->maire);
     }

@@ -52,6 +52,30 @@ ignore s'il vaut quelque chose.
 
 ---
 
+- A12. **Dans quelle langue un acte d'état civil individuel est-il établi ?**
+  Une seule, de façon bilingue, ou au choix du demandeur ?
+
+  *Ce que nous avons pu établir.* La Constitution du 18 janvier 1996 fait de
+  l'anglais et du français deux langues officielles **d'égale valeur**. La loi
+  du 24 décembre 2019 portant promotion des langues officielles impose
+  l'égalité d'usage des deux langues dans les administrations publiques **et
+  les collectivités territoriales décentralisées**, c'est-à-dire les communes,
+  qui délivrent précisément ces actes.
+
+  *Ce que nous n'avons pas pu établir.* Aucune source consultable ne dit ce
+  qu'il en est d'un acte de naissance **individuel**. Le §10 interdit de coder
+  une hypothèse juridique, donc rien n'a été supposé.
+
+  *Ce qui est en place en attendant (D-076).* La règle est un **réglage de
+  déploiement**, `PHOENIX_ACT_LANGUAGE` : `requester` (défaut), `en` ou `fr`.
+  Dans tous les cas la langue est **figée au dépôt** et inscrite au dossier :
+  la signature lie une empreinte de contenu au texte exact, et un acte qui se
+  lirait en français pour l'un et en anglais pour l'autre ne correspondrait
+  plus à ce que le maire a signé.
+
+  *Impact si la réponse est « bilingue ».* Le gabarit doit composer les deux
+  langues sur le même document, et l'empreinte de contenu porter sur les deux.
+
 ## Bloc B — Protection des données personnelles et biométrie
 
 **Conditionne les jalons 3 et 6, et le paramétrage de la rétention.**

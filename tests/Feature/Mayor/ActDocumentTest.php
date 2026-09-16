@@ -169,7 +169,7 @@ class ActDocumentTest extends TestCase
         $this->assertStringContainsString('%%EOF', $pdf);
 
         $texte = $this->extractText($pdf);
-        $this->assertStringContainsString("EXTRAIT D'ACTE DE NAISSANCE", $texte);
+        $this->assertStringContainsString('BIRTH CERTIFICATE EXTRACT', $texte);
         $this->assertStringContainsString('Personne DE TEST', $texte);
         $this->assertStringContainsString($this->demande->reference, $texte);
         $this->assertStringContainsString($this->maire->name, $texte);
@@ -186,9 +186,8 @@ class ActDocumentTest extends TestCase
         $texte = $this->extractText((string) Storage::disk('private')->get($signature->document_path));
 
         $this->assertStringContainsString(DocumentBuilder::demoNotice(), $texte);
-        $this->assertStringContainsString('SANS VALEUR JURIDIQUE', $texte);
-        // Accentué depuis D-067 : le moteur compose le français correctement.
-        $this->assertStringContainsString('ne peut être présenté à aucune administration', $texte);
+        $this->assertStringContainsString('NO LEGAL VALUE', $texte);
+        $this->assertStringContainsString('cannot be presented to any administration', $texte);
     }
 
     /** La mention figure AUSSI en haut de la première page : impossible à manquer. */
@@ -213,9 +212,9 @@ class ActDocumentTest extends TestCase
         $signature = $this->issue();
         $texte = $this->extractText((string) Storage::disk('private')->get($signature->proof_path));
 
-        $this->assertStringContainsString('PREUVE DE SIGNATURE', $texte);
+        $this->assertStringContainsString('PROOF OF SIGNATURE', $texte);
         $this->assertStringContainsString($signature->document_hash, str_replace("\n", '', $texte));
-        $this->assertStringContainsString('NON - demonstration', $texte);
+        $this->assertStringContainsString('NO, demonstration', $texte);
         $this->assertStringContainsString(DocumentBuilder::demoNotice(), $texte);
     }
 

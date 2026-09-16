@@ -276,7 +276,7 @@ class SignatureConfirmationTest extends TestCase
         $reponse->assertSessionHasErrors('confirmation_code');
 
         $this->assertStringContainsString(
-            'Trop de codes erronés',
+            'Too many wrong codes',
             session('errors')->first('confirmation_code')
         );
 
@@ -351,7 +351,7 @@ class SignatureConfirmationTest extends TestCase
             ->assertSessionHasErrors('confirmation_code');
 
         $this->assertStringContainsString(
-            'Code incorrect',
+            'Incorrect code',
             session('errors')->first('confirmation_code')
         );
 
@@ -466,7 +466,7 @@ class SignatureConfirmationTest extends TestCase
         $this->actingAs($this->maire)
             ->getJson(route('mayor.device-challenge', $this->demande))
             ->assertStatus(422)
-            ->assertJsonPath('message', fn (string $m): bool => str_contains($m, "Aucun appareil n'est enrôlé"));
+            ->assertJsonPath('message', fn (string $m): bool => str_contains($m, 'No device is enrolled'));
     }
 
     /* --- L'écran ------------------------------------------------------ */
@@ -478,7 +478,7 @@ class SignatureConfirmationTest extends TestCase
 
         $reponse->assertOk();
         $reponse->assertSee('confirmation_code', false);
-        $reponse->assertSee('Code de confirmation');
+        $reponse->assertSee('Confirmation code');
     }
 
     /**
@@ -562,7 +562,7 @@ class SignatureConfirmationTest extends TestCase
         }
 
         $this->assertNotNull($erreur, 'La confirmation aurait dû être refusée.');
-        $this->assertStringContainsString('double authentification', $erreur);
+        $this->assertStringContainsString('two-factor authentication', $erreur);
     }
 
     private function enroleUnAppareil(): SimulatedAuthenticator

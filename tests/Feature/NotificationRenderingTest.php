@@ -101,17 +101,17 @@ class NotificationRenderingTest extends TestCase
         $citoyen = User::factory()->citizen()->create();
         $this->actingAs($citoyen)->get(route('notifications.index'))
             ->assertOk()
-            ->assertSee('à chaque étape de vos demandes');
+            ->assertSee('at every step of your requests');
 
         $officier = User::factory()->officer($centre)->create();
         $this->actingAs($officier)->get(route('notifications.index'))
             ->assertOk()
-            ->assertDontSee('vos demandes')
-            ->assertSee('le maire vous retournera');
+            ->assertDontSee('your requests')
+            ->assertSee('the mayor returns a file to you');
 
         $maire = User::factory()->mayor($centre->commune)->create();
         $this->actingAs($maire)->get(route('notifications.index'))
             ->assertOk()
-            ->assertDontSee('vos demandes');
+            ->assertDontSee('your requests');
     }
 }

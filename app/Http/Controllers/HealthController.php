@@ -69,12 +69,12 @@ class HealthController extends Controller
             $version = DB::selectOne('SELECT version() AS v')->v ?? '';
 
             return [
-                'label' => 'Connexion MySQL',
+                'label' => __('admin.health.checks.database'),
                 'ok' => true,
                 'detail' => explode(' (', $version)[0],
             ];
         } catch (Throwable $e) {
-            return ['label' => 'Connexion MySQL', 'ok' => false, 'detail' => $e->getMessage()];
+            return ['label' => __('admin.health.checks.database'), 'ok' => false, 'detail' => $e->getMessage()];
         }
     }
 
@@ -96,14 +96,14 @@ class HealthController extends Controller
             $count = DB::table('allowed_transitions')->count();
 
             return [
-                'label' => 'Déclencheur de machine à états',
+                'label' => __('admin.health.checks.state_machine'),
                 'ok' => $present && $count > 0,
                 'detail' => $present
-                    ? "Actif, {$count} transitions autorisées"
-                    : 'ABSENT — les transitions interdites ne seraient plus bloquées',
+                    ? __('admin.health.checks.state_machine_ok', ['count' => $count])
+                    : __('admin.health.checks.state_machine_missing'),
             ];
         } catch (Throwable $e) {
-            return ['label' => 'Déclencheur de machine à états', 'ok' => false, 'detail' => $e->getMessage()];
+            return ['label' => __('admin.health.checks.state_machine'), 'ok' => false, 'detail' => $e->getMessage()];
         }
     }
 
@@ -142,14 +142,14 @@ class HealthController extends Controller
             $appendOnly = $alterants === [];
 
             return [
-                'label' => "Journal d'audit en ajout seul",
+                'label' => __('admin.health.checks.audit_append_only'),
                 'ok' => $appendOnly,
                 'detail' => $appendOnly
-                    ? "Le rôle {$role} ne peut ni modifier ni supprimer une entrée"
-                    : "ALERTE : le rôle {$role} peut altérer le journal d'audit",
+                    ? __('admin.health.checks.audit_ok', ['role' => $role])
+                    : __('admin.health.checks.audit_alert', ['role' => $role]),
             ];
         } catch (Throwable $e) {
-            return ['label' => "Journal d'audit en ajout seul", 'ok' => false, 'detail' => $e->getMessage()];
+            return ['label' => __('admin.health.checks.audit_append_only'), 'ok' => false, 'detail' => $e->getMessage()];
         }
     }
 
@@ -162,11 +162,13 @@ class HealthController extends Controller
         $writable = is_dir($root) && is_writable($root);
 
         return [
-            'label' => 'Stockage privé des pièces',
+            'label' => __('admin.health.checks.private_storage'),
             'ok' => $outsideWebroot && $writable,
             'detail' => $outsideWebroot
-                ? ($writable ? 'Hors de la racine web, accessible en écriture' : 'Hors racine web mais NON accessible en écriture')
-                : 'ALERTE : le stockage est dans la racine web, donc exposé',
+                ? ($writable
+                    ? __('admin.health.checks.private_storage_ok')
+                    : __('admin.health.checks.private_storage_readonly'))
+                : __('admin.health.checks.private_storage_alert'),
         ];
     }
 
@@ -176,11 +178,11 @@ class HealthController extends Controller
         $set = (string) config('phoenix.blind_index_key') !== '';
 
         return [
-            'label' => "Clé de l'index aveugle",
+            'label' => __('admin.health.checks.blind_index'),
             'ok' => $set,
             'detail' => $set
-                ? 'Présente — la recherche par numéro de pièce est opérante'
-                : 'Absente — exécuter php artisan phoenix:generate-index-key',
+                ? __('admin.health.checks.blind_index_ok')
+                : __('admin.health.checks.blind_index_missing'),
         ];
     }
 }

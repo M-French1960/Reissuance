@@ -217,7 +217,7 @@ class TrackingTimelineTest extends TestCase
         $demande = $this->demande();
 
         $detail = $this->detailDuDernierJalon($demande);
-        $this->assertStringContainsString('Vous pourrez', $detail);
+        $this->assertStringContainsString('You will be able to', $detail);
 
         // Une fois l'acte signé, le même jalon parle au présent.
         DocumentSignature::create([
@@ -230,7 +230,7 @@ class TrackingTimelineTest extends TestCase
         ]);
 
         $detail = $this->detailDuDernierJalon($demande->refresh());
-        $this->assertStringContainsString('Votre acte est prêt', $detail);
+        $this->assertStringContainsString('Your certificate is ready', $detail);
     }
 
     private function detailDuDernierJalon(ReissuanceRequest $demande): string
@@ -321,7 +321,7 @@ class TrackingTimelineTest extends TestCase
         $this->actingAs($this->citoyen)
             ->get(route('citizen.requests.show', $demande))
             ->assertOk()
-            ->assertSee('Pourquoi cette demande a été refusée')
+            ->assertSee('Why this request was rejected')
             ->assertSee('Les photographies ne correspondent pas')
             // Et ce qui reste entre agents y reste.
             ->assertDontSee('NOTE INTERNE QUI NE DOIT PAS SORTIR');
@@ -347,7 +347,7 @@ class TrackingTimelineTest extends TestCase
         $this->actingAs($this->citoyen)
             ->get(route('citizen.requests.show', $demande))
             ->assertOk()
-            ->assertSee('non atteint')
-            ->assertDontSee('Vous pourrez télécharger votre acte');
+            ->assertSee('not reached')
+            ->assertDontSee('You will be able to download your certificate');
     }
 }
