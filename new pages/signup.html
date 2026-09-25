@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Créer un compte — PHOENIX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   TOKENS — identiques aux autres pages PHOENIX
+   ========================================================= */
+:root{
+  --violet-900:#2A0A55; --violet-800:#4A148C; --violet-700:#5B0FB0; --violet-500:#7B2FF2;
+  --lilac-200:#E3D6FF; --ink:#1D1530; --ink-soft:#544A6B; --page:#F3F2F9; --white:#FFFFFF;
+  --ok:#1F9D6B; --warn:#B7791F; --danger:#C0392B;
+  --glass-dark:rgba(255,255,255,.10); --glass-dark-border:rgba(255,255,255,.28);
+  --glass-light:rgba(255,255,255,.62); --glass-light-border:rgba(255,255,255,.9);
+  --r-lg:22px; --r-md:14px; --r-sm:10px;
+  --font-display:"Fraunces", Georgia, "Times New Roman", serif;
+  --font-body:"Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{min-height:100%}
+body{
+  margin:0;font-family:var(--font-body);line-height:1.6;color:var(--ink);
+  background:
+    radial-gradient(700px 500px at 100% 0%, rgba(123,47,242,.22), transparent 70%),
+    radial-gradient(600px 460px at 40% 100%, rgba(156,39,176,.16), transparent 70%),
+    var(--page);
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+a{color:var(--violet-700);font-weight:700}
+a:hover{color:var(--violet-800)}
+:focus-visible{outline:3px solid #FFD166;outline-offset:3px;border-radius:6px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* =========================================================
+   STRUCTURE : panneau violet + formulaire
+   ========================================================= */
+.shell{min-height:100vh;min-height:100dvh;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr)}
+
+.aside{
+  position:relative;overflow:hidden;color:var(--white);padding:2.5rem clamp(1.5rem,4vw,3.5rem);
+  display:flex;flex-direction:column;gap:2.5rem;
+  background:
+    radial-gradient(600px 400px at 90% 15%, rgba(123,47,242,.55), transparent 60%),
+    radial-gradient(500px 400px at 0% 100%, rgba(91,15,176,.8), transparent 60%),
+    linear-gradient(160deg,var(--violet-900),var(--violet-800) 55%,var(--violet-700));
+}
+.orb{position:absolute;border-radius:50%;filter:blur(8px);pointer-events:none}
+.orb-1{width:280px;height:280px;right:-60px;top:30%;background:radial-gradient(circle at 30% 30%,#B388FF,#6A1B9A 70%);opacity:.7}
+.orb-2{width:160px;height:160px;left:12%;bottom:6%;background:radial-gradient(circle at 30% 30%,#FFC2E2,#9C27B0 70%);opacity:.5}
+
+.brand{position:relative;display:flex;align-items:center;gap:.6rem;text-decoration:none;color:var(--white)}
+.brand:hover{color:var(--white)}
+.brand svg{width:38px;height:38px}
+.brand-name{font:700 1.4rem/1 var(--font-display);letter-spacing:.04em}
+
+.aside-body{position:relative;margin-block:auto}
+.aside h1{font:700 clamp(2rem,3.4vw,2.9rem)/1.08 var(--font-display);margin:0 0 1rem;max-width:14ch}
+.aside p.lead{margin:0 0 2rem;color:rgba(255,255,255,.86);max-width:30rem;font-size:1.05rem}
+
+.benefits{
+  list-style:none;margin:0;padding:1.3rem;display:grid;gap:1rem;max-width:26rem;border-radius:var(--r-lg);
+  background:var(--glass-dark);border:1px solid var(--glass-dark-border);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+.benefits li{display:grid;grid-template-columns:34px 1fr;gap:.8rem;align-items:start}
+.benefits .ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:rgba(255,255,255,.16)}
+.benefits strong{display:block}
+.benefits span.d{font-size:.9rem;color:rgba(255,255,255,.78)}
+.aside-foot{position:relative;font-size:.85rem;color:rgba(255,255,255,.7)}
+.aside-foot a{color:var(--white)}
+
+/* ---------- Colonne formulaire ---------- */
+.content{display:flex;align-items:center;justify-content:center;padding:2.5rem clamp(1rem,4vw,3rem)}
+.card{
+  width:100%;max-width:520px;padding:2.2rem;border-radius:26px;
+  background:var(--glass-light);border:1px solid var(--glass-light-border);
+  backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);
+  box-shadow:0 30px 70px -35px rgba(74,20,140,.5);
+}
+.card h2{font:700 1.8rem/1.15 var(--font-display);margin:0 0 .4rem;color:var(--violet-900)}
+.card .sub{margin:0 0 1.8rem;color:var(--ink-soft)}
+
+.form-alert{
+  display:none;margin:0 0 1.2rem;padding:.8rem 1rem;border-radius:var(--r-md);
+  background:rgba(192,57,43,.1);color:#8E2A1F;font-weight:600;font-size:.93rem;
+}
+.form-alert.show{display:block}
+
+.row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.field{margin-bottom:1.1rem}
+.field > label,.field legend{display:block;font-size:.9rem;font-weight:700;margin:0 0 .4rem .15rem;padding:0}
+.field .opt{font-weight:500;color:var(--ink-soft)}
+.control{position:relative}
+.field input[type=text],.field input[type=email],.field input[type=tel],.field input[type=password]{
+  width:100%;min-height:50px;padding:.7rem 1rem;border-radius:var(--r-sm);
+  border:1px solid rgba(91,15,176,.2);background:rgba(255,255,255,.85);
+  font:500 1rem var(--font-body);color:var(--ink);transition:border-color .2s, box-shadow .2s;
+}
+.field input::placeholder{color:#9A93AE}
+.field input:focus{outline:none;border-color:var(--violet-700);box-shadow:0 0 0 3px rgba(123,47,242,.2)}
+.field input[aria-invalid="true"]{border-color:var(--danger);box-shadow:0 0 0 3px rgba(192,57,43,.14)}
+.help{font-size:.83rem;color:var(--ink-soft);margin:.35rem 0 0 .15rem}
+.err{font-size:.85rem;color:var(--danger);font-weight:600;margin:.35rem 0 0 .15rem;min-height:0}
+.err:empty{display:none}
+
+/* Téléphone avec indicatif */
+.tel{display:flex}
+.tel .prefix{
+  display:flex;align-items:center;padding:0 .9rem;border:1px solid rgba(91,15,176,.2);border-right:0;
+  border-radius:var(--r-sm) 0 0 var(--r-sm);background:rgba(91,15,176,.06);font-weight:700;color:var(--violet-800);white-space:nowrap;
+}
+.tel input{border-radius:0 var(--r-sm) var(--r-sm) 0!important}
+
+/* Mot de passe */
+.control .toggle{
+  position:absolute;right:6px;top:50%;transform:translateY(-50%);height:38px;padding:0 .8rem;border-radius:8px;border:0;
+  background:none;color:var(--violet-700);font:700 .85rem var(--font-body);cursor:pointer;
+}
+.control .toggle:hover{background:rgba(91,15,176,.08)}
+.control input[type=password],.control input.pw{padding-right:6.2rem}
+.meter{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:.55rem}
+.meter span{height:5px;border-radius:5px;background:rgba(91,15,176,.12);transition:background-color .2s}
+.rules{list-style:none;margin:.55rem 0 0 .15rem;padding:0;display:flex;flex-wrap:wrap;gap:.3rem 1rem;font-size:.83rem;color:var(--ink-soft)}
+.rules li::before{content:"○ ";color:#B9B1CC}
+.rules li.ok{color:var(--ok)}
+.rules li.ok::before{content:"✓ ";color:var(--ok)}
+
+/* Sexe : pastilles */
+fieldset.field{border:0;margin:0 0 1.1rem;padding:0;min-width:0}
+.segmented{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.segmented input{position:absolute;opacity:0;pointer-events:none}
+.segmented label{
+  display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:var(--r-sm);cursor:pointer;
+  border:1.5px solid rgba(91,15,176,.18);background:rgba(255,255,255,.75);font-weight:600;
+}
+.segmented label:hover{border-color:rgba(91,15,176,.4)}
+.segmented input:focus-visible + label{outline:3px solid #FFD166;outline-offset:2px}
+.segmented input:checked + label{border-color:var(--violet-700);background:var(--white);color:var(--violet-800);box-shadow:0 0 0 1.5px var(--violet-700) inset}
+fieldset[aria-invalid="true"] .segmented label{border-color:rgba(192,57,43,.5)}
+
+/* Consentement */
+.consent{display:grid;grid-template-columns:22px 1fr;gap:.7rem;align-items:start;font-size:.9rem;color:var(--ink-soft);margin:.4rem 0 .3rem}
+.consent input{width:20px;height:20px;margin:.15rem 0 0;accent-color:var(--violet-700)}
+
+.submit{
+  width:100%;min-height:52px;margin-top:1.2rem;border:0;border-radius:999px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:.6rem;
+  background:var(--violet-700);color:var(--white);font:700 1.02rem var(--font-body);
+  box-shadow:0 14px 30px -14px rgba(91,15,176,.8);transition:background-color .2s;
+}
+.submit:hover:not(:disabled){background:var(--violet-800)}
+.submit:disabled{opacity:.7;cursor:progress}
+.spinner{width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.switch{text-align:center;margin:1.4rem 0 0;color:var(--ink-soft)}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+@media (max-width:980px){
+  .shell{grid-template-columns:1fr}
+  .aside{padding:1.5rem 1.25rem 2rem;gap:1.2rem}
+  .aside-body{margin:0}
+  .aside h1{font-size:1.7rem;max-width:none;margin-bottom:.5rem}
+  .aside p.lead{margin:0;font-size:.98rem}
+  .benefits,.aside-foot,.orb-2{display:none}
+  .content{padding:0 1rem 2rem;margin-top:-1rem;align-items:flex-start}
+}
+@media (max-width:520px){
+  .card{padding:1.5rem 1.2rem}
+  .row{grid-template-columns:1fr;gap:0}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .card{background:rgba(255,255,255,.96)}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <!-- ================= PANNEAU DE MARQUE ================= -->
+  <aside class="aside">
+    <span class="orb orb-1" aria-hidden="true"></span>
+    <span class="orb orb-2" aria-hidden="true"></span>
+
+    <a class="brand" href="index.html" aria-label="PHOENIX, retour à l'accueil">
+      <svg viewBox="0 0 40 40" aria-hidden="true">
+        <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#C9A8FF"/></linearGradient></defs>
+        <path d="M20 4c3 6 9 8 13 7-2 5-6 8-9 9 3 1 6 4 7 9-5-1-9-4-11-8-2 4-6 7-11 8 1-5 4-8 7-9-3-1-7-4-9-9 4 1 10-1 13-7z" fill="url(#g1)"/>
+      </svg>
+      <span class="brand-name">PHOENIX</span>
+    </a>
+
+    <div class="aside-body">
+      <h1>Un compte pour suivre votre demande de bout en bout.</h1>
+      <p class="lead">Créez votre espace pour déposer une demande de réédition et être prévenu à chaque étape.</p>
+
+      <ul class="benefits">
+        <li>
+          <span class="ic" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/></svg></span>
+          <span><strong>Demande en ligne</strong><span class="d">Déposez vos pièces depuis votre téléphone.</span></span>
+        </li>
+        <li>
+          <span class="ic" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span>
+          <span><strong>Notifications par SMS</strong><span class="d">Vérification, signature, copie disponible.</span></span>
+        </li>
+        <li>
+          <span class="ic" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
+          <span><strong>Données protégées</strong><span class="d">Seuls les agents concernés accèdent à votre dossier.</span></span>
+        </li>
+      </ul>
+    </div>
+
+    <p class="aside-foot">Besoin d'aide ? <a href="index.html#faq">Consultez la FAQ</a></p>
+  </aside>
+
+  <!-- ================= FORMULAIRE ================= -->
+  <main class="content">
+    <div class="card">
+      <h2 id="form-title">Créer un compte</h2>
+      <p class="sub">Déjà inscrit ? <a href="login.html">Se connecter</a></p>
+
+      <div class="form-alert" id="form-alert" role="alert" tabindex="-1"></div>
+
+      <form id="signup-form" novalidate aria-labelledby="form-title">
+        <div class="row">
+          <div class="field">
+            <label for="firstname">Prénom</label>
+            <input type="text" id="firstname" name="firstname" autocomplete="given-name" aria-describedby="firstname-error" required>
+            <p class="err" id="firstname-error"></p>
+          </div>
+          <div class="field">
+            <label for="lastname">Nom</label>
+            <input type="text" id="lastname" name="lastname" autocomplete="family-name" aria-describedby="lastname-error" required>
+            <p class="err" id="lastname-error"></p>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="phone">Téléphone mobile</label>
+          <div class="tel">
+            <span class="prefix" aria-hidden="true">+237</span>
+            <input type="tel" id="phone" name="phone" inputmode="numeric" autocomplete="tel-national" placeholder="6XX XX XX XX"
+                   aria-describedby="phone-help phone-error" required>
+          </div>
+          <p class="help" id="phone-help">Vous recevrez vos codes et notifications par SMS.</p>
+          <p class="err" id="phone-error"></p>
+        </div>
+
+        <div class="field">
+          <label for="email">Adresse e-mail</label>
+          <input type="email" id="email" name="email" autocomplete="email" placeholder="vous@exemple.com" aria-describedby="email-error" required>
+          <p class="err" id="email-error"></p>
+        </div>
+
+        <div class="field">
+          <label for="password">Mot de passe</label>
+          <div class="control">
+            <input type="password" id="password" name="password" class="pw" autocomplete="new-password"
+                   aria-describedby="pw-rules password-error" required>
+            <button type="button" class="toggle" id="pw-toggle" aria-controls="password" aria-pressed="false">Afficher</button>
+          </div>
+          <div class="meter" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+          <ul class="rules" id="pw-rules" aria-label="Règles du mot de passe">
+            <li data-rule="len">8 caractères minimum</li>
+            <li data-rule="letter">Une lettre</li>
+            <li data-rule="digit">Un chiffre</li>
+          </ul>
+          <p class="err" id="password-error"></p>
+        </div>
+
+        <fieldset class="field" id="gender-group" aria-describedby="gender-error">
+          <legend>Sexe</legend>
+          <div class="segmented">
+            <input type="radio" name="gender" id="g-f" value="female"><label for="g-f">Féminin</label>
+            <input type="radio" name="gender" id="g-m" value="male"><label for="g-m">Masculin</label>
+          </div>
+          <p class="err" id="gender-error"></p>
+        </fieldset>
+
+        <div class="field">
+          <label class="consent" for="consent">
+            <input type="checkbox" id="consent" name="consent" aria-describedby="consent-error">
+            <span>J'accepte les <a href="terms.html">conditions d'utilisation</a> et le traitement de mes données pour l'instruction de mes demandes, décrit dans la <a href="privacy.html">politique de confidentialité</a>.</span>
+          </label>
+          <p class="err" id="consent-error"></p>
+        </div>
+
+        <button type="submit" class="submit" id="submit-btn">Créer mon compte</button>
+      </form>
+
+    </div>
+  </main>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const form = $('signup-form');
+
+/* =========================================================
+   RÈGLES DE VALIDATION
+   Format mobile camerounais supposé : 9 chiffres commençant par 6 (à confirmer).
+   ========================================================= */
+const onlyDigits = s => s.replace(/\D/g,'');
+const validators = {
+  firstname: v => v.trim() ? '' : 'Indiquez votre prénom.',
+  lastname:  v => v.trim() ? '' : 'Indiquez votre nom.',
+  phone: v => {
+    const d = onlyDigits(v).replace(/^237/,'');
+    if (!d) return 'Indiquez votre numéro de téléphone.';
+    return /^6\d{8}$/.test(d) ? '' : 'Numéro attendu : 9 chiffres commençant par 6, par exemple 6XX XX XX XX.';
+  },
+  email: v => {
+    if (!v.trim()) return 'Indiquez votre adresse e-mail.';
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim()) ? '' : 'Adresse e-mail invalide, par exemple vous@exemple.com.';
+  },
+  password: v => {
+    if (!v) return 'Choisissez un mot de passe.';
+    const r = pwRules(v);
+    return r.len && r.letter && r.digit ? '' : 'Le mot de passe doit respecter les trois règles ci-dessus.';
+  }
+};
+const pwRules = v => ({ len: v.length >= 8, letter: /[A-Za-zÀ-ÿ]/.test(v), digit: /\d/.test(v) });
+
+function setError(id, msg){
+  const input = $(id), err = $(id + '-error');
+  err.textContent = msg;
+  input.setAttribute('aria-invalid', msg ? 'true' : 'false');
+  return !msg;
+}
+
+/* Valider à la sortie du champ, puis en direct une fois l'erreur affichée */
+Object.keys(validators).forEach(id => {
+  const el = $(id);
+  el.addEventListener('blur', () => { if (el.value) setError(id, validators[id](el.value)); });
+  el.addEventListener('input', () => { if (el.getAttribute('aria-invalid') === 'true') setError(id, validators[id](el.value)); });
+});
+
+/* Formatage du téléphone : 6XX XX XX XX */
+$('phone').addEventListener('input', e => {
+  let d = onlyDigits(e.target.value);
+  if (d.startsWith('237') && d.length > 9) d = d.slice(3);
+  d = d.slice(0,9);
+  e.target.value = [d.slice(0,3), d.slice(3,5), d.slice(5,7), d.slice(7,9)].filter(Boolean).join(' ');
+});
+
+/* Mot de passe : règles, jauge et affichage */
+const meterColors = ['var(--danger)','var(--warn)','#7BB661','var(--ok)'];
+$('password').addEventListener('input', e => {
+  const v = e.target.value, r = pwRules(v);
+  document.querySelectorAll('#pw-rules li').forEach(li => li.classList.toggle('ok', r[li.dataset.rule]));
+  let score = [r.len, r.letter, r.digit].filter(Boolean).length;
+  if (score === 3 && (v.length >= 12 || /[^A-Za-z0-9]/.test(v))) score = 4;
+  document.querySelectorAll('.meter span').forEach((s,i) => s.style.background = i < score ? meterColors[score-1] : '');
+});
+$('pw-toggle').addEventListener('click', () => {
+  const pw = $('password'), show = pw.type === 'password';
+  pw.type = show ? 'text' : 'password';
+  $('pw-toggle').textContent = show ? 'Masquer' : 'Afficher';
+  $('pw-toggle').setAttribute('aria-pressed', show);
+  pw.focus();
+});
+
+/* Sexe et consentement */
+document.querySelectorAll('[name="gender"]').forEach(r => r.addEventListener('change', () => {
+  $('gender-error').textContent = ''; $('gender-group').removeAttribute('aria-invalid');
+}));
+$('consent').addEventListener('change', () => { if ($('consent').checked) $('consent-error').textContent = ''; });
+
+/* =========================================================
+   ENVOI
+   ========================================================= */
+form.addEventListener('submit', e => {
+  e.preventDefault();
+  $('form-alert').classList.remove('show');
+
+  const results = Object.keys(validators).map(id => setError(id, validators[id]($(id).value)));
+  const gender = document.querySelector('[name="gender"]:checked')?.value || '';
+  if (!gender){ $('gender-error').textContent = 'Sélectionnez une option.'; $('gender-group').setAttribute('aria-invalid','true'); }
+  if (!$('consent').checked) $('consent-error').textContent = 'Vous devez accepter les conditions pour créer un compte.';
+
+  const firstInvalid = form.querySelector('[aria-invalid="true"]');
+  if (firstInvalid){
+    const n = form.querySelectorAll('[aria-invalid="true"]').length + (!$('consent').checked ? 1 : 0);
+    $('form-alert').textContent = n > 1 ? `${n} champs sont à corriger.` : 'Un champ est à corriger.';
+    $('form-alert').classList.add('show');
+    (firstInvalid.matches('fieldset') ? firstInvalid.querySelector('input') : firstInvalid).focus();
+    return;
+  }
+  if (!$('consent').checked){ $('consent').focus(); return; }
+
+  const btn = $('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner" aria-hidden="true"></span> Création du compte…';
+
+  const user = {
+    firstname: $('firstname').value.trim(),
+    lastname:  $('lastname').value.trim(),
+    phone:     '+237' + onlyDigits($('phone').value).replace(/^237/,''),
+    email:     $('email').value.trim().toLowerCase(),
+    gender
+  };
+
+  // TODO production : POST /api/register vers Laravel (mot de passe haché côté serveur),
+  // puis vérification du téléphone par code SMS. Le mot de passe n'est JAMAIS stocké côté navigateur.
+  setTimeout(() => {
+    try {
+      localStorage.setItem('userName', `${user.firstname} ${user.lastname}`);
+      localStorage.setItem('userEmail', user.email);
+      localStorage.setItem('userGender', user.gender);
+      localStorage.removeItem('userPassword'); // nettoie l'ancienne version du prototype
+    } catch(err) {}
+    location.href = 'applicant-dashboard.html';
+  }, 700);
+});
+</script>
+</body>
+</html>

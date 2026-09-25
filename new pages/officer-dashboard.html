@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Espace officier — PHOENIX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   TOKENS — identiques à l'accueil et à l'espace demandeur
+   ========================================================= */
+:root{
+  --violet-900:#2A0A55; --violet-800:#4A148C; --violet-700:#5B0FB0; --violet-500:#7B2FF2;
+  --lilac-200:#E3D6FF; --ink:#1D1530; --ink-soft:#544A6B; --page:#F3F2F9; --white:#FFFFFF;
+  --ok:#1F9D6B; --warn:#B7791F; --danger:#C0392B; --info:#2B6CB0;
+  --glass-dark:rgba(255,255,255,.10); --glass-dark-border:rgba(255,255,255,.28);
+  --glass-light:rgba(255,255,255,.58); --glass-light-border:rgba(255,255,255,.85);
+  --r-lg:22px; --r-md:14px; --r-sm:10px;
+  --font-display:"Fraunces", Georgia, "Times New Roman", serif;
+  --font-body:"Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --sidebar:264px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;font-family:var(--font-body);line-height:1.6;color:var(--ink);
+  background:
+    radial-gradient(600px 420px at 95% 5%, rgba(123,47,242,.20), transparent 70%),
+    radial-gradient(520px 400px at 25% 100%, rgba(156,39,176,.14), transparent 70%),
+    var(--page);
+  background-attachment:fixed;
+}
+a{color:inherit}
+:focus-visible{outline:3px solid #FFD166;outline-offset:3px;border-radius:6px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.skip{position:absolute;left:1rem;top:-4rem;background:var(--white);color:var(--violet-800);padding:.6rem 1rem;border-radius:var(--r-sm);z-index:100;font-weight:700}
+.skip:focus{top:1rem}
+
+.glass{
+  background:var(--glass-light);border:1px solid var(--glass-light-border);
+  backdrop-filter:blur(18px) saturate(150%);-webkit-backdrop-filter:blur(18px) saturate(150%);
+  box-shadow:0 20px 50px -30px rgba(74,20,140,.45);
+}
+
+/* ---------- Boutons ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:44px;padding:.65rem 1.2rem;
+  border-radius:999px;border:1px solid transparent;font:600 .95rem/1 var(--font-body);text-decoration:none;cursor:pointer;
+  transition:background-color .2s ease;
+}
+.btn-primary{background:var(--white);color:var(--violet-800);box-shadow:0 10px 30px -12px rgba(20,0,60,.6)}
+.btn-primary:hover{background:var(--lilac-200)}
+.btn-solid{background:var(--violet-700);color:var(--white)}
+.btn-solid:hover{background:var(--violet-800)}
+.btn-line{background:transparent;color:var(--violet-700);border-color:rgba(91,15,176,.35)}
+.btn-line:hover{background:rgba(91,15,176,.08)}
+.btn-sm{min-height:38px;padding:.5rem 1rem;font-size:.88rem}
+
+/* =========================================================
+   STRUCTURE
+   ========================================================= */
+.layout{display:grid;grid-template-columns:var(--sidebar) 1fr;min-height:100%}
+
+.sidebar{
+  position:sticky;top:0;height:100vh;height:100dvh;display:flex;flex-direction:column;gap:1.5rem;
+  padding:calc(1.5rem + env(safe-area-inset-top,0px)) 1rem calc(1.2rem + env(safe-area-inset-bottom,0px));
+  color:var(--white);overflow:hidden;
+  background:
+    radial-gradient(260px 260px at 90% 15%, rgba(179,136,255,.45), transparent 70%),
+    linear-gradient(170deg,var(--violet-900),var(--violet-800) 60%,var(--violet-700));
+}
+.brand{display:flex;align-items:center;gap:.6rem;padding:0 .6rem;text-decoration:none}
+.brand svg{width:34px;height:34px;flex:none}
+.brand-name{font:700 1.3rem/1 var(--font-display);letter-spacing:.04em;display:block}
+.brand-sub{font-size:.8rem;opacity:.75;display:block;margin-top:.25rem}
+.side-nav{display:grid;gap:.2rem;list-style:none;margin:0;padding:0}
+.side-nav a{
+  display:flex;align-items:center;gap:.8rem;padding:.75rem .9rem;border-radius:var(--r-md);
+  text-decoration:none;font-weight:500;color:rgba(255,255,255,.85);border:1px solid transparent;
+}
+.side-nav a:hover{background:rgba(255,255,255,.1);color:var(--white)}
+.side-nav a[aria-current="page"]{
+  background:var(--glass-dark);border-color:var(--glass-dark-border);color:var(--white);font-weight:700;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+.side-nav svg{width:20px;height:20px;flex:none}
+.side-nav .count{margin-left:auto;font-size:.75rem;font-weight:700;background:#FFD166;color:var(--violet-900);border-radius:999px;padding:.1rem .5rem}
+.side-center{
+  margin-top:auto;padding:1rem;border-radius:var(--r-md);background:var(--glass-dark);border:1px solid var(--glass-dark-border);font-size:.88rem;
+}
+.side-center span{display:block;opacity:.75}
+.side-center strong{font-size:1rem}
+
+.main{min-width:0;padding:0 clamp(1rem,3vw,2.5rem) calc(2.5rem + env(safe-area-inset-bottom,0px))}
+.topbar{
+  position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:1rem;
+  margin:0 calc(-1 * clamp(1rem,3vw,2.5rem)) 1.5rem;padding:calc(.9rem + env(safe-area-inset-top,0px)) clamp(1rem,3vw,2.5rem) .9rem;
+  background:rgba(243,242,249,.7);border-bottom:1px solid rgba(91,15,176,.1);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+.menu-toggle{display:none;width:44px;height:44px;border-radius:50%;border:0;background:none;color:var(--violet-800);cursor:pointer}
+.menu-toggle:hover{background:rgba(91,15,176,.08)}
+.crumb{font-weight:700;color:var(--violet-900)}
+.top-actions{margin-left:auto;display:flex;align-items:center;gap:.6rem}
+
+/* Menu profil */
+.profile{position:relative}
+.profile-btn{
+  display:flex;align-items:center;gap:.6rem;padding:.3rem .9rem .3rem .3rem;border-radius:999px;cursor:pointer;
+  background:var(--glass-light);border:1px solid var(--glass-light-border);font:600 .92rem var(--font-body);color:var(--ink);
+}
+.profile-btn:hover{background:var(--white)}
+.init{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--violet-700);color:#fff;font-weight:700}
+.profile-menu{
+  position:absolute;right:0;top:calc(100% + 8px);min-width:220px;padding:.5rem;border-radius:var(--r-md);list-style:none;margin:0;
+  background:rgba(255,255,255,.92);border:1px solid var(--glass-light-border);box-shadow:0 20px 50px -20px rgba(74,20,140,.5);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+.profile-menu[hidden]{display:none}
+.profile-menu a,.profile-menu button{
+  display:block;width:100%;text-align:left;padding:.65rem .8rem;border-radius:var(--r-sm);border:0;background:none;
+  font:500 .93rem var(--font-body);color:var(--ink);text-decoration:none;cursor:pointer;
+}
+.profile-menu a:hover,.profile-menu button:hover{background:rgba(91,15,176,.08)}
+.profile-menu .danger{color:var(--danger)}
+
+/* Bannière */
+.welcome{
+  position:relative;overflow:hidden;border-radius:26px;padding:1.8rem 2.2rem;color:var(--white);margin-bottom:1.5rem;
+  display:flex;justify-content:space-between;align-items:center;gap:1.5rem;flex-wrap:wrap;
+  background:
+    radial-gradient(420px 260px at 88% 10%, rgba(179,136,255,.6), transparent 70%),
+    linear-gradient(135deg,var(--violet-800),var(--violet-700));
+}
+.welcome .orb{position:absolute;width:220px;height:220px;border-radius:50%;right:-60px;bottom:-90px;background:radial-gradient(circle at 30% 30%,#FFC2E2,#9C27B0 70%);opacity:.45;filter:blur(6px);pointer-events:none}
+.welcome h1{font:700 clamp(1.6rem,3vw,2.2rem)/1.1 var(--font-display);margin:0 0 .4rem}
+.welcome p{margin:0;max-width:40rem;color:rgba(255,255,255,.86)}
+.welcome .btn{position:relative}
+
+/* Statistiques-filtres */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;margin-bottom:1.5rem}
+.stat{
+  display:flex;flex-direction:column;gap:.3rem;text-align:left;cursor:pointer;border-radius:var(--r-lg);padding:1.1rem 1.2rem;
+  font-family:var(--font-body);color:var(--ink);transition:background-color .2s, border-color .2s;
+}
+.stat:hover{background:rgba(255,255,255,.8)}
+.stat[aria-pressed="true"]{background:var(--white);border-color:var(--violet-700);box-shadow:0 0 0 2px var(--violet-700) inset, 0 20px 50px -30px rgba(74,20,140,.45)}
+.stat-top{display:flex;align-items:center;gap:.5rem;font-weight:600;color:var(--ink-soft);font-size:.9rem}
+.stat-dot{width:10px;height:10px;border-radius:50%}
+.stat-value{font:700 2.1rem/1 var(--font-display);color:var(--violet-900)}
+.stat-hint{font-size:.8rem;color:var(--ink-soft)}
+
+/* Couleurs de statut */
+.s-pending{--c:var(--warn)} .s-verified{--c:var(--info)} .s-escalated{--c:#8E24AA}
+.s-rejected{--c:var(--danger)} .s-completed{--c:var(--ok)}
+.stat-dot{background:var(--c)}
+.pill{
+  display:inline-flex;align-items:center;gap:.4rem;padding:.25rem .7rem;border-radius:999px;font-size:.8rem;font-weight:700;white-space:nowrap;
+  color:var(--c);background:color-mix(in srgb, var(--c) 13%, transparent);
+}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--c)}
+
+/* Filtres */
+.filters{border-radius:var(--r-lg);padding:1.1rem 1.2rem;margin-bottom:1.25rem;display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:.9rem;align-items:end}
+.field label{display:block;font-size:.85rem;font-weight:600;color:var(--ink-soft);margin:0 0 .35rem .2rem}
+.field input,.field select{
+  width:100%;min-height:44px;padding:.55rem .9rem;border-radius:var(--r-sm);border:1px solid rgba(91,15,176,.2);
+  background:rgba(255,255,255,.8);font:500 .95rem var(--font-body);color:var(--ink);
+}
+.field input:focus,.field select:focus{outline:none;border-color:var(--violet-700);box-shadow:0 0 0 3px rgba(123,47,242,.2)}
+.search{position:relative}
+.search svg{position:absolute;left:.8rem;bottom:12px;color:var(--ink-soft);pointer-events:none}
+.search input{padding-left:2.4rem}
+
+/* Tableau */
+.table-card{border-radius:var(--r-lg);padding:1.3rem 1.3rem .6rem}
+.table-head{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:.8rem;flex-wrap:wrap}
+.table-head h2{font:600 1.25rem/1.2 var(--font-display);margin:0;color:var(--violet-900)}
+.result-count{font-size:.9rem;color:var(--ink-soft)}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.93rem}
+th{
+  text-align:left;font-weight:600;color:var(--ink-soft);padding:.7rem .6rem;border-bottom:1px solid rgba(91,15,176,.15);white-space:nowrap;
+}
+th button{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:.3rem;border-radius:6px}
+th button:focus-visible{outline:3px solid #FFD166;outline-offset:3px}
+td{padding:.85rem .6rem;border-bottom:1px solid rgba(91,15,176,.08);vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:rgba(255,255,255,.55)}
+.ref{font-weight:700;color:var(--violet-900);white-space:nowrap}
+.applicant strong{display:block}
+.applicant span{font-size:.83rem;color:var(--ink-soft)}
+.wait{font-weight:600;white-space:nowrap}
+.wait.late{color:var(--danger)}
+.wait.late::before{content:"● ";font-size:.7rem}
+td.act{text-align:right}
+
+.empty{padding:2.5rem 1rem;text-align:center;color:var(--ink-soft)}
+.empty p{margin:0 0 1rem}
+
+/* Voile mobile */
+.scrim{display:none}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+@media (max-width:1200px){
+  .stats{grid-template-columns:repeat(3,1fr)}
+  .filters{grid-template-columns:1fr 1fr 1fr}
+  .filters .search{grid-column:1 / -1}
+}
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{position:fixed;inset:0 auto 0 0;width:min(84vw,var(--sidebar));z-index:60;transform:translateX(-100%);transition:transform .25s ease}
+  .sidebar.open{transform:none}
+  .scrim{display:block;position:fixed;inset:0;background:rgba(20,5,45,.45);z-index:55;opacity:0;pointer-events:none;transition:opacity .25s}
+  .scrim.open{opacity:1;pointer-events:auto}
+  .menu-toggle{display:grid;place-items:center}
+  .profile-btn .name{display:none}
+  .profile-btn{padding:.3rem}
+}
+/* Sur mobile, chaque ligne devient une carte */
+@media (max-width:720px){
+  .stats{grid-template-columns:1fr 1fr}
+  .filters{grid-template-columns:1fr 1fr}
+  .welcome{padding:1.5rem}
+  .welcome .btn{flex:1 1 100%}
+  table,thead,tbody,tr,td{display:block}
+  thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  tbody tr{border:1px solid rgba(91,15,176,.12);border-radius:var(--r-md);padding:.8rem 1rem;margin-bottom:.8rem;background:rgba(255,255,255,.6)}
+  td{display:flex;justify-content:space-between;gap:1rem;padding:.4rem 0;border:0;text-align:right}
+  td::before{content:attr(data-label);font-weight:600;color:var(--ink-soft);text-align:left}
+  td.act{padding-top:.7rem}
+  td.act::before{content:none}
+  td.act .btn{width:100%}
+  .applicant{text-align:right}
+}
+@media (max-width:420px){
+  .stats,.filters{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .glass{background:rgba(255,255,255,.94)} .topbar{background:rgba(243,242,249,.97)}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#contenu">Aller au contenu</a>
+
+<div class="layout">
+  <!-- ================= BARRE LATÉRALE ================= -->
+  <aside class="sidebar" id="sidebar" aria-label="Menu de l'espace officier">
+    <a class="brand" href="officer-dashboard.html">
+      <svg viewBox="0 0 40 40" aria-hidden="true">
+        <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#C9A8FF"/></linearGradient></defs>
+        <path d="M20 4c3 6 9 8 13 7-2 5-6 8-9 9 3 1 6 4 7 9-5-1-9-4-11-8-2 4-6 7-11 8 1-5 4-8 7-9-3-1-7-4-9-9 4 1 10-1 13-7z" fill="url(#g1)"/>
+      </svg>
+      <span><span class="brand-name">PHOENIX</span><span class="brand-sub">Espace officier</span></span>
+    </a>
+
+    <nav>
+      <ul class="side-nav">
+        <li><a href="officer-dashboard.html" aria-current="page">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/></svg>
+          Tableau de bord</a></li>
+        <li><a href="officer-verification.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 14l2 2 4-4"/></svg>
+          Demandes à vérifier <span class="count" id="nav-pending" hidden></span></a></li>
+        <li><a href="officer-reports.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+          Rapports</a></li>
+        <li><a href="officer-settings.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+          Paramètres</a></li>
+      </ul>
+    </nav>
+
+    <div class="side-center">
+      <span>Centre d'affectation</span>
+      <strong id="officer-center">Yaoundé III</strong>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <!-- ================= CONTENU ================= -->
+  <div class="main">
+    <header class="topbar">
+      <button class="menu-toggle" id="menu-toggle" type="button" aria-controls="sidebar" aria-expanded="false" aria-label="Ouvrir le menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <span class="crumb">Officier d'état civil</span>
+      <div class="top-actions">
+        <div class="profile">
+          <button class="profile-btn" id="profile-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="profile-menu">
+            <span class="init" id="officer-initials" aria-hidden="true">AM</span>
+            <span class="name" id="officer-name">A. Mbarga</span>
+          </button>
+          <ul class="profile-menu" id="profile-menu" hidden>
+            <li><a href="officer-settings.html">Mon profil</a></li>
+            <li><button type="button" class="danger" id="signout-btn">Se déconnecter</button></li>
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <main id="contenu">
+      <section class="welcome" aria-labelledby="welcome-title">
+        <span class="orb" aria-hidden="true"></span>
+        <div style="position:relative">
+          <h1 id="welcome-title">Bonjour, officier Mbarga</h1>
+          <p id="welcome-sub">Vérifiez les demandes de réédition de votre centre avant leur transmission au maire pour signature.</p>
+        </div>
+        <a class="btn btn-primary" href="#" id="next-btn">Traiter la plus ancienne</a>
+      </section>
+
+      <!-- Statistiques cliquables = filtres rapides -->
+      <div class="stats" role="group" aria-label="Filtrer par statut">
+        <button class="stat glass s-pending" type="button" data-status="pending" aria-pressed="false">
+          <span class="stat-top"><span class="stat-dot"></span>En attente</span>
+          <span class="stat-value" data-count="pending">0</span>
+          <span class="stat-hint">À vérifier</span>
+        </button>
+        <button class="stat glass s-verified" type="button" data-status="verified" aria-pressed="false">
+          <span class="stat-top"><span class="stat-dot"></span>Vérifiées</span>
+          <span class="stat-value" data-count="verified">0</span>
+          <span class="stat-hint">Chez le maire</span>
+        </button>
+        <button class="stat glass s-escalated" type="button" data-status="escalated" aria-pressed="false">
+          <span class="stat-top"><span class="stat-dot"></span>Escaladées</span>
+          <span class="stat-value" data-count="escalated">0</span>
+          <span class="stat-hint">Examen approfondi</span>
+        </button>
+        <button class="stat glass s-rejected" type="button" data-status="rejected" aria-pressed="false">
+          <span class="stat-top"><span class="stat-dot"></span>Rejetées</span>
+          <span class="stat-value" data-count="rejected">0</span>
+          <span class="stat-hint">Motif notifié</span>
+        </button>
+        <button class="stat glass s-completed" type="button" data-status="completed" aria-pressed="false">
+          <span class="stat-top"><span class="stat-dot"></span>Terminées</span>
+          <span class="stat-value" data-count="completed">0</span>
+          <span class="stat-hint">Copie délivrée</span>
+        </button>
+      </div>
+
+      <!-- Filtres -->
+      <form class="filters glass" id="filters" role="search" onsubmit="return false">
+        <div class="field search">
+          <label for="f-search">Rechercher</label>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input id="f-search" type="search" placeholder="Référence ou nom du demandeur" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="f-status">Statut</label>
+          <select id="f-status">
+            <option value="all">Tous</option>
+            <option value="pending">En attente</option>
+            <option value="verified">Vérifiée</option>
+            <option value="escalated">Escaladée</option>
+            <option value="rejected">Rejetée</option>
+            <option value="completed">Terminée</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-center">Centre</label>
+          <select id="f-center"><option value="all">Tous</option></select>
+        </div>
+        <div class="field">
+          <label for="f-date">Déposées depuis le</label>
+          <input id="f-date" type="date">
+        </div>
+        <button class="btn btn-line" type="reset" id="f-reset">Réinitialiser</button>
+      </form>
+
+      <!-- Tableau -->
+      <section class="table-card glass" aria-labelledby="table-title">
+        <div class="table-head">
+          <h2 id="table-title">Demandes de réédition</h2>
+          <span class="result-count" id="result-count" aria-live="polite"></span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Référence</th>
+                <th scope="col">Demandeur</th>
+                <th scope="col">Centre</th>
+                <th scope="col">Statut</th>
+                <th scope="col" aria-sort="ascending" id="th-date">
+                  <button type="button" id="sort-btn">Déposée le <span id="sort-icon" aria-hidden="true">↑</span></button>
+                </th>
+                <th scope="col">Attente</th>
+                <th scope="col"><span class="sr-only">Action</span></th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <div class="empty" id="empty" hidden>
+          <p>Aucune demande ne correspond à ces filtres.</p>
+          <button class="btn btn-line" type="button" id="empty-reset">Effacer les filtres</button>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   CONFIGURATION
+   ========================================================= */
+// Référentiel unique des centres : la liste déroulante ET les libellés en dépendent.
+const CENTERS = {
+  'yaounde-1':'Yaoundé I', 'yaounde-2':'Yaoundé II', 'yaounde-3':'Yaoundé III', 'yaounde-4':'Yaoundé IV',
+  'yaounde-5':'Yaoundé V', 'yaounde-6':'Yaoundé VI', 'yaounde-7':'Yaoundé VII'
+};
+const STATUS = {
+  pending:  { label:'En attente', cls:'s-pending'  },
+  verified: { label:'Vérifiée',   cls:'s-verified' },
+  escalated:{ label:'Escaladée',  cls:'s-escalated'},
+  rejected: { label:'Rejetée',    cls:'s-rejected' },
+  completed:{ label:'Terminée',   cls:'s-completed'}
+};
+// Seuil d'alerte "en retard" (en jours) — valeur arbitraire, à fixer avec l'administration.
+const LATE_AFTER_DAYS = 7;
+
+/* ---------- Données d'exemple (plus tard : API / Supabase) ---------- */
+const requests = [
+  { id:'PHX-00000001', applicantName:'Jean Pheno',   documentType:'Acte de naissance', center:'yaounde-3', status:'pending',   submittedAt:'2026-09-10T10:20:00' },
+  { id:'PHX-00000002', applicantName:'Marie Ngoa',   documentType:'Acte de naissance', center:'yaounde-2', status:'verified',  submittedAt:'2026-09-08T14:05:00' },
+  { id:'PHX-00000003', applicantName:'Paul Mohamed', documentType:'Acte de naissance', center:'yaounde-3', status:'escalated', submittedAt:'2026-09-05T09:15:00' },
+  { id:'PHX-00000004', applicantName:'Grace Kamga',  documentType:'Acte de naissance', center:'yaounde-1', status:'completed', submittedAt:'2026-08-27T16:40:00' },
+  { id:'PHX-00000005', applicantName:'Serge Atangana', documentType:'Acte de naissance', center:'yaounde-3', status:'pending', submittedAt:'2026-09-22T08:30:00' },
+  { id:'PHX-00000006', applicantName:'Aïcha Bello',  documentType:'Acte de naissance', center:'yaounde-4', status:'rejected',  submittedAt:'2026-09-01T11:00:00' }
+];
+
+/* =========================================================
+   UTILITAIRES
+   ========================================================= */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate = iso => new Date(iso).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' });
+const fmtTime = iso => new Date(iso).toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+const daysSince = iso => Math.floor((Date.now() - new Date(iso)) / 86400000);
+const norm = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+
+/* État de l'interface */
+let sortAsc = true; // plus anciennes en premier : file d'attente équitable
+
+/* ---------- Liste des centres ---------- */
+Object.entries(CENTERS).forEach(([k,v]) => $('f-center').add(new Option(v,k)));
+
+/* ---------- Statistiques ---------- */
+function updateStats(){
+  const counts = Object.fromEntries(Object.keys(STATUS).map(k => [k,0]));
+  requests.forEach(r => { if (counts[r.status] !== undefined) counts[r.status]++; });
+  document.querySelectorAll('[data-count]').forEach(el => el.textContent = counts[el.dataset.count]);
+  const nav = $('nav-pending');
+  nav.hidden = !counts.pending; nav.textContent = counts.pending;
+}
+
+/* ---------- Filtrage + tri ---------- */
+function getFiltered(){
+  const q = norm($('f-search').value.trim());
+  const status = $('f-status').value, center = $('f-center').value, from = $('f-date').value;
+  return requests
+    .filter(r => status === 'all' || r.status === status)
+    .filter(r => center === 'all' || r.center === center)
+    .filter(r => !from || new Date(r.submittedAt) >= new Date(from))
+    .filter(r => !q || norm(r.id).includes(q) || norm(r.applicantName).includes(q))
+    .sort((a,b) => (new Date(a.submittedAt) - new Date(b.submittedAt)) * (sortAsc ? 1 : -1));
+}
+
+function render(){
+  const rows = getFiltered();
+  $('tbody').innerHTML = rows.map(r => {
+    const st = STATUS[r.status] || { label:r.status, cls:'' };
+    const d = daysSince(r.submittedAt);
+    const open = r.status === 'pending' || r.status === 'escalated';
+    const late = open && d > LATE_AFTER_DAYS;
+    const action = r.status === 'pending'
+      ? `<a class="btn btn-solid btn-sm" href="officer-verification.html?id=${encodeURIComponent(r.id)}">Vérifier</a>`
+      : `<a class="btn btn-line btn-sm" href="officer-verification.html?id=${encodeURIComponent(r.id)}">Consulter</a>`;
+    return `<tr>
+      <td data-label="Référence" class="ref">${esc(r.id)}</td>
+      <td data-label="Demandeur" class="applicant"><strong>${esc(r.applicantName)}</strong><span>${esc(r.documentType)}</span></td>
+      <td data-label="Centre">${esc(CENTERS[r.center] || r.center)}</td>
+      <td data-label="Statut"><span class="pill ${st.cls}">${esc(st.label)}</span></td>
+      <td data-label="Déposée le">${fmtDate(r.submittedAt)} <span style="color:var(--ink-soft)">${fmtTime(r.submittedAt)}</span></td>
+      <td data-label="Attente"><span class="wait ${late ? 'late' : ''}" ${late ? `title="Au-delà de ${LATE_AFTER_DAYS} jours"` : ''}>${open ? (d === 0 ? "Aujourd'hui" : d + ' j') : '—'}</span></td>
+      <td class="act">${action}</td>
+    </tr>`;
+  }).join('');
+
+  $('empty').hidden = rows.length > 0;
+  $('result-count').textContent = `${rows.length} demande${rows.length > 1 ? 's' : ''} sur ${requests.length}`;
+
+  // Synchronise les cartes de statut avec le filtre
+  const s = $('f-status').value;
+  document.querySelectorAll('.stat').forEach(b => b.setAttribute('aria-pressed', b.dataset.status === s));
+}
+
+/* ---------- Bouton "Traiter la plus ancienne" ---------- */
+function updateNext(){
+  const oldest = requests.filter(r => r.status === 'pending')
+    .sort((a,b) => new Date(a.submittedAt) - new Date(b.submittedAt))[0];
+  const btn = $('next-btn');
+  if (oldest){ btn.href = 'officer-verification.html?id=' + encodeURIComponent(oldest.id); btn.hidden = false; }
+  else btn.hidden = true;
+  const n = requests.filter(r => r.status === 'pending').length;
+  $('welcome-sub').textContent = n
+    ? `${n} demande${n>1?'s':''} en attente de vérification. Les dossiers vérifiés sont transmis au maire pour signature.`
+    : 'Aucune demande en attente. Les nouveaux dossiers de votre centre apparaîtront ici.';
+}
+
+/* ---------- Événements ---------- */
+['f-search','f-status','f-center','f-date'].forEach(id => $(id).addEventListener('input', render));
+$('filters').addEventListener('reset', () => setTimeout(render));
+$('empty-reset').addEventListener('click', () => { $('filters').reset(); render(); $('f-search').focus(); });
+
+document.querySelectorAll('.stat').forEach(b => b.addEventListener('click', () => {
+  $('f-status').value = $('f-status').value === b.dataset.status ? 'all' : b.dataset.status;
+  render();
+}));
+
+$('sort-btn').addEventListener('click', () => {
+  sortAsc = !sortAsc;
+  $('sort-icon').textContent = sortAsc ? '↑' : '↓';
+  $('th-date').setAttribute('aria-sort', sortAsc ? 'ascending' : 'descending');
+  render();
+});
+
+/* Menu profil */
+const pBtn = $('profile-btn'), pMenu = $('profile-menu');
+pBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  const open = pMenu.hidden; pMenu.hidden = !open; pBtn.setAttribute('aria-expanded', open);
+});
+document.addEventListener('click', e => { if (!pMenu.contains(e.target)) { pMenu.hidden = true; pBtn.setAttribute('aria-expanded', false); } });
+$('signout-btn').addEventListener('click', () => { location.href = 'signin.html'; });
+
+/* Menu mobile */
+const sidebar = $('sidebar'), scrim = $('scrim'), toggle = $('menu-toggle');
+function setMenu(open){
+  sidebar.classList.toggle('open', open); scrim.classList.toggle('open', open);
+  toggle.setAttribute('aria-expanded', open); toggle.setAttribute('aria-label', open ? 'Fermer le menu' : 'Ouvrir le menu');
+}
+toggle.addEventListener('click', () => setMenu(!sidebar.classList.contains('open')));
+scrim.addEventListener('click', () => setMenu(false));
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape'){ setMenu(false); pMenu.hidden = true; pBtn.setAttribute('aria-expanded', false); }
+});
+
+/* ---------- Démarrage ---------- */
+updateStats(); updateNext(); render();
+</script>
+</body>
+</html>

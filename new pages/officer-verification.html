@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vérification d'une demande — PHOENIX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   TOKENS — identiques aux autres pages PHOENIX
+   ========================================================= */
+:root{
+  --violet-900:#2A0A55; --violet-800:#4A148C; --violet-700:#5B0FB0; --violet-500:#7B2FF2;
+  --lilac-200:#E3D6FF; --ink:#1D1530; --ink-soft:#544A6B; --page:#F3F2F9; --white:#FFFFFF;
+  --ok:#1F9D6B; --warn:#B7791F; --danger:#C0392B; --info:#2B6CB0; --esc:#8E24AA;
+  --glass-dark:rgba(255,255,255,.10); --glass-dark-border:rgba(255,255,255,.28);
+  --glass-light:rgba(255,255,255,.58); --glass-light-border:rgba(255,255,255,.85);
+  --r-lg:22px; --r-md:14px; --r-sm:10px;
+  --font-display:"Fraunces", Georgia, "Times New Roman", serif;
+  --font-body:"Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --sidebar:264px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;font-family:var(--font-body);line-height:1.6;color:var(--ink);
+  background:
+    radial-gradient(600px 420px at 95% 5%, rgba(123,47,242,.20), transparent 70%),
+    radial-gradient(520px 400px at 25% 100%, rgba(156,39,176,.14), transparent 70%),
+    var(--page);
+  background-attachment:fixed;
+}
+a{color:inherit}
+img{max-width:100%;display:block}
+:focus-visible{outline:3px solid #FFD166;outline-offset:3px;border-radius:6px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.skip{position:absolute;left:1rem;top:-4rem;background:var(--white);color:var(--violet-800);padding:.6rem 1rem;border-radius:var(--r-sm);z-index:100;font-weight:700}
+.skip:focus{top:1rem}
+[hidden]{display:none!important}
+
+.glass{
+  background:var(--glass-light);border:1px solid var(--glass-light-border);
+  backdrop-filter:blur(18px) saturate(150%);-webkit-backdrop-filter:blur(18px) saturate(150%);
+  box-shadow:0 20px 50px -30px rgba(74,20,140,.45);
+}
+
+/* ---------- Boutons ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:46px;padding:.7rem 1.3rem;
+  border-radius:999px;border:1px solid transparent;font:600 .96rem/1 var(--font-body);text-decoration:none;cursor:pointer;
+  transition:background-color .2s ease;
+}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn-solid{background:var(--violet-700);color:var(--white)}
+.btn-solid:hover:not(:disabled){background:var(--violet-800)}
+.btn-line{background:transparent;color:var(--violet-700);border-color:rgba(91,15,176,.35)}
+.btn-line:hover:not(:disabled){background:rgba(91,15,176,.08)}
+.btn-text{background:none;color:var(--ink-soft);padding-inline:.6rem}
+.btn-text:hover{color:var(--violet-800)}
+.btn-danger{background:var(--danger);color:#fff}
+.spinner{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* =========================================================
+   STRUCTURE (identique au dashboard officier)
+   ========================================================= */
+.layout{display:grid;grid-template-columns:var(--sidebar) 1fr;min-height:100%}
+.sidebar{
+  position:sticky;top:0;height:100vh;height:100dvh;display:flex;flex-direction:column;gap:1.5rem;
+  padding:calc(1.5rem + env(safe-area-inset-top,0px)) 1rem calc(1.2rem + env(safe-area-inset-bottom,0px));
+  color:var(--white);overflow:hidden;
+  background:
+    radial-gradient(260px 260px at 90% 15%, rgba(179,136,255,.45), transparent 70%),
+    linear-gradient(170deg,var(--violet-900),var(--violet-800) 60%,var(--violet-700));
+}
+.brand{display:flex;align-items:center;gap:.6rem;padding:0 .6rem;text-decoration:none}
+.brand svg{width:34px;height:34px;flex:none}
+.brand-name{font:700 1.3rem/1 var(--font-display);letter-spacing:.04em;display:block}
+.brand-sub{font-size:.8rem;opacity:.75;display:block;margin-top:.25rem}
+.side-nav{display:grid;gap:.2rem;list-style:none;margin:0;padding:0}
+.side-nav a{
+  display:flex;align-items:center;gap:.8rem;padding:.75rem .9rem;border-radius:var(--r-md);
+  text-decoration:none;font-weight:500;color:rgba(255,255,255,.85);border:1px solid transparent;
+}
+.side-nav a:hover{background:rgba(255,255,255,.1);color:var(--white)}
+.side-nav a[aria-current="page"]{background:var(--glass-dark);border-color:var(--glass-dark-border);color:var(--white);font-weight:700}
+.side-nav svg{width:20px;height:20px;flex:none}
+.side-center{margin-top:auto;padding:1rem;border-radius:var(--r-md);background:var(--glass-dark);border:1px solid var(--glass-dark-border);font-size:.88rem}
+.side-center span{display:block;opacity:.75}
+.side-center strong{font-size:1rem}
+
+.main{min-width:0;padding:0 clamp(1rem,3vw,2.5rem) calc(2.5rem + env(safe-area-inset-bottom,0px))}
+.topbar{
+  position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:1rem;
+  margin:0 calc(-1 * clamp(1rem,3vw,2.5rem)) 1.5rem;padding:calc(.9rem + env(safe-area-inset-top,0px)) clamp(1rem,3vw,2.5rem) .9rem;
+  background:rgba(243,242,249,.7);border-bottom:1px solid rgba(91,15,176,.1);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+.menu-toggle{display:none;width:44px;height:44px;border-radius:50%;border:0;background:none;color:var(--violet-800);cursor:pointer}
+.crumb{display:flex;align-items:center;gap:.5rem;font-weight:600;color:var(--ink-soft);min-width:0}
+.crumb a{text-decoration:none}
+.crumb a:hover{color:var(--violet-800);text-decoration:underline}
+.crumb strong{color:var(--violet-900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top-actions{margin-left:auto}
+.profile-chip{display:flex;align-items:center;gap:.6rem;padding:.3rem .9rem .3rem .3rem;border-radius:999px;background:var(--glass-light);border:1px solid var(--glass-light-border);font-weight:600;font-size:.92rem}
+.init{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--violet-700);color:#fff;font-weight:700}
+
+/* ---------- En-tête de dossier ---------- */
+.case-head{
+  position:relative;overflow:hidden;border-radius:26px;padding:1.6rem 2rem;color:var(--white);margin-bottom:1.25rem;
+  display:flex;justify-content:space-between;align-items:center;gap:1rem 2rem;flex-wrap:wrap;
+  background:
+    radial-gradient(420px 260px at 88% 10%, rgba(179,136,255,.6), transparent 70%),
+    linear-gradient(135deg,var(--violet-800),var(--violet-700));
+}
+.case-head h1{font:700 clamp(1.5rem,2.8vw,2rem)/1.15 var(--font-display);margin:0 0 .3rem}
+.case-head p{margin:0;color:rgba(255,255,255,.85)}
+.case-tags{display:flex;gap:.5rem;flex-wrap:wrap}
+.tag{padding:.35rem .8rem;border-radius:999px;background:var(--glass-dark);border:1px solid var(--glass-dark-border);font-size:.85rem;font-weight:600}
+
+.readonly{border-radius:var(--r-md);padding:.9rem 1.2rem;margin-bottom:1.25rem;display:flex;gap:.8rem;align-items:center;background:rgba(43,108,176,.1);color:var(--info);font-weight:600}
+
+/* ---------- Stepper ---------- */
+.stepper{list-style:none;margin:0 0 1.25rem;padding:.9rem;border-radius:var(--r-lg);display:grid;grid-template-columns:repeat(5,1fr);gap:.4rem}
+.stepper button{
+  width:100%;display:flex;align-items:center;gap:.7rem;padding:.55rem .7rem;border-radius:var(--r-md);border:0;background:none;
+  font:inherit;color:var(--ink-soft);text-align:left;cursor:pointer;
+}
+.stepper button:disabled{cursor:default;opacity:.65}
+.stepper button:hover:not(:disabled){background:rgba(91,15,176,.06)}
+.stepper .num{flex:none;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:.9rem;border:2px solid rgba(91,15,176,.25);background:var(--white);color:var(--violet-700)}
+.stepper .lbl{font-weight:700;font-size:.9rem;line-height:1.2;color:var(--ink)}
+.stepper .sub{display:block;font-size:.78rem;font-weight:500;color:var(--ink-soft)}
+.stepper li.done .num{background:var(--violet-700);border-color:var(--violet-700);color:#fff}
+.stepper li.flag .num{background:var(--warn);border-color:var(--warn);color:#fff}
+.stepper li.active button{background:var(--white);box-shadow:0 0 0 2px var(--violet-700) inset}
+
+/* ---------- Grille principale ---------- */
+.work{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:1.25rem;align-items:start}
+.panel{border-radius:var(--r-lg);padding:1.6rem}
+.panel h2{font:600 1.35rem/1.2 var(--font-display);margin:0 0 .3rem;color:var(--violet-900)}
+.panel .intro{margin:0 0 1.4rem;color:var(--ink-soft)}
+.actions{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1.6rem;padding-top:1.2rem;border-top:1px solid rgba(91,15,176,.1)}
+.actions .push{margin-left:auto}
+
+.fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:.8rem}
+.fld{padding:.8rem 1rem;border-radius:var(--r-md);background:rgba(255,255,255,.65);border:1px solid rgba(91,15,176,.08)}
+.fld dt{font-size:.8rem;font-weight:600;color:var(--ink-soft)}
+.fld dd{margin:0;font-weight:600;word-break:break-word}
+
+/* Résultats */
+.result{border-radius:var(--r-md);padding:1rem 1.2rem;display:flex;gap:.9rem;align-items:flex-start;margin-top:1.2rem}
+.result svg{flex:none;margin-top:2px}
+.result strong{display:block}
+.result.ok{background:rgba(31,157,107,.1);color:#11603F}
+.result.ko{background:rgba(192,57,43,.1);color:#8E2A1F}
+.result.neutral{background:rgba(91,15,176,.07);color:var(--violet-900)}
+
+/* Photos */
+.photos{display:grid;grid-template-columns:1fr 1.3fr;gap:1rem}
+.photo{border-radius:var(--r-md);background:rgba(255,255,255,.65);border:1px solid rgba(91,15,176,.08);padding:.8rem}
+.photo h3{font:600 .95rem var(--font-body);margin:0 0 .6rem}
+.photo button{all:unset;display:block;cursor:zoom-in;border-radius:var(--r-sm);overflow:hidden;width:100%}
+.photo button:focus-visible{outline:3px solid #FFD166;outline-offset:3px}
+.photo img{width:100%;aspect-ratio:auto;border-radius:var(--r-sm);background:#ECE8F5}
+.photo .hint{font-size:.8rem;color:var(--ink-soft);margin:.5rem 0 0}
+
+.choice-group{border:0;margin:1.4rem 0 0;padding:0}
+.choice-group legend{font-weight:700;margin-bottom:.6rem}
+.choices{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem}
+.choice{position:relative}
+.choice input{position:absolute;opacity:0;pointer-events:none}
+.choice label{
+  display:flex;flex-direction:column;gap:.2rem;height:100%;padding:.9rem 1rem;border-radius:var(--r-md);cursor:pointer;
+  background:rgba(255,255,255,.7);border:1.5px solid rgba(91,15,176,.15);font-weight:700;
+}
+.choice label small{font-weight:500;color:var(--ink-soft)}
+.choice label:hover{border-color:rgba(91,15,176,.4)}
+.choice input:focus-visible + label{outline:3px solid #FFD166;outline-offset:2px}
+.choice input:checked + label{border-color:var(--c,var(--violet-700));box-shadow:0 0 0 1.5px var(--c,var(--violet-700)) inset;background:var(--white)}
+.c-ok{--c:var(--ok)} .c-ko{--c:var(--danger)} .c-esc{--c:var(--esc)} .c-warn{--c:var(--warn)}
+.choice input:checked + label .mark{color:var(--c)}
+
+/* Recherche registre */
+.search-row{display:grid;grid-template-columns:1fr 1fr auto;gap:.8rem;align-items:end}
+.field label{display:block;font-size:.85rem;font-weight:600;color:var(--ink-soft);margin:0 0 .35rem .2rem}
+.field input,.field textarea{
+  width:100%;min-height:46px;padding:.65rem .9rem;border-radius:var(--r-sm);border:1px solid rgba(91,15,176,.2);
+  background:rgba(255,255,255,.85);font:500 .95rem var(--font-body);color:var(--ink);
+}
+.field textarea{min-height:110px;resize:vertical;line-height:1.5}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--violet-700);box-shadow:0 0 0 3px rgba(123,47,242,.2)}
+.field .err{display:none;color:var(--danger);font-size:.85rem;font-weight:600;margin:.4rem 0 0 .2rem}
+.field.invalid textarea{border-color:var(--danger)}
+.field.invalid .err{display:block}
+.field + .field{margin-top:1rem}
+
+.compare-wrap{overflow-x:auto;margin-top:1.2rem}
+.compare{width:100%;border-collapse:collapse;font-size:.93rem;min-width:520px}
+.compare th{text-align:left;font-weight:600;color:var(--ink-soft);padding:.6rem;border-bottom:1px solid rgba(91,15,176,.15)}
+.compare td{padding:.7rem .6rem;border-bottom:1px solid rgba(91,15,176,.08)}
+.compare tr:last-child td{border-bottom:0}
+.compare td:first-child{font-weight:600;color:var(--ink-soft)}
+.compare .m{font-weight:700;white-space:nowrap}
+.compare .m.yes{color:var(--ok)} .compare .m.no{color:var(--danger)}
+.compare tr.diff{background:rgba(192,57,43,.06)}
+
+/* Décision */
+.recap{list-style:none;margin:0 0 1.4rem;padding:0;display:grid;gap:.5rem}
+.recap li{display:flex;gap:.7rem;align-items:center;padding:.7rem 1rem;border-radius:var(--r-md);background:rgba(255,255,255,.65);font-weight:600;font-size:.93rem}
+.recap .ic{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:.75rem;font-weight:700}
+.recap .ok .ic{background:var(--ok)} .recap .ko .ic{background:var(--danger)} .recap .todo .ic{background:#B9B1CC}
+.recap .todo{color:var(--ink-soft)}
+.recap button{margin-left:auto;background:none;border:0;color:var(--violet-700);font:700 .85rem var(--font-body);cursor:pointer;padding:.2rem .4rem;border-radius:6px}
+.warn-box{border-radius:var(--r-md);padding:.9rem 1.1rem;margin-top:1rem;background:rgba(183,121,31,.12);color:#7A4F12;font-weight:600;font-size:.93rem}
+
+/* ---------- Panneau dossier (droite) ---------- */
+.side-panel{position:sticky;top:96px;border-radius:var(--r-lg);padding:1.3rem}
+.side-panel h2{font:600 1.1rem var(--font-display);margin:0 0 .9rem;color:var(--violet-900)}
+.who{display:flex;gap:.8rem;align-items:center;margin-bottom:1rem}
+.who img{width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--white)}
+.who strong{display:block;line-height:1.2}
+.who span{font-size:.85rem;color:var(--ink-soft)}
+.mini{margin:0;display:grid;gap:.55rem;font-size:.9rem}
+.mini div{display:flex;justify-content:space-between;gap:1rem}
+.mini dt{color:var(--ink-soft)}
+.mini dd{margin:0;font-weight:600;text-align:right;word-break:break-word}
+.notes-box{margin-top:1.1rem;padding-top:1rem;border-top:1px solid rgba(91,15,176,.1)}
+.notes-box p{margin:0;font-size:.88rem;color:var(--ink-soft)}
+
+/* ---------- Fenêtres ---------- */
+dialog{border:0;padding:0;border-radius:var(--r-lg);max-width:min(92vw,560px);width:100%;background:rgba(255,255,255,.95);box-shadow:0 30px 80px -20px rgba(20,0,60,.6)}
+dialog::backdrop{background:rgba(20,5,45,.55);backdrop-filter:blur(4px)}
+.dlg{padding:1.6rem}
+.dlg h2{font:600 1.3rem var(--font-display);margin:0 0 .6rem;color:var(--violet-900)}
+.dlg p{margin:0 0 .6rem;color:var(--ink-soft)}
+.dlg .actions{margin-top:1.2rem}
+dialog.zoom{max-width:min(94vw,900px);background:transparent;box-shadow:none}
+dialog.zoom img{width:100%;border-radius:var(--r-lg)}
+dialog.zoom .close{position:absolute;top:10px;right:10px}
+
+/* ---------- État terminal (succès / erreur) ---------- */
+.state{text-align:center;padding:3rem 1.5rem;border-radius:var(--r-lg);max-width:640px;margin:2rem auto}
+.state .big{width:72px;height:72px;border-radius:50%;display:grid;place-items:center;margin:0 auto 1rem;color:#fff}
+.state h1{font:700 1.6rem var(--font-display);margin:0 0 .5rem;color:var(--violet-900)}
+.state p{color:var(--ink-soft);margin:0 0 1.5rem}
+.state .actions{justify-content:center;border:0}
+
+.scrim{display:none}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+@media (max-width:1250px){
+  .work{grid-template-columns:1fr}
+  .side-panel{position:static;order:-1}
+  .stepper .sub{display:none}
+}
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{position:fixed;inset:0 auto 0 0;width:min(84vw,var(--sidebar));z-index:60;transform:translateX(-100%);transition:transform .25s ease}
+  .sidebar.open{transform:none}
+  .scrim{display:block;position:fixed;inset:0;background:rgba(20,5,45,.45);z-index:55;opacity:0;pointer-events:none;transition:opacity .25s}
+  .scrim.open{opacity:1;pointer-events:auto}
+  .menu-toggle{display:grid;place-items:center}
+  .profile-chip .name{display:none}
+  .profile-chip{padding:.3rem}
+  .stepper{grid-template-columns:repeat(5,auto);justify-content:space-between}
+  .stepper .lbl{display:none}
+  .stepper li.active .lbl{display:inline}
+}
+@media (max-width:640px){
+  .case-head{padding:1.3rem}
+  .panel{padding:1.2rem}
+  .photos,.choices,.search-row{grid-template-columns:1fr}
+  .actions .btn{flex:1 1 100%}
+  .actions .push{margin-left:0}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .glass{background:rgba(255,255,255,.94)} .topbar{background:rgba(243,242,249,.97)}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#contenu">Aller au contenu</a>
+
+<div class="layout">
+  <!-- ================= BARRE LATÉRALE ================= -->
+  <aside class="sidebar" id="sidebar" aria-label="Menu de l'espace officier">
+    <a class="brand" href="officer-dashboard.html">
+      <svg viewBox="0 0 40 40" aria-hidden="true">
+        <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#C9A8FF"/></linearGradient></defs>
+        <path d="M20 4c3 6 9 8 13 7-2 5-6 8-9 9 3 1 6 4 7 9-5-1-9-4-11-8-2 4-6 7-11 8 1-5 4-8 7-9-3-1-7-4-9-9 4 1 10-1 13-7z" fill="url(#g1)"/>
+      </svg>
+      <span><span class="brand-name">PHOENIX</span><span class="brand-sub">Espace officier</span></span>
+    </a>
+    <nav>
+      <ul class="side-nav">
+        <li><a href="officer-dashboard.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/></svg>
+          Tableau de bord</a></li>
+        <li><a href="officer-verification.html" aria-current="page">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 14l2 2 4-4"/></svg>
+          Demandes à vérifier</a></li>
+        <li><a href="officer-reports.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+          Rapports</a></li>
+        <li><a href="officer-settings.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+          Paramètres</a></li>
+      </ul>
+    </nav>
+    <div class="side-center"><span>Centre d'affectation</span><strong>Yaoundé III</strong></div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="menu-toggle" id="menu-toggle" type="button" aria-controls="sidebar" aria-expanded="false" aria-label="Ouvrir le menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <nav class="crumb" aria-label="Fil d'Ariane">
+        <a href="officer-dashboard.html">Demandes</a><span aria-hidden="true">/</span><strong id="crumb-ref">Vérification</strong>
+      </nav>
+      <div class="top-actions">
+        <span class="profile-chip"><span class="init" aria-hidden="true">AM</span><span class="name">A. Mbarga</span></span>
+      </div>
+    </header>
+
+    <main id="contenu">
+      <!-- ============ ÉTAT : dossier introuvable ============ -->
+      <section class="state glass" id="state-error" hidden>
+        <div class="big" style="background:var(--danger)" aria-hidden="true">!</div>
+        <h1 id="error-title">Dossier introuvable</h1>
+        <p id="error-text">Aucune demande ne correspond à cette référence.</p>
+        <div class="actions">
+          <a class="btn btn-solid" href="officer-dashboard.html">Retour aux demandes</a>
+          <a class="btn btn-line" href="?id=PHX-00000001">Ouvrir le dossier d'exemple</a>
+        </div>
+      </section>
+
+      <!-- ============ ÉTAT : décision enregistrée ============ -->
+      <section class="state glass" id="state-done" hidden tabindex="-1">
+        <div class="big" id="done-icon" style="background:var(--ok)" aria-hidden="true">✓</div>
+        <h1 id="done-title">Décision enregistrée</h1>
+        <p id="done-text"></p>
+        <div class="actions">
+          <a class="btn btn-solid" href="officer-dashboard.html" id="done-next">Dossier suivant</a>
+          <a class="btn btn-line" href="officer-dashboard.html">Retour aux demandes</a>
+        </div>
+      </section>
+
+      <!-- ============ VÉRIFICATION ============ -->
+      <div id="workspace" hidden>
+        <section class="case-head">
+          <div>
+            <h1 id="case-title">Demande</h1>
+            <p id="case-sub"></p>
+          </div>
+          <div class="case-tags" id="case-tags"></div>
+        </section>
+
+        <div class="readonly" id="readonly" hidden>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+          <span id="readonly-text">Cette demande a déjà été traitée. Consultation seule.</span>
+        </div>
+
+        <ol class="stepper glass" id="stepper" aria-label="Étapes de vérification"></ol>
+
+        <div class="work">
+          <div>
+            <!-- ÉTAPE 1 -->
+            <section class="panel glass step" data-step="1" aria-labelledby="h1s">
+              <h2 id="h1s" tabindex="-1">Informations de la demande</h2>
+              <p class="intro">Relisez les informations déclarées par le demandeur avant de lancer les contrôles.</p>
+              <dl class="fields" id="req-fields"></dl>
+              <div class="actions">
+                <a class="btn btn-text" href="officer-dashboard.html">Retour aux demandes</a>
+                <button class="btn btn-solid push" type="button" data-go="2">Vérifier la pièce d'identité</button>
+              </div>
+            </section>
+
+            <!-- ÉTAPE 2 -->
+            <section class="panel glass step" data-step="2" aria-labelledby="h2s" hidden>
+              <h2 id="h2s" tabindex="-1">Contrôle de la pièce d'identité</h2>
+              <p class="intro">Le numéro déclaré est comparé au fichier des pièces d'identité (simulation en attendant l'intégration réelle).</p>
+              <dl class="fields">
+                <div class="fld"><dt>Numéro déclaré</dt><dd id="id-number">—</dd></div>
+                <div class="fld"><dt>Nom déclaré</dt><dd id="id-declared">—</dd></div>
+                <div class="fld"><dt>Nom sur la pièce</dt><dd id="id-name">Non contrôlé</dd></div>
+              </dl>
+              <div id="id-result" aria-live="polite"></div>
+              <div class="actions">
+                <button class="btn btn-text" type="button" data-go="1">Précédent</button>
+                <button class="btn btn-line push" type="button" id="id-check">Lancer le contrôle</button>
+                <button class="btn btn-solid" type="button" data-go="3" id="id-next" disabled>Continuer vers les photos</button>
+              </div>
+            </section>
+
+            <!-- ÉTAPE 3 -->
+            <section class="panel glass step" data-step="3" aria-labelledby="h3s" hidden>
+              <h2 id="h3s" tabindex="-1">Comparaison des photos</h2>
+              <p class="intro">Comparez le selfie pris en direct avec la photo de la pièce d'identité. Cliquez sur une image pour l'agrandir.</p>
+              <div class="photos">
+                <figure class="photo" style="margin:0">
+                  <h3>Selfie en direct</h3>
+                  <button type="button" data-zoom="selfie" aria-label="Agrandir le selfie"><img id="img-selfie" alt="Selfie du demandeur"></button>
+                </figure>
+                <figure class="photo" style="margin:0">
+                  <h3>Pièce d'identité</h3>
+                  <button type="button" data-zoom="id" aria-label="Agrandir la pièce d'identité"><img id="img-id" alt="Pièce d'identité du demandeur"></button>
+                </figure>
+              </div>
+              <fieldset class="choice-group">
+                <legend>La personne du selfie correspond-elle à la pièce ?</legend>
+                <div class="choices">
+                  <div class="choice c-ok"><input type="radio" name="photo" id="ph-yes" value="yes"><label for="ph-yes"><span class="mark">Oui</span><small>Même personne</small></label></div>
+                  <div class="choice c-warn"><input type="radio" name="photo" id="ph-doubt" value="doubt"><label for="ph-doubt"><span class="mark">Doute</span><small>Photo peu lisible</small></label></div>
+                  <div class="choice c-ko"><input type="radio" name="photo" id="ph-no" value="no"><label for="ph-no"><span class="mark">Non</span><small>Personnes différentes</small></label></div>
+                </div>
+              </fieldset>
+              <div class="actions">
+                <button class="btn btn-text" type="button" data-go="2">Précédent</button>
+                <button class="btn btn-solid push" type="button" data-go="4" id="photo-next" disabled>Rechercher dans le registre</button>
+              </div>
+            </section>
+
+            <!-- ÉTAPE 4 -->
+            <section class="panel glass step" data-step="4" aria-labelledby="h4s" hidden>
+              <h2 id="h4s" tabindex="-1">Recherche dans le registre d'état civil</h2>
+              <p class="intro">Retrouvez l'acte d'origine dans la base du centre. Les écarts avec la demande sont signalés ligne par ligne.</p>
+              <form class="search-row" id="civil-form">
+                <div class="field"><label for="s-name">Nom complet</label><input id="s-name" type="text" autocomplete="off"></div>
+                <div class="field"><label for="s-id">Numéro de pièce</label><input id="s-id" type="text" autocomplete="off" inputmode="numeric"></div>
+                <button class="btn btn-line" type="submit" id="civil-btn">Rechercher</button>
+              </form>
+              <div id="civil-result" aria-live="polite"></div>
+              <div class="actions">
+                <button class="btn btn-text" type="button" data-go="3">Précédent</button>
+                <button class="btn btn-solid push" type="button" data-go="5" id="civil-next" disabled>Passer à la décision</button>
+              </div>
+            </section>
+
+            <!-- ÉTAPE 5 -->
+            <section class="panel glass step" data-step="5" aria-labelledby="h5s" hidden>
+              <h2 id="h5s" tabindex="-1">Décision</h2>
+              <p class="intro">Récapitulatif des contrôles, puis votre décision. Un motif est obligatoire pour un rejet ou une escalade : il est communiqué au demandeur en cas de rejet.</p>
+              <ul class="recap" id="recap"></ul>
+
+              <form id="decision-form" novalidate>
+                <fieldset class="choice-group" style="margin-top:0">
+                  <legend>Votre décision</legend>
+                  <div class="choices">
+                    <div class="choice c-ok"><input type="radio" name="decision" id="d-accept" value="accepted"><label for="d-accept"><span class="mark">Valider</span><small>Transmettre au maire pour signature</small></label></div>
+                    <div class="choice c-ko"><input type="radio" name="decision" id="d-reject" value="rejected"><label for="d-reject"><span class="mark">Rejeter</span><small>Le demandeur est notifié du motif</small></label></div>
+                    <div class="choice c-esc"><input type="radio" name="decision" id="d-escalate" value="escalated"><label for="d-escalate"><span class="mark">Escalader</span><small>Examen approfondi</small></label></div>
+                  </div>
+                </fieldset>
+                <div class="warn-box" id="accept-warn" hidden></div>
+
+                <div style="margin-top:1.3rem">
+                  <div class="field" id="reason-field" hidden>
+                    <label for="reason">Motif (obligatoire)</label>
+                    <textarea id="reason" aria-describedby="reason-err"></textarea>
+                    <p class="err" id="reason-err">Indiquez le motif de votre décision.</p>
+                  </div>
+                  <div class="field">
+                    <label for="notes">Note interne (facultative, non visible par le demandeur)</label>
+                    <textarea id="notes" placeholder="Observations pour vos collègues ou le maire"></textarea>
+                  </div>
+                </div>
+
+                <div class="actions">
+                  <button class="btn btn-text" type="button" data-go="4">Précédent</button>
+                  <button class="btn btn-solid push" type="submit" id="submit-btn" disabled>Enregistrer la décision</button>
+                </div>
+              </form>
+            </section>
+          </div>
+
+          <!-- Panneau dossier -->
+          <aside class="side-panel glass" aria-labelledby="sp-title">
+            <h2 id="sp-title">Dossier</h2>
+            <div class="who">
+              <img id="sp-photo" alt="">
+              <div><strong id="sp-name">—</strong><span id="sp-ref">—</span></div>
+            </div>
+            <dl class="mini" id="sp-fields"></dl>
+            <div class="notes-box"><p>Toutes vos actions sur ce dossier sont horodatées et associées à votre compte.</p></div>
+          </aside>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Confirmation -->
+<dialog id="confirm-dlg" aria-labelledby="cf-title">
+  <form method="dialog" class="dlg">
+    <h2 id="cf-title">Confirmer la décision</h2>
+    <p id="cf-text"></p>
+    <div class="actions">
+      <button class="btn btn-text" value="cancel">Annuler</button>
+      <button class="btn btn-solid push" value="ok" id="cf-ok">Confirmer</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Zoom image -->
+<dialog id="zoom-dlg" class="zoom" aria-label="Image agrandie">
+  <form method="dialog"><button class="btn btn-solid close" value="close">Fermer</button></form>
+  <img id="zoom-img" alt="">
+</dialog>
+
+<script>
+/* =========================================================
+   DONNÉES D'EXEMPLE (plus tard : API Laravel / Supabase)
+   Dates au format ISO pour un affichage localisé fiable.
+   ========================================================= */
+const CENTERS = {
+  'yaounde-1':'Yaoundé I','yaounde-2':'Yaoundé II','yaounde-3':'Yaoundé III','yaounde-4':'Yaoundé IV',
+  'yaounde-5':'Yaoundé V','yaounde-6':'Yaoundé VI','yaounde-7':'Yaoundé VII'
+};
+const STATUS = {
+  pending:{label:'En attente'}, verified:{label:'Vérifiée'}, escalated:{label:'Escaladée'},
+  rejected:{label:'Rejetée'}, completed:{label:'Terminée'}
+};
+
+/* Image de remplacement générée localement (évite toute dépendance externe) */
+const ph = (label, w, h, hue) => 'data:image/svg+xml;utf8,' + encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+   <rect width="100%" height="100%" fill="hsl(${hue},45%,90%)"/>
+   <circle cx="${w/2}" cy="${h*0.42}" r="${Math.min(w,h)*0.18}" fill="hsl(${hue},35%,72%)"/>
+   <rect x="${w*0.27}" y="${h*0.64}" width="${w*0.46}" height="${h*0.28}" rx="${w*0.2}" fill="hsl(${hue},35%,72%)"/>
+   <text x="50%" y="${h-14}" font-family="sans-serif" font-size="16" fill="hsl(${hue},30%,40%)" text-anchor="middle">${label}</text></svg>`);
+
+const requests = [
+  {
+    id:'PHX-00000001', applicantName:'Jean Pheno', applicantDob:'1998-03-15', applicantPlace:'Yaoundé',
+    applicantId:'123456789', applicantPhone:'+237 6 00 00 00 00', applicantEmail:'jean@example.com',
+    documentType:'Acte de naissance', reason:'Perte', center:'yaounde-3', status:'pending', submittedAt:'2026-09-10T10:20:00',
+    selfieImage:ph('Selfie',400,500,270), idImage:ph('Pièce d\'identité',500,320,250),
+    policeMatch:{ nameOnId:'Jean Pheno', match:true },
+    civilRecord:{ name:'Jean Pheno', dob:'1998-03-15', place:'Yaoundé', idNumber:'123456789', actNumber:'YDE3/1998/00412', recordStatus:'Actif' }
+  },
+  {
+    id:'PHX-00000003', applicantName:'Paul Mohamed', applicantDob:'1990-07-02', applicantPlace:'Yaoundé',
+    applicantId:'555222111', applicantPhone:'+237 6 70 00 00 00', applicantEmail:'paul@example.com',
+    documentType:'Acte de naissance', reason:'Détérioration', center:'yaounde-3', status:'pending', submittedAt:'2026-09-05T09:15:00',
+    selfieImage:ph('Selfie',400,500,300), idImage:ph('Pièce d\'identité',500,320,220),
+    policeMatch:{ nameOnId:'Paul Mohamadou', match:false },
+    civilRecord:{ name:'Paul Mohamed', dob:'1990-07-12', place:'Yaoundé', idNumber:'555222111', actNumber:'YDE3/1990/01877', recordStatus:'Actif' }
+  },
+  {
+    id:'PHX-00000002', applicantName:'Marie Ngoa', applicantDob:'1995-01-02', applicantPlace:'Bafoussam',
+    applicantId:'987654321', applicantPhone:'+237 6 70 00 00 01', applicantEmail:'marie@example.com',
+    documentType:'Acte de naissance', reason:'Perte', center:'yaounde-2', status:'verified', submittedAt:'2026-09-08T14:05:00',
+    selfieImage:ph('Selfie',400,500,280), idImage:ph('Pièce d\'identité',500,320,260),
+    policeMatch:{ nameOnId:'Marie Ngoa', match:true },
+    civilRecord:{ name:'Marie Ngoa', dob:'1995-01-02', place:'Bafoussam', idNumber:'987654321', actNumber:'BAF1/1995/00093', recordStatus:'Actif' }
+  }
+];
+
+/* =========================================================
+   UTILITAIRES & ÉTAT
+   ========================================================= */
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '—').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate = iso => iso ? new Date(iso + (iso.length === 10 ? 'T00:00:00' : '')).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}) : '—';
+const norm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+
+const STEPS = [
+  { n:1, label:'Demande',   sub:'Informations' },
+  { n:2, label:'Identité',  sub:'Contrôle de la pièce' },
+  { n:3, label:'Photos',    sub:'Selfie et pièce' },
+  { n:4, label:'Registre',  sub:'Acte d\'origine' },
+  { n:5, label:'Décision',  sub:'Valider, rejeter, escalader' }
+];
+
+const state = {
+  req:null, step:1, reached:1, readonly:false,
+  idCheck:null,      // null | true | false
+  photo:null,        // null | 'yes' | 'doubt' | 'no'
+  civil:null         // null | { found:bool, mismatches:[] }
+};
+
+/* =========================================================
+   CHARGEMENT
+   ========================================================= */
+function showError(title, text){
+  $('error-title').textContent = title; $('error-text').textContent = text;
+  $('state-error').hidden = false; $('workspace').hidden = true;
+}
+
+function load(){
+  const id = new URLSearchParams(location.search).get('id');
+  if (!id) return showError('Aucun dossier sélectionné', 'Ouvrez une demande depuis la liste pour la vérifier.');
+  const req = requests.find(r => r.id === id);
+  if (!req) return showError('Dossier introuvable', `Aucune demande ne correspond à la référence ${id}.`);
+
+  state.req = req;
+  state.readonly = req.status !== 'pending' && req.status !== 'escalated';
+  $('workspace').hidden = false;
+  document.title = `${req.id} — Vérification — PHOENIX`;
+  $('crumb-ref').textContent = req.id;
+
+  // En-tête
+  $('case-title').textContent = `${req.documentType} · ${req.applicantName}`;
+  $('case-sub').textContent = `Référence ${req.id}, déposée le ${fmtDate(req.submittedAt.slice(0,10))}`;
+  $('case-tags').innerHTML = [STATUS[req.status]?.label || req.status, CENTERS[req.center] || req.center, req.reason]
+    .map(t => `<span class="tag">${esc(t)}</span>`).join('');
+
+  if (state.readonly){
+    $('readonly').hidden = false;
+    $('readonly-text').textContent = `Cette demande est au statut « ${STATUS[req.status]?.label} ». Consultation seule, aucune décision possible.`;
+  }
+
+  // Étape 1
+  const f = [
+    ['Nom complet', req.applicantName], ['Date de naissance', fmtDate(req.applicantDob)], ['Lieu de naissance', req.applicantPlace],
+    ['N° de pièce d\'identité', req.applicantId], ['Téléphone', req.applicantPhone], ['E-mail', req.applicantEmail],
+    ['Document demandé', req.documentType], ['Motif', req.reason], ['Centre', CENTERS[req.center] || req.center]
+  ];
+  $('req-fields').innerHTML = f.map(([k,v]) => `<div class="fld"><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('');
+
+  // Étape 2
+  $('id-number').textContent = req.applicantId;
+  $('id-declared').textContent = req.applicantName;
+
+  // Étape 3
+  $('img-selfie').src = req.selfieImage; $('img-id').src = req.idImage;
+
+  // Étape 4
+  $('s-name').value = req.applicantName; $('s-id').value = req.applicantId;
+
+  // Panneau latéral
+  $('sp-photo').src = req.selfieImage;
+  $('sp-name').textContent = req.applicantName;
+  $('sp-ref').textContent = req.id;
+  $('sp-fields').innerHTML = [
+    ['Né(e) le', fmtDate(req.applicantDob)], ['À', req.applicantPlace], ['Pièce', req.applicantId], ['Téléphone', req.applicantPhone]
+  ].map(([k,v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('');
+
+  if (state.readonly){ $('submit-btn').disabled = true; document.querySelectorAll('[name="decision"]').forEach(i => i.disabled = true); }
+  goTo(1, false);
+}
+
+/* =========================================================
+   NAVIGATION ENTRE ÉTAPES
+   ========================================================= */
+function stepStatus(n){
+  if (n === 2 && state.idCheck !== null) return state.idCheck ? 'done' : 'flag';
+  if (n === 3 && state.photo) return state.photo === 'yes' ? 'done' : 'flag';
+  if (n === 4 && state.civil) return state.civil.found && !state.civil.mismatches.length ? 'done' : 'flag';
+  if (n === 1 && state.reached > 1) return 'done';
+  return '';
+}
+
+function renderStepper(){
+  $('stepper').innerHTML = STEPS.map(s => {
+    const st = stepStatus(s.n);
+    const active = s.n === state.step;
+    const canGo = s.n <= state.reached;
+    const mark = st === 'done' ? '✓' : st === 'flag' ? '!' : s.n;
+    return `<li class="${st} ${active ? 'active' : ''}">
+      <button type="button" data-go="${s.n}" ${canGo ? '' : 'disabled'} ${active ? 'aria-current="step"' : ''}>
+        <span class="num" aria-hidden="true">${mark}</span>
+        <span><span class="lbl">${esc(s.label)}</span><span class="sub">${esc(s.sub)}</span></span>
+        <span class="sr-only">${st === 'done' ? '(terminée)' : st === 'flag' ? '(point d\'attention)' : ''}</span>
+      </button></li>`;
+  }).join('');
+}
+
+function goTo(n, focus = true){
+  state.step = n; state.reached = Math.max(state.reached, n);
+  document.querySelectorAll('.step').forEach(s => s.hidden = Number(s.dataset.step) !== n);
+  if (n === 5) renderRecap();
+  renderStepper();
+  if (focus){
+    const h = document.querySelector(`.step[data-step="${n}"] h2`);
+    h.focus({ preventScroll:true });
+    window.scrollTo({ top:0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  }
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-go]');
+  if (b && !b.disabled) goTo(Number(b.dataset.go));
+});
+
+/* =========================================================
+   ÉTAPE 2 — contrôle de la pièce (simulation)
+   ========================================================= */
+$('id-check').addEventListener('click', () => {
+  const btn = $('id-check');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner" aria-hidden="true" style="border-color:rgba(91,15,176,.3);border-top-color:var(--violet-700)"></span> Contrôle en cours…';
+  $('id-result').innerHTML = '';
+  setTimeout(() => {
+    const pm = state.req.policeMatch;
+    const match = !!(pm && pm.match);
+    state.idCheck = match;
+    $('id-name').textContent = pm ? pm.nameOnId : 'Aucune correspondance';
+    $('id-result').innerHTML = match
+      ? `<div class="result ok"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>
+         <div><strong>Pièce reconnue</strong>Le numéro correspond bien au nom déclaré.</div></div>`
+      : `<div class="result ko"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+         <div><strong>Correspondance incertaine</strong>Le nom enregistré pour ce numéro diffère du nom déclaré. Vous pouvez poursuivre, ce point sera rappelé à la décision.</div></div>`;
+    btn.disabled = false; btn.textContent = 'Relancer le contrôle';
+    $('id-next').disabled = false;
+    renderStepper();
+  }, 1000);
+});
+
+/* =========================================================
+   ÉTAPE 3 — photos
+   ========================================================= */
+document.querySelectorAll('[name="photo"]').forEach(r => r.addEventListener('change', () => {
+  state.photo = r.value; $('photo-next').disabled = false; renderStepper();
+}));
+document.querySelectorAll('[data-zoom]').forEach(b => b.addEventListener('click', () => {
+  const src = b.dataset.zoom === 'selfie' ? state.req.selfieImage : state.req.idImage;
+  $('zoom-img').src = src; $('zoom-img').alt = b.querySelector('img').alt; $('zoom-dlg').showModal();
+}));
+
+/* =========================================================
+   ÉTAPE 4 — registre d'état civil (simulation) + comparaison
+   ========================================================= */
+$('civil-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const r = state.req, rec = r.civilRecord;
+  const qName = norm($('s-name').value), qId = norm($('s-id').value);
+  const found = rec && ((qId && norm(rec.idNumber) === qId) || (qName && norm(rec.name) === qName));
+
+  if (!found){
+    state.civil = { found:false, mismatches:[] };
+    $('civil-result').innerHTML = `<div class="result ko"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      <div><strong>Aucun acte trouvé</strong>Vérifiez l'orthographe du nom ou le numéro. Sans acte d'origine, la réédition ne peut pas être validée.</div></div>`;
+  } else {
+    const rows = [
+      ['Nom complet', r.applicantName, rec.name],
+      ['Date de naissance', fmtDate(r.applicantDob), fmtDate(rec.dob)],
+      ['Lieu de naissance', r.applicantPlace, rec.place],
+      ['N° de pièce', r.applicantId, rec.idNumber]
+    ];
+    const mismatches = rows.filter(([,a,b]) => norm(a) !== norm(b)).map(x => x[0]);
+    state.civil = { found:true, mismatches };
+    $('civil-result').innerHTML = `
+      <div class="result ${mismatches.length ? 'ko' : 'ok'}">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">${mismatches.length ? '<path d="M12 8v5M12 17h.01"/><circle cx="12" cy="12" r="9"/>' : '<path d="M5 12l5 5 9-10"/>'}</svg>
+        <div><strong>Acte ${esc(rec.actNumber)} trouvé</strong>${mismatches.length
+          ? `${mismatches.length} écart${mismatches.length > 1 ? 's' : ''} avec la demande : ${esc(mismatches.join(', ').toLowerCase())}.`
+          : 'Toutes les informations concordent avec la demande.'} Statut de l'acte : ${esc(rec.recordStatus)}.</div>
+      </div>
+      <div class="compare-wrap"><table class="compare">
+        <caption class="sr-only">Comparaison entre la demande et le registre</caption>
+        <thead><tr><th scope="col">Champ</th><th scope="col">Déclaré</th><th scope="col">Registre</th><th scope="col">Concordance</th></tr></thead>
+        <tbody>${rows.map(([k,a,b]) => { const ok = norm(a) === norm(b);
+          return `<tr class="${ok ? '' : 'diff'}"><td>${esc(k)}</td><td>${esc(a)}</td><td>${esc(b)}</td>
+                  <td class="m ${ok ? 'yes' : 'no'}">${ok ? '✓ Identique' : '✕ Différent'}</td></tr>`; }).join('')}
+        </tbody></table></div>`;
+  }
+  $('civil-next').disabled = false;
+  renderStepper();
+});
+
+/* =========================================================
+   ÉTAPE 5 — décision
+   ========================================================= */
+function checks(){
+  return [
+    { label:'Pièce d\'identité', step:2,
+      st: state.idCheck === null ? 'todo' : state.idCheck ? 'ok' : 'ko',
+      txt: state.idCheck === null ? 'Non contrôlée' : state.idCheck ? 'Reconnue' : 'Correspondance incertaine' },
+    { label:'Photos', step:3,
+      st: !state.photo ? 'todo' : state.photo === 'yes' ? 'ok' : 'ko',
+      txt: !state.photo ? 'Non comparées' : { yes:'Même personne', doubt:'Doute', no:'Personnes différentes' }[state.photo] },
+    { label:'Registre', step:4,
+      st: !state.civil ? 'todo' : state.civil.found && !state.civil.mismatches.length ? 'ok' : 'ko',
+      txt: !state.civil ? 'Non consulté' : !state.civil.found ? 'Acte introuvable'
+         : state.civil.mismatches.length ? `${state.civil.mismatches.length} écart(s)` : 'Concordant' }
+  ];
+}
+function renderRecap(){
+  $('recap').innerHTML = checks().map(c => `
+    <li class="${c.st}"><span class="ic" aria-hidden="true">${c.st === 'ok' ? '✓' : c.st === 'ko' ? '!' : '·'}</span>
+      <span>${esc(c.label)} : ${esc(c.txt)}</span>
+      <button type="button" data-go="${c.step}">Revoir</button></li>`).join('');
+  updateDecision();
+}
+
+function updateDecision(){
+  const d = document.querySelector('[name="decision"]:checked')?.value;
+  const needReason = d === 'rejected' || d === 'escalated';
+  $('reason-field').hidden = !needReason;
+  $('reason').placeholder = d === 'rejected'
+    ? 'Ce motif sera communiqué au demandeur. Soyez précis et factuel.'
+    : 'Expliquez ce qui nécessite un examen approfondi.';
+  $('submit-btn').disabled = state.readonly || !d;
+
+  // Validation d'un dossier incomplet ou avec anomalies : avertissement non bloquant
+  const cs = checks();
+  const problems = cs.filter(c => c.st !== 'ok');
+  const warn = $('accept-warn');
+  if (d === 'accepted' && problems.length){
+    warn.hidden = false;
+    warn.textContent = `Attention : ${problems.map(p => `${p.label.toLowerCase()} (${p.txt.toLowerCase()})`).join(', ')}. Une escalade est peut-être plus appropriée.`;
+  } else warn.hidden = true;
+}
+document.querySelectorAll('[name="decision"]').forEach(r => r.addEventListener('change', updateDecision));
+$('reason').addEventListener('input', () => $('reason-field').classList.remove('invalid'));
+
+const LABELS = { accepted:'validée et transmise au maire', rejected:'rejetée', escalated:'escaladée pour examen approfondi' };
+
+$('decision-form').addEventListener('submit', e => {
+  e.preventDefault();
+  if (state.readonly) return;
+  const d = document.querySelector('[name="decision"]:checked')?.value;
+  if (!d) return;
+  const reason = $('reason').value.trim();
+  if ((d === 'rejected' || d === 'escalated') && !reason){
+    $('reason-field').classList.add('invalid'); $('reason').focus(); return;
+  }
+  $('cf-text').textContent = `La demande ${state.req.id} de ${state.req.applicantName} sera ${LABELS[d]}.` +
+    (d === 'rejected' ? ' Le demandeur recevra le motif indiqué.' : '') + ' Cette action ne peut pas être annulée depuis cet écran.';
+  $('cf-ok').className = 'btn push ' + (d === 'rejected' ? 'btn-danger' : 'btn-solid');
+  $('confirm-dlg').showModal();
+});
+
+$('confirm-dlg').addEventListener('close', () => {
+  if ($('confirm-dlg').returnValue !== 'ok') return;
+  const d = document.querySelector('[name="decision"]:checked').value;
+  const payload = {
+    requestId: state.req.id, decision: d,
+    reason: $('reason').value.trim() || null, notes: $('notes').value.trim() || null,
+    checks: { idCheck: state.idCheck, photo: state.photo, civil: state.civil },
+    decidedAt: new Date().toISOString()
+  };
+  // TODO : envoyer `payload` à l'API (POST /api/requests/{id}/decision), avec l'identité de l'officier côté serveur.
+  console.log('Décision à envoyer :', payload);
+
+  const colors = { accepted:'var(--ok)', rejected:'var(--danger)', escalated:'var(--esc)' };
+  $('done-icon').style.background = colors[d];
+  $('done-icon').textContent = d === 'accepted' ? '✓' : d === 'rejected' ? '✕' : '↑';
+  $('done-title').textContent = 'Décision enregistrée';
+  $('done-text').textContent = `La demande ${state.req.id} a été ${LABELS[d]}.`;
+  const next = requests.find(r => r.status === 'pending' && r.id !== state.req.id);
+  if (next) $('done-next').href = '?id=' + encodeURIComponent(next.id); else $('done-next').hidden = true;
+  $('workspace').hidden = true; $('state-done').hidden = false; $('state-done').focus();
+});
+
+/* =========================================================
+   MENU MOBILE
+   ========================================================= */
+const sidebar = $('sidebar'), scrim = $('scrim'), toggle = $('menu-toggle');
+function setMenu(open){
+  sidebar.classList.toggle('open', open); scrim.classList.toggle('open', open);
+  toggle.setAttribute('aria-expanded', open); toggle.setAttribute('aria-label', open ? 'Fermer le menu' : 'Ouvrir le menu');
+}
+toggle.addEventListener('click', () => setMenu(!sidebar.classList.contains('open')));
+scrim.addEventListener('click', () => setMenu(false));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') setMenu(false); });
+
+load();
+</script>
+</body>
+</html>
