@@ -31,6 +31,7 @@ return [
         'reason_min' => 'The reason has to be explicit enough: at least 10 characters.',
         'cannot_accept_incomplete' => 'You cannot accept this request until all four checks have a result. Missing: :steps.',
         'decision_recorded' => 'Request :reference: :decision.',
+        'next_open' => 'Open :reference',
         'next_waiting' => 'Another request is waiting to be taken on.',
         'result_required' => 'Record the result of your check before continuing.',
         'run_facial_first' => 'Run the facial comparison before concluding on the photographs.',

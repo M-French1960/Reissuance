@@ -13,6 +13,8 @@ return [
         'assignment' => 'Assignation',
         'assignment_all' => 'Toutes',
         'submitted_since' => 'Déposées depuis le',
+        'waiting' => 'Attente',
+        'waiting_over' => "N'attend plus",
         'assigned_to' => 'Prise en charge',
         'assigned_to_you' => 'Vous',
         'unassigned' => 'Non assignée',

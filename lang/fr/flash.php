@@ -23,6 +23,7 @@ return [
         'reason_min' => 'Le motif doit être suffisamment explicite : au moins 10 caractères.',
         'cannot_accept_incomplete' => "Vous ne pouvez pas accepter cette demande tant que les quatre vérifications n'ont pas de résultat. Il manque : :steps.",
         'decision_recorded' => 'Demande :reference : :decision.',
+        'next_open' => 'Ouvrir :reference',
         'next_waiting' => 'Une demande suivante est en attente de prise en charge.',
         'result_required' => 'Indiquez le résultat de votre contrôle avant de continuer.',
         'run_facial_first' => 'Lancez la comparaison faciale avant de conclure sur les photographies.',

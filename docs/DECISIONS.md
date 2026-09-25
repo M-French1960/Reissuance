@@ -3947,3 +3947,87 @@ h1 à h3.
 
 Vérifié indépendamment au navigateur sur **vingt-cinq écrans**, la galerie de
 composants comprise : aucun saut, un seul `h1` partout.
+
+---
+
+## D-082 — Ce que les maquettes officier apportaient et qui manquait encore
+
+Le dossier `new pages` n'a pas bougé : toujours les quatre mêmes fichiers, tous
+intégrés en D-080. Mais deux éléments de la maquette du poste de l'officier
+n'étaient pas passés dans le produit, et tous deux comblent un manque réel.
+
+### « Dossier suivant » : la moitié de la fonction existait déjà
+
+`DecisionController` cherchait la demande suivante à prendre en charge, **puis
+jetait le résultat** :
+
+```php
+$suivante = ReissuanceRequest::query()->where(...)->first();
+
+if ($suivante !== null) {
+    return redirect()->route('officer.queue')
+        ->with('status', $message.' '.__('flash.officer.next_waiting'));
+}
+```
+
+La requête ne servait que de booléen pour choisir un message. L'officier lisait
+« une autre demande attend d'être prise en charge » et devait la retrouver
+lui-même dans la file. Le §8.2 du brief demande pourtant « l'avancement dans la
+file sans retour au tableau de bord », et le commentaire du code citait cette
+exigence au-dessus du code qui ne la remplissait pas.
+
+**Le chaînon manquant était ailleurs.** `x-alert` sait afficher un lien depuis
+toujours — c'est le « aucune impasse » du §8.1 — mais `x-flash` ne le lui
+passait pas. Un message qui annonce quelque chose à faire sans donner le moyen
+de le faire *est* une impasse. Le flash transmet maintenant `statusAction` et
+`statusActionLabel`, ce dont tout le reste du service profitera.
+
+**Le retour se fait toujours par la file, jamais directement sur le dossier
+suivant.** Un enchaînement automatique enverrait l'officier sur un dossier
+qu'il n'a pas choisi et lui ferait perdre le contexte de ce qu'il vient de
+décider. Le lien est une proposition.
+
+### « Attente » : la seule information qui permet de prioriser
+
+La file n'indiquait pas depuis combien de temps un demandeur attend. Trois
+précautions :
+
+- la durée se mesure **depuis le dépôt**, jamais depuis la prise en charge :
+  c'est le demandeur qui attend, pas le dossier, et une colonne dont le sens
+  changerait d'une ligne à l'autre serait un piège ;
+- une demande **signée, refusée ou annulée** n'affiche rien : elle n'attend
+  plus, et une durée y laisserait croire qu'elle est encore en cours ;
+- **aucun seuil n'est mis en couleur.** Signaler les dossiers trop vieux serait
+  utile, mais aucun délai n'est fixé — c'est la question D8, toujours ouverte.
+  Peindre en rouge au bout de N jours reviendrait à inventer un engagement de
+  service.
+
+La durée est absolue (« 1 semaine ») et non relative (« il y a 1 semaine ») :
+dans une colonne intitulée « Attente », la forme relative répète la colonne
+voisine.
+
+### Une faille dans ma propre règle typographique
+
+Le client a banni les tirets longs des interfaces, et `TypographyTest` les
+refuse. Il ne cherchait que le caractère U+2014. Or `&mdash;` s'écrit en ASCII
+et **s'affiche** en tiret long : la règle était contournable sans le vouloir, et
+je l'ai contournée moi-même en écrivant `&mdash;` dans la cellule vide de la
+colonne « Attente ».
+
+La règle porte sur ce qui arrive à l'écran, pas sur l'encodage choisi pour l'y
+mettre. Le test refuse maintenant `&mdash;`, `&#8212;` et `&#x2014;` autant que
+le caractère, vérifié en réintroduisant l'entité.
+
+### Ce qui n'a délibérément pas été repris
+
+- **« Dossier introuvable »** avec un bouton « Ouvrir le dossier d'exemple » :
+  l'application renvoie une vraie page 404, qui appartient au service depuis
+  D-073. Et un « dossier d'exemple » dans un poste de travail réel est une
+  invitation à confondre une démonstration avec un dossier.
+- **« Cette demande a déjà été traitée. Consultation seule. »** : l'application
+  distingue **trois** situations là où la maquette n'en voyait qu'une (D-055) —
+  à prendre en charge, tenue par un collègue nommé, ou sans titulaire. Garder
+  le message unique aurait été une régression.
+- **Un voyant de chargement sur les boutons d'envoi.** Il empêche le double
+  clic, mais l'application n'a pas de problème de double soumission ici, et
+  cela aurait ajouté du JavaScript à trois formulaires sans bénéfice mesuré.

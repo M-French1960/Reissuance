@@ -170,10 +170,29 @@ class DecisionController extends Controller
             'decision' => $decision->label(),
         ]);
 
+        /*
+         * LE LIEN VERS LA SUIVANTE, PAS SEULEMENT SA MENTION (D-082).
+         *
+         * `$suivante` etait calculee puis jetee : elle ne servait que de
+         * booleen pour choisir le message. L'officier lisait « une autre
+         * demande attend » et devait la retrouver lui-meme dans la file.
+         *
+         * Le retour se fait toujours par la FILE, jamais directement sur le
+         * dossier suivant : un enchainement automatique enverrait l'officier
+         * sur un dossier qu'il n'a pas choisi, et lui ferait perdre le
+         * contexte de ce qu'il vient de decider. Le lien est une proposition.
+         */
         if ($suivante !== null) {
             return redirect()
                 ->route('officer.queue')
-                ->with('status', $message.' '.__('flash.officer.next_waiting'));
+                ->with('status', $message.' '.__('flash.officer.next_waiting'))
+                ->with('statusAction', route('officer.verification.step', [
+                    'reissuanceRequest' => $suivante,
+                    'step' => 1,
+                ]))
+                ->with('statusActionLabel', __('flash.officer.next_open', [
+                    'reference' => $suivante->reference,
+                ]));
         }
 
         return redirect()->route('officer.queue')->with('status', $message);

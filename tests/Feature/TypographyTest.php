@@ -101,8 +101,22 @@ class TypographyTest extends TestCase
         }
 
         foreach ($this->fichiers(resource_path('views'), '.blade.php') as $fichier) {
-            if (str_contains($this->sansCommentaires((string) file_get_contents($fichier)), self::EM_DASH)) {
-                $fautifs[] = str_replace(resource_path('views').'/', '', $fichier);
+            $sans = $this->sansCommentaires((string) file_get_contents($fichier));
+
+            /*
+             * LES ENTITES COMPTENT AUTANT QUE LE CARACTERE.
+             *
+             * Ce test ne cherchait que U+2014. Or `&mdash;` s'ecrit en ASCII
+             * et s'AFFICHE en tiret long : la regle du client etait donc
+             * contournable sans le vouloir, et je l'ai contournee moi-meme en
+             * ecrivant `&mdash;` dans une cellule vide de la file (D-082).
+             * La regle porte sur ce qui arrive a l'ecran, pas sur l'encodage
+             * choisi pour l'y mettre.
+             */
+            foreach ([self::EM_DASH, '&mdash;', '&#8212;', '&#x2014;'] as $marqueur) {
+                if (str_contains($sans, $marqueur)) {
+                    $fautifs[] = str_replace(resource_path('views').'/', '', $fichier).' ('.$marqueur.')';
+                }
             }
         }
 

@@ -31,6 +31,17 @@
     };
 @endphp
 
+{{--
+    ET IL PEUT PORTER UNE ACTION (D-082).
+
+    `x-alert` sait depuis toujours afficher un lien — c'est le « aucune
+    impasse » du 8.1 — mais le flash ne le lui passait pas. Un message comme
+    « Décision enregistrée. Une autre demande attend d'être prise en charge. »
+    annoncait donc quelque chose a faire sans donner le moyen de le faire :
+    l'officier devait retrouver la demande suivante dans la file a la main.
+--}}
 @if ($message)
-    <x-alert :variant="$variante">{{ $message }}</x-alert>
+    <x-alert :variant="$variante"
+             :action="session('statusAction')"
+             :action-label="session('statusActionLabel')">{{ $message }}</x-alert>
 @endif
