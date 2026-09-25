@@ -89,3 +89,45 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* =============================================================================
+   PAGE D'ACCUEIL — jetons propres au parcours d'entrée (D-078)
+   =============================================================================
+   Ces valeurs ne servent QUE la page d'accueil. Elles vivent ici plutôt que
+   dans home.css pour la même raison que le reste : une seule source.
+
+   Le violet de marque est conservé tel quel (--color-brand-700 vaut #4a148c,
+   la couleur de la maquette). Ce qui s'ajoute est la profondeur du héros et
+   les teintes de verre, qui n'existaient pas dans les écrans de travail.
+   ========================================================================== */
+:root {
+  --home-violet-900: #2a0a55;   /* fond profond du héros */
+  --home-violet-700: #5b0fb0;
+  --home-violet-500: #7b2ff2;   /* accent interactif */
+  --home-lilac-200: #e3d6ff;
+  --home-page: #f3f2f9;         /* fond clair des sections */
+
+  /* Le verre, en deux déclinaisons : sur fond sombre et sur fond clair. */
+  --home-glass-dark: rgb(255 255 255 / 0.10);
+  --home-glass-dark-border: rgb(255 255 255 / 0.28);
+  --home-glass-light: rgb(255 255 255 / 0.58);
+  --home-glass-light-border: rgb(255 255 255 / 0.85);
+
+  --home-focus: #ffd166;
+
+  --home-r-lg: 22px;
+  --home-r-md: 14px;
+  --home-r-sm: 10px;
+
+  /*
+     Deux familles, servies depuis ce serveur.
+
+     PAS DE POLICE DISTANTE : la politique de sécurité déclare `font-src
+     'self'`, et une requête vers un tiers sur la première page du service
+     ferait fuir l'adresse IP de chaque visiteur vers ce tiers. Les deux
+     fichiers sont des variables, sous-ensemble latin, 90 Ko à eux deux,
+     sous licence SIL OFL dont le texte accompagne les fichiers.
+  */
+  --home-font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --home-font-body: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}

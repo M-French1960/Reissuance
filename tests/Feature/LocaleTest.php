@@ -26,7 +26,7 @@ class LocaleTest extends TestCase
     {
         $this->get(route('home'))
             ->assertOk()
-            ->assertSee('Civil status certificate reissue')
+            ->assertSee('Your lost birth certificate')
             ->assertSee('<html lang="en"', false);
     }
 
@@ -38,7 +38,7 @@ class LocaleTest extends TestCase
 
         $this->get(route('home'))
             ->assertOk()
-            ->assertSee('Demandez une nouvelle copie de votre acte de naissance', false)
+            ->assertSee('Votre acte de naissance perdu', false)
             ->assertSee('<html lang="fr"', false);
 
         // Et sur une autre page, sans avoir a rechoisir.

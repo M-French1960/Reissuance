@@ -51,6 +51,47 @@ Aucune étape de compilation, aucune dépendance tierce chargée par le
 navigateur : c'est ce que valait la décision D-010 (HTML et CSS écrits à la
 main).
 
+### 2.1 La page d'accueil se pèse à part (D-078)
+
+Elle ne charge **pas** `app.css` : la maquette retenue porte sa propre coquille,
+et un visiteur n'a besoin d'aucune règle des écrans de travail. Elle charge en
+revanche deux polices, ce que le reste du service ne fait pas.
+
+| Ressource | Brut | Gzip |
+|---|---:|---:|
+| HTML (anglais) | 26 707 o | 5 197 o |
+| `css/tokens.css` | 5 950 o | 2 518 o |
+| `css/home.css` | 23 749 o | 6 571 o |
+| `js/home.js` | 2 288 o | 1 072 o |
+| `js/language-switch.js` | 704 o | 393 o |
+| `fonts/fraunces-latin.woff2` | 33 096 o | déjà compressé |
+| `fonts/manrope-latin.woff2` | 24 836 o | déjà compressé |
+| **Première visite** | **117 330 o** | **73 683 o** |
+
+Le CSS de l'accueil reste dans le budget du §8.5 : **9 089 o** compressés pour
+50 000, et le JavaScript **1 465 o** pour 100 000.
+
+**Les polices coûtent 57 932 octets, soit 78 % du poids de la première visite.**
+C'est le poste le plus lourd du projet, et il est là pour l'apparence, pas pour
+la fonction. Trois choses le rendent acceptable, et une quatrième le rend
+réversible :
+
+1. Elles sont servies **depuis ce serveur**. Les charger chez un tiers aurait
+   fait fuir l'adresse IP de chaque visiteur du service, et la politique de
+   sécurité (`font-src 'self'`) l'interdit de toute façon.
+2. `font-display: swap` : le texte s'affiche immédiatement dans la police
+   système, puis bascule. **Personne n'attend 57 Ko pour lire la première
+   phrase.**
+3. Fraunces est passée de 67 304 à 33 096 octets en figeant son axe de taille
+   optique, qui en pesait la moitié (`scripts/fonts-instance.py`). Manrope n'a
+   pas été retouchée : y restreindre les graisses ne gagnait que 900 octets.
+4. **Si le client juge le coût trop élevé**, deux lignes de `tokens.css`
+   suffisent à revenir à la pile système : `--home-font-display` et
+   `--home-font-body`. Rien d'autre ne change. C'est un arbitrage d'apparence,
+   et il lui appartient.
+
+Aucune autre page du service ne paie ces 57 Ko.
+
 ---
 
 ## 3. Temps de réponse et poids des pages
@@ -66,6 +107,7 @@ Base peuplée, quatre requêtes réseau par page (HTML + 2 CSS + 1 JS) :
 | File de signature | 12 069 o | 32 ms | 53 ms | 36 ms |
 | Comptes | 79 663 o | 32 ms | 80 ms | 27 ms |
 | Journal d'audit | 32 320 o | 29 ms | 63 ms | 28 ms |
+| Accueil (D-078) | 26 707 o | 23 ms | — | — |
 
 **Le temps serveur ne dépasse jamais 41 ms** et ne varie pas avec le volume :
 toutes les listes paginent, aucune ne parcourt la table entière.

@@ -3552,3 +3552,126 @@ l'administrateur en français. Ce n'était **pas** l'application : mon script
 réutilisait un code TOTP dans la même fenêtre de 30 secondes, et la protection
 contre le rejeu le refusait. Vérifié avant de conclure, plutôt que porté au
 compte de l'application.
+
+---
+
+## D-078 — La page d'accueil livrée par le client, et ce qu'elle promettait
+
+Le client a fourni une maquette HTML complète et a demandé qu'elle serve de page
+d'accueil. Elle est belle, et elle a été reprise telle quelle dans sa
+composition, sa palette et son parcours. Ce qui suit est la liste de ce qui a dû
+changer pour qu'elle puisse être servie, et de ce qu'elle affirmait sans que ce
+soit vrai.
+
+### Elle ne se serait pas affichée
+
+Trois choses, qu'aucun test n'aurait vues parce que la page rend 200 dans les
+deux cas :
+
+- ses styles vivaient dans une balise `<style>` en ligne ;
+- son script vivait dans une balise `<script>` en ligne ;
+- ses polices venaient de Google Fonts.
+
+La politique de sécurité du projet déclare `style-src 'self'`,
+`script-src 'self'` et `font-src 'self'`, sans `unsafe-inline`. **Le navigateur
+aurait tout refusé, et la première page du service se serait affichée
+entièrement nue, sans mise en forme et sans JavaScript.** Ce n'est pas une
+hypothèse : Playwright a refusé mon propre `addStyleTag` pendant les mesures,
+avec le message de la CSP.
+
+Tout est sorti dans `public/css/home.css` et `public/js/home.js`. Les deux
+polices sont servies depuis ce serveur, avec leur licence SIL OFL à côté.
+
+### Ce qu'elle affirmait, et qui n'est pas vrai de ce logiciel
+
+Chaque point a été vérifié dans le code avant d'être retiré.
+
+| La maquette disait | Ce que fait l'application |
+|---|---|
+| « Vous êtes prévenu par SMS et e-mail » | `RequestStatusChanged::via()` renvoie `database` et `mail`. **Aucun SMS.** |
+| « Une déclaration de perte délivrée par le commissariat » | `AttachmentController` n'accepte que `selfie` et `id_document`. |
+| Un champ de suivi public, `PHX-2026-004218` | Aucune route publique de suivi, et le format réel est `PHX-XXXX-XXXX` (`ReissuanceRequest::generateReference()`). |
+| Actes de mariage et de décès, « Bientôt » | Personne n'a fixé de date. Ils sont donnés pour ce qu'ils sont : non traités ici. |
+| Deux réponses de FAQ « [À compléter : …] » | Le délai n'est pas publié, et la page dit pourquoi (question D8, sans réponse). Le tarif est un réglage, et la page dit qu'il est affiché avant tout paiement. |
+| « Vous faites la demande pour un proche ? » | Le formulaire ne porte aucun champ de filiation ni de procuration. Remplacé par une affirmation vérifiable : chaque étape est enregistrée, on peut revenir. |
+| Confidentialité, Contact, Conditions d'utilisation | Trois pages qui n'existent pas. Le pied de page ne porte plus que des liens vivants. |
+| Un sélecteur de langue « visuel uniquement » | Remplacé par le vrai composant, qui écrit en session et sur le compte. |
+
+**Et ce qu'elle n'avait pas :** le bandeau de démonstration. Tant que le
+prestataire de signature est l'adaptateur de démonstration, les actes produits
+portent « sans valeur juridique ». Le laisser hors de l'accueil aurait laissé
+quelqu'un engager une démarche pour un document sans valeur (D-025, §10).
+
+### Trois défauts que la suite verte n'a pas vus
+
+Le premier est le plus instructif.
+
+**`.home a { color: inherit }` rendait les quatre boutons illisibles.** Cette
+règle pèse (0,1,1) en spécificité ; les modificateurs `.home-btn--primary` et
+`.home-btn--solid` pèsent (0,1,0). Le sélecteur générique gagnait. Mesuré dans
+le navigateur : **texte blanc sur fond blanc, rapport 1:1** pour « Créer un
+compte », « Commencer une demande » et « Commencer la demande » ; quasi-noir sur
+violet, autour de 2,4:1, pour le bouton du panneau latéral. Les appels à
+l'action de la page d'entrée du service étaient des pastilles vides. Aucun test
+ne pouvait le voir : le HTML était correct, les routes justes, la page rendait
+200.
+
+**La barre de navigation empruntait son contraste au décor.** Elle était
+violette à 45 % d'opacité : lisible sur le héros sombre, elle passait à
+**3,36:1** dès que le bandeau de démonstration, rouge clair, défilait dessous.
+Une barre fixe ne peut pas dépendre de ce qui passe derrière elle. Même défaut
+sur la carte-document du héros, où le texte blanc des valeurs tombait à
+**3,25:1** là où l'orbe violet clair passait derrière le verre. Les deux portent
+maintenant leur propre teinte.
+
+**Sans JavaScript, le menu du téléphone ne s'ouvrait pas.** La liste était
+`display: none` par défaut et seul le bouton pouvait la rouvrir : les quatre
+liens de section étaient donc perdus. Constaté dans un navigateur script
+désactivé, pas déduit. Le repli appartient maintenant au script seul, via un
+attribut qu'il pose sur `<html>` ; un test refuse toute règle qui cacherait la
+liste sans cette garde.
+
+### Comment le contraste a été mesuré, et pourquoi deux méthodes ont menti
+
+La première remontait le DOM à la recherche d'un fond opaque. Sur un dégradé,
+qui est un `background-image` et non un `background-color`, elle remontait
+jusqu'au `body` et déclarait « blanc sur blanc » tout le héros : **28 faux
+positifs.** La deuxième prenait une capture pleine page ; Chromium redimensionne
+la fenêtre pour la produire, la mise en page bouge, et les rectangles relevés
+ensuite ne correspondent plus à l'image. La troisième capture chaque élément
+pour lui-même, texte rendu transparent, et retient la **couleur dominante** de
+la zone — les extrêmes suffisaient à faire tomber un bouton parfaitement lisible
+à 1,04 à cause d'un bord anticrénelé. C'est celle qui a trouvé les trois défauts
+réels, sur 300 textes mesurés.
+
+### Les polices, et un arbitrage qui appartient au client
+
+Fraunces pesait 67 304 octets, l'actif le plus lourd du projet, sur la première
+page du service. La moitié tenait dans son axe de taille optique. Cinq variantes
+ont été rendues côte à côte et comparées à l'écran ; l'axe est figé à 36, qui
+tient les grands titres sans amincir les petits — ce qui compte sur un téléphone
+d'entrée de gamme. **33 096 octets, soit 50 % de moins**
+(`scripts/fonts-instance.py` refait la transformation). Manrope n'a pas été
+retouchée : y restreindre les graisses ne gagnait que 900 octets, ce qui ne
+justifie pas de s'écarter du fichier d'origine.
+
+Les deux sont sous SIL OFL 1.1 et **aucune ne déclare de Reserved Font Name** :
+la modification et la rediffusion sous le même nom sont permises, licence
+jointe.
+
+Il reste que les polices coûtent **57 932 octets, soit 78 % du poids de la
+première visite**, et qu'elles servent l'apparence, pas la fonction. Avec
+`font-display: swap` personne ne les attend pour lire la première phrase, et
+aucune autre page du service ne les paie. **Si le client juge le coût trop
+élevé, deux lignes de `tokens.css` suffisent à revenir à la pile système.**
+C'est un arbitrage d'apparence, et il lui appartient.
+
+### Ce qui reste à signaler au client
+
+- **Le délai de traitement n'est pas publié** parce que personne ne l'a fixé
+  (question D8). La page le dit, plutôt que d'annoncer un chiffre inventé.
+- **Une pièce ne peut pas être remplacée après l'envoi.** La Policy `update`
+  n'autorise la modification que sur un brouillon. Si une photo est illisible,
+  le citoyen peut écrire à l'officier mais pas renvoyer la photo. La FAQ le dit
+  franchement ; **c'est une limite du produit, pas un choix de rédaction**, et
+  elle mériterait d'être levée.
