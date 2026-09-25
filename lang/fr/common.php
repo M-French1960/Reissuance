@@ -48,6 +48,7 @@ return [
     'processing_queue' => 'File de traitement',
     'signatures' => 'Signatures',
     'accounts' => 'Comptes',
+    'centers' => 'Centres',
     'assignments' => 'Affectations',
     'audit_log' => "Journal d'audit",
     'settings' => 'Réglages',

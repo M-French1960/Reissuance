@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Security;
 
+use App\Enums\RequestStatus;
 use App\Models\CivilStatusCenter;
 use App\Models\ReissuanceRequest;
 use App\Models\User;
+use App\Services\RequestTransitionService;
 use PHPUnit\Framework\Attributes\Test;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -39,16 +41,19 @@ class ScopeBypassTest extends TestCase
     /**
      * Les methodes auditees qui ont le droit de contourner la portee.
      *
-     * Il y en a deux, et il ne doit pas y en avoir une troisieme sans qu'on
+     * Il y en a trois, et il ne doit pas y en avoir une quatrieme sans qu'on
      * l'ait voulu : chacune est documentee dans le modele, et chacune porte sa
      * propre protection — une autorisation immediate pour la premiere, une
-     * liste blanche de colonnes sans donnee d'identite pour la seconde.
+     * liste blanche de colonnes sans donnee d'identite pour la seconde, et
+     * pour la troisieme le fait qu'elle ne rende AUCUNE colonne d'une demande,
+     * seulement des agregats par centre (D-085).
      *
      * @var list<string>
      */
     private const METHODES_AUDITEES = [
         'loadForAuthorization',
         'assignmentsForAdministration',
+        'aggregatesForAdministration',
     ];
 
     #[Test]
@@ -159,6 +164,44 @@ class ScopeBypassTest extends TestCase
             $demande->id,
             ReissuanceRequest::loadForAuthorization($demande->id)->id,
             'loadForAuthorization() doit rendre la demande malgré la portée.'
+        );
+    }
+
+    /**
+     * Les agregats ne rendent aucune donnee d'une demande.
+     *
+     * C'est la protection de `aggregatesForAdministration()` : elle contourne la
+     * portee, et ce qui la rend defendable est qu'elle ne selectionne aucune
+     * colonne de la table — un identifiant de centre, un compte, une date.
+     * Le test lit les cles reellement rendues, pas la promesse du commentaire.
+     */
+    #[Test]
+    public function les_agregats_administratifs_ne_rendent_que_des_comptes(): void
+    {
+        $centre = CivilStatusCenter::factory()->create();
+
+        $citoyen = User::factory()->citizen()->create();
+
+        // L'etat passe par la machine a etats : un declencheur de base refuse
+        // une transition sans ligne d'audit correspondante.
+        $demande = ReissuanceRequest::factory()->submitted()->create([
+            'user_id' => $citoyen->id,
+            'civil_status_center_id' => $centre->id,
+            'commune_id' => $centre->commune_id,
+        ]);
+
+        app(RequestTransitionService::class)->transition($demande, RequestStatus::Pending, $citoyen);
+
+        $this->actingAs(User::factory()->admin()->create());
+
+        $ligne = ReissuanceRequest::aggregatesForAdministration()->get()->first();
+
+        $this->assertNotNull($ligne, "L'agrégat doit rendre la ligne malgré la portée.");
+
+        $this->assertSame(
+            ['civil_status_center_id', 'received', 'in_flight', 'oldest'],
+            array_keys($ligne->getAttributes()),
+            'Les agrégats administratifs ne doivent rendre que le centre et des comptes.'
         );
     }
 

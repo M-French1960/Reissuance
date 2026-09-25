@@ -48,6 +48,7 @@ return [
     'processing_queue' => 'Processing queue',
     'signatures' => 'Signatures',
     'accounts' => 'Accounts',
+    'centers' => 'Centres',
     'assignments' => 'Assignments',
     'audit_log' => 'Audit log',
     'settings' => 'Settings',

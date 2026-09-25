@@ -6,6 +6,7 @@ use App\Http\Controllers\ActDocumentController;
 use App\Http\Controllers\ActDraftController;
 use App\Http\Controllers\Admin\AssignmentController;
 use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Admin\CenterController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Citizen\AttachmentController;
@@ -255,6 +256,20 @@ Route::middleware('auth')->group(function (): void {
              */
             Route::post('/affectations/{demande}/liberation', [AssignmentController::class, 'release'])
                 ->whereNumber('demande')->name('assignments.release');
+
+            /*
+             * Centres d'etat civil (D-085). RACCORDEMENT, pas creation : un
+             * centre existe par un acte administratif hors plateforme.
+             *
+             * Aucune route de suppression n'existe, et ce n'est pas un oubli :
+             * un centre supprime rendrait orphelines des demandes envoyees et
+             * des decisions signees. Debrancher est reversible.
+             */
+            Route::get('/centres', [CenterController::class, 'index'])->name('centers.index');
+            Route::get('/centres/nouveau', [CenterController::class, 'create'])->name('centers.create');
+            Route::post('/centres', [CenterController::class, 'store'])->name('centers.store');
+            Route::get('/centres/{center}', [CenterController::class, 'edit'])->name('centers.edit');
+            Route::patch('/centres/{center}', [CenterController::class, 'update'])->name('centers.update');
 
             /*
              * Reglages : CONSULTATION SEULE, et aucune route d'ecriture

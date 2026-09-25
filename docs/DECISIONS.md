@@ -4255,3 +4255,128 @@ Il ne compare pas l'officier à ses collègues, il ne note personne, et il ne
 produit aucun export. Un export nominatif de décisions est une donnée
 personnelle qui sort de la plateforme : cela demande un arbitrage, pas un
 bouton.
+
+---
+
+## D-085 — Raccorder un centre, et le nombre que je refuse de calculer
+
+- **Date :** 2026-09-25
+- **Statut :** décidé
+
+Deuxième écran du groupe 1 : la gestion des centres d'état civil
+(`admin-centers.html`). Comme les rapports de l'officier, il ne demandait aucun
+arbitrage — mais en l'écrivant, trois choses sont apparues qu'il fallait
+trancher.
+
+### Ce n'est pas « créer un centre », et le mot compte
+
+Un centre d'état civil n'existe pas parce que quelqu'un a rempli un
+formulaire : il existe par un acte administratif qui ne passe pas par cette
+plateforme. Ce qui se décide ici, c'est de **raccorder** un centre existant, ou
+de le débrancher. Écrire « créer un centre » aurait codé une hypothèse
+juridique dans un bouton (§10). L'écran porte donc le mot juste, et une carte
+explique en toutes lettres ce que le raccordement change.
+
+Et il change une chose précise, vérifiée dans le code plutôt que supposée :
+`is_active` est lu **à un seul endroit**, la liste des centres proposée au
+citoyen. Débrancher empêche donc l'arrivée de **nouvelles** demandes et ne
+touche à **aucune** demande en cours. L'écran l'écrit, parce qu'un
+administrateur qui craint d'interrompre des dossiers en cours ne débranchera
+jamais rien.
+
+### Le défaut trouvé en donnant un sens au drapeau
+
+Le formulaire du citoyen **listait** les centres raccordés, mais sa validation
+ne vérifiait que `exists:civil_status_centers,id`. Un identifiant de centre
+débranché — gardé dans un onglet ouvert avant le débranchement, ou posé à la
+main — passait. La demande arrivait alors dans un centre que l'administrateur
+venait justement de retirer du service, et personne ne la regardait.
+
+Deux barrières, et non une : la règle d'existence vérifie maintenant
+`is_active`, et l'envoi la revérifie. Un brouillon peut dormir des jours ; le
+centre choisi à l'étape 3 peut avoir été débranché avant l'étape 4.
+
+### Le nombre que je refuse de calculer
+
+La maquette affiche trois chiffres par centre : officiers, dossiers en cours,
+**dossiers en retard**. Les deux premiers sont des faits. Le troisième est un
+jugement, et il exige un seuil que **personne n'a arbitré** : le délai légal de
+traitement est la question ouverte **D8**, toujours sans réponse. Le calculer
+m'obligeait à choisir un nombre de jours et à le faire passer pour une règle du
+service.
+
+L'écran affiche donc **l'ancienneté du plus ancien dossier en attente** —
+« 9 jours ». C'est la même information pour décider s'il faut un agent de plus,
+sans déclarer personne en faute.
+
+### L'administrateur ne voit toujours aucune demande
+
+Sa portée de visibilité est `whereRaw('1 = 0')`, délibérément. Cet écran
+affiche pourtant des nombres tirés des demandes. La méthode qui les calcule ne
+rend **aucune colonne** d'une demande : un identifiant de centre et trois
+agrégats. C'est strictement moins que la lecture administrative existante, qui
+laisse déjà voir une référence.
+
+**Le garde-fou a fonctionné contre moi, et c'est le plus intéressant.** J'avais
+d'abord écrit le comptage dans la Policy, avec un `withoutGlobalScopes()`. Le
+test `ScopeBypassTest` est tombé immédiatement : le contournement de portée
+n'a le droit d'exister qu'à un seul endroit du code. La Policy reçoit donc le
+nombre en argument et reste une règle pure. Sans ce test, un contournement de
+portée se serait installé dans une classe d'autorisation — exactement l'endroit
+où personne ne le cherche.
+
+La liste des méthodes autorisées passe de deux à trois. Ce n'est pas anodin, et
+c'est écrit dans le test : la quatrième devra aussi se justifier.
+
+### Le code du registre se fige
+
+Le code identifie le centre pour tout le reste du système et il est affiché au
+citoyen. Le changer sur un centre qui porte déjà des dossiers romprait la
+correspondance entre ce que le citoyen a lu et ce que la base contient. Une
+faute de frappe se rattrape donc tant qu'aucune demande n'est arrivée, et
+jamais après.
+
+La règle est appliquée **par le contrôleur**, pas par un champ désactivé : un
+champ grisé se réactive en trois clics dans un navigateur. Le test envoie la
+requête directement, comme le ferait quelqu'un qui l'a fait. Et le refus est
+**annoncé** : un code silencieusement ignoré ferait croire à une modification
+qui n'a pas eu lieu.
+
+### Aucune suppression, et ce n'est pas un oubli
+
+Il n'existe pas de route de suppression. Un centre supprimé rendrait
+orphelines des demandes envoyées, des décisions et des lignes d'audit — et la
+clé étrangère le refuserait de toute façon. Un test envoie un `DELETE` et
+constate un **405** : l'URL existe, aucune route n'y répond.
+
+### Deux pièges écrits sur la carte
+
+Un centre raccordé **sans officier actif** reçoit des dossiers que personne
+n'examinera. Une commune **sans maire actif** produit des actes que personne ne
+peut signer — et c'est la commune, pas le centre, qui détermine le maire
+compétent. La maquette annonçait le second dans une notification passagère ;
+une notification disparaît, la carte reste. Un maire suspendu ne fait pas taire
+l'avertissement : il ne signe rien.
+
+### Une cible tactile que l'audit donnait pour conforme
+
+En mesurant l'écran au navigateur, le bouton d'ouverture du menu est ressorti à
+**34 × 44 px** sous 720 px de large. La feuille de style lui pose pourtant
+`width: var(--tap-target)`, soit 44 px. Il est l'enfant d'une rangée flexible,
+`flex-shrink` vaut 1 par défaut, et la barre lui reprenait dix pixels : la
+largeur **calculée** tombait à 34. C'est le même piège que les cellules de
+tableau de D-083 — un jeton de 44 px ne garantit rien tant qu'un parent peut le
+reprendre.
+
+`docs/ACCESSIBILITE.md` annonçait zéro cible sous le seuil. Je ne sais pas
+pourquoi la passe précédente ne l'avait pas vu, et je ne l'invente pas : le
+document porte désormais la correction et la mesure du jour — **81 relevés**
+sur neuf écrans et neuf largeurs de 320 à 1920 px, zéro débordement, zéro cible
+sous 44 px, zéro refus CSP.
+
+### Ce que cet écran ne stocke pas
+
+La maquette demandait une adresse de retrait des copies et des horaires
+d'ouverture. Ils ne sont pas conservés : ils ne vaudraient d'être stockés
+qu'une fois **affichés au citoyen**, ce qui est une décision à part et une
+autre interface. L'écran le dit plutôt que de laisser croire à un oubli.

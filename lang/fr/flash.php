@@ -36,6 +36,7 @@ return [
         'registration_year_max' => "L'année d'enregistrement ne peut pas être dans le futur.",
         'birth_date_before' => "La date de naissance doit être antérieure à aujourd'hui.",
         'centre_required' => "Choisissez le centre d'état civil où l'acte a été enregistré.",
+        'centre_unavailable' => 'Ce centre ne reçoit plus de demandes. Choisissez-en un autre dans la liste.',
         'photo_saved' => 'La photo a été enregistrée.',
         'file_mimetypes' => 'Le fichier doit être une image JPEG, PNG ou WebP.',
         'file_max' => 'Le fichier est trop volumineux. Reprenez la photo : elle sera compressée automatiquement.',

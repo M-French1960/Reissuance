@@ -35,6 +35,20 @@ conformité.**
 | Cibles tactiles sous 44 px | **0** |
 | Éléments invisibles atteints au clavier | **0** |
 
+> **Révision du 2026-09-25 (D-085).** Ce tableau porte sur l'audit d'origine.
+> Une mesure ultérieure, faite en construisant l'écran de raccordement des
+> centres, a trouvé **une cible sous le seuil que ce tableau donne à zéro** :
+> le bouton d'ouverture du menu mesurait **34 × 44 px** sous 720 px de large.
+> La feuille de style lui pose bien `width: var(--tap-target)`, mais il est
+> l'enfant d'une rangée flexible et `flex-shrink` vaut 1 par défaut : la barre
+> lui reprenait dix pixels. `flex: 0 0 auto` le corrige.
+>
+> Je ne sais pas pourquoi la passe de D-083 l'avait rapporté conforme, et je ne
+> l'invente pas : ou son sélecteur ne l'atteignait pas, ou l'élément a changé
+> depuis. Ce qui est vérifié, c'est la mesure d'aujourd'hui — 81 relevés sur
+> neuf écrans de l'administrateur et neuf largeurs de 320 à 1920 px : zéro
+> débordement, zéro cible sous 44 px, zéro refus CSP.
+
 ---
 
 ## 3. Ce que l'audit a trouvé, et qui est corrigé

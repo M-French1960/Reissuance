@@ -158,6 +158,21 @@ class RequestWizardController extends Controller
             }
         }
 
+        /*
+         * LE CENTRE EST-IL TOUJOURS RACCORDE ?
+         *
+         * Un brouillon peut dormir des jours. Entre le choix du centre et
+         * l'envoi, l'administrateur a pu le debrancher. Sans cette barriere, la
+         * demande partait vers un centre hors service : aucun agent ne la
+         * voyait passer, et le citoyen attendait une reponse que personne ne
+         * pouvait ecrire. On le renvoie choisir, avec la raison.
+         */
+        if ($draft->center !== null && ! $draft->center->is_active) {
+            return redirect()
+                ->route('citizen.requests.step', ['reissuanceRequest' => $draft, 'step' => 3])
+                ->withErrors(['civil_status_center_id' => __('flash.citizen.centre_unavailable')]);
+        }
+
         // Barriere de paiement, si le service l'a placee ici (D-041). Quand le
         // placement est « none » ou « before_signature », allows() rend true
         // et ce controleur n'a rien a savoir du paiement.
@@ -219,7 +234,22 @@ class RequestWizardController extends Controller
                 'parents_address' => ['required', 'string', 'max:255'],
             ],
             3 => [
-                'civil_status_center_id' => ['required', 'integer', 'exists:civil_status_centers,id'],
+                /*
+                 * LE CENTRE DOIT ETRE RACCORDE, ET PAS SEULEMENT EXISTER.
+                 *
+                 * La liste proposee plus haut filtre deja sur `is_active`,
+                 * mais la validation ne le faisait pas : un identifiant de
+                 * centre debranche, garde dans un onglet ouvert avant le
+                 * debranchement ou pose a la main, passait. La demande
+                 * arrivait alors dans un centre que l'administrateur avait
+                 * justement retire du service, ou aucun agent ne la
+                 * regardait. Trouve en construisant l'ecran de raccordement
+                 * (D-085) : c'est ce qui donne un sens au drapeau.
+                 */
+                'civil_status_center_id' => [
+                    'required', 'integer',
+                    Rule::exists('civil_status_centers', 'id')->where('is_active', true),
+                ],
             ],
             4 => [],
             default => abort(404),
@@ -234,6 +264,7 @@ class RequestWizardController extends Controller
             'registration_year.max' => __('flash.citizen.registration_year_max'),
             'date_of_birth.before' => __('flash.citizen.birth_date_before'),
             'civil_status_center_id.required' => __('flash.citizen.centre_required'),
+            'civil_status_center_id.exists' => __('flash.citizen.centre_unavailable'),
         ];
     }
 

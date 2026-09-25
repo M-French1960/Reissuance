@@ -202,6 +202,52 @@ class ReissuanceRequest extends Model
      *
      * @var list<string>
      */
+    /**
+     * Les agregats par centre, et RIEN d'autre.
+     *
+     * POURQUOI CETTE METHODE EXISTE. L'administrateur decide s'il faut
+     * rattacher un agent de plus a un centre, et si le code d'un centre est
+     * encore corrigeable. Ces deux decisions demandent de savoir COMBIEN de
+     * dossiers un centre porte, jamais lesquels.
+     *
+     * POURQUOI CE N'EST PAS UNE BRECHE : elle ne rend AUCUNE colonne d'une
+     * demande. Elle rend un identifiant de centre et trois agregats. C'est
+     * strictement moins que `ADMINISTRATION_COLUMNS`, qui laisse deja lire une
+     * reference. Un test lit les cles reellement rendues.
+     *
+     * LES BROUILLONS SONT EXCLUS. Un brouillon n'est jamais arrive au centre :
+     * il n'existe que pour son auteur, qui peut encore en changer le centre.
+     *
+     * CE QU'ELLE NE CALCULE PAS : le nombre de dossiers « en retard ». Aucun
+     * delai de traitement n'est arbitre (question ouverte D8), et je ne
+     * declare pas un dossier tardif sur un seuil que j'aurais choisi. La date
+     * la plus ancienne est un fait ; « en retard » serait un jugement.
+     *
+     * @return Builder<self>
+     */
+    public static function aggregatesForAdministration(): Builder
+    {
+        $enCours = [
+            RequestStatus::Pending->value,
+            RequestStatus::UnderReview->value,
+            RequestStatus::AwaitingSignature->value,
+            RequestStatus::Escalated->value,
+        ];
+
+        $marqueurs = implode(', ', array_fill(0, count($enCours), '?'));
+
+        return self::withoutGlobalScopes()
+            ->selectRaw(
+                'civil_status_center_id'
+                .', count(*) as received'
+                .", sum(status in ({$marqueurs})) as in_flight"
+                .", min(case when status in ({$marqueurs}) then submitted_at end) as oldest",
+                [...$enCours, ...$enCours]
+            )
+            ->where('status', '!=', RequestStatus::Draft->value)
+            ->groupBy('civil_status_center_id');
+    }
+
     public const ADMINISTRATION_COLUMNS = [
         'id',
         'reference',

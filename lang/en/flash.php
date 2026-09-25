@@ -44,6 +44,7 @@ return [
         'registration_year_max' => 'The year of registration cannot be in the future.',
         'birth_date_before' => 'The date of birth has to be earlier than today.',
         'centre_required' => 'Choose the civil status centre where the certificate was registered.',
+        'centre_unavailable' => 'That centre is no longer receiving requests. Choose another one from the list.',
         'photo_saved' => 'The photo has been saved.',
         'file_mimetypes' => 'The file has to be a JPEG, PNG or WebP image.',
         'file_max' => 'The file is too large. Take the photo again: it will be compressed automatically.',

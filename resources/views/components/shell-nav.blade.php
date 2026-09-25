@@ -37,6 +37,7 @@
         UserRole::Admin => [
             ['dashboard', 'dashboard', 'common.dashboard', 'dashboard'],
             ['admin.users.index', 'users', 'common.accounts', 'admin.users.*'],
+            ['admin.centers.index', 'building', 'common.centers', 'admin.centers.*'],
             ['admin.assignments.index', 'link', 'common.assignments', 'admin.assignments.*'],
             ['admin.audit.index', 'log', 'common.audit_log', 'admin.audit.*'],
             ['admin.settings.index', 'sliders', 'common.settings', 'admin.settings.*'],

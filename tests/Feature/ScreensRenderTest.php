@@ -57,13 +57,15 @@ class ScreensRenderTest extends TestCase
                 'notifications.index', 'two-factor.setup',
             ]],
             'officier' => ['officer', [
-                'dashboard', 'officer.queue', 'notifications.index', 'two-factor.setup',
+                'dashboard', 'officer.queue', 'officer.reports',
+                'notifications.index', 'two-factor.setup',
             ]],
             'maire' => ['mayor', [
                 'dashboard', 'mayor.dashboard', 'notifications.index', 'two-factor.setup',
             ]],
             'administrateur' => ['admin', [
                 'dashboard', 'admin.users.index', 'admin.users.create',
+                'admin.centers.index', 'admin.centers.create',
                 'admin.audit.index', 'notifications.index', 'two-factor.setup',
             ]],
         ];
