@@ -1,0 +1,257 @@
+/* =============================================================================
+   PHOENIX — coquille de l'espace connecté (D-079)
+   =============================================================================
+   Elle ne remplace QUE le cadre : barre latérale, barre du haut, zone de
+   contenu. Tout ce qui vit à l'intérieur — cartes, boutons, champs, tableaux,
+   badges — continue de venir de app.css, qui reste chargé. C'est ce qui rend
+   ce changement de coquille tenable sur vingt-neuf écrans : aucun composant
+   n'est touché.
+
+   Les couleurs viennent de tokens.css, comme partout ailleurs. Aucune valeur
+   en dur ici.
+   ========================================================================== */
+
+.shell {
+  margin: 0;
+  font-family: var(--ui-font-body);
+  color: var(--color-ink-900);
+  min-height: 100vh;
+  background:
+    radial-gradient(600px 420px at 95% 5%, rgb(123 47 242 / 0.16), transparent 70%),
+    radial-gradient(520px 400px at 25% 100%, rgb(156 39 176 / 0.12), transparent 70%),
+    var(--ui-page);
+  background-attachment: fixed;
+}
+
+.shell__layout { display: grid; grid-template-columns: var(--shell-side) 1fr; min-height: 100vh; }
+
+/*
+   LE VOILE N'EST PAS UNE COLONNE.
+   Sans cette ligne il reste un enfant de la grille, il occupe la
+   deuxieme colonne de la premiere rangee, et TOUTE la page bascule en
+   rangee deux, sous la barre laterale, large de 264 px. Constate a
+   l'ecran : la file de traitement tenait dans un ruban de 264 px sur un
+   ecran de 1366. Il n'existe qu'au format telephone, et seulement si le
+   script peut l'ouvrir.
+*/
+.shell__scrim { display: none; }
+
+/* --- Barre latérale -------------------------------------------------------- */
+/*
+   LA COULEUR TIENT TOUTE LA COLONNE, LE MENU SEUL EST EPINGLE.
+
+   En rendant l'aside lui-meme collant, le violet s'arretait a la hauteur de
+   la fenetre : sur la page des comptes, haute de 2060 px, la barre laterale
+   devenait blanche a partir de 900 px, avec une coupure nette au milieu de
+   l'ecran. La colonne porte donc le fond, et c'est son contenu qui colle.
+*/
+.shell__side {
+  color: #fff;
+  background:
+    radial-gradient(260px 260px at 90% 15%, rgb(179 136 255 / 0.4), transparent 70%),
+    linear-gradient(170deg, var(--ui-violet-900), var(--color-brand-700) 60%, var(--ui-violet-700));
+}
+
+.shell__side-inner {
+  position: sticky; top: 0;
+  height: 100vh; height: 100dvh;
+  display: flex; flex-direction: column; gap: var(--space-5);
+  padding: calc(var(--space-5) + env(safe-area-inset-top, 0px)) var(--space-4)
+           calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+}
+
+.shell__brand { display: flex; align-items: center; gap: var(--space-3); padding-inline: var(--space-2); text-decoration: none; color: inherit; }
+.shell__brand-mark { width: 34px; height: 34px; flex: none; }
+.shell__brand-name { font: 700 1.3rem/1 var(--ui-font-display); letter-spacing: 0.04em; display: block; }
+.shell__brand-role { font-size: var(--text-xs); opacity: 0.8; display: block; margin-top: var(--space-1); }
+
+.shell__nav { display: grid; gap: 2px; list-style: none; margin: 0; padding: 0; }
+
+.shell__nav a {
+  display: flex; align-items: center; gap: var(--space-3);
+  min-height: var(--tap-target); padding: var(--space-3);
+  border-radius: var(--ui-r-md); border: 1px solid transparent;
+  text-decoration: none; font-weight: 500; color: #fff;
+}
+
+.shell__nav a:hover { background: rgb(255 255 255 / 0.14); }
+
+.shell__nav a[aria-current="page"] {
+  background: rgb(255 255 255 / 0.16);
+  border-color: var(--ui-glass-dark-border);
+  font-weight: 700;
+}
+
+.shell__count {
+  margin-left: auto; font-size: var(--text-xs); font-weight: 700;
+  background: var(--ui-focus); color: var(--ui-violet-900);
+  border-radius: var(--radius-pill); padding: 1px var(--space-2);
+}
+
+.shell__signout { margin-top: auto; }
+
+.shell__signout button {
+  display: flex; align-items: center; gap: var(--space-3);
+  width: 100%; min-height: var(--tap-target); padding: var(--space-3);
+  border-radius: var(--ui-r-md); border: 1px solid var(--ui-glass-dark-border);
+  background: rgb(255 255 255 / 0.08); color: #fff;
+  font: 600 var(--text-base)/1 var(--ui-font-body); cursor: pointer; text-align: left;
+}
+
+.shell__signout button:hover { background: rgb(255 255 255 / 0.18); }
+
+/* --- Colonne de droite ----------------------------------------------------- */
+.shell__main { min-width: 0; display: flex; flex-direction: column; }
+
+.shell__top {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; gap: var(--space-4);
+  padding: calc(var(--space-3) + env(safe-area-inset-top, 0px)) var(--space-5) var(--space-3);
+  background: rgb(243 242 249 / 0.88);
+  border-bottom: 1px solid rgb(91 15 176 / 0.12);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+}
+
+/* Il cede la place plutot que de pousser la barre hors de l'ecran. Le titre
+   est repete juste dessous par le <h1>, donc la coupure ne perd rien. */
+.shell__crumb {
+  font-weight: 700; color: var(--ui-violet-900); font-size: var(--text-lg);
+  flex: 1 1 auto; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.shell__top-actions { margin-left: auto; flex: none; display: flex; align-items: center; gap: var(--space-2); }
+
+.shell__toggle {
+  display: none; width: var(--tap-target); height: var(--tap-target);
+  border-radius: 50%; border: 0; background: none; color: var(--color-brand-700); cursor: pointer;
+}
+
+.shell__toggle:hover { background: rgb(91 15 176 / 0.1); }
+
+.shell__icon-link {
+  position: relative; width: var(--tap-target); height: var(--tap-target);
+  border-radius: 50%; display: grid; place-items: center;
+  background: var(--color-surface); border: 1px solid var(--color-line);
+  color: var(--color-brand-700);
+}
+
+.shell__icon-link:hover { background: var(--color-brand-050); }
+
+.shell__badge {
+  position: absolute; top: -2px; right: -2px;
+  min-width: 20px; height: 20px; padding: 0 5px;
+  border-radius: var(--radius-pill);
+  background: var(--tone-danger-fg); color: #fff;
+  font-size: var(--text-xs); font-weight: 700;
+  display: grid; place-items: center; border: 2px solid var(--ui-page);
+}
+
+.shell__identity {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-1) var(--space-3) var(--space-1) var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface); border: 1px solid var(--color-line);
+  font-size: var(--text-sm);
+}
+
+.shell__initials {
+  width: 34px; height: 34px; border-radius: 50%; flex: none;
+  display: grid; place-items: center;
+  background: var(--color-brand-700); color: #fff; font-weight: 700;
+}
+
+.shell__identity-name { font-weight: 600; }
+.shell__identity-role { display: block; font-size: var(--text-xs); color: var(--color-ink-500); }
+
+.shell__content { flex: 1; padding: var(--space-5); }
+.shell__content > * + * { margin-top: var(--space-5); }
+
+.shell__foot {
+  padding: var(--space-4) var(--space-5) calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
+  color: var(--color-ink-500); font-size: var(--text-sm);
+}
+
+/* Le sélecteur de langue vit sur fond clair ici, pas sur la barre violette. */
+.shell__top .lang-switch__select {
+  border-color: var(--color-line); color: var(--color-ink-900);
+  background: var(--color-surface); border-radius: var(--radius-pill);
+}
+
+/* --- Panneaux de tableau de bord ------------------------------------------- */
+.shell-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--space-5); }
+.shell-grid > * { margin-top: 0; }
+.span-4 { grid-column: span 4; }
+.span-5 { grid-column: span 5; }
+.span-7 { grid-column: span 7; }
+.span-8 { grid-column: span 8; }
+.span-12 { grid-column: span 12; }
+
+.panel {
+  border-radius: var(--ui-r-lg); padding: var(--space-5);
+  background: var(--ui-glass-light); border: 1px solid var(--ui-glass-light-border);
+  backdrop-filter: blur(18px) saturate(150%); -webkit-backdrop-filter: blur(18px) saturate(150%);
+  box-shadow: 0 20px 50px -30px rgb(74 20 140 / 0.45);
+}
+
+.panel__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-4); }
+.panel__head h2 { font: 600 var(--text-xl)/1.2 var(--ui-font-display); margin: 0; color: var(--ui-violet-900); }
+.panel__head a { font-size: var(--text-sm); font-weight: 700; color: var(--ui-violet-700); }
+
+/* --- Adaptation ------------------------------------------------------------ */
+@media (max-width: 1100px) {
+  .span-4 { grid-column: span 6; }
+  .span-8, .span-7, .span-5 { grid-column: span 12; }
+}
+
+@media (max-width: 900px) {
+  .shell__layout { grid-template-columns: 1fr; }
+  .shell__toggle { display: grid; place-items: center; }
+  .shell__identity-name, .shell__identity-role { display: none; }
+  .shell__identity { padding: var(--space-1); }
+
+  /*
+     SANS JAVASCRIPT, LA BARRE LATÉRALE RESTE LÀ.
+     Elle passe au-dessus du contenu, en pleine largeur, et le contenu suit
+     dessous. C'est moins élégant qu'un tiroir, mais un tiroir qu'aucun
+     script ne peut ouvrir est un menu perdu — la leçon de D-078.
+  */
+  .shell__side-inner { position: static; height: auto; }
+
+  [data-js] .shell__side {
+    position: fixed; inset: 0 auto 0 0; z-index: 60;
+    width: min(84vw, var(--shell-side)); height: 100vh; height: 100dvh;
+    transform: translateX(-100%); transition: transform 0.25s ease;
+  }
+
+  [data-js] .shell__side-inner { height: 100%; overflow-y: auto; }
+
+  [data-js] .shell__side.is-open { transform: none; }
+
+  [data-js] .shell__scrim {
+    display: block; position: fixed; inset: 0; z-index: 55;
+    background: rgb(20 5 45 / 0.5); opacity: 0; pointer-events: none;
+    transition: opacity 0.25s ease; border: 0;
+  }
+
+  [data-js] .shell__scrim.is-open { opacity: 1; pointer-events: auto; }
+}
+
+@media (max-width: 640px) {
+  .span-4 { grid-column: span 12; }
+  .shell__content, .shell__top { padding-inline: var(--space-4); }
+  .panel { padding: var(--space-4); }
+  .shell__top { gap: var(--space-2); }
+  /* Le selecteur de langue reste visible, mais il rentre : « Francais » est
+     plus long que « English », et c'est lui qui poussait la barre dehors. */
+  .shell__top .lang-switch__select { font-size: var(--text-xs); padding-inline: var(--space-1); max-width: 6rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell__side, .shell__scrim { transition: none !important; }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .panel { background: rgb(255 255 255 / 0.96); }
+  .shell__top { background: rgb(243 242 249 / 0.98); }
+}

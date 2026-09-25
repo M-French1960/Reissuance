@@ -91,33 +91,37 @@
 }
 
 /* =============================================================================
-   PAGE D'ACCUEIL — jetons propres au parcours d'entrée (D-078)
+   PALETTE ÉTENDUE — la langue visuelle des maquettes (D-078, D-079)
    =============================================================================
-   Ces valeurs ne servent QUE la page d'accueil. Elles vivent ici plutôt que
-   dans home.css pour la même raison que le reste : une seule source.
+   Nées avec la page d'accueil, ces valeurs servent maintenant aussi la
+   coquille de l'espace connecté. Elles ont donc perdu le préfixe « home »,
+   qui aurait fait croire qu'une barre latérale appartient à l'accueil.
 
    Le violet de marque est conservé tel quel (--color-brand-700 vaut #4a148c,
-   la couleur de la maquette). Ce qui s'ajoute est la profondeur du héros et
-   les teintes de verre, qui n'existaient pas dans les écrans de travail.
+   la couleur des maquettes). Ce qui s'ajoute est la profondeur des fonds
+   sombres et les teintes de verre, qui n'existaient pas dans les écrans de
+   travail.
    ========================================================================== */
 :root {
-  --home-violet-900: #2a0a55;   /* fond profond du héros */
-  --home-violet-700: #5b0fb0;
-  --home-violet-500: #7b2ff2;   /* accent interactif */
-  --home-lilac-200: #e3d6ff;
-  --home-page: #f3f2f9;         /* fond clair des sections */
+  --ui-violet-900: #2a0a55;   /* fond profond du héros et de la barre latérale */
+  --ui-violet-700: #5b0fb0;
+  --ui-violet-500: #7b2ff2;   /* accent interactif */
+  --ui-lilac-200: #e3d6ff;
+  --ui-page: #f3f2f9;         /* fond clair des sections */
 
   /* Le verre, en deux déclinaisons : sur fond sombre et sur fond clair. */
-  --home-glass-dark: rgb(255 255 255 / 0.10);
-  --home-glass-dark-border: rgb(255 255 255 / 0.28);
-  --home-glass-light: rgb(255 255 255 / 0.58);
-  --home-glass-light-border: rgb(255 255 255 / 0.85);
+  --ui-glass-dark: rgb(255 255 255 / 0.10);
+  --ui-glass-dark-border: rgb(255 255 255 / 0.28);
+  --ui-glass-light: rgb(255 255 255 / 0.58);
+  --ui-glass-light-border: rgb(255 255 255 / 0.85);
 
-  --home-focus: #ffd166;
+  --ui-focus: #ffd166;
 
-  --home-r-lg: 22px;
-  --home-r-md: 14px;
-  --home-r-sm: 10px;
+  --shell-side: 264px;   /* largeur de la barre latérale de l'espace connecté */
+
+  --ui-r-lg: 22px;
+  --ui-r-md: 14px;
+  --ui-r-sm: 10px;
 
   /*
      Deux familles, servies depuis ce serveur.
@@ -128,6 +132,6 @@
      fichiers sont des variables, sous-ensemble latin, 90 Ko à eux deux,
      sous licence SIL OFL dont le texte accompagne les fichiers.
   */
-  --home-font-display: "Fraunces", Georgia, "Times New Roman", serif;
-  --home-font-body: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --ui-font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --ui-font-body: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }

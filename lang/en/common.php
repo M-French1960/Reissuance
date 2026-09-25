@@ -10,6 +10,8 @@ return [
     'main_navigation' => 'Main navigation',
 
     'language' => 'Language',
+    'open_menu' => 'Open the menu',
+    'close_menu' => 'Close the menu',
     'change_language' => 'Change language',
 
     'none' => 'None',
