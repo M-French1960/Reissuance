@@ -16,6 +16,45 @@ return [
         'apply' => 'Apply for a certificate',
         'apply_again' => 'Submit another application',
         'all_requests' => 'All my requests',
+
+        'welcome_named' => 'Hello, :name',
+        'welcome_anonymous' => 'Welcome',
+        'welcome_lede' => 'Follow your applications, read what the officer writes to you and download your certificate, all from here.',
+
+        'stat_active' => 'Applications in progress',
+        'stat_delivered' => 'Certificates issued',
+        'stat_see_all' => 'See my applications',
+
+        'action_title' => 'Have a birth certificate reissued',
+        'action_body' => 'For a certificate that was lost or damaged.',
+
+        'resume_draft' => 'Finish my draft application',
+
+        'track_title' => 'Where my application stands',
+        'track_reference' => 'Number',
+        'track_centre' => 'Centre',
+        'track_submitted' => 'Submitted on',
+        'track_open' => 'Open the application',
+        'track_empty' => 'You have no application in progress. Start one and every step will be shown here, from submission to the copy being issued.',
+
+        'checklist_title' => 'What to prepare',
+        'checklist_id' => 'A valid identity document',
+        'checklist_photo' => 'A photo of yourself',
+        'checklist_details' => 'The certificate details and the civil status centre',
+        'checklist_email' => 'The email address that receives the notifications',
+
+        'activity_title' => 'Recent activity',
+        'activity_empty' => 'Updates on your applications will appear here.',
+        'activity_all' => 'See all',
+
+        'payments_title' => 'Payments',
+        'payments_empty' => 'No payment yet. You are asked to pay only if this installation requires it, and the amount is shown to you first.',
+        'payments_all' => 'See my applications',
+        'payments_request' => 'Application',
+        'payments_amount' => 'Amount',
+        'payments_method' => 'Method',
+        'payments_date' => 'Date',
+        'payments_status' => 'Status',
     ],
 
     'officer' => [

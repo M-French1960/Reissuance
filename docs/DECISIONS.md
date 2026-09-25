@@ -3675,3 +3675,112 @@ C'est un arbitrage d'apparence, et il lui appartient.
   le citoyen peut écrire à l'officier mais pas renvoyer la photo. La FAQ le dit
   franchement ; **c'est une limite du produit, pas un choix de rédaction**, et
   elle mériterait d'être levée.
+
+---
+
+## D-079 — Le tableau de bord du demandeur, et une coquille pour tout l'espace connecté
+
+Le client a fourni une deuxième maquette, celle du tableau de bord d'un
+demandeur, bâtie sur une barre latérale. Deux arbitrages lui ont été soumis
+avant d'écrire une ligne : la coquille passe sur **les quatre rôles**, et le
+menu ne porte **que des liens qui mènent quelque part**.
+
+### Ce qui n'a pas été repris, vérifié dans le code
+
+| La maquette | Ce que fait l'application |
+|---|---|
+| « Vous serez prévenu par SMS et e-mail » | `RequestStatusChanged::via()` renvoie `database` et `mail`. Toujours aucun SMS. |
+| « Déclaration de perte » dans les pièces à préparer | `AttachmentController` n'accepte que `selfie` et `id_document`. |
+| « Numéro de téléphone actif, pour recevoir le code de suivi » | Le téléphone est collecté au profil, mais **rien ne lui envoie quoi que ce soit**. |
+| « perdu, volé ou détérioré » | Les motifs sont `lost` et `damaged`. Pas de vol. |
+| Le paiement en deuxième étape de la frise | `phoenix.payments.gate` vaut `none`, `before_submission` ou `before_signature`. Coder le paiement en dur ferait mentir la frise dans deux cas sur trois. Les paiements ont leur propre panneau. |
+| `PHX-2026-004218` | Le format réel est `PHX-XXXX-XXXX`. |
+| `<a href="form.html">Nouvelle demande</a>` | Créer un brouillon est un **POST** ; un lien serait suivi par les préchargeurs et casserait `LinkVerbsTest`. |
+| Montant `[montant]` | Un texte de remplissage sous les yeux du demandeur. |
+| « Paiements », « Paramètres », « Contacter le support » | Trois pages qui n'existent pas. |
+| Pas d'entrée « Sécurité » | La double authentification est **obligatoire** et n'apparaissait nulle part. |
+
+Et une ligne qui ne doit exister nulle part dans le dépôt :
+
+```js
+['userName','userEmail','userGender','userPassword'].forEach(k => localStorage.removeItem(k));
+```
+
+Le prototype **rangeait un mot de passe dans `localStorage`**. Que ce soit une
+maquette ne change rien : la session est gérée par Laravel, et cette ligne n'a
+pas été portée.
+
+### « Actes délivrés », et non « Demandes terminées »
+
+La maquette proposait deux compteurs. Le piège est que **trois** états
+terminent un parcours : `signed`, `rejected` et `cancelled`. Les compter
+ensemble aurait fait lire *« 1 demande terminée »* à quelqu'un dont la demande
+venait d'être **refusée**, et « terminée » se lit comme « aboutie ».
+
+Le second compteur ne compte donc que les actes réellement signés, et son
+libellé le dit. `isStopped()` ne pouvait pas servir ici : il ne couvre que le
+refus et l'annulation, pas la signature.
+
+Un brouillon compte comme « en cours ». Sans cela, quelqu'un qui a laissé une
+demande à mi-chemin lirait « 0 en cours » et croirait n'avoir rien à faire.
+
+### Une seule frise, et c'est celle qui a déjà été corrigée
+
+La tentation était d'écrire pour le tableau de bord une frise plus simple,
+déduite du statut courant. **C'est exactement le défaut que D-075 a corrigé**
+sur la page de suivi : un brouillon annulé y affichait « Demande envoyée ✓ »,
+« Vérification par l'officier ✓ » et « Décision du maire ✓ », trois étapes qui
+n'avaient jamais eu lieu, parce que trois états partagent le même rang.
+
+Une deuxième frise aurait refait cette erreur **et personne ne l'aurait vue**,
+la première restant juste. La méthode privée du contrôleur est donc devenue
+`App\Support\Tracking\RequestTimeline`, et un test vérifie que les deux écrans
+affichent la même chose. Au passage, les tests de frise n'ont plus besoin de
+réflexion pour atteindre une méthode privée.
+
+### Le défaut qui a cassé vingt-neuf écrans sans faire rougir un test
+
+Le voile du tiroir mobile était un **troisième enfant de la grille**. Le
+placement automatique lui a donné la colonne deux de la rangée un, ce qui a
+repoussé toute la page en rangée deux, sous la barre latérale, dans un ruban de
+264 pixels sur un écran de 1366. Sur **tous** les écrans connectés.
+
+Le HTML était valide, les routes justes, les 864 tests verts, et chaque page
+rendait 200. Trouvé en ouvrant la file de traitement et en la regardant.
+
+Deux autres de la même façon. La barre du haut mesurait **441 pixels sur un
+téléphone de 390** en français, parce que le fil d'Ariane ne cédait pas un
+pixel et que « Français » est plus large que « English ». Et la barre latérale
+était collante sur une hauteur de fenêtre : sur la page des comptes, haute de
+2 060 pixels, son violet s'arrêtait net à 900 et le reste de la colonne était
+blanc.
+
+Un test PHP ne peut pas mesurer une grille. `ShellTest` fige donc le **contrat**
+dont la mise en page dépend — le voile hors du flux, l'escamotage réservé au
+script — et suit réellement chaque lien du menu de chaque rôle. Les deux gardes
+ont été vérifiées en les retirant.
+
+### Deux écrans parlaient français dans les deux langues
+
+Trouvés en relisant les vues, pas par un test :
+
+- **la pagination** écrivait « Précédent », « Suivant » et « Page 1 sur 3 » en
+  dur. Cette vue sert **toutes** les listes du service : mes demandes, les
+  comptes, le journal d'audit. Pire, un test *gardait* le défaut : il attendait
+  « Page 1 sur 2 » alors que la langue par défaut est l'anglais, et il passait
+  précisément parce que la chaîne était figée en français. Les clés existaient
+  déjà dans `lang/*/common.php` ; la vue ne les utilisait pas ;
+- le badge **« Non lue »** de la page des notifications.
+
+La galerie de composants (`dev/ui.blade.php`) reste en français : c'est un
+outil de développement, monté uniquement quand la route existe, et aucun
+citoyen ne l'atteint.
+
+### Ce qui reste à signaler au client
+
+- Les deux compteurs mènent au même écran : `citizen.requests.index` ne filtre
+  pas par statut. Ajouter le filtre est petit, mais ce n'était pas demandé.
+- Le libellé du bouton d'appel change selon qu'un brouillon existe, parce que
+  `citizen.requests.start` **reprend** le brouillon en cours. Annoncer « Faire
+  une demande » à quelqu'un qui en a déjà une à mi-chemin lui ferait croire
+  qu'il en ouvre une seconde.

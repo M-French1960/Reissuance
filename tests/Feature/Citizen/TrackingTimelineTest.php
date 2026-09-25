@@ -6,13 +6,13 @@ namespace Tests\Feature\Citizen;
 
 use App\Enums\DecisionType;
 use App\Enums\RequestStatus;
-use App\Http\Controllers\Citizen\RequestTrackingController;
 use App\Models\CivilStatusCenter;
 use App\Models\DocumentSignature;
 use App\Models\ReissuanceRequest;
 use App\Models\RequestDecision;
 use App\Models\User;
 use App\Services\RequestTransitionService;
+use App\Support\Tracking\RequestTimeline;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -70,11 +70,10 @@ class TrackingTimelineTest extends TestCase
     /** @return list<string> les états de la frise, dans l'ordre */
     private function frise(ReissuanceRequest $demande): array
     {
-        $controleur = app(RequestTrackingController::class);
-        $methode = new \ReflectionMethod($controleur, 'timeline');
-        $methode->setAccessible(true);
-
-        return array_column($methode->invoke($controleur, $demande->refresh()), 'etat');
+        // Plus de reflexion : la frise est un service depuis D-079, parce que
+        // le tableau de bord en a besoin lui aussi et qu'il ne doit pas en
+        // exister une deuxieme version.
+        return array_column(app(RequestTimeline::class)->for($demande->refresh()), 'etat');
     }
 
     /** Un brouillon annulé n'a jamais été instruit : rien n'est « terminé ». */
@@ -235,11 +234,7 @@ class TrackingTimelineTest extends TestCase
 
     private function detailDuDernierJalon(ReissuanceRequest $demande): string
     {
-        $controleur = app(RequestTrackingController::class);
-        $methode = new \ReflectionMethod($controleur, 'timeline');
-        $methode->setAccessible(true);
-
-        $jalons = $methode->invoke($controleur, $demande->refresh());
+        $jalons = app(RequestTimeline::class)->for($demande->refresh());
 
         return (string) end($jalons)['detail'];
     }

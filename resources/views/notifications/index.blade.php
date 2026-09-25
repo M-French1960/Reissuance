@@ -20,7 +20,7 @@
         @php $d = $notification->data; @endphp
         <x-card :title="$d['title'] ?? __('notifications.title')">
             @unless ($notification->read_at)
-                <p class="u-flush"><span class="badge badge--progress">Non lue</span></p>
+                <p class="u-flush"><span class="badge badge--progress">{{ __('common.unread') }}</span></p>
             @endunless
 
             <p>{{ $d['body'] ?? '' }}</p>

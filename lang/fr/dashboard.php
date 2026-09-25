@@ -16,6 +16,45 @@ return [
         'apply' => 'Faire une demande',
         'apply_again' => 'Faire une nouvelle demande',
         'all_requests' => 'Toutes mes demandes',
+
+        'welcome_named' => 'Bonjour, :name',
+        'welcome_anonymous' => 'Bienvenue',
+        'welcome_lede' => "Suivez vos demandes, lisez ce que l'officier vous écrit et téléchargez votre acte, depuis cet espace.",
+
+        'stat_active' => 'Demandes en cours',
+        'stat_delivered' => 'Actes délivrés',
+        'stat_see_all' => 'Voir mes demandes',
+
+        'action_title' => 'Faire rééditer un acte de naissance',
+        'action_body' => 'Pour un acte perdu ou abîmé.',
+
+        'resume_draft' => 'Terminer ma demande commencée',
+
+        'track_title' => 'Où en est ma demande',
+        'track_reference' => 'Numéro',
+        'track_centre' => 'Centre',
+        'track_submitted' => 'Déposée le',
+        'track_open' => 'Ouvrir la demande',
+        'track_empty' => "Vous n'avez aucune demande en cours. Lancez-en une et chaque étape s'affichera ici, du dépôt jusqu'à la remise de la copie.",
+
+        'checklist_title' => 'Ce qu\'il faut préparer',
+        'checklist_id' => "Une pièce d'identité valide",
+        'checklist_photo' => 'Une photo de vous',
+        'checklist_details' => "Les informations de l'acte et le centre d'état civil",
+        'checklist_email' => 'L\'adresse électronique qui reçoit les notifications',
+
+        'activity_title' => 'Activité récente',
+        'activity_empty' => 'Les mises à jour de vos demandes apparaîtront ici.',
+        'activity_all' => 'Tout voir',
+
+        'payments_title' => 'Paiements',
+        'payments_empty' => "Aucun paiement pour l'instant. Un règlement ne vous est demandé que si cette installation l'exige, et le montant vous est affiché avant.",
+        'payments_all' => 'Voir mes demandes',
+        'payments_request' => 'Demande',
+        'payments_amount' => 'Montant',
+        'payments_method' => 'Moyen',
+        'payments_date' => 'Date',
+        'payments_status' => 'Statut',
     ],
 
     'officer' => [

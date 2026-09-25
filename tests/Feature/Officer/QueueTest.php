@@ -151,7 +151,23 @@ class QueueTest extends TestCase
         $reponse = $this->actingAs($this->officier)->get(route('officer.queue'))->assertOk();
 
         $this->assertCount(25, $reponse->viewData('requests')->items());
-        $reponse->assertSee('Page 1 sur 2');
+
+        /*
+         * LA PAGINATION SUIT LA LANGUE (D-079).
+         *
+         * Cette assertion attendait « Page 1 sur 2 » alors que la langue par
+         * defaut est l'anglais : elle passait parce que la vue de pagination
+         * ecrivait « Précédent », « Suivant » et « Page x sur y » EN DUR, dans
+         * toutes les langues et sur toutes les listes du service. Le test
+         * gardait donc le defaut au lieu de le signaler.
+         */
+        $reponse->assertSee('Page 1 of 2');
+
+        $this->actingAs($this->officier)
+            ->withSession(['locale' => 'fr'])
+            ->get(route('officer.queue'))
+            ->assertOk()
+            ->assertSee('Page 1 sur 2');
     }
 
     #[Test]
