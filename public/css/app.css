@@ -67,7 +67,17 @@ main { padding-block: var(--space-5) var(--space-7); }
   box-shadow: var(--shadow-sm);
 }
 .card + .card { margin-top: var(--space-4); }
-.card__title { margin-bottom: var(--space-2); }
+/* LA TAILLE NE SUIT PAS LA BALISE (D-081).
+
+   Ni ce titre ni celui de l'etat vide ne fixaient leur taille : ils la
+   tenaient de leur balise. En passant de <h3> a <h2> pour reparer le saut de
+   niveau, ils auraient donc grossi de 18 a 22 px — un changement d'apparence
+   qui n'etait pas demande, et qui aurait fait varier l'aspect d'un etat vide
+   selon que la carte qui l'entoure porte un titre ou non.
+
+   Le niveau dit la STRUCTURE, la classe dit l'APPARENCE. Les deux sont
+   maintenant independants, ce qui est le propre d'un systeme de composants. */
+.card__title { margin-bottom: var(--space-2); font-size: var(--text-xl); }
 
 /* --- Boutons -------------------------------------------------------------
    Hauteur minimale 44 px : cible tactile WCAG 2.5.5. */
@@ -129,7 +139,7 @@ main { padding-block: var(--space-5) var(--space-7); }
 
 /* --- Etat vide ----------------------------------------------------------- */
 .empty-state { text-align: center; padding: var(--space-7) var(--space-4); color: var(--color-ink-500); }
-.empty-state__title { color: var(--color-ink-900); }
+.empty-state__title { color: var(--color-ink-900); font-size: var(--text-lg); }
 
 /* --- Squelette de chargement --------------------------------------------- */
 .skeleton { background: var(--color-surface-sunken); border-radius: var(--radius-sm); min-height: 1em; animation: pulse 1.4s ease-in-out infinite; }

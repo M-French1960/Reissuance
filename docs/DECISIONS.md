@@ -3881,3 +3881,69 @@ d'elle. Il parcourt maintenant toutes les coquilles du dossier.
 - La maquette du poste de l'officier fusionnait tableau de bord et file en un
   seul écran. Les deux ont été gardés : fusionner aurait supprimé un écran, ce
   qui dépasse une refonte d'interface.
+
+---
+
+## D-081 — Le saut de niveau de titre, sur presque tous les écrans
+
+`x-card` figeait son titre à `<h3>`, et `x-empty-state` aussi. Une carte se
+pose directement sous le `<h1>` de la page : **chaque écran du service
+annonçait donc h1 puis h3, sans jamais de h2.** Échec du critère WCAG 1.3.1 —
+la structure annoncée ne correspond pas à la structure réelle.
+
+Ce n'est pas cosmétique. Naviguer de titre en titre est la manière normale de
+parcourir une page quand on ne la voit pas, et un niveau manquant fait croire
+qu'une section a été sautée, ou qu'il en existe une parente qu'on n'a pas
+entendue. Sur un service où l'on cherche « Ma demande » ou « Ma décision »
+dans une page qui compte huit sections, c'est la table des matières qui ment.
+
+**Aucun des 884 tests ne pouvait le voir.** Les pages rendaient 200 et le HTML
+était valide. `AccessibilityTest` vérifiait les zones défilantes, les cibles
+tactiles, le lien d'évitement et la langue déclarée — pas l'ordre des titres.
+
+### Un niveau paramétrable, pas un `<h2>` figé
+
+Le premier réflexe était de remplacer `h3` par `h2` dans les deux composants.
+Une vérification des trente vues qui posent une carte a montré que ce n'est pas
+si simple :
+
+- **aucune carte n'est imbriquée** dans une autre, ni posée dans une section
+  qui porte déjà son `<h2>`. Pour `x-card`, `h2` est donc juste partout ;
+- **l'état vide, lui, dépend de son contexte.** Sur ses neuf emplacements, six
+  sont posés dans une carte **sans titre** — l'état vide est alors le titre de
+  la section, donc un `<h2>` — et trois dans une carte ou une section qui porte
+  déjà son `<h2>`, où il devient un `<h3>`.
+
+Les deux composants acceptent donc un `level`, valeur par défaut 2, et les
+trois emplacements imbriqués passent 3. C'est la vue qui connaît sa structure ;
+le composant ne peut pas la deviner. Le niveau est borné à 2..6 et ne sert
+qu'à fabriquer une balise de titre.
+
+### L'apparence ne suit plus la balise
+
+Ni `.card__title` ni `.empty-state__title` ne fixaient leur taille : ils la
+tenaient de leur balise. Le passage de `<h3>` à `<h2>` les aurait fait grossir
+de 18 à 22 px — un changement d'apparence qui n'était pas demandé, et qui
+aurait fait varier l'aspect d'un état vide selon que la carte qui l'entoure
+porte un titre ou non.
+
+Les deux tailles sont maintenant écrites dans la feuille. **Le niveau dit la
+structure, la classe dit l'apparence**, et les deux sont indépendants. Mesuré
+au navigateur avant et après : les titres de carte restent à 22 px, les états
+vides à 18 px, aux deux niveaux.
+
+### Ce qui garde la correction
+
+`ScreensRenderTest` ouvrait déjà chaque écran pour chaque rôle, avec de vraies
+données. Il vérifie désormais, sur le HTML rendu, qu'**aucun niveau n'est
+sauté** et qu'il y a **exactement un `<h1>`** par page. Les écrans publics ont
+été ajoutés au passage. Ce que `aria-hidden` masque aux lecteurs d'écran est
+exclu du calcul : ce qui ne leur est pas annoncé ne fait pas partie de la
+structure.
+
+C'est ce test qui a trouvé le second composant fautif : le premier correctif ne
+portait que sur `x-card`, et l'état vide de « Mes demandes » sautait toujours de
+h1 à h3.
+
+Vérifié indépendamment au navigateur sur **vingt-cinq écrans**, la galerie de
+composants comprise : aucun saut, un seul `h1` partout.

@@ -154,7 +154,7 @@
                     @endforeach
                 </ol>
             @else
-                <x-empty-state :title="__('dashboard.citizen.empty_title')">
+                <x-empty-state :level="3" :title="__('dashboard.citizen.empty_title')">
                     <p>{{ __('dashboard.citizen.track_empty') }}</p>
                     <form method="POST" action="{{ route('citizen.requests.start') }}">
                         @csrf

@@ -21,7 +21,7 @@
         <h2 class="card__title">{{ __('admin.assignments.stuck_title') }}</h2>
 
         @if ($bloquees->isEmpty())
-            <x-empty-state :title="__('admin.assignments.stuck_none_title')">
+            <x-empty-state :level="3" :title="__('admin.assignments.stuck_none_title')">
                 {{ __('admin.assignments.stuck_none_body') }}
             </x-empty-state>
         @else
@@ -77,7 +77,7 @@
         <h2 class="card__title">{{ __('admin.assignments.current_title') }}</h2>
 
         @if ($actives->isEmpty())
-            <x-empty-state :title="__('admin.assignments.current_none_title')">
+            <x-empty-state :level="3" :title="__('admin.assignments.current_none_title')">
                 {{ __('admin.assignments.current_none_body') }}
             </x-empty-state>
         @else
