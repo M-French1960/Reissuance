@@ -14,6 +14,7 @@
              connexion n'a pas de barre laterale a habiller. --}}
         <link rel="stylesheet" href="{{ asset('css/shell.css') }}">
         <script src="{{ asset('js/app-shell.js') }}" defer></script>
+        <script src="{{ asset('js/decision-confirm.js') }}" defer></script>
     @endauth
     {{-- Progressive enhancement: without these scripts the forms still work,
          they just lose in-browser compression, device signing and the

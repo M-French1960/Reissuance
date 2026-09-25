@@ -141,4 +141,38 @@ class TypographyTest extends TestCase
             $fautifs,
         )));
     }
+
+    /**
+     * AUCUNE ENTITE HTML DANS UNE ECHAPPEE BLADE.
+     *
+     * CE QUE CE TEST FERME (D-080). La file de traitement ecrivait
+     * `{{ $direction === 'asc' ? '&uarr;' : '&darr;' }}`. Blade echappe le
+     * contenu de `{{ }}`, donc l'esperluette devenait `&amp;`, et l'en-tete du
+     * tableau affichait « Déposée le &DARR; » en toutes lettres, a l'ecran, sur
+     * l'ecran de travail d'un officier.
+     *
+     * Rien ne pouvait le voir : la page rend 200, le HTML est valide, et le
+     * texte « &darr; » est un texte comme un autre pour une assertion.
+     * Le caractere lui-meme (↓) n'a pas ce probleme.
+     */
+    #[Test]
+    public function aucune_entite_html_n_est_echappee_par_blade(): void
+    {
+        $fautives = [];
+
+        foreach ($this->fichiers(resource_path('views'), '.blade.php') as $chemin) {
+            $sans = $this->sansCommentaires((string) file_get_contents($chemin));
+
+            // Une entite nommee ou numerique a l'interieur d'une echappee.
+            preg_match_all('/\{\{[^}]*&(#\d+|#x[0-9a-f]+|[a-z]+);[^}]*\}\}/i', $sans, $trouvees);
+
+            foreach ($trouvees[0] as $extrait) {
+                $fautives[] = basename($chemin).' : '.trim($extrait);
+            }
+        }
+
+        $this->assertSame([], $fautives,
+            'Entites HTML echappees par Blade, donc affichees telles quelles : '
+                .implode(' ; ', $fautives));
+    }
 }

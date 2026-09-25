@@ -62,7 +62,10 @@
                                 <th scope="col" @if ($sort === $col) aria-sort="{{ $direction === 'asc' ? 'ascending' : 'descending' }}" @endif>
                                     <a href="{{ route('officer.queue', array_merge(request()->query(), ['tri' => $col, 'sens' => $sort === $col && $direction === 'desc' ? 'asc' : 'desc'])) }}">
                                         {{ $libelle }}
-                                        @if ($sort === $col)<span aria-hidden="true">{{ $direction === 'asc' ? '&uarr;' : '&darr;' }}</span>@endif
+                                        {{-- LES ENTITES HTML ETAIENT ECHAPPEES PAR {{ }} : l'en-tete
+                                             affichait « Déposée le &DARR; » en toutes lettres. Les
+                                             caracteres eux-memes n'ont pas ce probleme. --}}
+                                        @if ($sort === $col)<span aria-hidden="true">{{ $direction === 'asc' ? '↑' : '↓' }}</span>@endif
                                     </a>
                                 </th>
                             @endforeach

@@ -141,6 +141,9 @@ return [
         'no_js_note' => 'Without JavaScript, copy the reason you want into the field above.',
         'internal_notes' => 'Internal notes',
         'internal_notes_hint' => 'Optional. Not passed on to the citizen.',
+        'confirm_title' => 'Confirm this decision',
+        'confirm_body' => 'It cannot be undone. You are about to record:',
+        'confirm_yes' => 'Record the decision',
         'save_decision' => 'Save my decision',
     ],
 

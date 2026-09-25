@@ -21,7 +21,11 @@
      annonce comme fait alors qu'il n'a pas eu lieu n'est pas un defaut
      d'affichage. Les vues qui connaissent ce qui a REELLEMENT ete enregistre
      passent donc la liste ; les autres gardent l'ordre pour preuve. --}}
-<nav class="stepper" aria-label="Progression de la demande">
+{{-- L'INTITULE ETAIT EN DUR, EN FRANCAIS (D-080). Il n'est pas visible : il
+     n'est lu que par les lecteurs d'ecran, ce qui explique qu'il ait survecu
+     au passage bilingue. Une personne aveugle naviguant en anglais entendait
+     « Progression de la demande » avant une liste anglaise. --}}
+<nav class="stepper" aria-label="{{ __('common.progress_nav') }}">
     <ol class="stepper__list">
         @foreach ($steps as $number => $label)
             @php

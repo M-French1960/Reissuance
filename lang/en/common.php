@@ -27,6 +27,7 @@ return [
     'previous' => 'Previous',
     'next' => 'Next',
     'page_of' => 'Page :current of :last',
+    'progress_nav' => 'Application progress',
     'pagination' => 'Pagination',
     'unread' => 'Unread',
     'step_done' => 'completed',

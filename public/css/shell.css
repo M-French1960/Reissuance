@@ -417,3 +417,109 @@
 
 @media (max-width: 1100px) { .dash-counters { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 640px) { .dash-counters { grid-template-columns: repeat(2, 1fr); } }
+
+/* =============================================================================
+   POSTE DE VERIFICATION ET FILE DE TRAITEMENT (D-080)
+   =============================================================================
+   Refonte VISUELLE. Aucun comportement n'a bouge : l'indicateur d'etapes
+   continue de distinguer « passe par la » de « fait » (D-074), les trois
+   messages de prise en charge restent distincts (D-055), et l'acceptation
+   reste impossible tant qu'un controle manque (D-027).
+   ========================================================================== */
+
+/* --- Indicateur d'etapes, en frise horizontale ----------------------------- */
+.shell .stepper { margin-bottom: var(--space-5); }
+
+.shell .stepper__list {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: var(--space-2);
+}
+
+/* `background` et `padding` sont remis a zero : la regle
+   `.stepper__item--current { background: var(--color-brand-050) }` de app.css
+   dessinait derriere l'etape courante un rectangle blanc qui debordait du
+   panneau. Vu a l'ecran, pas deduit. */
+.shell .stepper__item {
+  position: relative; display: flex; flex-direction: column; align-items: center;
+  gap: var(--space-2); text-align: center; font-size: var(--text-sm); color: var(--color-ink-500);
+  background: none; padding: 0;
+}
+
+/* Le trait relie une etape a la PRECEDENTE : il ne part donc pas de la
+   premiere, et il ne depasse jamais a droite de la derniere. */
+.shell .stepper__item::before {
+  content: ""; position: absolute; top: 17px;
+  left: calc(-50% + 22px); right: calc(50% + 22px);
+  height: 3px; border-radius: 3px; background: rgb(91 15 176 / 0.15);
+}
+
+.shell .stepper__item:first-child::before { display: none; }
+.shell .stepper__item--done::before, .shell .stepper__item--current::before { background: var(--ui-violet-700); }
+
+.shell .stepper__marker {
+  position: relative; z-index: 1;
+  width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center;
+  font-weight: 700; background: var(--color-surface);
+  border: 2px solid rgb(91 15 176 / 0.25); color: var(--ui-violet-700);
+}
+
+.shell .stepper__item--done .stepper__marker { background: var(--ui-violet-700); border-color: var(--ui-violet-700); color: #fff; }
+.shell .stepper__item--current .stepper__marker { border-color: var(--ui-violet-700); box-shadow: 0 0 0 6px rgb(123 47 242 / 0.18); }
+.shell .stepper__item--current { color: var(--ui-violet-900); font-weight: 700; }
+
+@media (max-width: 860px) {
+  /* En colonne, le trait devient vertical et les libelles passent a droite. */
+  .shell .stepper__list { grid-auto-flow: row; gap: 0; }
+  .shell .stepper__item { flex-direction: row; text-align: left; gap: var(--space-3); padding: var(--space-2) 0; align-items: center; }
+  .shell .stepper__item::before { top: -8px; bottom: auto; left: 17px; right: auto; width: 3px; height: 16px; }
+}
+
+/* --- Les cartes du poste de travail prennent l'allure des panneaux --------- */
+.shell .card {
+  border-radius: var(--ui-r-lg);
+  background: var(--ui-glass-light);
+  border: 1px solid var(--ui-glass-light-border);
+  backdrop-filter: blur(18px) saturate(150%); -webkit-backdrop-filter: blur(18px) saturate(150%);
+  box-shadow: 0 20px 50px -30px rgb(74 20 140 / 0.45);
+}
+
+.shell .card__title { font: 600 var(--text-xl)/1.2 var(--ui-font-display); color: var(--ui-violet-900); }
+
+/* --- Barre de decision ----------------------------------------------------- */
+.shell .actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-5); }
+
+/*
+   L'AIDE DE CHAQUE DECISION PASSE A LA LIGNE.
+
+   `.u-note` est en ligne par defaut, et les trois options se lisaient
+   « Accepter et transmettre au maireLa demande passera en attente de
+   signature.(indisponible, vérification incomplète) ». Sur l'ecran ou l'on
+   decide de delivrer ou de refuser un acte d'etat civil, les trois choix
+   doivent se distinguer d'un coup d'oeil.
+*/
+/* Un bouton d'action de tableau ne se casse pas sur trois lignes : la colonne
+   « Prendre en charge » faisait des lignes trois fois plus hautes que les
+   autres. */
+.shell td .btn { white-space: nowrap; }
+
+.shell .fieldset .field--inline { align-items: flex-start; margin-bottom: var(--space-3); }
+.shell .fieldset label { display: block; }
+.shell .fieldset label .u-note { display: block; margin-top: var(--space-1); }
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .shell .card { background: rgb(255 255 255 / 0.96); }
+}
+
+/* --- Confirmation d'une decision ------------------------------------------- */
+.decision-confirm {
+  border: 1px solid var(--color-line); border-radius: var(--ui-r-lg);
+  padding: var(--space-5); max-width: 32rem; width: calc(100% - 2rem);
+  background: var(--color-surface); color: var(--color-ink-900);
+  box-shadow: 0 30px 70px -30px rgb(20 0 60 / 0.5);
+}
+
+.decision-confirm::backdrop { background: rgb(20 5 45 / 0.5); }
+.decision-confirm h2 { font: 600 var(--text-xl)/1.2 var(--ui-font-display); margin: 0 0 var(--space-3); color: var(--ui-violet-900); }
+.decision-confirm p { margin: 0 0 var(--space-4); }
+.decision-confirm__choice { font-weight: 700; }
+.decision-confirm__actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }

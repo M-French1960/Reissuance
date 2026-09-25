@@ -61,7 +61,7 @@
 
     @if ($peutDecider)
         <x-card :title="__('officer.step5.decision_title')">
-            <form method="POST" action="{{ route('officer.decision.store', $demande) }}">
+            <form method="POST" action="{{ route('officer.decision.store', $demande) }}" data-decision-form>
                 @csrf
 
                 <fieldset class="fieldset">
@@ -123,6 +123,30 @@
 
                 <x-button type="submit" variant="primary">{{ __('officer.step5.save_decision') }}</x-button>
             </form>
+
+            {{--
+                CONFIRMATION D'UNE DECISION IRREVERSIBLE.
+
+                Elle transmet l'acte au maire, ou elle refuse la demande d'etat
+                civil de quelqu'un et lui en notifie le motif. Le dialogue
+                reprend la decision choisie EN TOUTES LETTRES : un « Etes-vous
+                sûr ? » qui ne dit pas de quoi ne fait qu'ajouter un clic.
+
+                C'est un filet, pas une barriere. Sans JavaScript, ou sans
+                <dialog>, le formulaire part directement et les controles du
+                serveur sont identiques.
+            --}}
+            <dialog class="decision-confirm" data-decision-dialog aria-labelledby="confirmer-titre">
+                <h2 id="confirmer-titre">{{ __('officer.step5.confirm_title') }}</h2>
+                <p>
+                    {{ __('officer.step5.confirm_body') }}
+                    <span class="decision-confirm__choice" data-decision-summary></span>
+                </p>
+                <div class="decision-confirm__actions">
+                    <button type="button" class="btn btn--primary" data-decision-confirm>{{ __('officer.step5.confirm_yes') }}</button>
+                    <button type="button" class="btn btn--secondary" data-decision-cancel>{{ __('common.cancel') }}</button>
+                </div>
+            </dialog>
         </x-card>
     @endif
 @endsection

@@ -3784,3 +3784,100 @@ citoyen ne l'atteint.
   `citizen.requests.start` **reprend** le brouillon en cours. Annoncer « Faire
   une demande » à quelqu'un qui en a déjà une à mi-chemin lui ferait croire
   qu'il en ouvre une seconde.
+
+---
+
+## D-080 — Les quatre maquettes du dossier « new pages »
+
+Connexion, inscription, poste de l'officier et poste de vérification. La série
+officier a visiblement été écrite à partir de la spécification : ses cinq
+étapes de vérification sont exactement les cinq qui existent, et son panneau de
+décision dit déjà qu'un motif est obligatoire et qu'il est communiqué au
+demandeur en cas de rejet. La série authentification demandait plus de
+corrections.
+
+### Ce que les maquettes d'entrée affirmaient
+
+| La maquette | Ce que fait l'application |
+|---|---|
+| « Téléphone ou adresse e-mail » comme identifiant | Fortify est configuré sur `email`, et rien ne résout un numéro vers un compte. Quiconque aurait saisi son téléphone aurait été refusé sans explication. |
+| « Notifications par SMS », deux fois, et un mobile obligatoire pour les recevoir | Les canaux sont `database` et `mail`. Le téléphone est déjà demandé au profil, là où il sert. |
+| Un sexe obligatoire | **Rien** dans l'application ne le lit, ni pour instruire une demande ni pour rédiger un acte. Collecter une donnée personnelle sans usage sur une plateforme d'état civil demande une raison. |
+| « 8 caractères minimum, une lettre, un chiffre » | La politique réelle exige **douze** caractères, majuscule, minuscule, chiffre **et** symbole, plus un contrôle de mot de passe faible. |
+| « Suivre une demande avec un numéro de suivi » et un « Espace agent » séparé | Aucune route publique de suivi, et une seule porte pour les quatre rôles. |
+| Liens vers conditions d'utilisation et politique de confidentialité | Deux pages qui n'existent pas. |
+| « Exemple de suivi », deux étapes cochées | Lisible comme *son* dossier, avant même d'être connecté. L'intitulé dit maintenant qu'il montre à quoi ressemble le parcours. |
+
+**Le plus insidieux est la politique de mot de passe.** La maquette affichait
+une liste de règles qui s'allument en direct. Quelqu'un les aurait vues toutes
+vertes, puis son inscription aurait été refusée sans qu'il comprenne pourquoi.
+La liste affiche maintenant les règles réellement appliquées, et un test envoie
+un mot de passe conforme à la maquette pour vérifier que le serveur le refuse.
+
+### Le poste de l'officier
+
+Six compteurs, pas les cinq de la maquette : elle oubliait « en cours de
+vérification », le seul qui dise à un officier ce qu'il a lui-même sur le feu.
+
+Son filtre « Centre : Tous » n'a pas été repris. La portée globale restreint un
+officier aux demandes de **son** centre ; un filtre qui en propose d'autres
+laisserait croire le contraire, et chaque choix ne changerait rien. Un test le
+refuse désormais.
+
+« Traiter la plus ancienne » ouvre la file triée par date de dépôt croissante.
+Il n'existe pas d'action « prendre en charge la plus ancienne », et l'inventer
+aurait attribué un dossier à un officier qui ne l'a pas vu.
+
+Le poste de vérification n'a été **que** rhabillé. Il porte des comportements
+durement acquis — la distinction entre « passé par là » et « fait » (D-074),
+les trois messages distincts de prise en charge (D-055), l'acceptation
+impossible tant qu'un contrôle manque (D-027) — et les réécrire aurait été le
+meilleur moyen de les perdre.
+
+**Une seule addition :** la confirmation avant d'enregistrer une décision. Elle
+transmet l'acte au maire, ou elle refuse la demande d'état civil de quelqu'un et
+lui en notifie le motif. Le dialogue reprend la décision choisie **en toutes
+lettres** : un « Êtes-vous sûr ? » qui ne dit pas de quoi n'ajoute qu'un clic.
+C'est un filet, pas une barrière : sans JavaScript le formulaire part
+directement, et les contrôles du serveur sont exactement les mêmes.
+
+### Quatre défauts silencieux, trouvés en lisant et en regardant
+
+**Une variable CSS qui n'existe pas.** `app.css` écrivait
+`color: var(--color-ink)`. Les jetons s'appellent `--color-ink-900`, `-700`,
+`-500` et `-300`. Une variable inconnue sans valeur de repli rend la
+déclaration **invalide**, et la propriété est alors héritée : les options du
+sélecteur de langue héritaient du blanc prévu pour la barre violette, et
+s'affichaient en blanc sur blanc. `DesignTokensTest` refuse maintenant toute
+variable utilisée sans définition ni repli, vérifié en réintroduisant la faute.
+
+**Une entité HTML échappée par Blade.** La file écrivait
+`{{ ... ? '&uarr;' : '&darr;' }}`. Blade échappe l'esperluette, et l'en-tête du
+tableau affichait **« Déposée le &DARR; »** en toutes lettres sur l'écran de
+travail d'un officier. `TypographyTest` refuse maintenant toute entité à
+l'intérieur d'une échappée.
+
+**Le sélecteur de langue, encore blanc sur blanc** sur la nouvelle carte claire
+d'authentification : même famille que les boutons de l'accueil (D-078), même
+cause, une règle écrite pour un fond appliquée sur un autre.
+
+**Deux textes français en dur**, dans les deux langues : le titre du
+récapitulatif d'erreurs au-dessus de chaque formulaire d'authentification, et
+l'intitulé de l'indicateur d'étapes. Ce dernier n'est **pas visible** : il n'est
+lu que par les lecteurs d'écran, ce qui explique qu'il ait survécu au passage
+bilingue. Une personne aveugle naviguant en anglais entendait « Progression de
+la demande » avant une liste anglaise.
+
+**Et un test qui ne regardait qu'une coquille.** `AccessibilityTest` vérifiait
+le lien d'évitement et la langue déclarée sur `layouts/app.blade.php`. Une
+deuxième coquille est apparue et il a continué de passer sans rien vérifier
+d'elle. Il parcourt maintenant toutes les coquilles du dossier.
+
+### Ce qui reste à signaler au client
+
+- **Le téléphone et le sexe** n'ont pas été ajoutés à l'inscription. Si
+  l'administration a besoin du sexe pour rédiger l'acte, elle le dira et le
+  champ suivra ; en attendant, il n'a pas d'usage dans le logiciel.
+- La maquette du poste de l'officier fusionnait tableau de bord et file en un
+  seul écran. Les deux ont été gardés : fusionner aurait supprimé un écran, ce
+  qui dépasse une refonte d'interface.

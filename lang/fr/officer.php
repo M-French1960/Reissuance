@@ -141,6 +141,9 @@ return [
         'no_js_note' => 'Sans JavaScript, recopiez le motif voulu dans le champ ci-dessus.',
         'internal_notes' => 'Notes internes',
         'internal_notes_hint' => 'Facultatives. Non communiquées au citoyen.',
+        'confirm_title' => 'Confirmer cette décision',
+        'confirm_body' => "Elle ne peut pas être annulée. Vous êtes sur le point d'enregistrer :",
+        'confirm_yes' => 'Enregistrer la décision',
         'save_decision' => 'Enregistrer ma décision',
     ],
 
