@@ -384,3 +384,36 @@
   .dash-tracker__step { flex-direction: row; text-align: left; gap: var(--space-3); padding: var(--space-2) 0; align-items: flex-start; }
   .dash-tracker__step::before { top: -8px; bottom: auto; left: 17px; right: auto; width: 3px; height: 16px; }
 }
+
+/* --- Bandeau de compteurs (poste de l'officier, D-080) --------------------- */
+.dash-counters {
+  list-style: none; margin: 0 0 var(--space-3); padding: 0;
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-3);
+}
+
+.dash-counter {
+  display: flex; flex-direction: column; gap: var(--space-1);
+  height: 100%; padding: var(--space-4); border-radius: var(--ui-r-md);
+  text-decoration: none; color: inherit;
+  background: var(--ui-glass-light); border: 1px solid var(--ui-glass-light-border);
+  border-top: 3px solid var(--color-line);
+  transition: background-color 0.2s ease;
+}
+
+.dash-counter:hover { background: var(--color-surface); }
+
+/* Le liseré reprend le jeton de couleur du statut : la meme teinte que le
+   badge de la file, jamais une couleur choisie ici. */
+.dash-counter--waiting { border-top-color: var(--tone-waiting-fg); }
+.dash-counter--progress { border-top-color: var(--tone-progress-fg); }
+.dash-counter--attention { border-top-color: var(--tone-attention-fg); }
+.dash-counter--success { border-top-color: var(--tone-success-fg); }
+.dash-counter--danger { border-top-color: var(--tone-danger-fg); }
+.dash-counter--neutral { border-top-color: var(--tone-neutral-fg); }
+
+.dash-counter__label { font-size: var(--text-sm); font-weight: 600; color: var(--color-ink-700); }
+.dash-counter__value { font: 700 1.9rem/1 var(--ui-font-display); color: var(--ui-violet-900); }
+.dash-counter__hint { font-size: var(--text-xs); color: var(--color-ink-500); }
+
+@media (max-width: 1100px) { .dash-counters { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 640px) { .dash-counters { grid-template-columns: repeat(2, 1fr); } }

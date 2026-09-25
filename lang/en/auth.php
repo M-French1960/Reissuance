@@ -86,4 +86,41 @@ return [
     'twofa_recovery_note' => 'Use one of the recovery codes you wrote down during setup. Each code works once.',
     'twofa_recovery_code' => 'Recovery code',
     'twofa_use_code' => 'Use this code',
+
+    /* --- Coquille des ecrans d'authentification (D-080) --- */
+    'aside_help' => 'Need help? Read the questions on the home page',
+    'errors_blocking' => 'One problem is stopping you|:count problems are stopping you',
+
+    'login_aside_title' => 'Good to see you again',
+    'login_aside_lead' => 'Sign in to follow your applications and download your certificate.',
+    'login_demo_label' => 'What the journey looks like',
+    'login_demo_1' => 'Application submitted',
+    'login_demo_2' => 'Checked by the officer',
+    'login_demo_3' => 'Signature by the mayor',
+    'login_demo_4' => 'Copy available',
+
+    'register_aside_title' => 'One account, from the application to the certificate',
+    'register_aside_lead' => 'Create your account to apply for a reissue and be notified at every step.',
+    'register_point_online_title' => 'Apply online',
+    'register_point_online_body' => 'Upload your documents from your phone.',
+    'register_point_notify_title' => 'Notified by email',
+    'register_point_notify_body' => 'Officer check, mayor signature, copy available.',
+    'register_point_privacy_title' => 'Your file stays restricted',
+    'register_point_privacy_body' => 'Only the officer of your centre and your mayor can open it.',
+
+    'recover_aside_title' => 'Getting back into your account',
+    'recover_aside_lead' => 'We send a link to the address of your account. It is valid for a short time and can be used once.',
+
+    'show_password' => 'Show',
+    'hide_password' => 'Hide',
+    'caps_lock_on' => 'Caps lock is on.',
+
+    'password_rules_title' => 'Your password must have',
+    'password_rule_length' => 'At least 12 characters',
+    'password_rule_mixed' => 'An upper case and a lower case letter',
+    'password_rule_number' => 'A digit',
+    'password_rule_symbol' => 'A symbol',
+    'password_rule_note' => 'A string of unrelated words is easier to remember and harder to guess than one complicated word.',
+
+    'staff_note' => 'Officer, mayor or administrator: sign in here with the address the administration gave you.',
 ];

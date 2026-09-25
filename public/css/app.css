@@ -432,7 +432,13 @@ th a:hover { color: var(--color-brand-700); text-decoration: underline; }
 
 /* Les options se dessinent par le système : sans cette règle elles héritent
    du blanc sur blanc dans plusieurs navigateurs. */
-.lang-switch__select option { color: var(--color-ink); background: #fff; }
+/* `--color-ink` N'EXISTE PAS : les jetons sont --color-ink-900, -700, -500 et
+   -300. Une variable inconnue rend la declaration invalide, la couleur etait
+   donc heritee — c'est-a-dire BLANCHE, celle du selecteur sur la barre
+   violette. Les options du menu deroulant s'affichaient en blanc sur blanc.
+   Trouve en relisant la feuille, pas par un test : aucune assertion ne lit
+   une liste deroulante ouverte. */
+.lang-switch__select option { color: var(--color-ink-900); background: #fff; }
 
 .lang-switch__select:focus-visible {
   outline: 3px solid var(--color-focus);

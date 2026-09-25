@@ -139,4 +139,54 @@ class DesignTokensTest extends TestCase
 
         $this->assertSame([], $fautes, 'Couleurs en dur trouvées dans des vues : '.json_encode($fautes));
     }
+
+    /**
+     * TOUTE VARIABLE CSS UTILISEE EST DEFINIE QUELQUE PART.
+     *
+     * CE QUE CE TEST FERME (D-080). `app.css` ecrivait
+     * `color: var(--color-ink)`. Ce jeton n'existe pas : ils s'appellent
+     * --color-ink-900, -700, -500 et -300. Une variable inconnue sans valeur
+     * de repli rend la declaration INVALIDE, et la propriete est alors
+     * heritee. Ici, la couleur heritee etait le blanc du selecteur pose sur la
+     * barre violette : les options du menu deroulant s'affichaient en blanc
+     * sur blanc.
+     *
+     * Rien ne pouvait le voir. Le CSS reste valide au sens du parseur, la page
+     * rend 200, et aucune assertion ne lit une liste deroulante ouverte. Une
+     * faute de frappe dans un nom de jeton se paie donc a l'ecran, et
+     * seulement a l'ecran.
+     */
+    #[Test]
+    public function aucune_variable_css_n_est_utilisee_sans_etre_definie(): void
+    {
+        $definies = [];
+        $utilisees = [];
+
+        foreach (glob(public_path('css/*.css')) as $chemin) {
+            $css = (string) file_get_contents($chemin);
+
+            preg_match_all('/(--[a-z0-9-]+)\s*:/i', $css, $d);
+            $definies = array_merge($definies, $d[1]);
+
+            // Un var() avec valeur de repli est sur : il survit a l'absence.
+            preg_match_all('/var\(\s*(--[a-z0-9-]+)\s*\)/i', $css, $u);
+
+            foreach ($u[1] as $nom) {
+                $utilisees[$nom][] = basename($chemin);
+            }
+        }
+
+        $definies = array_unique($definies);
+        $orphelines = [];
+
+        foreach ($utilisees as $nom => $fichiers) {
+            if (! in_array($nom, $definies, true)) {
+                $orphelines[] = $nom.' ('.implode(', ', array_unique($fichiers)).')';
+            }
+        }
+
+        $this->assertSame([], $orphelines,
+            'Variables CSS utilisees sans definition ni repli : '.implode(' ; ', $orphelines)
+                .'. La declaration est invalide et la propriete est heritee, en silence.');
+    }
 }

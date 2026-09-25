@@ -157,19 +157,43 @@ class AccessibilityTest extends TestCase
     #[Test]
     public function la_langue_du_document_est_declaree(): void
     {
-        $layout = file_get_contents(resource_path('views/layouts/app.blade.php'));
-
-        $this->assertStringContainsString('<html lang=', $layout);
+        foreach ($this->coquilles() as $nom => $layout) {
+            $this->assertStringContainsString('<html lang=', $layout, "Coquille {$nom}.");
+        }
     }
 
     /** Le lien d'evitement, premier arret de tabulation de chaque page. */
     #[Test]
     public function le_lien_d_evitement_pointe_sur_une_cible_existante(): void
     {
-        $layout = file_get_contents(resource_path('views/layouts/app.blade.php'));
+        foreach ($this->coquilles() as $nom => $layout) {
+            $this->assertStringContainsString('class="skip-link" href="#contenu"', $layout, "Coquille {$nom}.");
+            $this->assertStringContainsString('id="contenu"', $layout, "Coquille {$nom}.");
+            $this->assertStringContainsString('tabindex="-1"', $layout, "Coquille {$nom}.");
+        }
+    }
 
-        $this->assertStringContainsString('class="skip-link" href="#contenu"', $layout);
-        $this->assertStringContainsString('id="contenu"', $layout);
-        $this->assertStringContainsString('tabindex="-1"', $layout);
+    /**
+     * TOUTES les coquilles, pas seulement la premiere.
+     *
+     * Ces deux tests ne regardaient que layouts/app.blade.php. Le jour ou une
+     * deuxieme coquille est apparue pour les ecrans d'authentification
+     * (D-080), ils ont continue de passer sans rien verifier d'elle : une
+     * coquille sans lien d'evitement ni langue declaree serait passee
+     * inapercue. Toute nouvelle coquille est reprise ici automatiquement.
+     *
+     * @return array<string, string>
+     */
+    private function coquilles(): array
+    {
+        $coquilles = [];
+
+        foreach (glob(resource_path('views/layouts/*.blade.php')) as $chemin) {
+            $coquilles[basename($chemin)] = (string) file_get_contents($chemin);
+        }
+
+        $this->assertNotEmpty($coquilles, 'Aucune coquille trouvee.');
+
+        return $coquilles;
     }
 }

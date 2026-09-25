@@ -3,31 +3,72 @@
 
 @section('content')
     {{--
-        THE SCREEN AN OFFICER LANDS ON AFTER SIGNING IN (D-073).
+        LE POSTE DE L'OFFICIER (D-073, D-080).
 
-        It stayed a milestone 2 sketch: three counters, then "Milestone 2, the
-        processing queue and the five-step verification arrive at milestone 4".
-        Both had existed for a long time. And none of the counters led to the
-        queue: the agent read a number with no way to open it.
+        Composition reprise de la maquette « officer-dashboard ». Ce qui a
+        change, et pourquoi :
+
+          - la maquette affichait cinq compteurs et OUBLIAIT « en cours de
+            vérification ». C'est pourtant le seul qui dit a un officier ce
+            qu'il a lui-meme sur le feu. Il est ici ;
+          - elle proposait un filtre « Centre : Tous ». La portee globale
+            restreint un officier aux demandes de SON centre, et rien ne peut
+            l'ouvrir. Proposer un tel filtre laisserait croire le contraire ;
+          - « Rapports » et « Paramètres » dans le menu : aucune de ces deux
+            pages n'existe, et les reglages sont reserves a l'administrateur ;
+          - « Traiter la plus ancienne » ouvre la file triee par date de
+            depot croissante. Il n'existe pas d'action « prendre en charge la
+            plus ancienne » : la prise en charge est un POST sur un dossier
+            precis, et l'inventer ici aurait attribue un dossier sans que
+            l'officier l'ait vu.
     --}}
     <h1>{{ __('dashboard.officer.heading') }}</h1>
-    <p>{{ __('dashboard.officer.centre_line', ['centre' => auth()->user()->center?->name ?? __('common.none')]) }}</p>
 
     <x-flash />
 
-    {{-- Each counter OPENS the queue filtered on its status. --}}
-    <div class="grid grid--3">
-        @foreach ([\App\Enums\RequestStatus::Pending, \App\Enums\RequestStatus::UnderReview, \App\Enums\RequestStatus::AwaitingSignature] as $status)
-            <x-card>
-                <p class="stat__label">{{ $status->label() }}</p>
-                <p class="stat__value">{{ $counts[$status->value] }}</p>
-                {{-- The query parameter is `statut`, not `status`. --}}
-                <x-button href="{{ route('officer.queue', ['statut' => $status->value]) }}" variant="secondary">
-                    {{ __('common.open') }}
-                </x-button>
-            </x-card>
-        @endforeach
-    </div>
+    <section class="dash-welcome" aria-labelledby="accueil-officier">
+        <span class="dash-welcome__orb" aria-hidden="true"></span>
+        <div class="dash-welcome__text">
+            <h2 id="accueil-officier">{{ __('dashboard.officer.welcome', ['name' => auth()->user()->name]) }}</h2>
+            <p>{{ __('dashboard.officer.welcome_lede') }}</p>
+            <p class="u-note">{{ __('dashboard.officer.centre_line', ['centre' => auth()->user()->center?->name ?? __('common.none')]) }}</p>
+        </div>
+        <div class="dash-welcome__actions">
+            <x-button variant="primary"
+                      href="{{ route('officer.queue', ['statut' => \App\Enums\RequestStatus::Pending->value, 'tri' => 'submitted_at', 'sens' => 'asc']) }}">
+                {{ __('dashboard.officer.oldest') }}
+            </x-button>
+        </div>
+    </section>
+
+    <section aria-labelledby="compteurs">
+        <h2 id="compteurs" class="visually-hidden">{{ __('dashboard.officer.counters_title') }}</h2>
+
+        {{-- Chaque compteur OUVRE la file filtree sur son statut : un nombre
+             qu'on ne peut pas ouvrir ne sert a rien (D-073). --}}
+        <ul class="dash-counters">
+            @foreach ([
+                \App\Enums\RequestStatus::Pending,
+                \App\Enums\RequestStatus::UnderReview,
+                \App\Enums\RequestStatus::AwaitingSignature,
+                \App\Enums\RequestStatus::Escalated,
+                \App\Enums\RequestStatus::Signed,
+                \App\Enums\RequestStatus::Rejected,
+            ] as $statut)
+                <li>
+                    <a class="dash-counter dash-counter--{{ $statut->tone() }}"
+                       href="{{ route('officer.queue', ['statut' => $statut->value]) }}">
+                        <span class="dash-counter__label">{{ $statut->label() }}</span>
+                        <span class="dash-counter__value">{{ $counts[$statut->value] }}</span>
+                        <span class="dash-counter__hint">{{ __('dashboard.officer.hint_'.$statut->value) }}</span>
+                    </a>
+                </li>
+            @endforeach
+        </ul>
+
+        {{-- Dit une fois, clairement : ces chiffres ne sont pas ceux du pays. --}}
+        <p class="u-note">{{ __('dashboard.officer.scope_note') }}</p>
+    </section>
 
     <x-card :title="__('dashboard.officer.queue_title')">
         <p>{{ __('dashboard.officer.queue_body') }}</p>

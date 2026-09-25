@@ -15,9 +15,11 @@
              message dit ce qui s'est passe et ce qu'il faut faire (8.1). --}}
         @if ($errors->any())
             <div class="alert alert--danger" role="alert" tabindex="-1" id="erreurs">
-                <p class="alert__title">
-                    {{ $errors->count() === 1 ? 'Un problème empêche de continuer' : $errors->count().' problèmes empêchent de continuer' }}
-                </p>
+                {{-- ELLE ETAIT EN DUR, EN FRANCAIS, SUR TOUS LES ECRANS
+                     D'AUTHENTIFICATION (D-080). Un lecteur anglophone qui se
+                     trompait de mot de passe lisait « Un problème empêche de
+                     continuer » au-dessus d'un message anglais. --}}
+                <p class="alert__title">{{ trans_choice('auth.errors_blocking', $errors->count(), ['count' => $errors->count()]) }}</p>
                 <ul class="alert__list">
                     @foreach ($errors->all() as $message)
                         <li>{{ $message }}</li>

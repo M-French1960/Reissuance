@@ -65,6 +65,18 @@ return [
         'queue_title' => 'File de traitement',
         'queue_body' => "Prenez un dossier en charge, menez les cinq contrôles, puis décidez. Tout ce que vous ouvrez est inscrit au journal d'audit.",
         'open_queue' => 'Ouvrir la file',
+        /* --- Reprise de la maquette officier (D-080) --- */
+        'welcome' => 'Bonjour, :name',
+        'welcome_lede' => 'Vérifiez les demandes de réédition de votre centre avant leur transmission au maire pour signature.',
+        'oldest' => 'Ouvrir la plus ancienne en attente',
+        'counters_title' => 'Votre centre en ce moment',
+        'hint_pending' => "En attente d'un officier",
+        'hint_under_review' => 'Prise en charge, contrôles en cours',
+        'hint_awaiting_signature' => 'Plus rien à faire de votre côté',
+        'hint_escalated' => "En attente de l'arbitrage du maire",
+        'hint_signed' => 'Dossier clos',
+        'hint_rejected' => 'Le demandeur en connaît la raison',
+        'scope_note' => 'Ces comptes ne portent que sur votre centre. La plateforme ne vous laisse pas en consulter un autre.',
     ],
 
     'mayor' => [

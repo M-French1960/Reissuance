@@ -86,4 +86,41 @@ return [
     'twofa_recovery_note' => "Utilisez l'un des codes de secours notés lors de la configuration. Chaque code ne sert qu'une fois.",
     'twofa_recovery_code' => 'Code de secours',
     'twofa_use_code' => 'Utiliser ce code',
+
+    /* --- Coquille des ecrans d'authentification (D-080) --- */
+    'aside_help' => "Besoin d'aide ? Lisez les questions sur la page d'accueil",
+    'errors_blocking' => 'Un problème empêche de continuer|:count problèmes empêchent de continuer',
+
+    'login_aside_title' => 'Content de vous revoir',
+    'login_aside_lead' => 'Connectez-vous pour suivre vos demandes et télécharger votre acte.',
+    'login_demo_label' => 'À quoi ressemble le parcours',
+    'login_demo_1' => 'Demande déposée',
+    'login_demo_2' => "Vérifiée par l'officier",
+    'login_demo_3' => 'Signature du maire',
+    'login_demo_4' => 'Copie disponible',
+
+    'register_aside_title' => "Un compte, de la demande jusqu'à l'acte",
+    'register_aside_lead' => 'Créez votre compte pour déposer une demande de réédition et être prévenu à chaque étape.',
+    'register_point_online_title' => 'Demande en ligne',
+    'register_point_online_body' => 'Déposez vos pièces depuis votre téléphone.',
+    'register_point_notify_title' => 'Prévenu par courriel',
+    'register_point_notify_body' => "Vérification de l'officier, signature du maire, copie disponible.",
+    'register_point_privacy_title' => 'Votre dossier reste restreint',
+    'register_point_privacy_body' => "Seuls l'officier de votre centre et votre maire peuvent l'ouvrir.",
+
+    'recover_aside_title' => 'Retrouver votre compte',
+    'recover_aside_lead' => "Un lien est envoyé à l'adresse de votre compte. Il est valable peu de temps et ne sert qu'une fois.",
+
+    'show_password' => 'Afficher',
+    'hide_password' => 'Masquer',
+    'caps_lock_on' => 'Le verrouillage des majuscules est actif.',
+
+    'password_rules_title' => 'Votre mot de passe doit comporter',
+    'password_rule_length' => 'Au moins 12 caractères',
+    'password_rule_mixed' => 'Une majuscule et une minuscule',
+    'password_rule_number' => 'Un chiffre',
+    'password_rule_symbol' => 'Un symbole',
+    'password_rule_note' => "Une suite de mots sans rapport est plus facile à retenir et plus difficile à deviner qu'un seul mot compliqué.",
+
+    'staff_note' => "Officier, maire ou administrateur : connectez-vous ici avec l'adresse que l'administration vous a communiquée.",
 ];

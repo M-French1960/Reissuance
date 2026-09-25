@@ -65,6 +65,18 @@ return [
         'queue_title' => 'Processing queue',
         'queue_body' => 'Take a file, run the five checks, then decide. Everything you open is recorded in the audit log.',
         'open_queue' => 'Open the queue',
+        /* --- Reprise de la maquette officier (D-080) --- */
+        'welcome' => 'Hello, :name',
+        'welcome_lede' => 'Check the reissue applications of your centre before they go to the mayor for signature.',
+        'oldest' => 'Open the oldest waiting',
+        'counters_title' => 'Your centre right now',
+        'hint_pending' => 'Waiting for an officer to take it',
+        'hint_under_review' => 'Taken, checks under way',
+        'hint_awaiting_signature' => 'Nothing left for you to do',
+        'hint_escalated' => 'Waiting for the mayor to arbitrate',
+        'hint_signed' => 'File closed',
+        'hint_rejected' => 'The applicant was told why',
+        'scope_note' => 'These counts cover your centre only. The platform does not let you see another one.',
     ],
 
     'mayor' => [
