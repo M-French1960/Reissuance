@@ -60,15 +60,15 @@
                     <tbody>
                         @foreach ($users as $user)
                             <tr>
-                                <td>{{ $user->name }}<br><span class="field__hint">{{ $user->email }}</span></td>
-                                <td>{{ $user->role->label() }}</td>
-                                <td>{{ $user->center?->name ?? $user->commune?->name }}</td>
-                                <td>
+                                <td data-label="{{ __('common.name') }}">{{ $user->name }}<br><span class="field__hint">{{ $user->email }}</span></td>
+                                <td data-label="{{ __('admin.users.role') }}">{{ $user->role->label() }}</td>
+                                <td data-label="{{ __('admin.users.attachment') }}">{{ $user->center?->name ?? $user->commune?->name }}</td>
+                                <td data-label="{{ __('admin.users.status') }}">
                                     <span class="badge badge--{{ $user->status === 'active' ? 'success' : ($user->status === 'suspended' ? 'attention' : ($user->status === 'pending' ? 'waiting' : 'neutral')) }}">
                                         {{ __('enums.account_status.'.$user->status) }}
                                     </span>
                                 </td>
-                                <td>
+                                <td data-label="{{ __('admin.users.two_factor') }}">
                                     @if ($user->two_factor_confirmed_at)
                                         <span class="badge badge--success">{{ __('admin.users.two_factor_configured') }}</span>
                                     @elseif ($user->role->requiresTwoFactor())
@@ -77,7 +77,7 @@
                                         <span class="badge badge--neutral">{{ __('admin.users.two_factor_optional') }}</span>
                                     @endif
                                 </td>
-                                <td>
+                                <td data-label="{{ __('common.actions') }}">
                                     <div class="row-actions">
                                         @can('changeStatus', $user)
                                             <details>

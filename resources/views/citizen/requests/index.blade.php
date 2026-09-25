@@ -45,10 +45,10 @@
                     <tbody>
                         @foreach ($requests as $demande)
                             <tr>
-                                <td>{{ $demande->reference }}</td>
-                                <td><x-status-badge :status="$demande->status" /></td>
-                                <td>{{ $demande->center?->name }}</td>
-                                <td>{{ $demande->submitted_at?->translatedFormat('d/m/Y') }}</td>
+                                <td data-label="{{ __('common.reference') }}">{{ $demande->reference }}</td>
+                                <td data-label="{{ __('common.status') }}"><x-status-badge :status="$demande->status" /></td>
+                                <td data-label="{{ __('common.centre') }}">{{ $demande->center?->name }}</td>
+                                <td data-label="{{ __('common.submitted_on') }}">{{ $demande->submitted_at?->translatedFormat('d/m/Y') }}</td>
                                 <td>
                                     @if ($demande->isDraft())
                                         <a href="{{ route('citizen.requests.step', ['reissuanceRequest' => $demande, 'step' => min($demande->last_completed_step + 1, 4)]) }}">{{ __('common.resume') }}</a>

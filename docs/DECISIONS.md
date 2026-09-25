@@ -4031,3 +4031,120 @@ le caractère, vérifié en réintroduisant l'entité.
 - **Un voyant de chargement sur les boutons d'envoi.** Il empêche le double
   clic, mais l'application n'a pas de problème de double soumission ici, et
   cela aurait ajouté du JavaScript à trois formulaires sans bénéfice mesuré.
+
+---
+
+## D-083 — Du grand écran au téléphone : la passe responsive
+
+Le client a livré 31 maquettes de plus dans `new pages`, avec une charte
+commune, et a demandé de **mettre l'accent sur le responsive, du web au
+mobile**.
+
+### La méthode : mesurer avant de corriger
+
+Une sonde ouvre **chaque écran, pour chaque rôle, à douze largeurs** — 320,
+360, 390, 414, 480, 600, 768, 820, 1024, 1280, 1440, 1920 — et relève trois
+choses : le débordement horizontal et l'élément exact qui le cause, les cibles
+tactiles sous 44 px, et les tableaux qui défilent horizontalement.
+
+320 px est le plancher (iPhone SE première génération) et **360 px est la
+largeur la plus répandue en Afrique subsaharienne** : c'est l'écran du citoyen
+visé, pas un cas limite.
+
+Premier relevé, 246 mesures :
+
+| | avant | après |
+|---|---:|---:|
+| débordements horizontaux | 4 | **0** |
+| écrans avec une cible tactile < 44 px | 222 | **0** |
+| tableaux qui défilent sous 720 px | 40 | **0** |
+
+### Les tableaux deviennent des cartes
+
+Un tableau de sept colonnes sur un téléphone de 360 px ne se lit pas. Il
+défilait horizontalement dans `.table-wrap` : techniquement correct, mais
+personne ne fait défiler une ligne pour lire une référence puis revient en
+arrière pour lire le statut. **Mesure avant correction : la file de traitement
+faisait 1 087 px de large dans un conteneur de 276.**
+
+Sous 720 px, chaque ligne devient une carte et chaque cellule affiche
+l'intitulé de sa colonne, lu dans `data-label`. Trois précautions :
+
+- **l'en-tête reste dans le DOM**, simplement masqué à l'œil. Une table sans
+  `<thead>` n'est plus une table pour un lecteur d'écran, et les relations
+  ligne/colonne se perdraient ;
+- **les gabarits PDF ne sont pas touchés.** Ils sont composés à largeur fixe
+  par dompdf et n'ont aucun `.table-wrap` : les passer en cartes casserait
+  l'acte. Un test le vérifie ;
+- **la dernière cellule, celle des actions, ne porte pas d'intitulé** : « Action »
+  répété sur chaque carte, au-dessus d'un bouton qui dit déjà ce qu'il fait,
+  n'apprend rien.
+
+### Les cibles tactiles : le jeton existait, il n'était pas appliqué
+
+`--tap-target: 44px` est défini depuis le début, et un test vérifie *que le
+jeton vaut 44 px*. Rien ne vérifiait que les éléments l'atteignent. Sept
+familles étaient en dessous : la marque de la barre latérale à 43 px, le bouton
+« Afficher » du mot de passe à 36, « Mot de passe oublié ? » à 22, les liens des
+compteurs à 22, les boutons de la barre d'accueil à 42.
+
+« Mot de passe oublié ? » est la porte de sortie de quelqu'un qui ne peut pas
+entrer, et le bouton « Afficher » se frappe au pouce à côté d'un champ de mot
+de passe : le rater efface la saisie.
+
+### Trois défauts que la mesure a trouvés et que je n'aurais pas devinés
+
+**Le tiroir fermé était atteignable au clavier.** La barre latérale n'était
+qu'écartée par `transform: translateX(-100%)`. Constaté en donnant le focus :
+il entrait dans le menu invisible, et une personne qui navigue à la tabulation
+traversait cinq liens qu'elle ne voyait pas. `visibility: hidden` l'en retire.
+Ce n'est pas un défaut responsive, c'est un défaut d'accessibilité que seule la
+passe responsive a exposé.
+
+**Mes propres cellules refusaient de rétrécir.** J'avais écrit
+`td::before { flex: 0 0 auto }` : l'intitulé ne cédait pas un pixel, et c'est
+lui qui débordait. Une cellule de 337 px dans un conteneur de 276.
+
+**Le dernier débordement était un badge.** `white-space: nowrap` garde la
+pastille d'une seule pièce, ce qui est juste sur un écran large. À 320 px,
+« Envoyée, en attente de traitement » mesure plus que la carte qui la contient.
+
+### Une hypothèse écartée avant d'écrire une ligne
+
+Le premier relevé désignait la barre latérale hors écran comme coupable. En
+masquant la barre, la largeur de défilement **n'a pas bougé** : l'hypothèse
+était fausse, et la corriger aurait ajouté une règle inutile pour rien. Le vrai
+coupable était le tableau, isolé en masquant les éléments un à un.
+
+### Ce qui garde la correction
+
+`ResponsiveTablesTest` fige le contrat dont la mise en page dépend : toute
+cellule de tableau d'écran porte l'intitulé de sa colonne, et aucun gabarit PDF
+n'est converti. Il tombe au moment où une colonne est ajoutée sans son
+intitulé, pas six mois plus tard sur un téléphone. Vérifié en retirant un
+`data-label`.
+
+### Ce qui reste : les écrans absents du produit
+
+Sur les 35 maquettes, une douzaine décrit des écrans qui **n'existent pas**.
+Trois groupes, très inégaux :
+
+1. **Des écrans construisibles sur les données existantes** : rapports de
+   l'officier, liste des paiements de l'administrateur, gestion des centres
+   d'état civil, confirmation après signature du maire.
+2. **Des fonctions qui demandent une décision, pas une interface** :
+   - `track.html` — suivi **public** par référence **et code à quatre
+     chiffres**. J'ai refusé deux fois le suivi public, parce qu'une référence
+     seule est devinable. **Un second facteur change l'analyse** : cela devient
+     défendable, mais demande une colonne, une limitation de débit et un
+     arbitrage explicite ;
+   - `verify.html` — vérification publique de l'authenticité d'un acte par
+     code. C'est exactement ce dont a besoin une administration qui reçoit une
+     copie. Même analyse ;
+   - `request-complement.html` — déposer une pièce manquante **après** l'envoi.
+     C'est la limite que j'ai signalée deux fois ; le client y répond par un
+     écran. C'est une vraie fonction, avec sa Policy et sa machine à états.
+3. **Des pages qui demandent un contenu que je ne peux pas écrire** :
+   conditions d'utilisation, politique de confidentialité, déclaration
+   d'accessibilité. Le README du client les marque lui-même « provisoires ».
+   §10 : je n'invente pas un texte juridique.

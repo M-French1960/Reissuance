@@ -154,6 +154,98 @@ table { width: 100%; border-collapse: collapse; }
 th, td { padding: var(--space-3); text-align: left; border-bottom: 1px solid var(--color-line); font-size: var(--text-sm); }
 th { background: var(--color-surface-sunken); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-ink-700); }
 
+/* =============================================================================
+   TABLEAUX : EN CARTES SOUS 720 PIXELS (D-083)
+   =============================================================================
+   Un tableau de sept colonnes sur un telephone de 360 px ne se lit pas. Il
+   defilait horizontalement dans `.table-wrap` : techniquement correct, mais
+   personne ne fait defiler une ligne pour lire une reference puis revient en
+   arriere pour lire le statut. Mesure avant correction : la file de traitement
+   mesurait 1087 px de large dans un conteneur de 276.
+
+   Chaque ligne devient une carte, et chaque cellule porte l'intitule de sa
+   colonne, lu depuis `data-label`. L'en-tete est retire de l'affichage mais
+   reste dans le DOM : une table sans <thead> n'est plus une table pour un
+   lecteur d'ecran, et les relations ligne/colonne se perdraient.
+
+   Ce motif ne touche QUE les tableaux places dans `.table-wrap`, c'est-a-dire
+   les ecrans. Les gabarits PDF n'en ont aucun : ils sont composes a largeur
+   fixe par dompdf, et les passer en cartes casserait l'acte.
+   ========================================================================== */
+@media (max-width: 720px) {
+  .table-wrap { overflow-x: visible; }
+
+  /* Plus de defilement a l'interieur : il n'a plus rien a contenir. */
+  .table-wrap[tabindex] { outline: none; }
+
+  .table-wrap table,
+  .table-wrap thead,
+  .table-wrap tbody,
+  .table-wrap tr,
+  .table-wrap td { display: block; width: auto; }
+
+  /* Masque a l'oeil, conserve pour les lecteurs d'ecran. */
+  .table-wrap thead {
+    position: absolute; width: 1px; height: 1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+  }
+
+  .table-wrap tbody tr {
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+    margin-bottom: var(--space-3);
+    background: var(--color-surface);
+  }
+
+  .table-wrap tbody tr:last-child { margin-bottom: 0; }
+
+  .table-wrap td {
+    display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline;
+    gap: var(--space-2) var(--space-4); padding: var(--space-2) 0;
+    border: 0; text-align: right;
+    /* Une reference, une adresse ou un nom de variable n'ont pas d'espace ou
+       se couper. Sans cela ils poussent la carte hors de l'ecran : mesure a
+       360 px, une cellule de 337 dans un conteneur de 276. */
+    min-width: 0; overflow-wrap: anywhere;
+  }
+
+  .table-wrap td::before {
+    content: attr(data-label);
+    font-weight: 600; color: var(--color-ink-500);
+    text-align: left;
+    /* `0 0 auto` empechait l'intitule de retrecir : c'est lui qui debordait.
+       Il cede maintenant, et la valeur passe a la ligne si besoin. */
+    flex: 0 1 auto; min-width: 0;
+  }
+
+  /* Une cellule sans intitule ne laisse pas de colonne vide a gauche. */
+  .table-wrap td:not([data-label]) { display: block; text-align: left; }
+
+  /* La derniere cellule porte l'action : le bouton prend la largeur. */
+  .table-wrap td:last-child { border-top: 1px solid var(--color-line); margin-top: var(--space-2); padding-top: var(--space-3); }
+  .table-wrap td:last-child .btn { width: 100%; }
+
+  .table-wrap caption { text-align: left; }
+
+  /*
+     UN BADGE PEUT SE COUPER SUR UN TELEPHONE.
+
+     `white-space: nowrap` garde la pastille d'une seule piece, ce qui est
+     juste sur un ecran large. A 320 px, « Envoyée, en attente de traitement »
+     mesure plus que la carte qui la contient : c'etait le dernier debordement
+     horizontal du service, mesure a 37 px.
+
+     Le rayon reste, la pastille devient simplement un bloc de deux lignes.
+  */
+  .badge { white-space: normal; text-align: left; }
+
+  /* Une cellule sans valeur n'affiche pas son intitule tout seul. En colonnes
+     la case reste vide sans gener ; en carte, « Rattachement » suivi de rien
+     est une ligne de bruit repetee a chaque fiche. */
+  .table-wrap td:empty { display: none; }
+}
+
 /* --- Frise chronologique (suivi citoyen) --------------------------------- */
 .timeline { list-style: none; margin: 0; padding: 0; }
 .timeline__item { display: flex; gap: var(--space-3); padding-bottom: var(--space-4); }

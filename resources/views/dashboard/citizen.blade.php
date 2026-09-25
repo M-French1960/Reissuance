@@ -228,13 +228,13 @@
                         <tbody>
                             @foreach ($paiements as $paiement)
                                 <tr>
-                                    <td>{{ $paiement->request?->reference }}</td>
+                                    <td data-label="{{ __('dashboard.citizen.payments_request') }}">{{ $paiement->request?->reference }}</td>
                                     {{-- Le montant tel qu'il a ete encaisse, jamais le tarif
                                          d'aujourd'hui : un recu ne se reecrit pas. --}}
-                                    <td>{{ $paiement->money()->format() }}</td>
-                                    <td>{{ $paiement->operator?->label() }}</td>
-                                    <td>{{ $paiement->created_at->translatedFormat('d/m/Y') }}</td>
-                                    <td><span class="badge badge--{{ $paiement->isPaid() ? 'success' : 'waiting' }}">{{ $paiement->status->label() }}</span></td>
+                                    <td data-label="{{ __('dashboard.citizen.payments_amount') }}">{{ $paiement->money()->format() }}</td>
+                                    <td data-label="{{ __('dashboard.citizen.payments_method') }}">{{ $paiement->operator?->label() }}</td>
+                                    <td data-label="{{ __('dashboard.citizen.payments_date') }}">{{ $paiement->created_at->translatedFormat('d/m/Y') }}</td>
+                                    <td data-label="{{ __('dashboard.citizen.payments_status') }}"><span class="badge badge--{{ $paiement->isPaid() ? 'success' : 'waiting' }}">{{ $paiement->status->label() }}</span></td>
                                 </tr>
                             @endforeach
                         </tbody>

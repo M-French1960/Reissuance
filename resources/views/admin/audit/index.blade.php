@@ -40,8 +40,8 @@
                     <tbody>
                         @foreach ($logs as $log)
                             <tr>
-                                <td>{{ $log->created_at?->format('d/m/Y H:i:s') }}</td>
-                                <td>{{ $log->actor?->name ?? __('admin.audit.unknown_actor') }}<br>
+                                <td data-label="{{ __('admin.audit.timestamp') }}">{{ $log->created_at?->format('d/m/Y H:i:s') }}</td>
+                                <td data-label="{{ __('admin.audit.actor') }}">{{ $log->actor?->name ?? __('admin.audit.unknown_actor') }}<br>
                                     {{-- The role through its label, like every other screen.
                                          It was printed raw here, so the same account read
                                          "officer" in the log and "Civil status officer"
@@ -52,10 +52,10 @@
                                          them would make the log harder to read against
                                          either. --}}
                                     <span class="field__hint">{{ \App\Enums\UserRole::tryFrom((string) $log->actor_role)?->label() ?? $log->actor_role }}</span></td>
-                                <td>{{ $log->action }}</td>
-                                <td>{{ $log->auditable_type }} @if ($log->auditable_id) #{{ $log->auditable_id }} @endif</td>
-                                <td>@if ($log->from_status) {{ $log->from_status }} &rarr; {{ $log->to_status }} @endif</td>
-                                <td>{{ $log->ip_address }}</td>
+                                <td data-label="{{ __('admin.audit.action') }}">{{ $log->action }}</td>
+                                <td data-label="{{ __('admin.audit.entity') }}">{{ $log->auditable_type }} @if ($log->auditable_id) #{{ $log->auditable_id }} @endif</td>
+                                <td data-label="{{ __('admin.audit.transition') }}">@if ($log->from_status) {{ $log->from_status }} &rarr; {{ $log->to_status }} @endif</td>
+                                <td data-label="{{ __('admin.audit.ip_address') }}">{{ $log->ip_address }}</td>
                             </tr>
                         @endforeach
                     </tbody>

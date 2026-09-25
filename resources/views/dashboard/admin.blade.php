@@ -24,9 +24,9 @@
                                  back converted by the model casts, even behind a
                                  selectRaw. Converting them again raised a TypeError,
                                  and this screen returned 500 from milestone 2 on. --}}
-                            <td>{{ $row->role->label() }}</td>
-                            <td>{{ __('enums.account_status.'.$row->status) }}</td>
-                            <td>{{ $row->total }}</td>
+                            <td data-label="{{ __('common.role') }}">{{ $row->role->label() }}</td>
+                            <td data-label="{{ __('common.status') }}">{{ __('enums.account_status.'.$row->status) }}</td>
+                            <td data-label="{{ __('dashboard.admin.count') }}">{{ $row->total }}</td>
                         </tr>
                     @endforeach
                 </tbody>

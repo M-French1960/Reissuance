@@ -45,21 +45,21 @@
                     <tbody>
                         @foreach ($bloquees as $affectation)
                             <tr>
-                                <td>{{ $affectation->reference }}</td>
-                                <td>{{ $affectation->center?->name }}</td>
-                                <td>
+                                <td data-label="{{ __('common.reference') }}">{{ $affectation->reference }}</td>
+                                <td data-label="{{ __('common.centre') }}">{{ $affectation->center?->name }}</td>
+                                <td data-label="{{ __('admin.assignments.assigned_agent') }}">
                                     {{ $affectation->assignedOfficer?->name }}<br>
                                     <span class="field__hint">{{ $affectation->assignedOfficer?->email }}</span>
                                 </td>
-                                <td>
+                                <td data-label="{{ __('admin.assignments.why') }}">
                                     <span class="badge badge--attention">
                                         {{ $affectation->assignedOfficer?->isActive()
                                             ? __('admin.assignments.attached_elsewhere')
                                             : __('admin.assignments.account_inactive') }}
                                     </span>
                                 </td>
-                                <td>{{ $affectation->submitted_at?->translatedFormat('j F Y') }}</td>
-                                <td>
+                                <td data-label="{{ __('common.submitted_on') }}">{{ $affectation->submitted_at?->translatedFormat('j F Y') }}</td>
+                                <td data-label="{{ __('common.action') }}">
                                     <form method="POST" action="{{ route('admin.assignments.release', $affectation) }}">
                                         @csrf
                                         <x-button type="submit" variant="secondary">{{ __('admin.assignments.release') }}</x-button>
@@ -95,10 +95,10 @@
                     <tbody>
                         @foreach ($actives as $affectation)
                             <tr>
-                                <td>{{ $affectation->reference }}</td>
-                                <td>{{ $affectation->center?->name }}</td>
-                                <td>{{ $affectation->assignedOfficer?->name }}</td>
-                                <td>{{ $affectation->submitted_at?->translatedFormat('j F Y') }}</td>
+                                <td data-label="{{ __('common.reference') }}">{{ $affectation->reference }}</td>
+                                <td data-label="{{ __('common.centre') }}">{{ $affectation->center?->name }}</td>
+                                <td data-label="{{ __('admin.assignments.assigned_agent') }}">{{ $affectation->assignedOfficer?->name }}</td>
+                                <td data-label="{{ __('common.submitted_on') }}">{{ $affectation->submitted_at?->translatedFormat('j F Y') }}</td>
                             </tr>
                         @endforeach
                     </tbody>

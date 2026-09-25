@@ -37,15 +37,15 @@
                     @foreach (\App\Services\VerificationWorkflow::VERIFICATION_STEPS as $numero)
                         @php $e = $etapes->get($numero); @endphp
                         <tr>
-                            <td>{{ $numero }}. {{ $steps[$numero] }}</td>
-                            <td>
+                            <td data-label="{{ __('verification.step_column') }}">{{ $numero }}. {{ $steps[$numero] }}</td>
+                            <td data-label="{{ __('common.result') }}">
                                 @if ($e?->result)
                                     <span class="badge badge--{{ $e->result->tone() }}">{{ $e->result->label() }}</span>
                                 @else
                                     <span class="badge badge--danger">{{ __('verification.not_recorded') }}</span>
                                 @endif
                             </td>
-                            <td>{{ $e?->officer?->name }}</td>
+                            <td data-label="{{ __('common.by') }}">{{ $e?->officer?->name }}</td>
                         </tr>
                     @endforeach
                 </tbody>

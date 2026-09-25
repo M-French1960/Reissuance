@@ -108,10 +108,10 @@
                     <tbody>
                         @foreach ($appareils as $appareil)
                             <tr>
-                                <td>{{ $appareil->label }}</td>
-                                <td>{{ $appareil->created_at?->translatedFormat('d/m/Y') }}</td>
-                                <td>{{ $appareil->last_used_at?->translatedFormat('d/m/Y H:i') ?? __('common.never') }}</td>
-                                <td>
+                                <td data-label="{{ __('auth.device_column') }}">{{ $appareil->label }}</td>
+                                <td data-label="{{ __('auth.enrolled_on') }}">{{ $appareil->created_at?->translatedFormat('d/m/Y') }}</td>
+                                <td data-label="{{ __('auth.last_signature') }}">{{ $appareil->last_used_at?->translatedFormat('d/m/Y H:i') ?? __('common.never') }}</td>
+                                <td data-label="{{ __('common.action') }}">
                                     <form method="POST" action="{{ route('devices.destroy', $appareil) }}">
                                         @csrf
                                         @method('DELETE')

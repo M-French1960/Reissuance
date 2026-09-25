@@ -16,21 +16,21 @@
                     @foreach (\App\Services\VerificationWorkflow::VERIFICATION_STEPS as $numero)
                         @php $e = $etapes->get($numero); @endphp
                         <tr>
-                            <td>{{ $numero }}. {{ $steps[$numero] }}</td>
-                            <td>
+                            <td data-label="{{ __('verification.step_column') }}">{{ $numero }}. {{ $steps[$numero] }}</td>
+                            <td data-label="{{ __('common.result') }}">
                                 @if ($e?->result)
                                     <span class="badge badge--{{ $e->result->tone() }}">{{ $e->result->label() }}</span>
                                 @else
                                     <span class="badge badge--danger">{{ __('verification.not_recorded') }}</span>
                                 @endif
                             </td>
-                            <td>{{ $e?->completed_at?->translatedFormat('d/m/Y H:i') }}</td>
+                            <td data-label="{{ __('common.recorded') }}">{{ $e?->completed_at?->translatedFormat('d/m/Y H:i') }}</td>
                         </tr>
                     @endforeach
                     <tr>
-                        <td>5. {{ $steps[5] }}</td>
-                        <td><span class="badge badge--neutral">{{ __('verification.in_progress') }}</span></td>
-                        <td></td>
+                        <td data-label="{{ __('verification.step_column') }}">5. {{ $steps[5] }}</td>
+                        <td data-label="{{ __('common.result') }}"><span class="badge badge--neutral">{{ __('verification.in_progress') }}</span></td>
+                        <td data-label="{{ __('common.recorded') }}"></td>
                     </tr>
                 </tbody>
             </table>

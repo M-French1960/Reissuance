@@ -95,10 +95,10 @@
                     <tbody>
                         @foreach ($requests as $demande)
                             <tr>
-                                <td>{{ $demande->reference }}</td>
-                                <td><x-status-badge :status="$demande->status" /></td>
-                                <td>{{ $demande->submitted_at?->translatedFormat('d/m/Y H:i') }}</td>
-                                <td>
+                                <td data-label="{{ __('common.reference') }}">{{ $demande->reference }}</td>
+                                <td data-label="{{ __('common.status') }}"><x-status-badge :status="$demande->status" /></td>
+                                <td data-label="{{ __('common.submitted_on') }}">{{ $demande->submitted_at?->translatedFormat('d/m/Y H:i') }}</td>
+                                <td data-label="{{ __('officer.queue.waiting') }}">
                                     {{-- Une demande close n'attend plus rien : y afficher une
                                          duree laisserait croire qu'elle est encore en cours. --}}
                                     @if ($demande->submitted_at && ! in_array($demande->status, [
@@ -120,8 +120,8 @@
                                         <span class="visually-hidden">{{ __('officer.queue.waiting_over') }}</span>
                                     @endif
                                 </td>
-                                <td>{{ $demande->full_name_at_birth }}</td>
-                                <td>
+                                <td data-label="{{ __('common.applicant') }}">{{ $demande->full_name_at_birth }}</td>
+                                <td data-label="{{ __('officer.queue.assigned_to') }}">
                                     @if ($demande->assignedOfficer)
                                         {{ $demande->assigned_officer_id === auth()->id() ? __('officer.queue.assigned_to_you') : $demande->assignedOfficer->name }}
                                     @else

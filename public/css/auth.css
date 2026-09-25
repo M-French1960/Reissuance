@@ -34,7 +34,7 @@
 .auth__orb--1 { width: 260px; height: 260px; right: -60px; top: 12%; opacity: 0.6; background: radial-gradient(circle at 30% 30%, #b388ff, #6a1b9a 70%); }
 .auth__orb--2 { width: 160px; height: 160px; left: -40px; bottom: 10%; opacity: 0.45; background: radial-gradient(circle at 30% 30%, #ffc2e2, #9c27b0 70%); }
 
-.auth__brand { position: relative; display: flex; align-items: center; gap: var(--space-3); text-decoration: none; color: inherit; }
+.auth__brand { position: relative; display: flex; align-items: center; gap: var(--space-3); min-height: var(--tap-target); text-decoration: none; color: inherit; }
 .auth__brand-mark { width: 34px; height: 34px; flex: none; }
 .auth__brand-name { font: 700 1.3rem/1 var(--ui-font-display); letter-spacing: 0.04em; }
 
@@ -95,7 +95,9 @@
 
 .auth__password-toggle {
   position: absolute; right: var(--space-2); top: 50%; transform: translateY(-50%);
-  min-height: 36px; padding: var(--space-1) var(--space-3);
+  /* 36 px mesures. Sur un telephone, ce bouton est frappe avec le pouce, a
+     cote d'un champ de mot de passe : le rater efface la saisie. */
+  min-height: var(--tap-target); padding: var(--space-1) var(--space-3);
   border: 1px solid var(--color-line); border-radius: var(--radius-pill);
   background: var(--color-surface); color: var(--color-brand-700);
   font: 600 var(--text-sm)/1 var(--ui-font-body); cursor: pointer;
@@ -121,7 +123,9 @@
 /* --- Liens de bas de carte ------------------------------------------------- */
 .auth__links { margin: var(--space-5) 0 0; font-size: var(--text-sm); display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); align-items: center; }
 .auth__label-row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
-.auth__label-row a { font-size: var(--text-sm); }
+/* « Mot de passe oublié ? » mesurait 22 px de haut. C'est la porte de sortie
+   de quelqu'un qui ne peut pas entrer : elle doit se viser facilement. */
+.auth__label-row a { font-size: var(--text-sm); display: inline-flex; align-items: center; min-height: var(--tap-target); }
 
 /* --- Adaptation ------------------------------------------------------------ */
 @media (max-width: 980px) {

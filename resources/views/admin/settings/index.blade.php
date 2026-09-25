@@ -38,13 +38,13 @@
                     <tbody>
                         @foreach ($reglages as $reglage)
                             <tr>
-                                <td>
+                                <td data-label="{{ __('admin.settings.setting') }}">
                                     {{ $reglage->label }}
                                     @if ($reglage->alerte)
                                         <br><span class="field__hint">{{ $reglage->alerte }}</span>
                                     @endif
                                 </td>
-                                <td>
+                                <td data-label="{{ __('admin.settings.value') }}">
                                     @if ($reglage->sensible)
                                         <span class="badge badge--{{ $reglage->configure ? 'success' : 'attention' }}">
                                             {{ $reglage->valeur }}
@@ -53,7 +53,7 @@
                                         {{ $reglage->valeur }}
                                     @endif
                                 </td>
-                                <td><code>{{ $reglage->variable }}</code></td>
+                                <td data-label="{{ __('admin.settings.where_to_change') }}"><code>{{ $reglage->variable }}</code></td>
                             </tr>
                         @endforeach
                     </tbody>

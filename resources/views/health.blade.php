@@ -34,13 +34,13 @@
                     <tbody>
                         @foreach ($checks as $check)
                             <tr>
-                                <td>{{ $check['label'] }}</td>
-                                <td>
+                                <td data-label="{{ __('admin.health.check') }}">{{ $check['label'] }}</td>
+                                <td data-label="{{ __('admin.health.state') }}">
                                     <span class="badge badge--{{ $check['ok'] ? 'success' : 'danger' }}">
                                         {{ $check['ok'] ? __('admin.health.ok') : __('admin.health.failing') }}
                                     </span>
                                 </td>
-                                <td>{{ $check['detail'] }}</td>
+                                <td data-label="{{ __('admin.health.detail') }}">{{ $check['detail'] }}</td>
                             </tr>
                         @endforeach
                     </tbody>

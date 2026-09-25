@@ -37,10 +37,10 @@
                     <tbody>
                         @foreach ($actes as $acte)
                             <tr>
-                                <td>{{ $acte['certificate_number'] ?? '' }}</td>
-                                <td>{{ $acte['full_name'] ?? '' }}</td>
-                                <td>{{ $acte['date_of_birth'] ?? '' }}, {{ $acte['place_of_birth'] ?? '' }}</td>
-                                <td>
+                                <td data-label="{{ __('officer.step4.certificate_number') }}">{{ $acte['certificate_number'] ?? '' }}</td>
+                                <td data-label="{{ __('common.name') }}">{{ $acte['full_name'] ?? '' }}</td>
+                                <td data-label="{{ __('officer.step4.birth') }}">{{ $acte['date_of_birth'] ?? '' }}, {{ $acte['place_of_birth'] ?? '' }}</td>
+                                <td data-label="{{ __('officer.step4.record_state') }}">
                                     <span class="badge badge--{{ ($acte['record_status'] ?? '') === 'active' ? 'success' : 'attention' }}">
                                         {{ ($acte['record_status'] ?? '') === 'active' ? __('officer.step4.record_active') : __('officer.step4.record_destroyed') }}
                                     </span>

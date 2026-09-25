@@ -30,11 +30,11 @@
                     <tbody>
                         @foreach ($aSigner as $demande)
                             <tr>
-                                <td>{{ $demande->reference }}</td>
-                                <td>{{ $demande->full_name_at_birth }}</td>
-                                <td>{{ $demande->center?->name }}</td>
-                                <td>{{ $demande->submitted_at?->translatedFormat('d/m/Y') }}</td>
-                                <td><a href="{{ route('mayor.review', $demande) }}">{{ __('mayor.queue.examine') }}</a></td>
+                                <td data-label="{{ __('common.reference') }}">{{ $demande->reference }}</td>
+                                <td data-label="{{ __('common.applicant') }}">{{ $demande->full_name_at_birth }}</td>
+                                <td data-label="{{ __('common.centre') }}">{{ $demande->center?->name }}</td>
+                                <td data-label="{{ __('common.submitted_on') }}">{{ $demande->submitted_at?->translatedFormat('d/m/Y') }}</td>
+                                <td data-label="{{ __('common.action') }}"><a href="{{ route('mayor.review', $demande) }}">{{ __('mayor.queue.examine') }}</a></td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -64,10 +64,10 @@
                     <tbody>
                         @foreach ($escaladees as $demande)
                             <tr>
-                                <td>{{ $demande->reference }}</td>
-                                <td>{{ $demande->full_name_at_birth }}</td>
-                                <td>{{ $demande->decisions->first()?->reason }}</td>
-                                <td><a href="{{ route('mayor.review', $demande) }}">{{ __('mayor.queue.rule') }}</a></td>
+                                <td data-label="{{ __('common.reference') }}">{{ $demande->reference }}</td>
+                                <td data-label="{{ __('common.applicant') }}">{{ $demande->full_name_at_birth }}</td>
+                                <td data-label="{{ __('mayor.queue.referral_reason') }}">{{ $demande->decisions->first()?->reason }}</td>
+                                <td data-label="{{ __('common.action') }}"><a href="{{ route('mayor.review', $demande) }}">{{ __('mayor.queue.rule') }}</a></td>
                             </tr>
                         @endforeach
                     </tbody>
