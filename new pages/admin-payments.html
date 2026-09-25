@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Paiements — Administration PHOENIX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/phoenix.css">
+<style>
+.op{display:inline-flex;align-items:center;gap:.5rem}
+.op i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.85rem}
+</style>
+</head>
+<body data-role="admin" data-active="payments" data-crumb="Paiements">
+<div class="layout">
+  <div class="main">
+    <main id="contenu">
+      <section class="banner">
+        <div><h1>Paiements et remboursements</h1><p>Transactions Mobile Money et remboursements des demandes rejetées.</p></div>
+        <div class="actions-inline"><button class="btn btn-white" type="button" id="export">Exporter en CSV</button></div>
+      </section>
+
+      <div class="stats" id="stats"></div>
+
+      <div class="tabs glass" role="tablist" id="tabs" aria-label="Vue">
+        <button role="tab" aria-selected="true" data-tab="tx">Transactions</button>
+        <button role="tab" aria-selected="false" data-tab="refunds">Remboursements à traiter <span id="ref-n"></span></button>
+      </div>
+
+      <form class="filters glass" role="search" onsubmit="return false" id="filters">
+        <div class="field"><label for="f-q">Rechercher</label><input type="search" id="f-q" placeholder="Référence, demande ou numéro"></div>
+        <div class="field"><label for="f-op">Opérateur</label><select id="f-op"><option value="">Tous</option><option value="mtn-momo">MTN Mobile Money</option><option value="orange-money">Orange Money</option></select></div>
+        <div class="field"><label for="f-st">Statut</label><select id="f-st"><option value="">Tous</option><option value="paid">Payé</option><option value="pending">En attente</option><option value="failed">Échoué</option><option value="refunded">Remboursé</option></select></div>
+      </form>
+
+      <section class="panel glass" aria-labelledby="t-title">
+        <div class="panel-head"><h2 id="t-title">Transactions</h2><span class="muted" id="count" aria-live="polite"></span></div>
+        <div class="table-wrap">
+          <table class="data cards">
+            <thead id="thead"></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <div class="empty" id="empty" hidden><p>Rien à afficher.</p></div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script src="assets/phoenix.js"></script>
+<script>
+PX.shell();
+const { $, esc } = PX;
+const OP = { 'mtn-momo':['MTN Mobile Money','#FFCB05'], 'orange-money':['Orange Money','#FF7900'] };
+const ST = { paid:['s-completed','Payé'], pending:['s-pending','En attente'], failed:['s-rejected','Échoué'], refunded:['s-refunded','Remboursé'] };
+
+/* Données d'exemple générées — plus tard : /api/admin/payments */
+let seed = 11; const rnd = n => { seed = (seed * 9301 + 49297) % 233280; return Math.floor(seed / 233280 * n); };
+const tx = Array.from({ length:60 }, (_, i) => {
+  const r = rnd(100);
+  const status = r < 80 ? 'paid' : r < 87 ? 'pending' : r < 93 ? 'failed' : 'refunded';
+  return { ref:`PAY-${90000 - i * 37}`, request:`PHX-2026-00${4300 - i * 5}`, op: rnd(2) ? 'mtn-momo' : 'orange-money',
+    phone:`6${rnd(10)}${rnd(10)} •• •• ${rnd(10)}${rnd(10)}`, amount:PX.FEE_XAF, status, at:new Date(Date.now() - i * 9 * 3600000).toISOString(),
+    opRef:`${rnd(2) ? 'MP' : 'OM'}${2600000 + rnd(99999)}` };
+});
+let refunds = [
+  { request:'PHX-2026-004011', holder:'Idriss Abdoulaye', reason:'Acte introuvable au registre de Yaoundé II', rejectedAt:new Date(Date.now() - 9 * 86400000).toISOString(), op:'orange-money', phone:'69• •• •• 41', amount:PX.FEE_XAF },
+  { request:'PHX-2026-003962', holder:'Nadège Eyenga', reason:'Demande en double', rejectedAt:new Date(Date.now() - 8 * 86400000).toISOString(), op:'mtn-momo', phone:'67• •• •• 08', amount:PX.FEE_XAF },
+  { request:'PHX-2026-003901', holder:'Hervé Manga', reason:'Titulaire non autorisé (pas de procuration)', rejectedAt:new Date(Date.now() - 12 * 86400000).toISOString(), op:'mtn-momo', phone:'65• •• •• 77', amount:PX.FEE_XAF }
+];
+let tab = new URLSearchParams(location.search).get('tab') === 'refunds' ? 'refunds' : 'tx';
+
+function stats(){
+  const s = st => tx.filter(t => t.status === st).reduce((a,t) => a + t.amount, 0);
+  const cards = [['Encaissé', PX.fmtXAF(s('paid')), 'ok', 'money'], ['En attente', PX.fmtXAF(s('pending')), 'warn', 'clock'],
+    ['Remboursé', PX.fmtXAF(s('refunded')), '', 'out'], ['À rembourser', PX.fmtXAF(refunds.reduce((a,r) => a + r.amount, 0)), 'danger', 'alert']];
+  $('stats').innerHTML = cards.map(([l,v,c,ic]) => `<div class="stat glass"><div class="stat-top">${l}<span class="stat-ic ${c}">${PX.ICONS[ic].replace('<svg','<svg width="20" height="20"')}</span></div><span class="stat-value" style="font-size:1.6rem">${v}</span></div>`).join('');
+  $('ref-n').textContent = refunds.length ? `(${refunds.length})` : '';
+}
+
+function render(){
+  stats();
+  document.querySelectorAll('#tabs [role=tab]').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === tab));
+  $('filters').hidden = tab !== 'tx';
+  if (tab === 'tx'){
+    $('t-title').textContent = 'Transactions';
+    const q = PX.norm($('f-q').value), op = $('f-op').value, st = $('f-st').value;
+    const rows = tx.filter(t => (!q || PX.norm(t.ref + t.request + t.opRef).includes(q)) && (!op || t.op === op) && (!st || t.status === st));
+    $('thead').innerHTML = '<tr><th scope="col">Référence</th><th scope="col">Demande</th><th scope="col">Opérateur</th><th scope="col">Numéro</th><th scope="col">Montant</th><th scope="col">Date</th><th scope="col">Statut</th></tr>';
+    $('tbody').innerHTML = rows.map(t => `<tr>
+      <td data-label="Référence"><strong>${esc(t.ref)}</strong><span class="sub mono">${esc(t.opRef)}</span></td>
+      <td data-label="Demande" class="mono">${esc(t.request)}</td>
+      <td data-label="Opérateur"><span class="op"><i style="background:${OP[t.op][1]}"></i>${OP[t.op][0]}</span></td>
+      <td data-label="Numéro" class="mono">${esc(t.phone)}</td>
+      <td data-label="Montant">${PX.fmtXAF(t.amount)}</td>
+      <td data-label="Date">${PX.fmtDateTime(t.at)}</td>
+      <td data-label="Statut"><span class="pill ${ST[t.status][0]}">${ST[t.status][1]}</span></td></tr>`).join('');
+    $('empty').hidden = rows.length > 0;
+    $('count').textContent = `${rows.length} transaction${rows.length > 1 ? 's' : ''}`;
+  } else {
+    $('t-title').textContent = 'Remboursements à traiter';
+    $('thead').innerHTML = '<tr><th scope="col">Demande</th><th scope="col">Motif du rejet</th><th scope="col">Rejetée le</th><th scope="col">Vers</th><th scope="col">Montant</th><th scope="col"><span class="sr-only">Action</span></th></tr>';
+    $('tbody').innerHTML = refunds.map((r,i) => `<tr>
+      <td data-label="Demande"><strong>${esc(r.request)}</strong><span class="sub">${esc(r.holder)}</span></td>
+      <td data-label="Motif">${esc(r.reason)}</td>
+      <td data-label="Rejetée le"><span class="${PX.daysSince(r.rejectedAt) > 7 ? 'late' : ''}">${PX.fmtDate(r.rejectedAt)}</span></td>
+      <td data-label="Vers"><span class="op"><i style="background:${OP[r.op][1]}"></i>${esc(r.phone)}</span></td>
+      <td data-label="Montant">${PX.fmtXAF(r.amount)}</td>
+      <td class="act"><button class="btn btn-solid btn-sm" type="button" data-refund="${i}">Rembourser</button></td></tr>`).join('');
+    $('empty').hidden = refunds.length > 0;
+    $('empty').querySelector('p').textContent = 'Aucun remboursement en attente.';
+    $('count').textContent = `${refunds.length} en attente`;
+  }
+}
+$('tabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b){ tab = b.dataset.tab; render(); } });
+['f-q','f-op','f-st'].forEach(id => $(id).addEventListener('input', render));
+$('tbody').addEventListener('click', async e => {
+  const b = e.target.closest('[data-refund]'); if (!b) return;
+  const r = refunds[+b.dataset.refund];
+  if (!await PX.confirmDialog({ title:'Confirmer le remboursement', text:`${PX.fmtXAF(r.amount)} seront renvoyés au ${r.phone} (${OP[r.op][0]}) pour la demande ${r.request}.`, ok:'Rembourser' })) return;
+  // TODO : POST /api/admin/refunds — initié côté serveur auprès de l'opérateur, journalisé
+  refunds.splice(+b.dataset.refund, 1);
+  tx.unshift({ ref:`PAY-R${Date.now() % 100000}`, request:r.request, op:r.op, phone:r.phone, amount:r.amount, status:'refunded', at:new Date().toISOString(), opRef:'—' });
+  render(); PX.toast('Remboursement émis. Le demandeur est notifié.', 'ok');
+});
+$('export').addEventListener('click', () => {
+  PX.downloadCSV('paiements.csv', [['Référence','Réf. opérateur','Demande','Opérateur','Montant','Date','Statut'],
+    ...tx.map(t => [t.ref, t.opRef, t.request, OP[t.op][0], t.amount, new Date(t.at).toLocaleString('fr-FR'), ST[t.status][1]])]);
+  PX.toast('Export CSV téléchargé.', 'ok');
+});
+render();
+</script>
+</body>
+</html>

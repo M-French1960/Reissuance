@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rapports — PHOENIX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/phoenix.css">
+<style>
+.reasons{list-style:none;margin:0;padding:0;display:grid;gap:.9rem}
+.reasons li{display:grid;gap:.35rem}
+.reasons .top{display:flex;justify-content:space-between;gap:1rem;font-size:.93rem}
+.reasons .top strong{white-space:nowrap}
+.reasons .progress span{background:var(--danger)}
+</style>
+</head>
+<body data-role="officer" data-active="reports" data-crumb="Rapports">
+<div class="layout">
+  <div class="main">
+    <main id="contenu">
+      <section class="banner">
+        <div><h1>Rapports</h1><p>Votre activité de vérification au centre de Yaoundé III.</p></div>
+        <div class="actions-inline no-print">
+          <div class="field" style="margin:0"><label for="period" class="sr-only">Période</label>
+            <select id="period" class="input" style="min-height:44px;background-color:rgba(255,255,255,.92)"><option value="4">4 dernières semaines</option><option value="8">8 dernières semaines</option><option value="12">12 dernières semaines</option></select></div>
+          <button class="btn btn-white" type="button" id="print">Exporter en PDF</button>
+        </div>
+      </section>
+
+      <div class="stats" id="stats"></div>
+
+      <div class="grid">
+        <section class="panel glass span-8" aria-labelledby="c-title">
+          <div class="panel-head"><h2 id="c-title">Décisions par semaine</h2></div>
+          <div id="chart"></div>
+        </section>
+        <section class="panel glass span-4" aria-labelledby="r-title">
+          <div class="panel-head"><h2 id="r-title">Motifs de rejet les plus fréquents</h2></div>
+          <ul class="reasons" id="reasons"></ul>
+        </section>
+      </div>
+      <p class="help" style="margin-top:1rem">Données d'exemple. En production, calculées par le serveur à partir du journal d'audit.</p>
+    </main>
+  </div>
+</div>
+
+<script src="assets/phoenix.js"></script>
+<script>
+PX.shell({ counts:{ verify:2 } });
+const { $, esc } = PX;
+let seed = 3; const rnd = n => { seed = (seed * 9301 + 49297) % 233280; return Math.floor(seed / 233280 * n); };
+const W = Array.from({ length:12 }, () => ({ ok:14 + rnd(10), comp:2 + rnd(4), rej:rnd(4), esc:rnd(3) }));
+
+function render(){
+  const n = +$('period').value, wk = W.slice(-n);
+  const tot = k => wk.reduce((s,w) => s + w[k], 0);
+  const all = tot('ok') + tot('comp') + tot('rej') + tot('esc');
+  const S = [['Dossiers traités', all, 'doc', ''], ['Validés', tot('ok'), 'ok', 'ok'], ['Compléments demandés', tot('comp'), 'alert', 'warn'],
+    ['Rejetés', tot('rej'), 'x', 'danger'], ['Délai moyen', '2,4 j', 'clock', '']];
+  $('stats').innerHTML = S.map(([l,v,ic,c]) => `<div class="stat glass"><div class="stat-top">${l}<span class="stat-ic ${c}">${PX.ICONS[ic].replace('<svg','<svg width="20" height="20"')}</span></div>
+    <span class="stat-value">${v}</span>${typeof v === 'number' && l !== 'Dossiers traités' ? `<span class="stat-hint">${Math.round(v / all * 100)} % des dossiers</span>` : '<span class="stat-hint">&nbsp;</span>'}</div>`).join('');
+  PX.barChart($('chart'), { stacked:true, title:'Décisions par semaine, empilées par type',
+    labels: wk.map((_, i) => i === wk.length - 1 ? 'Cette sem.' : `S-${wk.length - 1 - i}`),
+    series:[{ name:'Validés', color:'#1F9D6B', values:wk.map(w => w.ok) }, { name:'Compléments', color:'#B7791F', values:wk.map(w => w.comp) },
+            { name:'Rejetés', color:'#C0392B', values:wk.map(w => w.rej) }, { name:'Escaladés', color:'#8E24AA', values:wk.map(w => w.esc) }] });
+  const rej = tot('rej') || 1;
+  const reasons = [['Acte introuvable dans le registre', .45], ['Informations incohérentes avec le registre', .25], ['Demandeur non autorisé', .18], ['Pièces falsifiées ou illisibles', .12]];
+  $('reasons').innerHTML = reasons.map(([l,p]) => `<li><span class="top"><span>${esc(l)}</span><strong>${Math.round(rej * p)}</strong></span><div class="progress"><span style="width:${p * 100 / .45}%"></span></div></li>`).join('');
+}
+$('period').addEventListener('change', render);
+$('print').addEventListener('click', () => window.print());
+render();
+</script>
+</body>
+</html>

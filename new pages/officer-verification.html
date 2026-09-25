@@ -169,7 +169,7 @@ img{max-width:100%;display:block}
 
 .choice-group{border:0;margin:1.4rem 0 0;padding:0}
 .choice-group legend{font-weight:700;margin-bottom:.6rem}
-.choices{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.6rem}
 .choice{position:relative}
 .choice input{position:absolute;opacity:0;pointer-events:none}
 .choice label{
@@ -267,9 +267,10 @@ dialog.zoom .close{position:absolute;top:10px;right:10px}
   .menu-toggle{display:grid;place-items:center}
   .profile-chip .name{display:none}
   .profile-chip{padding:.3rem}
-  .stepper{grid-template-columns:repeat(5,auto);justify-content:space-between}
+  .stepper{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .stepper button{justify-content:center;padding:.5rem .2rem;position:relative}
   .stepper .lbl{display:none}
-  .stepper li.active .lbl{display:inline}
+  .stepper li.active .lbl{display:none}
 }
 @media (max-width:640px){
   .case-head{padding:1.3rem}
@@ -302,13 +303,13 @@ dialog.zoom .close{position:absolute;top:10px;right:10px}
         <li><a href="officer-dashboard.html">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/></svg>
           Tableau de bord</a></li>
-        <li><a href="officer-verification.html" aria-current="page">
+        <li><a href="officer-dashboard.html?status=pending" aria-current="page">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 14l2 2 4-4"/></svg>
           Demandes à vérifier</a></li>
         <li><a href="officer-reports.html">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
           Rapports</a></li>
-        <li><a href="officer-settings.html">
+        <li><a href="profile.html?role=officer">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
           Paramètres</a></li>
       </ul>
@@ -457,6 +458,7 @@ dialog.zoom .close{position:absolute;top:10px;right:10px}
                     <div class="choice c-ok"><input type="radio" name="decision" id="d-accept" value="accepted"><label for="d-accept"><span class="mark">Valider</span><small>Transmettre au maire pour signature</small></label></div>
                     <div class="choice c-ko"><input type="radio" name="decision" id="d-reject" value="rejected"><label for="d-reject"><span class="mark">Rejeter</span><small>Le demandeur est notifié du motif</small></label></div>
                     <div class="choice c-esc"><input type="radio" name="decision" id="d-escalate" value="escalated"><label for="d-escalate"><span class="mark">Escalader</span><small>Examen approfondi</small></label></div>
+                    <div class="choice c-warn"><input type="radio" name="decision" id="d-complement" value="complement"><label for="d-complement"><span class="mark">Demander un complément</span><small>Le demandeur renvoie une pièce, sans nouveau paiement</small></label></div>
                   </div>
                 </fieldset>
                 <div class="warn-box" id="accept-warn" hidden></div>
@@ -792,10 +794,12 @@ function renderRecap(){
 
 function updateDecision(){
   const d = document.querySelector('[name="decision"]:checked')?.value;
-  const needReason = d === 'rejected' || d === 'escalated';
+  const needReason = d === 'rejected' || d === 'escalated' || d === 'complement';
   $('reason-field').hidden = !needReason;
   $('reason').placeholder = d === 'rejected'
     ? 'Ce motif sera communiqué au demandeur. Soyez précis et factuel.'
+    : d === 'complement'
+    ? 'Précisez la pièce attendue et comment la fournir. Ce message est envoyé au demandeur.'
     : 'Expliquez ce qui nécessite un examen approfondi.';
   $('submit-btn').disabled = state.readonly || !d;
 
@@ -811,7 +815,7 @@ function updateDecision(){
 document.querySelectorAll('[name="decision"]').forEach(r => r.addEventListener('change', updateDecision));
 $('reason').addEventListener('input', () => $('reason-field').classList.remove('invalid'));
 
-const LABELS = { accepted:'validée et transmise au maire', rejected:'rejetée', escalated:'escaladée pour examen approfondi' };
+const LABELS = { accepted:'validée et transmise au maire', rejected:'rejetée', escalated:'escaladée pour examen approfondi', complement:'mise en attente d\'un complément du demandeur' };
 
 $('decision-form').addEventListener('submit', e => {
   e.preventDefault();
@@ -819,11 +823,11 @@ $('decision-form').addEventListener('submit', e => {
   const d = document.querySelector('[name="decision"]:checked')?.value;
   if (!d) return;
   const reason = $('reason').value.trim();
-  if ((d === 'rejected' || d === 'escalated') && !reason){
+  if ((d === 'rejected' || d === 'escalated' || d === 'complement') && !reason){
     $('reason-field').classList.add('invalid'); $('reason').focus(); return;
   }
   $('cf-text').textContent = `La demande ${state.req.id} de ${state.req.applicantName} sera ${LABELS[d]}.` +
-    (d === 'rejected' ? ' Le demandeur recevra le motif indiqué.' : '') + ' Cette action ne peut pas être annulée depuis cet écran.';
+    (d === 'rejected' || d === 'complement' ? ' Le demandeur recevra votre message.' : '') + ' Cette action ne peut pas être annulée depuis cet écran.';
   $('cf-ok').className = 'btn push ' + (d === 'rejected' ? 'btn-danger' : 'btn-solid');
   $('confirm-dlg').showModal();
 });
@@ -840,9 +844,9 @@ $('confirm-dlg').addEventListener('close', () => {
   // TODO : envoyer `payload` à l'API (POST /api/requests/{id}/decision), avec l'identité de l'officier côté serveur.
   console.log('Décision à envoyer :', payload);
 
-  const colors = { accepted:'var(--ok)', rejected:'var(--danger)', escalated:'var(--esc)' };
+  const colors = { accepted:'var(--ok)', rejected:'var(--danger)', escalated:'var(--esc)', complement:'var(--warn)' };
   $('done-icon').style.background = colors[d];
-  $('done-icon').textContent = d === 'accepted' ? '✓' : d === 'rejected' ? '✕' : '↑';
+  $('done-icon').textContent = d === 'accepted' ? '✓' : d === 'rejected' ? '✕' : d === 'complement' ? '…' : '↑';
   $('done-title').textContent = 'Décision enregistrée';
   $('done-text').textContent = `La demande ${state.req.id} a été ${LABELS[d]}.`;
   const next = requests.find(r => r.status === 'pending' && r.id !== state.req.id);

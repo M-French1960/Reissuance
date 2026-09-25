@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mes demandes — PHOENIX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/phoenix.css">
+<style>
+.req-list{display:grid;gap:1rem}
+.req{display:grid;grid-template-columns:1fr auto;gap:1rem 1.5rem;align-items:center;border-radius:var(--r-lg);padding:1.3rem 1.5rem;text-decoration:none;color:var(--ink);transition:background-color .2s}
+.req:hover{background:rgba(255,255,255,.82)}
+.req h2{font:600 1.1rem var(--font-display);margin:0 0 .25rem}
+.req .meta{display:flex;flex-wrap:wrap;gap:.3rem 1.2rem;font-size:.88rem;color:var(--ink-soft)}
+.req .right{display:flex;flex-direction:column;align-items:flex-end;gap:.5rem}
+.req .bar{grid-column:1 / -1}
+.req.action{border-left:4px solid var(--warn)}
+.req .cta{font-weight:700;color:var(--violet-700);font-size:.9rem}
+.req.action .cta{color:var(--warn)}
+@media (max-width:640px){ .req{grid-template-columns:1fr} .req .right{align-items:flex-start;flex-direction:row;flex-wrap:wrap} }
+</style>
+</head>
+<body data-role="applicant" data-active="requests" data-crumb="Mes demandes">
+<div class="layout">
+  <div class="main">
+    <main id="contenu">
+      <section class="banner">
+        <div><h1>Mes demandes</h1><p>Toutes vos demandes de réédition, de la plus récente à la plus ancienne.</p></div>
+        <div class="actions-inline"><a class="btn btn-white" href="form.html">Nouvelle demande</a></div>
+      </section>
+
+      <div class="tabs glass" role="tablist" aria-label="Filtrer les demandes" id="tabs">
+        <button role="tab" aria-selected="true" data-f="all">Toutes</button>
+        <button role="tab" aria-selected="false" data-f="action">Action requise</button>
+        <button role="tab" aria-selected="false" data-f="active">En cours</button>
+        <button role="tab" aria-selected="false" data-f="done">Terminées</button>
+      </div>
+
+      <div class="req-list" id="list" aria-live="polite"></div>
+      <div class="panel glass empty" id="empty" hidden>
+        <p id="empty-text">Aucune demande dans cette catégorie.</p>
+        <a class="btn btn-solid" href="form.html">Commencer une demande</a>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="assets/phoenix.js"></script>
+<script src="assets/demo-data.js"></script>
+<script>
+const { $, esc } = PX;
+const reqs = [...DEMO.requests].sort((a,b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+const actionN = reqs.filter(r => r.status === 'complement').length;
+PX.shell({ counts:{ requests: actionN || 0, notifications:2 } });
+
+const GROUP = r => r.status === 'complement' ? 'action' : ['completed','rejected'].includes(r.status) ? 'done' : 'active';
+const CTA = { complement:'Envoyer le complément', completed:'Récupérer ma copie', rejected:'Voir le motif' };
+
+function render(f){
+  const rows = reqs.filter(r => f === 'all' || GROUP(r) === f);
+  $('list').innerHTML = rows.map(r => {
+    const idx = DEMO.steps.findIndex(s => s.key === r.step);
+    const pct = r.status === 'completed' ? 100 : Math.round((idx + 1) / DEMO.steps.length * 100);
+    return `<a class="req glass ${r.status === 'complement' ? 'action' : ''}" href="request-detail.html?id=${encodeURIComponent(r.id)}">
+      <div>
+        <h2>${esc(r.doc)} · ${esc(r.holder)}</h2>
+        <div class="meta"><span>N° ${esc(r.id)}</span><span>${esc(PX.CENTERS[r.center])}</span><span>Déposée le ${PX.fmtDate(r.submittedAt)}</span></div>
+      </div>
+      <div class="right">${PX.pill(r.status)}<span class="cta">${esc(CTA[r.status] || 'Voir le suivi')}</span></div>
+      ${r.status !== 'rejected' ? `<div class="bar"><div class="progress" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100" aria-label="Avancement"><span style="width:${pct}%"></span></div></div>` : ''}
+    </a>`;
+  }).join('');
+  $('empty').hidden = rows.length > 0;
+  $('empty-text').textContent = f === 'action' ? 'Aucune action n\'est attendue de votre part.' : 'Aucune demande dans cette catégorie.';
+}
+
+$('tabs').addEventListener('click', e => {
+  const b = e.target.closest('[data-f]'); if (!b) return;
+  document.querySelectorAll('#tabs [role=tab]').forEach(t => t.setAttribute('aria-selected', t === b));
+  render(b.dataset.f);
+});
+render(new URLSearchParams(location.search).get('status') === 'active' ? 'active' : 'all');
+if (new URLSearchParams(location.search).get('status') === 'active') document.querySelector('[data-f=active]').click();
+</script>
+</body>
+</html>

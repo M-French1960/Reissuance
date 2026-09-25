@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Administration — PHOENIX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/phoenix.css">
+<style>
+.alerts{list-style:none;margin:0;padding:0;display:grid;gap:.6rem}
+.alerts li{display:grid;grid-template-columns:36px 1fr;gap:.8rem;align-items:start;padding:.8rem .9rem;border-radius:var(--r-md);background:rgba(255,255,255,.7)}
+.alerts .ic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center}
+.alerts .ic svg{width:18px;height:18px}
+.alerts .ko .ic{background:rgba(192,57,43,.1);color:var(--danger)}
+.alerts .warn .ic{background:rgba(183,121,31,.13);color:var(--warn)}
+.alerts strong{display:block;font-size:.93rem}
+.alerts a{font-size:.85rem;font-weight:700}
+.bar-cell{display:flex;align-items:center;gap:.6rem;min-width:140px}
+.bar-cell .progress{flex:1}
+</style>
+</head>
+<body data-role="admin" data-active="dashboard" data-crumb="Tableau de bord">
+<div class="layout">
+  <div class="main">
+    <main id="contenu">
+      <section class="banner">
+        <div><h1>Bonjour, Claire</h1><p>Vue d'ensemble de la plateforme, tous centres confondus.</p></div>
+        <div class="actions-inline">
+          <div class="field" style="margin:0"><label for="period" class="sr-only">Période</label>
+            <select id="period" class="input" style="min-height:44px;background-color:rgba(255,255,255,.92)"><option value="30">30 derniers jours</option><option value="7">7 derniers jours</option></select></div>
+        </div>
+      </section>
+
+      <div class="stats" id="stats"></div>
+
+      <div class="grid">
+        <section class="panel glass span-8" aria-labelledby="c-title">
+          <div class="panel-head"><h2 id="c-title">Demandes déposées par jour</h2><span class="muted" id="c-sub"></span></div>
+          <div id="chart"></div>
+        </section>
+        <section class="panel glass span-4" aria-labelledby="a-title">
+          <div class="panel-head"><h2 id="a-title">Alertes</h2></div>
+          <ul class="alerts" id="alerts"></ul>
+        </section>
+        <section class="panel glass span-12" aria-labelledby="t-title">
+          <div class="panel-head"><h2 id="t-title">Charge par centre</h2><a href="admin-centers.html">Gérer les centres</a></div>
+          <div class="table-wrap">
+            <table class="data cards">
+              <thead><tr><th scope="col">Centre</th><th scope="col">En attente</th><th scope="col">En retard</th><th scope="col">Officiers actifs</th><th scope="col">Maire</th><th scope="col">Traitées sur la période</th></tr></thead>
+              <tbody id="tbody"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+      <p class="help" style="margin-top:1rem">Toutes les valeurs de cette page sont fictives.</p>
+    </main>
+  </div>
+</div>
+
+<script src="assets/phoenix.js"></script>
+<script>
+PX.shell();
+const { $, esc } = PX;
+
+/* Données d'exemple — plus tard : GET /api/admin/overview?days=… */
+const CENTERS = [
+  ['yaounde-1', 14, 2, 3, true, 96], ['yaounde-2', 9, 0, 2, true, 71], ['yaounde-3', 22, 5, 3, true, 128],
+  ['yaounde-4', 11, 1, 2, true, 64], ['yaounde-5', 6, 0, 1, false, 38], ['yaounde-6', 17, 4, 2, true, 83], ['yaounde-7', 3, 0, 1, true, 19]
+];
+function seeded(n){ let x = 42; return Array.from({ length:n }, (_, i) => { x = (x * 9301 + 49297) % 233280; return Math.round(14 + 10 * Math.sin(i / 3) + (x / 233280) * 12 + i * .35); }); }
+
+function render(){
+  const days = +$('period').value;
+  const values = seeded(30).slice(-days);
+  const labels = values.map((_, i) => { const d = new Date(Date.now() - (days - 1 - i) * 86400000); return d.toLocaleDateString('fr-FR',{ day:'numeric', month:'short' }); });
+  const total = values.reduce((a,b) => a + b, 0);
+  $('c-sub').textContent = `${PX.fmtNum(total)} demandes`;
+  PX.lineChart($('chart'), { labels, values, title:`Demandes déposées par jour sur ${days} jours`, every: days > 10 ? 5 : 1 });
+
+  const k = days / 30;
+  const S = [
+    ['Demandes déposées', PX.fmtNum(total), '<span class="trend-up">+8 %</span> vs période précédente', 'doc', ''],
+    ['Délai moyen de traitement', '6,2 j', 'Du dépôt à la copie disponible', 'clock', 'warn'],
+    ['Taux de rejet', '7 %', 'Motif principal : acte introuvable', 'x', 'danger'],
+    ['Montant encaissé', PX.fmtXAF(Math.round(total * .93) * PX.FEE_XAF), 'Hors remboursements', 'money', 'ok']
+  ];
+  $('stats').innerHTML = S.map(([l,v,h,ic,c]) => `<div class="stat glass"><div class="stat-top">${l}<span class="stat-ic ${c}">${PX.ICONS[ic].replace('<svg','<svg width="20" height="20"')}</span></div>
+    <span class="stat-value" style="font-size:${v.length > 12 ? '1.5rem' : ''}">${v}</span><span class="stat-hint">${h}</span></div>`).join('');
+
+  const maxDone = Math.max(...CENTERS.map(c => c[5]));
+  $('tbody').innerHTML = CENTERS.map(([key, pending, late, off, mayor, done]) => `<tr>
+    <td data-label="Centre" class="strong">${esc(PX.CENTERS[key])}</td>
+    <td data-label="En attente">${pending}</td>
+    <td data-label="En retard">${late ? `<span class="late">${late}</span>` : '0'}</td>
+    <td data-label="Officiers actifs">${off}</td>
+    <td data-label="Maire">${mayor ? '<span class="pill s-ok">Actif</span>' : '<span class="pill s-rejected">Aucun</span>'}</td>
+    <td data-label="Traitées"><div class="bar-cell"><div class="progress"><span style="width:${Math.round(done * k) / maxDone * 100 / k}%"></span></div><strong>${Math.round(done * k)}</strong></div></td></tr>`).join('');
+
+  const alerts = [];
+  CENTERS.filter(c => !c[4]).forEach(c => alerts.push(['ko', 'alert', `${PX.CENTERS[c[0]]} : aucun maire actif`, 'Les dossiers vérifiés ne peuvent pas être signés.', 'admin-agents.html', 'Affecter un maire']));
+  CENTERS.filter(c => c[2] >= 4).forEach(c => alerts.push(['warn', 'clock', `${PX.CENTERS[c[0]]} : ${c[2]} dossiers en retard`, 'Au-delà du seuil fixé dans la configuration.', 'admin-centers.html', 'Voir le centre']));
+  alerts.push(['warn', 'money', '3 remboursements à traiter', 'Demandes rejetées depuis plus de 7 jours.', 'admin-payments.html?tab=refunds', 'Traiter']);
+  $('alerts').innerHTML = alerts.map(([c,ic,t,d,href,cta]) => `<li class="${c}"><span class="ic">${PX.ICONS[ic]}</span><span><strong>${esc(t)}</strong><span class="muted" style="font-size:.88rem">${esc(d)}</span><br><a href="${href}">${cta}</a></span></li>`).join('');
+}
+$('period').addEventListener('change', render);
+render();
+</script>
+</body>
+</html>

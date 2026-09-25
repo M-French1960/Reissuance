@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Aide et contact — PHOENIX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/phoenix.css">
+<style>
+.search-hero{position:relative;max-width:640px;margin-top:1.4rem}
+.search-hero svg{position:absolute;left:1.1rem;top:50%;transform:translateY(-50%);color:var(--ink-soft);width:20px;height:20px}
+.search-hero input{width:100%;min-height:56px;padding:.8rem 1rem .8rem 3rem;border-radius:999px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.95);font:500 1.02rem var(--font-body);color:var(--ink)}
+.search-hero input:focus{outline:none;box-shadow:0 0 0 4px rgba(255,209,102,.5)}
+.cats{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}
+.cat{border-radius:var(--r-lg);padding:1.2rem;text-align:left;cursor:pointer;font:inherit;color:var(--ink);display:flex;flex-direction:column;gap:.5rem}
+.cat .ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:rgba(91,15,176,.1);color:var(--violet-700)}
+.cat .ic svg{width:22px;height:22px}
+.cat strong{font:600 1.05rem var(--font-display);color:var(--violet-900)}
+.cat span.n{font-size:.85rem;color:var(--ink-soft)}
+.cat[aria-pressed="true"]{background:var(--white);box-shadow:0 0 0 2px var(--violet-700) inset}
+.layout-help{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:1.25rem;align-items:start}
+.faq details{border-bottom:1px solid rgba(91,15,176,.1)}
+.faq details:last-child{border-bottom:0}
+.faq summary{list-style:none;cursor:pointer;padding:1rem 0;font-weight:700;display:flex;justify-content:space-between;gap:1rem;align-items:center}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font:500 1.5rem/1 var(--font-body);color:var(--violet-700);transition:transform .2s;flex:none}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq details p{margin:0 0 1rem;color:var(--ink-soft)}
+.faq mark{background:#FFE9A8;border-radius:3px;padding:0 2px}
+.contact-card{position:sticky;top:1.2rem}
+.coords{display:grid;gap:.6rem;margin-top:1.2rem;padding-top:1.1rem;border-top:1px solid rgba(91,15,176,.1);font-size:.92rem}
+.coords div{display:flex;gap:.6rem;align-items:flex-start}
+.coords svg{width:18px;height:18px;color:var(--violet-700);flex:none;margin-top:3px}
+@media (max-width:1000px){ .layout-help{grid-template-columns:1fr} .contact-card{position:static} .cats{grid-template-columns:1fr 1fr} }
+</style>
+</head>
+<body>
+<a class="skip" href="#contenu">Aller au contenu</a>
+<header class="band">
+  <div class="wrap">
+    <nav class="pub-nav" aria-label="Navigation">
+      <a class="brand" href="index.html" id="brand"><span class="brand-name">PHOENIX</span></a>
+      <div class="links"><a class="btn btn-ghost hide-m" href="track.html">Suivre une demande</a><a class="btn btn-white" href="login.html">Se connecter</a></div>
+    </nav>
+    <h1>Comment pouvons-nous vous aider ?</h1>
+    <p class="lead">Réponses aux questions fréquentes sur la réédition de vos actes, le paiement et le suivi.</p>
+    <div class="search-hero" role="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <label for="q" class="sr-only">Rechercher dans l'aide</label>
+      <input type="search" id="q" placeholder="Ex. : paiement, délai, procuration…" autocomplete="off">
+    </div>
+  </div>
+</header>
+
+<main id="contenu" class="pub-main wrap">
+  <div class="cats" id="cats" role="group" aria-label="Catégories"></div>
+
+  <div class="layout-help">
+    <section class="panel glass" aria-labelledby="faq-title">
+      <div class="panel-head"><h2 id="faq-title">Questions fréquentes</h2><span class="muted" id="faq-count" aria-live="polite"></span></div>
+      <div class="faq" id="faq"></div>
+      <div class="empty" id="faq-empty" hidden><p>Aucune réponse ne correspond. Posez-nous votre question avec le formulaire.</p></div>
+    </section>
+
+    <aside class="contact-card panel glass" id="contact" aria-labelledby="c-title">
+      <div class="panel-head"><h2 id="c-title">Nous écrire</h2></div>
+      <form id="c-form" novalidate>
+        <div class="field"><label for="subject">Sujet</label>
+          <select id="subject" aria-describedby="subject-error"><option value="">Choisir</option><option>Faire une demande</option><option>Paiement ou remboursement</option><option>Suivi d'une demande</option><option>Mon compte</option><option>Signaler un document suspect</option><option>Autre</option></select>
+          <p class="err" id="subject-error"></p></div>
+        <div class="field"><label for="ref">Référence de demande <span class="opt">(facultatif)</span></label><input type="text" id="ref" placeholder="PHX-2026-000000" autocapitalize="characters"></div>
+        <div class="field"><label for="contact-info">Téléphone ou e-mail pour vous répondre</label><input type="text" id="contact-info" autocomplete="email" aria-describedby="contact-info-error"><p class="err" id="contact-info-error"></p></div>
+        <div class="field"><label for="msg">Message</label><textarea id="msg" aria-describedby="msg-error"></textarea><p class="err" id="msg-error"></p></div>
+        <button class="btn btn-solid" type="submit" style="width:100%" id="send">Envoyer</button>
+      </form>
+      <div class="coords">
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Réponse sous [délai à définir], du lundi au vendredi.</span></div>
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 21h18M5 21V9l7-5 7 5v12"/></svg><span>Vous pouvez aussi vous rendre au centre d'état civil où votre acte a été établi.</span></div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<footer class="foot"><div class="wrap"><span>© 2026 PHOENIX</span><span><a href="verify.html">Vérifier un acte</a><a href="track.html">Suivre une demande</a></span></div></footer>
+
+<script src="assets/phoenix.js"></script>
+<script>
+const { $, esc } = PX;
+$('brand').insertAdjacentHTML('afterbegin', PX.LOGO);
+
+const CATS = [['request','Faire une demande','doc'],['payment','Paiement','card'],['tracking','Suivi','clock'],['account','Mon compte','user']];
+const FAQ = [
+  ['request','Quels documents dois-je préparer ?','Une pièce d\'identité valide, une déclaration de perte délivrée par le commissariat ou la gendarmerie, les informations de l\'acte (centre, date de naissance, noms des parents) et un téléphone pour recevoir les codes.'],
+  ['request','Puis-je faire la demande pour mon enfant ou un proche ?','Oui. Pour un enfant mineur, joignez un document prouvant la filiation. Pour un autre proche, une procuration est nécessaire.'],
+  ['request','Je ne connais pas le numéro de l\'acte. Est-ce bloquant ?','Non, il est facultatif. Le centre, le nom complet à la naissance, la date de naissance et le nom de la mère suffisent en général à retrouver l\'acte.'],
+  ['request','Mon centre d\'état civil n\'apparaît pas dans la liste.','Seuls les centres raccordés à PHOENIX sont proposés. Pour les autres, la démarche se fait encore au guichet du centre.'],
+  ['payment','Quels moyens de paiement sont acceptés ?','MTN Mobile Money et Orange Money. Vous validez le paiement sur votre téléphone avec votre code secret : PHOENIX ne vous le demandera jamais.'],
+  ['payment','Combien coûte une réédition ?','[Montant officiel à confirmer avec l\'administration.] Le montant exact est affiché avant le paiement.'],
+  ['payment','Suis-je remboursé si ma demande est rejetée ?','[Règle de remboursement à définir.] Si un remboursement s\'applique, il est versé sur le numéro qui a payé et vous en êtes informé par SMS.'],
+  ['payment','J\'ai payé mais ma demande indique « en attente ».','La confirmation de l\'opérateur peut prendre quelques minutes. Si le statut ne change pas au bout d\'une heure, écrivez-nous avec la référence de la demande.'],
+  ['tracking','Combien de temps faut-il pour obtenir ma copie ?','[Délai moyen à communiquer une fois le service en fonctionnement.] Vous suivez chaque étape depuis votre espace et êtes prévenu par SMS.'],
+  ['tracking','L\'officier me demande un complément. Que faire ?','Ouvrez la demande dans votre espace et utilisez « Envoyer le complément ». Votre dossier reprend dès réception, sans nouveau paiement.'],
+  ['tracking','Comment récupérer ma copie ?','Selon les options proposées par votre centre : téléchargement de la copie signée électroniquement, ou retrait au guichet avec votre pièce d\'identité.'],
+  ['tracking','Comment un organisme peut-il vérifier ma copie ?','Chaque copie porte un QR code et un code de vérification. L\'organisme les saisit sur la page « Vérifier un acte ».'],
+  ['account','J\'ai oublié mon mot de passe.','Sur la page de connexion, cliquez sur « Mot de passe oublié ». Un code vous est envoyé par SMS ou e-mail.'],
+  ['account','J\'ai changé de numéro de téléphone.','Modifiez-le dans « Mon profil ». Un code de vérification est envoyé au nouveau numéro. Si vous n\'avez plus accès à votre compte, écrivez-nous.']
+];
+let cat = '';
+$('cats').innerHTML = CATS.map(([k,l,ic]) => `<button class="cat glass" type="button" data-cat="${k}" aria-pressed="false"><span class="ic">${PX.ICONS[ic]}</span><strong>${l}</strong><span class="n">${FAQ.filter(f => f[0] === k).length} questions</span></button>`).join('');
+$('cats').addEventListener('click', e => { const b = e.target.closest('[data-cat]'); if (!b) return;
+  cat = cat === b.dataset.cat ? '' : b.dataset.cat; document.querySelectorAll('.cat').forEach(c => c.setAttribute('aria-pressed', c.dataset.cat === cat)); render(); });
+
+const hl = (text, q) => { if (!q) return esc(text); const n = PX.norm(text), i = n.indexOf(q); if (i < 0) return esc(text);
+  return esc(text.slice(0,i)) + '<mark>' + esc(text.slice(i, i + q.length)) + '</mark>' + esc(text.slice(i + q.length)); };
+function render(){
+  const q = PX.norm($('q').value);
+  const rows = FAQ.filter(([c,qq,a]) => (!cat || c === cat) && (!q || PX.norm(qq + ' ' + a).includes(q)));
+  $('faq').innerHTML = rows.map(([c,qq,a]) => `<details ${q ? 'open' : ''}><summary>${hl(qq,q)}</summary><p>${hl(a,q)}</p></details>`).join('');
+  $('faq-empty').hidden = rows.length > 0;
+  $('faq-count').textContent = `${rows.length} question${rows.length > 1 ? 's' : ''}`;
+}
+$('q').addEventListener('input', render);
+render();
+
+// Contact
+const params = new URLSearchParams(location.search);
+if (params.get('ref')){ $('ref').value = params.get('ref'); $('subject').value = 'Suivi d\'une demande'; }
+try { const e = localStorage.getItem('userEmail'); if (e) $('contact-info').value = e; } catch(e) {}
+$('c-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const ci = $('contact-info').value.trim();
+  const checks = { subject:$('subject').value ? '' : 'Choisissez un sujet.',
+    'contact-info': !ci ? 'Indiquez comment vous répondre.' : (ci.includes('@') ? (/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(ci) ? '' : 'Adresse e-mail invalide.') : (PX.phoneError(ci) ? 'Téléphone ou e-mail invalide.' : '')),
+    msg: $('msg').value.trim().length >= 10 ? '' : 'Décrivez votre question en quelques mots (10 caractères minimum).' };
+  let first = null;
+  Object.entries(checks).forEach(([id,m]) => { $(id + '-error').textContent = m; $(id).setAttribute('aria-invalid', !!m); if (m && !first) first = $(id); });
+  if (first) return first.focus();
+  $('send').disabled = true; $('send').innerHTML = '<span class="spinner"></span> Envoi…';
+  // TODO : POST /api/support
+  setTimeout(() => {
+    $('c-form').innerHTML = `<div class="alert ok"><span>${PX.ICONS.ok.replace('<svg','<svg width="22" height="22"')}</span><div><strong>Message envoyé</strong>Nous vous répondrons à ${esc(ci)}. Conservez la référence <strong style="display:inline">SUP-${String(Date.now()).slice(-6)}</strong>.</div></div>`;
+  }, 700);
+});
+if (location.hash === '#contact') setTimeout(() => $('subject').focus(), 300);
+</script>
+</body>
+</html>

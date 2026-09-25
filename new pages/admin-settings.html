@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Configuration — PHOENIX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/phoenix.css">
+<style>
+main{max-width:980px}
+.money{display:flex}
+.money input{border-radius:var(--r-sm) 0 0 var(--r-sm)!important}
+.money span{display:flex;align-items:center;padding:0 .9rem;border:1px solid rgba(91,15,176,.2);border-left:0;border-radius:0 var(--r-sm) var(--r-sm) 0;background:rgba(91,15,176,.06);font-weight:700;color:var(--violet-800)}
+.vars{display:flex;gap:.4rem;flex-wrap:wrap;margin:.4rem 0 0}
+.vars button{border:1px solid rgba(91,15,176,.25);background:rgba(255,255,255,.7);border-radius:999px;padding:.2rem .6rem;font:600 .8rem ui-monospace,Consolas,monospace;color:var(--violet-700);cursor:pointer}
+.vars button:hover{background:rgba(91,15,176,.08)}
+.preview{margin-top:.6rem;padding:.8rem 1rem;border-radius:var(--r-md);background:rgba(91,15,176,.06);font-size:.9rem}
+.preview small{display:block;color:var(--ink-soft);font-weight:700;margin-bottom:.2rem}
+.count{font-size:.8rem;color:var(--ink-soft);text-align:right;margin-top:.25rem}
+.count.over{color:var(--danger);font-weight:700}
+.savebar{position:sticky;bottom:1rem;z-index:10;display:flex;align-items:center;gap:1rem;justify-content:space-between;padding:.8rem 1rem .8rem 1.3rem;border-radius:999px;margin-top:1.25rem}
+</style>
+</head>
+<body data-role="admin" data-active="settings" data-crumb="Configuration">
+<div class="layout">
+  <div class="main">
+    <main id="contenu">
+      <section class="banner">
+        <div><h1>Configuration</h1><p>Paramètres appliqués à toute la plateforme. Chaque modification est inscrite au journal d'audit.</p></div>
+      </section>
+
+      <form id="cfg" novalidate class="stack">
+        <section class="panel glass" aria-labelledby="s1">
+          <div class="panel-head"><h2 id="s1">Types d'actes et tarifs</h2></div>
+          <p class="intro">Les tarifs doivent correspondre aux montants officiels en vigueur.</p>
+          <div id="acts"></div>
+        </section>
+
+        <section class="panel glass" aria-labelledby="s2">
+          <div class="panel-head"><h2 id="s2">Délais d'alerte</h2></div>
+          <p class="intro">Au-delà de ces délais, les dossiers sont signalés en retard aux agents et à l'administration.</p>
+          <div class="row-3">
+            <div class="field"><label for="d-officer">Vérification par l'officier</label><div class="money"><input type="number" id="d-officer" min="1" max="60" value="7"><span>jours</span></div></div>
+            <div class="field"><label for="d-mayor">Signature du maire</label><div class="money"><input type="number" id="d-mayor" min="1" max="60" value="3"><span>jours</span></div></div>
+            <div class="field"><label for="d-complement">Réponse à un complément</label><div class="money"><input type="number" id="d-complement" min="1" max="90" value="14"><span>jours</span></div></div>
+          </div>
+        </section>
+
+        <section class="panel glass" aria-labelledby="s3">
+          <div class="panel-head"><h2 id="s3">Modèles de messages</h2></div>
+          <p class="intro">Cliquez sur une variable pour l'insérer. Un SMS standard compte environ 160 caractères ; au-delà, il est envoyé en plusieurs parties.</p>
+          <div class="field"><label for="tpl-select">Événement</label><select id="tpl-select"></select></div>
+          <div class="field">
+            <label for="tpl-sms">SMS</label>
+            <textarea id="tpl-sms" style="min-height:90px"></textarea>
+            <div class="vars" id="vars-sms"></div>
+            <p class="count" id="sms-count"></p>
+          </div>
+          <div class="field">
+            <label for="tpl-mail">E-mail</label>
+            <textarea id="tpl-mail"></textarea>
+            <div class="vars" id="vars-mail"></div>
+          </div>
+          <div class="preview" aria-live="polite"><small>Aperçu du SMS</small><span id="prev"></span></div>
+        </section>
+
+        <section class="panel glass" aria-labelledby="s4">
+          <div class="panel-head"><h2 id="s4">Sécurité</h2></div>
+          <label class="switch"><span><strong>Double authentification obligatoire pour les agents</strong><small>Code SMS à chaque connexion des officiers, maires et administrateurs</small></span><input type="checkbox" checked></label>
+          <label class="switch"><span><strong>Déconnexion automatique</strong><small>Après 30 minutes d'inactivité dans les espaces agents</small></span><input type="checkbox" checked></label>
+          <label class="switch"><span><strong>Mode maintenance</strong><small>Affiche la page de maintenance aux citoyens</small></span><input type="checkbox" id="maint"></label>
+        </section>
+
+        <div class="savebar glass" id="savebar" hidden>
+          <span><strong>Modifications non enregistrées</strong></span>
+          <span><button class="btn btn-text" type="button" id="discard">Annuler</button> <button class="btn btn-solid" type="submit">Enregistrer</button></span>
+        </div>
+      </form>
+    </main>
+  </div>
+</div>
+
+<script src="assets/phoenix.js"></script>
+<script>
+PX.shell();
+const { $, esc } = PX;
+
+const ACTS = [['birth','Acte de naissance',true,PX.FEE_XAF],['marriage','Acte de mariage',false,PX.FEE_XAF],['death','Acte de décès',false,PX.FEE_XAF]];
+$('acts').innerHTML = ACTS.map(([k,l,on,fee]) => `<div class="row" style="align-items:center;border-bottom:1px solid rgba(91,15,176,.08);padding:.4rem 0">
+  <label class="switch" style="border:0"><span><strong>${l}</strong><small>${on ? 'Ouvert aux demandes' : 'Affiché « bientôt »'}</small></span><input type="checkbox" data-act="${k}" ${on ? 'checked' : ''}></label>
+  <div class="field" style="margin:0"><label for="fee-${k}" class="sr-only">Tarif ${l}</label><div class="money"><input type="number" id="fee-${k}" min="0" step="500" value="${fee}"><span>FCFA</span></div></div></div>`).join('');
+document.querySelectorAll('[data-act]').forEach(c => c.addEventListener('change', () => c.closest('.switch').querySelector('small').textContent = c.checked ? 'Ouvert aux demandes' : 'Affiché « bientôt »'));
+
+const VARS = ['{prenom}','{reference}','{etape}','{centre}','{date_limite}','{lien}'];
+const SAMPLE = { '{prenom}':'Marie', '{reference}':'PHX-2026-004218', '{etape}':'signature du maire', '{centre}':'Yaoundé III', '{date_limite}':'7 octobre', '{lien}':'phoenix.cm/s/4218' };
+const TPL = {
+  status:{ label:'Avancement de la demande', sms:'PHOENIX : bonjour {prenom}, votre demande {reference} passe à l\'étape « {etape} ». Suivi : {lien}', mail:'Bonjour {prenom},\n\nVotre demande {reference} passe à l\'étape « {etape} ».\n\nSuivez-la ici : {lien}' },
+  complement:{ label:'Complément demandé', sms:'PHOENIX : {prenom}, l\'officier de {centre} a besoin d\'une pièce pour la demande {reference}. A envoyer avant le {date_limite} : {lien}', mail:'Bonjour {prenom},\n\nL\'officier du centre de {centre} a besoin d\'un complément pour votre demande {reference}.\nMerci de l\'envoyer avant le {date_limite} : {lien}' },
+  ready:{ label:'Copie disponible', sms:'PHOENIX : {prenom}, votre copie {reference} est signée et disponible. Téléchargement ou retrait : {lien}', mail:'Bonjour {prenom},\n\nBonne nouvelle : votre copie {reference} est disponible.\n\n{lien}' }
+};
+Object.entries(TPL).forEach(([k,t]) => $('tpl-select').add(new Option(t.label,k)));
+const insert = (ta, v) => { const s = ta.selectionStart, e = ta.selectionEnd; ta.setRangeText(v, s, e, 'end'); ta.focus(); ta.dispatchEvent(new Event('input',{ bubbles:true })); };
+['sms','mail'].forEach(t => {
+  $('vars-' + t).innerHTML = VARS.map(v => `<button type="button" data-v="${v}">${v}</button>`).join('');
+  $('vars-' + t).addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (b) insert($('tpl-' + t), b.dataset.v); });
+});
+function loadTpl(){ const t = TPL[$('tpl-select').value]; $('tpl-sms').value = t.sms; $('tpl-mail').value = t.mail; preview(); }
+function preview(){
+  const t = TPL[$('tpl-select').value]; t.sms = $('tpl-sms').value; t.mail = $('tpl-mail').value;
+  const txt = t.sms.replace(/\{[a-z_]+\}/g, m => SAMPLE[m] ?? m);
+  $('prev').textContent = txt;
+  const n = txt.length, parts = Math.ceil(n / 153) || 1;
+  $('sms-count').textContent = n <= 160 ? `${n} / 160 caractères (aperçu)` : `${n} caractères : environ ${parts} SMS`;
+  $('sms-count').classList.toggle('over', n > 160);
+}
+$('tpl-select').addEventListener('change', loadTpl);
+['tpl-sms','tpl-mail'].forEach(id => $(id).addEventListener('input', preview));
+loadTpl();
+
+// Barre d'enregistrement
+let dirty = false;
+$('cfg').addEventListener('input', () => { dirty = true; $('savebar').hidden = false; });
+$('cfg').addEventListener('change', () => { dirty = true; $('savebar').hidden = false; });
+$('discard').addEventListener('click', () => location.reload());
+$('maint').addEventListener('change', async e => {
+  if (e.target.checked && !await PX.confirmDialog({ title:'Activer la maintenance', text:'Les citoyens ne pourront plus déposer ni suivre de demande en ligne tant que le mode est actif.', ok:'Activer', danger:true })) e.target.checked = false;
+});
+$('cfg').addEventListener('submit', e => {
+  e.preventDefault();
+  const bad = [...document.querySelectorAll('#cfg input[type=number]')].find(i => i.value === '' || +i.value < +i.min || (i.max && +i.value > +i.max));
+  if (bad){ bad.setAttribute('aria-invalid','true'); bad.focus(); return PX.toast('Une valeur est hors limites.', 'ko'); }
+  // TODO : PUT /api/admin/settings
+  dirty = false; $('savebar').hidden = true; PX.toast('Configuration enregistrée et inscrite au journal d\'audit.', 'ok');
+});
+window.addEventListener('beforeunload', e => { if (dirty){ e.preventDefault(); e.returnValue = ''; } });
+</script>
+</body>
+</html>

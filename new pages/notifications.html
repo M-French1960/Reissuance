@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Notifications — PHOENIX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/phoenix.css">
+<style>
+.work{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:1.25rem;align-items:start}
+.day{font:600 .9rem var(--font-body);color:var(--ink-soft);margin:1.2rem 0 .5rem}
+.day:first-child{margin-top:0}
+.notif{display:grid;grid-template-columns:40px 1fr auto;gap:.9rem;align-items:start;padding:.9rem 1rem;border-radius:var(--r-md);text-decoration:none;color:var(--ink);position:relative}
+.notif:hover{background:rgba(255,255,255,.7)}
+.notif .ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:rgba(91,15,176,.1);color:var(--violet-700)}
+.notif .ic svg{width:20px;height:20px}
+.notif .ic.warn{background:rgba(183,121,31,.14);color:var(--warn)}
+.notif .ic.ok{background:rgba(31,157,107,.12);color:var(--ok)}
+.notif strong{display:block}
+.notif p{margin:.1rem 0 0;color:var(--ink-soft);font-size:.92rem}
+.notif time{font-size:.8rem;color:var(--ink-soft);white-space:nowrap}
+.notif.unread{background:rgba(255,255,255,.75)}
+.notif.unread::before{content:"";position:absolute;left:-2px;top:50%;width:8px;height:8px;margin-top:-4px;border-radius:50%;background:var(--violet-500)}
+@media (max-width:1100px){ .work{grid-template-columns:1fr} }
+@media (max-width:520px){ .notif{grid-template-columns:36px 1fr} .notif time{grid-column:2} }
+</style>
+</head>
+<body data-role="applicant" data-active="notifications" data-crumb="Notifications">
+<div class="layout">
+  <div class="main">
+    <main id="contenu">
+      <section class="banner">
+        <div><h1>Notifications</h1><p id="sub">Les mises à jour de vos demandes.</p></div>
+        <div class="actions-inline"><button class="btn btn-white" type="button" id="read-all">Tout marquer comme lu</button></div>
+      </section>
+
+      <div class="work">
+        <section class="panel glass" aria-labelledby="l-title">
+          <div class="panel-head">
+            <h2 id="l-title">Activité</h2>
+            <div class="tabs" role="tablist" aria-label="Filtrer" id="tabs" style="margin:0;background:rgba(255,255,255,.5)">
+              <button role="tab" aria-selected="true" data-f="all">Toutes</button>
+              <button role="tab" aria-selected="false" data-f="unread">Non lues</button>
+            </div>
+          </div>
+          <div id="list" aria-live="polite"></div>
+          <div class="empty" id="empty" hidden><p>Vous êtes à jour.</p></div>
+        </section>
+
+        <aside class="panel glass" aria-labelledby="s-title">
+          <div class="panel-head"><h2 id="s-title">Être prévenu par</h2></div>
+          <p class="muted" style="margin:-.4rem 0 .6rem;font-size:.9rem">Les notifications restent toujours visibles ici.</p>
+          <div id="prefs"></div>
+          <p class="help" style="margin-top:.8rem">Les SMS liés à la sécurité (codes, connexion) ne peuvent pas être désactivés.</p>
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="assets/phoenix.js"></script>
+<script>
+const { $, esc } = PX;
+/* Données d'exemple — plus tard : GET /api/notifications */
+const H = h => new Date(Date.now() - h * 3600000).toISOString();
+const notifs = [
+  { id:1, type:'warn', icon:'alert', title:'Complément demandé', text:'L\'officier a besoin d\'une nouvelle photo de votre pièce d\'identité.', ref:'PHX-2026-004218', at:H(2), read:false, href:'request-complement.html?id=PHX-2026-004218' },
+  { id:2, type:'', icon:'check', title:'Demande vérifiée', text:'La demande de Lucas Ngoa est transmise au maire pour signature.', ref:'PHX-2026-003540', at:H(5), read:false, href:'request-detail.html?id=PHX-2026-003540' },
+  { id:3, type:'ok', icon:'card', title:'Paiement confirmé', text:'20 000 FCFA reçus par MTN Mobile Money.', ref:'PHX-2026-004218', at:H(30), read:true, href:'payments.html?receipt=PAY-88213' },
+  { id:4, type:'', icon:'doc', title:'Demande déposée', text:'Votre demande a bien été enregistrée.', ref:'PHX-2026-004218', at:H(33), read:true, href:'request-detail.html?id=PHX-2026-004218' },
+  { id:5, type:'ok', icon:'ok', title:'Copie disponible', text:'Votre copie d\'acte de naissance est signée et disponible.', ref:'PHX-2026-001107', at:H(24 * 105), read:true, href:'request-detail.html?id=PHX-2026-001107' }
+];
+const unread = () => notifs.filter(n => !n.read).length;
+PX.shell({ counts:{ notifications:unread(), requests:1 } });
+let filter = 'all';
+
+function groupLabel(at){
+  const d = (Date.now() - new Date(at)) / 86400000;
+  if (new Date(at).toDateString() === new Date().toDateString()) return 'Aujourd\'hui';
+  return d < 7 ? 'Cette semaine' : 'Plus ancien';
+}
+function render(){
+  const rows = notifs.filter(n => filter === 'all' || !n.read);
+  let html = '', last = '';
+  rows.forEach(n => {
+    const g = groupLabel(n.at); if (g !== last){ html += `<h3 class="day">${g}</h3>`; last = g; }
+    html += `<a class="notif ${n.read ? '' : 'unread'}" href="${n.href}" data-id="${n.id}">
+      <span class="ic ${n.type}">${PX.ICONS[n.icon]}</span>
+      <span><strong>${esc(n.title)}${n.read ? '' : '<span class="sr-only"> (non lue)</span>'}</strong><p>${esc(n.text)} · ${esc(n.ref)}</p></span>
+      <time datetime="${n.at}">${groupLabel(n.at) === 'Aujourd\'hui' ? PX.fmtTime(n.at) : PX.fmtDate(n.at)}</time></a>`;
+  });
+  $('list').innerHTML = html;
+  $('empty').hidden = rows.length > 0;
+  $('sub').textContent = unread() ? `${unread()} notification${unread() > 1 ? 's' : ''} non lue${unread() > 1 ? 's' : ''}.` : 'Vous êtes à jour.';
+  $('read-all').disabled = !unread();
+}
+$('list').addEventListener('click', e => { const a = e.target.closest('[data-id]'); if (a) notifs.find(n => n.id == a.dataset.id).read = true; });
+$('tabs').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return;
+  filter = b.dataset.f; document.querySelectorAll('#tabs button').forEach(x => x.setAttribute('aria-selected', x === b)); render(); });
+$('read-all').addEventListener('click', () => { notifs.forEach(n => n.read = true); render(); PX.toast('Toutes les notifications sont marquées comme lues.'); });
+
+// Préférences (SMS / e-mail par type d'événement)
+const EVENTS = [['status','Avancement de la demande','Vérification, signature, copie disponible'],['complement','Complément demandé','Quand l\'officier a besoin d\'une pièce'],['payment','Paiements et remboursements','Confirmations et reçus']];
+$('prefs').innerHTML = EVENTS.map(([k,t,d]) => `
+  <fieldset style="border:0;padding:0;margin:0 0 .6rem"><legend class="label" style="margin-bottom:.1rem">${esc(t)}</legend><p class="help" style="margin:0 0 .2rem">${esc(d)}</p>
+  <label class="switch"><span>SMS</span><input type="checkbox" data-pref="${k}-sms" checked></label>
+  <label class="switch"><span>E-mail</span><input type="checkbox" data-pref="${k}-mail" ${k === 'payment' ? 'checked' : ''}></label></fieldset>`).join('');
+$('prefs').addEventListener('change', () => PX.toast('Préférence enregistrée.', 'ok')); // TODO : PATCH /api/me/notification-preferences
+render();
+</script>
+</body>
+</html>

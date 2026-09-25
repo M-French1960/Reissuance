@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PHOENIX — Réédition de vos actes d'état civil</title>
+<meta name="description" content="Demandez en ligne une nouvelle copie de votre acte de naissance perdu ou détérioré et suivez chaque étape jusqu'à sa délivrance.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   TOKENS — repris du prototype "Applicant Dashboard"
+   ========================================================= */
+:root{
+  --violet-900:#2A0A55;   /* fond profond du héros */
+  --violet-800:#4A148C;   /* sidebar du prototype */
+  --violet-700:#5B0FB0;   /* carte "Reissue Birth Certificates" */
+  --violet-500:#7B2FF2;   /* accent interactif */
+  --lilac-200:#E3D6FF;
+  --ink:#1D1530;          /* texte principal */
+  --ink-soft:#544A6B;
+  --page:#F3F2F9;         /* fond clair du prototype */
+  --white:#FFFFFF;
+  --ok:#1F9D6B;
+
+  --glass-dark:rgba(255,255,255,.10);
+  --glass-dark-border:rgba(255,255,255,.28);
+  --glass-light:rgba(255,255,255,.58);
+  --glass-light-border:rgba(255,255,255,.85);
+
+  --r-lg:22px; --r-md:14px; --r-sm:10px;
+  --font-display:"Fraunces", Georgia, "Times New Roman", serif;
+  --font-body:"Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --maxw:1180px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:calc(84px + env(safe-area-inset-top,0px))}
+body{
+  margin:0;font-family:var(--font-body);font-size:1rem;line-height:1.6;color:var(--ink);
+  background:var(--page);
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+img,svg{max-width:100%}
+a{color:inherit}
+:focus-visible{outline:3px solid #FFD166;outline-offset:3px;border-radius:6px}
+.wrap{width:min(100% - 2.5rem, var(--maxw));margin-inline:auto}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.skip{position:absolute;left:1rem;top:-4rem;background:var(--white);color:var(--violet-800);padding:.6rem 1rem;border-radius:var(--r-sm);z-index:100;font-weight:700}
+.skip:focus{top:1rem}
+
+/* ---------- Boutons ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
+  min-height:48px;padding:.75rem 1.4rem;border-radius:999px;border:1px solid transparent;
+  font:600 1rem/1 var(--font-body);text-decoration:none;cursor:pointer;
+  transition:transform .15s ease, background-color .2s ease, box-shadow .2s ease;
+}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--white);color:var(--violet-800);box-shadow:0 10px 30px -10px rgba(20,0,60,.6)}
+.btn-primary:hover{background:var(--lilac-200)}
+.btn-ghost{background:var(--glass-dark);color:var(--white);border-color:var(--glass-dark-border);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.btn-ghost:hover{background:rgba(255,255,255,.18)}
+.btn-solid{background:var(--violet-700);color:var(--white)}
+.btn-solid:hover{background:var(--violet-800)}
+
+/* =========================================================
+   EN-TÊTE
+   ========================================================= */
+.header{position:fixed;inset:0 0 auto 0;z-index:50;padding-top:env(safe-area-inset-top,0px)}
+.nav{
+  margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  padding:.6rem .6rem .6rem 1.2rem;border-radius:999px;
+  background:rgba(42,10,85,.45);border:1px solid var(--glass-dark-border);
+  backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);
+  color:var(--white);
+}
+.brand{display:flex;align-items:center;gap:.6rem;text-decoration:none}
+.brand-mark{width:34px;height:34px}
+.brand-name{font:700 1.3rem/1 var(--font-display);letter-spacing:.04em}
+.nav-links{display:flex;gap:.25rem;list-style:none;margin:0;padding:0}
+.nav-links a{display:block;padding:.6rem .9rem;border-radius:999px;text-decoration:none;font-weight:500;opacity:.9}
+.nav-links a:hover{background:rgba(255,255,255,.12);opacity:1}
+.nav-actions{display:flex;align-items:center;gap:.5rem}
+.lang{display:flex;border:1px solid var(--glass-dark-border);border-radius:999px;overflow:hidden}
+.lang button{background:none;border:0;color:var(--white);font:600 .85rem var(--font-body);padding:.5rem .7rem;cursor:pointer;opacity:.7}
+.lang button[aria-pressed="true"]{background:rgba(255,255,255,.2);opacity:1}
+.nav .btn{min-height:42px;padding:.55rem 1.1rem;font-size:.95rem}
+.menu-toggle{display:none;background:none;border:0;color:var(--white);width:44px;height:44px;border-radius:50%;cursor:pointer}
+.menu-toggle:hover{background:rgba(255,255,255,.12)}
+
+/* =========================================================
+   HÉROS
+   ========================================================= */
+.hero{
+  position:relative;overflow:hidden;color:var(--white);
+  padding:calc(140px + env(safe-area-inset-top,0px)) 0 110px;
+  background:
+    radial-gradient(900px 500px at 85% 20%, rgba(123,47,242,.55), transparent 60%),
+    radial-gradient(700px 500px at 5% 90%, rgba(91,15,176,.8), transparent 60%),
+    linear-gradient(160deg, var(--violet-900) 0%, var(--violet-800) 55%, var(--violet-700) 100%);
+}
+/* formes floues derrière le verre */
+.orb{position:absolute;border-radius:50%;filter:blur(8px);pointer-events:none}
+.orb-1{width:320px;height:320px;right:8%;top:22%;background:radial-gradient(circle at 30% 30%,#B388FF,#6A1B9A 70%);opacity:.75}
+.orb-2{width:180px;height:180px;right:36%;bottom:8%;background:radial-gradient(circle at 30% 30%,#FFC2E2,#9C27B0 70%);opacity:.55}
+.hero-grid{position:relative;display:grid;grid-template-columns:1.05fr .95fr;gap:3.5rem;align-items:center}
+.hero h1{
+  font:700 clamp(2.4rem, 5.2vw, 4.1rem)/1.05 var(--font-display);
+  margin:0 0 1.25rem;letter-spacing:-.01em;max-width:14ch;
+}
+.hero-lead{font-size:1.15rem;max-width:34rem;margin:0 0 2rem;color:rgba(255,255,255,.86)}
+.hero-cta{display:flex;flex-wrap:wrap;gap:.8rem;margin-bottom:2.2rem}
+
+/* Suivi rapide */
+.track{
+  max-width:32rem;padding:1rem;border-radius:var(--r-lg);
+  background:var(--glass-dark);border:1px solid var(--glass-dark-border);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+.track label{display:block;font-weight:600;margin:0 0 .5rem .2rem}
+.track-row{display:flex;gap:.5rem}
+.track input{
+  flex:1;min-width:0;min-height:48px;padding:.7rem 1rem;border-radius:999px;
+  border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.14);color:var(--white);
+  font:500 1rem var(--font-body);letter-spacing:.03em;
+}
+.track input::placeholder{color:rgba(255,255,255,.6)}
+.track input:focus{outline:none;border-color:#FFD166;box-shadow:0 0 0 3px rgba(255,209,102,.35)}
+.track .hint{font-size:.85rem;margin:.55rem 0 0 .2rem;color:rgba(255,255,255,.72);min-height:1.3em}
+.track .hint.error{color:#FFD1DC;font-weight:600}
+
+/* Carte-document en verre : l'élément signature */
+.doc-stage{position:relative;justify-self:center;width:min(100%,430px)}
+.doc{
+  position:relative;padding:1.6rem 1.6rem 1.4rem;border-radius:26px;
+  background:linear-gradient(145deg, rgba(255,255,255,.26), rgba(255,255,255,.08));
+  border:1px solid rgba(255,255,255,.4);
+  box-shadow:0 30px 60px -20px rgba(15,0,40,.65), inset 0 1px 0 rgba(255,255,255,.5);
+  backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);
+  animation:float-in 1s cubic-bezier(.2,.8,.2,1) both;
+}
+.doc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin-bottom:1.2rem}
+.doc-title{font:600 1.3rem/1.2 var(--font-display);margin:0}
+.doc-sub{font-size:.85rem;opacity:.8;margin:.2rem 0 0}
+.doc-seal{flex:none;width:52px;height:52px}
+.doc-lines{display:grid;gap:.55rem;margin-bottom:1.4rem}
+.doc-line{display:flex;justify-content:space-between;gap:1rem;font-size:.9rem;padding-bottom:.55rem;border-bottom:1px dashed rgba(255,255,255,.28)}
+.doc-line span:first-child{opacity:.75}
+.doc-line span:last-child{font-weight:600;text-align:right}
+
+.timeline{list-style:none;margin:0;padding:0;display:grid;gap:.15rem}
+.timeline li{display:grid;grid-template-columns:28px 1fr;gap:.7rem;align-items:start;padding:.35rem 0;font-size:.92rem}
+.dot{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;border:2px solid rgba(255,255,255,.45);font-size:.75rem;font-weight:700}
+.timeline .done .dot{background:var(--white);border-color:var(--white);color:var(--violet-800)}
+.timeline .current .dot{border-color:#FFD166;box-shadow:0 0 0 5px rgba(255,209,102,.22)}
+.timeline .current strong{color:#FFE4A0}
+.timeline small{display:block;opacity:.7;font-size:.8rem}
+
+.doc-badge{
+  position:absolute;left:-26px;bottom:-22px;display:flex;align-items:center;gap:.6rem;
+  padding:.7rem 1rem;border-radius:var(--r-md);color:var(--ink);
+  background:rgba(255,255,255,.82);border:1px solid var(--glass-light-border);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  box-shadow:0 16px 40px -14px rgba(20,0,60,.55);font-size:.88rem;font-weight:600;
+}
+.doc-badge svg{flex:none}
+
+@keyframes float-in{from{opacity:0;transform:translateY(24px) rotate(-2deg)}to{opacity:1;transform:none}}
+
+/* =========================================================
+   SECTIONS CLAIRES
+   ========================================================= */
+.section{position:relative;padding:96px 0}
+.section-bg{
+  position:relative;overflow:hidden;
+  background:
+    radial-gradient(520px 380px at 92% 10%, rgba(123,47,242,.20), transparent 70%),
+    radial-gradient(480px 360px at 4% 85%, rgba(156,39,176,.16), transparent 70%),
+    var(--page);
+}
+.section h2{font:700 clamp(1.9rem,3.6vw,2.7rem)/1.12 var(--font-display);margin:0 0 .8rem;color:var(--violet-900);max-width:22ch}
+.section-intro{color:var(--ink-soft);font-size:1.08rem;max-width:40rem;margin:0 0 3rem}
+
+.glass{
+  background:var(--glass-light);border:1px solid var(--glass-light-border);
+  backdrop-filter:blur(18px) saturate(150%);-webkit-backdrop-filter:blur(18px) saturate(150%);
+  box-shadow:0 20px 50px -30px rgba(74,20,140,.45);
+}
+
+/* Documents */
+.docs-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:1.25rem}
+.doc-card{border-radius:var(--r-lg);padding:1.8rem;display:flex;flex-direction:column;gap:.8rem}
+.doc-card h3{font:600 1.35rem/1.2 var(--font-display);margin:0}
+.doc-card p{margin:0;color:var(--ink-soft)}
+.doc-card .icon{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:rgba(91,15,176,.1);color:var(--violet-700)}
+.doc-card.featured{background:linear-gradient(150deg,var(--violet-700),var(--violet-800));color:var(--white);border-color:rgba(255,255,255,.2)}
+.doc-card.featured p{color:rgba(255,255,255,.85)}
+.doc-card.featured .icon{background:rgba(255,255,255,.16);color:var(--white)}
+.doc-card.featured .btn{align-self:flex-start;margin-top:auto}
+.status{display:inline-flex;align-self:flex-start;align-items:center;gap:.4rem;font-size:.82rem;font-weight:700;padding:.3rem .7rem;border-radius:999px}
+.status.live{background:rgba(255,255,255,.18);color:var(--white)}
+.status.soon{background:rgba(91,15,176,.1);color:var(--violet-700)}
+
+/* Étapes */
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:1.25rem;counter-reset:step}
+.step{border-radius:var(--r-lg);padding:1.6rem;position:relative}
+.step-num{
+  width:44px;height:44px;border-radius:50%;display:grid;place-items:center;margin-bottom:1rem;
+  font:700 1.1rem var(--font-display);color:var(--white);background:var(--violet-700);
+}
+.step h3{font:600 1.15rem/1.3 var(--font-display);margin:0 0 .4rem;color:var(--violet-900)}
+.step p{margin:0;color:var(--ink-soft);font-size:.95rem}
+.step .who{display:block;margin-top:.8rem;font-size:.82rem;font-weight:700;color:var(--violet-700)}
+
+/* Pièces à fournir */
+.checklist-wrap{display:grid;grid-template-columns:1fr 1fr;gap:2.5rem;align-items:start}
+.checklist{border-radius:var(--r-lg);padding:1.8rem;margin:0;list-style:none;display:grid;gap:1rem}
+.checklist li{display:grid;grid-template-columns:28px 1fr;gap:.8rem}
+.checklist .tick{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:rgba(31,157,107,.14);color:var(--ok)}
+.checklist strong{display:block}
+.checklist span.desc{color:var(--ink-soft);font-size:.93rem}
+.aside-note{border-radius:var(--r-lg);padding:1.6rem;border-left:4px solid var(--violet-700)}
+.aside-note h3{font:600 1.15rem var(--font-display);margin:0 0 .5rem;color:var(--violet-900)}
+.aside-note p{margin:0 0 .8rem;color:var(--ink-soft)}
+
+/* Confiance */
+.trust{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem}
+.trust-item{border-radius:var(--r-lg);padding:1.6rem}
+.trust-item h3{font:600 1.1rem var(--font-display);margin:.8rem 0 .4rem;color:var(--violet-900)}
+.trust-item p{margin:0;color:var(--ink-soft);font-size:.95rem}
+.trust-item svg{color:var(--violet-700)}
+
+/* FAQ */
+.faq{display:grid;gap:.8rem;max-width:52rem}
+.faq details{border-radius:var(--r-md);padding:0 1.3rem}
+.faq summary{
+  list-style:none;cursor:pointer;padding:1.15rem 0;font-weight:700;display:flex;justify-content:space-between;gap:1rem;align-items:center;
+}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font:500 1.5rem/1 var(--font-body);color:var(--violet-700);transition:transform .2s}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq details p{margin:0 0 1.2rem;color:var(--ink-soft)}
+
+/* Bandeau final */
+.final{
+  border-radius:28px;padding:3rem;color:var(--white);display:flex;justify-content:space-between;align-items:center;gap:2rem;flex-wrap:wrap;
+  background:
+    radial-gradient(420px 260px at 90% 0%, rgba(179,136,255,.55), transparent 70%),
+    linear-gradient(135deg,var(--violet-800),var(--violet-700));
+}
+.final h2{color:var(--white);margin:0 0 .4rem}
+.final p{margin:0;color:rgba(255,255,255,.85);max-width:34rem}
+
+/* Pied de page */
+.footer{background:var(--violet-900);color:rgba(255,255,255,.8);padding:3.5rem 0 2rem;font-size:.93rem}
+.footer-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:2rem;margin-bottom:2.5rem}
+.footer h4{color:var(--white);font:600 1rem var(--font-body);margin:0 0 .9rem}
+.footer ul{list-style:none;margin:0;padding:0;display:grid;gap:.5rem}
+.footer a{text-decoration:none}
+.footer a:hover{color:var(--white);text-decoration:underline}
+.footer-bottom{border-top:1px solid rgba(255,255,255,.15);padding-top:1.5rem;display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;font-size:.85rem}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+@media (max-width:1024px){
+  .hero-grid{grid-template-columns:1fr;gap:4rem}
+  .doc-stage{justify-self:start}
+  .docs-grid{grid-template-columns:1fr 1fr}
+  .docs-grid .featured{grid-column:1 / -1}
+  .steps{grid-template-columns:1fr 1fr}
+  .footer-grid{grid-template-columns:1fr 1fr}
+}
+@media (max-width:860px){
+  .menu-toggle{display:grid;place-items:center}
+  .nav-links{
+    display:none;position:absolute;left:1.25rem;right:1.25rem;top:calc(100% + 8px);
+    flex-direction:column;padding:.6rem;border-radius:var(--r-lg);
+    background:rgba(42,10,85,.92);border:1px solid var(--glass-dark-border);
+    backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  }
+  .nav-links.open{display:flex}
+  .nav-links a{padding:.9rem 1rem}
+  .nav{position:relative}
+  .nav-actions .btn-ghost{display:none}
+  .checklist-wrap{grid-template-columns:1fr}
+  .trust{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .wrap{width:min(100% - 1.5rem, var(--maxw))}
+  .hero{padding-bottom:90px}
+  .hero-cta .btn{flex:1 1 100%}
+  .track-row{flex-direction:column}
+  .docs-grid,.steps{grid-template-columns:1fr}
+  .doc-badge{left:12px;bottom:-26px}
+  .lang{display:none}
+  .final{padding:2rem}
+  .footer-grid{grid-template-columns:1fr}
+  .section{padding:72px 0}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+/* Repli si backdrop-filter n'est pas supporté */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .glass{background:rgba(255,255,255,.94)}
+  .nav{background:rgba(42,10,85,.95)}
+  .doc{background:rgba(74,20,140,.9)}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#contenu">Aller au contenu</a>
+
+<!-- ================= EN-TÊTE ================= -->
+<header class="header">
+  <div class="wrap">
+    <nav class="nav" aria-label="Navigation principale">
+      <a class="brand" href="index.html" aria-label="PHOENIX, accueil">
+        <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true">
+          <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#C9A8FF"/></linearGradient></defs>
+          <path d="M20 4c3 6 9 8 13 7-2 5-6 8-9 9 3 1 6 4 7 9-5-1-9-4-11-8-2 4-6 7-11 8 1-5 4-8 7-9-3-1-7-4-9-9 4 1 10-1 13-7z" fill="url(#g1)"/>
+        </svg>
+        <span class="brand-name">PHOENIX</span>
+      </a>
+
+      <ul class="nav-links" id="menu">
+        <li><a href="#documents">Documents</a></li>
+        <li><a href="#etapes">Comment ça marche</a></li>
+        <li><a href="#pieces">Pièces à fournir</a></li>
+        <li><a href="#faq">Aide</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <div class="lang" role="group" aria-label="Langue">
+          <button type="button" aria-pressed="true">FR</button>
+          <button type="button" aria-pressed="false">EN</button>
+        </div>
+        <a class="btn btn-ghost" href="login.html">Se connecter</a>
+        <a class="btn btn-primary" href="signup.html">Créer un compte</a>
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Ouvrir le menu">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main id="contenu">
+
+<!-- ================= HÉROS ================= -->
+<section class="hero" aria-labelledby="hero-title">
+  <span class="orb orb-1" aria-hidden="true"></span>
+  <span class="orb orb-2" aria-hidden="true"></span>
+
+  <div class="wrap hero-grid">
+    <div>
+      <h1 id="hero-title">Votre acte de naissance perdu, réédité sans file d'attente.</h1>
+      <p class="hero-lead">Déposez votre demande en ligne, suivez sa validation par l'officier d'état civil et la signature du maire, puis récupérez votre nouvelle copie certifiée.</p>
+
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="form.html">Commencer une demande</a>
+        <a class="btn btn-ghost" href="#etapes">Voir les étapes</a>
+      </div>
+
+      <form class="track" id="track-form" novalidate>
+        <label for="track-id">Vous avez déjà fait une demande ?</label>
+        <div class="track-row">
+          <input id="track-id" name="track-id" type="text" inputmode="text" autocomplete="off"
+                 placeholder="Numéro de suivi, ex. PHX-2026-004218" aria-describedby="track-hint">
+          <button class="btn btn-primary" type="submit">Suivre</button>
+        </div>
+        <p class="hint" id="track-hint" aria-live="polite">Le numéro figure dans l'e-mail ou le SMS de confirmation.</p>
+      </form>
+    </div>
+
+    <!-- Carte-document : aperçu d'une demande en cours -->
+    <div class="doc-stage" aria-label="Exemple de suivi d'une demande">
+      <article class="doc">
+        <div class="doc-head">
+          <div>
+            <p class="doc-title">Acte de naissance</p>
+            <p class="doc-sub">Demande de réédition · exemple</p>
+          </div>
+          <svg class="doc-seal" viewBox="0 0 52 52" aria-hidden="true">
+            <circle cx="26" cy="26" r="24" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="1.5" stroke-dasharray="3 3"/>
+            <circle cx="26" cy="26" r="17" fill="rgba(255,255,255,.18)" stroke="rgba(255,255,255,.7)"/>
+            <path d="M19 26.5l4.5 4.5L33 21.5" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+
+        <div class="doc-lines">
+          <div class="doc-line"><span>Titulaire</span><span>Marie France N.</span></div>
+          <div class="doc-line"><span>Centre d'état civil</span><span>Yaoundé IIIe</span></div>
+          <div class="doc-line"><span>Motif</span><span>Perte</span></div>
+        </div>
+
+        <ol class="timeline">
+          <li class="done"><span class="dot" aria-hidden="true">✓</span><div><strong>Demande reçue</strong><small>Pièces justificatives déposées</small></div></li>
+          <li class="done"><span class="dot" aria-hidden="true">✓</span><div><strong>Vérifiée par l'officier</strong><small>Correspondance avec le registre</small></div></li>
+          <li class="current"><span class="dot" aria-hidden="true">3</span><div><strong>Signature du maire</strong><small>En cours</small></div></li>
+          <li><span class="dot" aria-hidden="true">4</span><div><strong>Copie disponible</strong><small>Retrait ou téléchargement</small></div></li>
+        </ol>
+      </article>
+
+      <div class="doc-badge">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5B0FB0" stroke-width="2" aria-hidden="true"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        Vous êtes notifié à chaque étape
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= DOCUMENTS ================= -->
+<section class="section section-bg" id="documents" aria-labelledby="docs-title">
+  <div class="wrap">
+    <h2 id="docs-title">Quel document souhaitez-vous refaire ?</h2>
+    <p class="section-intro">La réédition des actes de naissance est ouverte. Les autres actes d'état civil arriveront progressivement.</p>
+
+    <div class="docs-grid">
+      <article class="doc-card glass featured">
+        <span class="status live"><svg width="10" height="10" aria-hidden="true"><circle cx="5" cy="5" r="5" fill="#7CF0B8"/></svg>Disponible</span>
+        <div class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.6-1.5 1.7-2 3-2s2.4.5 3 2M14 10h4M14 13h4"/></svg></div>
+        <h3>Acte de naissance</h3>
+        <p>Pour un acte perdu, volé ou détérioré. Vous indiquez le centre d'état civil d'origine, nous retrouvons l'acte dans le registre.</p>
+        <a class="btn btn-primary" href="form.html">Commencer la demande</a>
+      </article>
+
+      <article class="doc-card glass">
+        <span class="status soon">Bientôt</span>
+        <div class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="14" r="5"/><circle cx="15" cy="10" r="5"/></svg></div>
+        <h3>Acte de mariage</h3>
+        <p>Réédition d'une copie d'acte de mariage égarée.</p>
+      </article>
+
+      <article class="doc-card glass">
+        <span class="status soon">Bientôt</span>
+        <div class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/></svg></div>
+        <h3>Acte de décès</h3>
+        <p>Nouvelle copie pour les démarches de succession ou administratives.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ÉTAPES ================= -->
+<section class="section" id="etapes" aria-labelledby="steps-title">
+  <div class="wrap">
+    <h2 id="steps-title">Quatre étapes, suivies en temps réel</h2>
+    <p class="section-intro">Chaque étape est traitée par la bonne personne. Vous voyez à tout moment où en est votre dossier.</p>
+
+    <ol class="steps">
+      <li class="step glass">
+        <span class="step-num" aria-hidden="true">1</span>
+        <h3>Vous déposez la demande</h3>
+        <p>Informations sur l'acte, pièce d'identité et déclaration de perte, depuis votre téléphone ou ordinateur.</p>
+        <span class="who">Vous</span>
+      </li>
+      <li class="step glass">
+        <span class="step-num" aria-hidden="true">2</span>
+        <h3>L'officier vérifie</h3>
+        <p>Il retrouve l'acte dans le registre du centre et contrôle la conformité des informations.</p>
+        <span class="who">Officier d'état civil</span>
+      </li>
+      <li class="step glass">
+        <span class="step-num" aria-hidden="true">3</span>
+        <h3>Le maire signe</h3>
+        <p>La nouvelle copie est signée électroniquement par l'autorité compétente.</p>
+        <span class="who">Maire</span>
+      </li>
+      <li class="step glass">
+        <span class="step-num" aria-hidden="true">4</span>
+        <h3>Vous récupérez la copie</h3>
+        <p>Vous êtes prévenu par SMS et e-mail dès que votre document est prêt.</p>
+        <span class="who">Vous</span>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- ================= PIÈCES ================= -->
+<section class="section section-bg" id="pieces" aria-labelledby="pieces-title">
+  <div class="wrap checklist-wrap">
+    <div>
+      <h2 id="pieces-title">Préparez ces éléments avant de commencer</h2>
+      <p class="section-intro">Avoir tout sous la main vous permet de terminer la demande en une seule fois.</p>
+      <aside class="aside-note glass">
+        <h3>Vous faites la demande pour un proche ?</h3>
+        <p>Un parent ou un mandataire peut déposer la demande. Il faudra alors joindre la preuve du lien ou une procuration.</p>
+        <a class="btn btn-solid" href="help.html">En savoir plus</a>
+      </aside>
+    </div>
+
+    <ul class="checklist glass">
+      <li><span class="tick" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5 9-10"/></svg></span>
+        <div><strong>Une pièce d'identité valide</strong><span class="desc">CNI, passeport ou récépissé, en photo lisible.</span></div></li>
+      <li><span class="tick" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5 9-10"/></svg></span>
+        <div><strong>Une déclaration de perte</strong><span class="desc">Délivrée par le commissariat ou la gendarmerie.</span></div></li>
+      <li><span class="tick" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5 9-10"/></svg></span>
+        <div><strong>Les informations de l'acte</strong><span class="desc">Centre d'état civil, date de naissance et, si possible, le numéro de l'acte.</span></div></li>
+      <li><span class="tick" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5 9-10"/></svg></span>
+        <div><strong>Un numéro de téléphone actif</strong><span class="desc">Pour recevoir le code de suivi et les notifications.</span></div></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= CONFIANCE ================= -->
+<section class="section" aria-labelledby="trust-title">
+  <div class="wrap">
+    <h2 id="trust-title">Vos données restent protégées</h2>
+    <p class="section-intro">Un acte d'état civil est un document sensible. La plateforme est conçue en conséquence.</p>
+    <div class="trust">
+      <div class="trust-item glass">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        <h3>Accès contrôlé</h3>
+        <p>Seuls l'officier et le maire concernés consultent votre dossier.</p>
+      </div>
+      <div class="trust-item glass">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+        <h3>Signature électronique</h3>
+        <p>Chaque copie délivrée porte la signature de l'autorité compétente.</p>
+      </div>
+      <div class="trust-item glass">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        <h3>Historique complet</h3>
+        <p>Chaque action sur votre demande est datée et consultable.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FAQ ================= -->
+<section class="section section-bg" id="faq" aria-labelledby="faq-title">
+  <div class="wrap">
+    <h2 id="faq-title">Questions fréquentes</h2>
+    <p class="section-intro">Vous ne trouvez pas votre réponse ? Contactez le support depuis votre espace.</p>
+    <div class="faq">
+      <details class="glass">
+        <summary>Combien de temps prend une réédition ?</summary>
+        <p>[À compléter : délai de traitement moyen fixé avec les centres d'état civil partenaires.]</p>
+      </details>
+      <details class="glass">
+        <summary>Combien coûte la demande et comment payer ?</summary>
+        <p>[À compléter : frais applicables et moyens de paiement acceptés.]</p>
+      </details>
+      <details class="glass">
+        <summary>Mon centre d'état civil est-il couvert ?</summary>
+        <p>Lors de la demande, la liste des centres raccordés s'affiche. Si le vôtre n'y figure pas encore, vous pouvez être prévenu à son ouverture.</p>
+      </details>
+      <details class="glass">
+        <summary>Puis-je faire la demande pour mon enfant ?</summary>
+        <p>Oui. En tant que parent, joignez votre pièce d'identité et un document prouvant le lien de filiation.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ================= BANDEAU FINAL ================= -->
+<section class="section" aria-labelledby="final-title">
+  <div class="wrap">
+    <div class="final">
+      <div>
+        <h2 id="final-title">Prêt à refaire votre acte ?</h2>
+        <p>Créez votre compte et déposez votre demande en quelques minutes.</p>
+      </div>
+      <a class="btn btn-primary" href="form.html">Commencer une demande</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ================= PIED DE PAGE ================= -->
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <a class="brand" href="index.html" style="color:#fff;margin-bottom:.8rem">
+          <span class="brand-name">PHOENIX</span>
+        </a>
+        <p style="max-width:28ch;margin:.8rem 0 0">Réédition en ligne des actes d'état civil.</p>
+      </div>
+      <div>
+        <h4>Services</h4>
+        <ul><li><a href="#documents">Acte de naissance</a></li><li><a href="track.html">Suivre une demande</a></li><li><a href="verify.html">Vérifier un acte</a></li></ul>
+      </div>
+      <div>
+        <h4>Espaces</h4>
+        <ul><li><a href="login.html">Citoyen</a></li><li><a href="officer-login.html">Officier d'état civil</a></li><li><a href="officer-login.html">Mairie</a></li></ul>
+      </div>
+      <div>
+        <h4>Aide</h4>
+        <ul><li><a href="#faq">FAQ</a></li><li><a href="help.html#contact">Contact</a></li><li><a href="help.html">Aide</a></li></ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 PHOENIX</span>
+      <span>Conditions d'utilisation</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Menu mobile
+  const toggle = document.querySelector('.menu-toggle');
+  const menu = document.getElementById('menu');
+  toggle.addEventListener('click', () => {
+    const open = menu.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', open);
+    toggle.setAttribute('aria-label', open ? 'Fermer le menu' : 'Ouvrir le menu');
+  });
+  menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+    menu.classList.remove('open'); toggle.setAttribute('aria-expanded', false);
+  }));
+
+  // Sélecteur de langue (visuel uniquement pour l'instant)
+  document.querySelectorAll('.lang button').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('.lang button').forEach(x => x.setAttribute('aria-pressed', x === b));
+  }));
+
+  // Suivi rapide : validation du format (format d'exemple, à adapter)
+  const form = document.getElementById('track-form');
+  const input = document.getElementById('track-id');
+  const hint = document.getElementById('track-hint');
+  const defaultHint = hint.textContent;
+  input.addEventListener('input', () => {
+    input.value = input.value.toUpperCase();
+    hint.classList.remove('error'); hint.textContent = defaultHint;
+  });
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const v = input.value.trim();
+    if (!/^PHX-\d{4}-\d{6}$/.test(v)) {
+      hint.classList.add('error');
+      hint.textContent = v ? 'Format attendu : PHX-AAAA-000000.' : 'Saisissez votre numéro de suivi.';
+      input.focus();
+      return;
+    }
+    hint.textContent = 'Recherche de la demande ' + v + '…';
+    location.href = 'track.html?ref=' + encodeURIComponent(v);
+  });
+</script>
+</body>
+</html>

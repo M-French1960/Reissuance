@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Actes signés — PHOENIX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/phoenix.css">
+</head>
+<body data-role="mayor" data-active="signed" data-crumb="Actes signés">
+<div class="layout">
+  <div class="main">
+    <main id="contenu">
+      <section class="banner">
+        <div><h1>Actes signés</h1><p>Historique de vos signatures et suivi de la délivrance des copies.</p></div>
+        <div class="actions-inline"><button class="btn btn-white" type="button" id="export">Exporter en CSV</button></div>
+      </section>
+
+      <div class="grid" style="margin-bottom:1.25rem">
+        <section class="panel glass span-8" aria-labelledby="ch-title">
+          <div class="panel-head"><h2 id="ch-title">Signatures par semaine</h2><span class="muted">8 dernières semaines</span></div>
+          <div id="chart"></div>
+        </section>
+        <section class="panel glass span-4" aria-labelledby="sum-title">
+          <div class="panel-head"><h2 id="sum-title">En résumé</h2></div>
+          <dl class="kv-list">
+            <div><dt>Signés sur la période</dt><dd id="s-total">—</dd></div>
+            <div><dt>Délai moyen vérification → signature</dt><dd>1,8 jour</dd></div>
+            <div><dt>Copies déjà délivrées</dt><dd id="s-deliv">—</dd></div>
+            <div><dt>Renvoyés à l'officier</dt><dd>2</dd></div>
+          </dl>
+          <p class="help" style="margin-top:1rem">Valeurs d'exemple, calculées côté serveur en production.</p>
+        </section>
+      </div>
+
+      <form class="filters glass" onsubmit="return false" role="search">
+        <div class="field"><label for="f-q">Rechercher</label><input type="search" id="f-q" placeholder="Référence ou titulaire"></div>
+        <div class="field"><label for="f-period">Période</label>
+          <select id="f-period"><option value="30">30 derniers jours</option><option value="90">3 derniers mois</option><option value="all">Tout</option></select></div>
+        <div class="field"><label for="f-status">Délivrance</label>
+          <select id="f-status"><option value="">Toutes</option><option value="ready">À retirer</option><option value="done">Délivrée</option></select></div>
+      </form>
+
+      <section class="panel glass" aria-labelledby="t-title">
+        <div class="panel-head"><h2 id="t-title">Historique</h2><span class="muted" id="count" aria-live="polite"></span></div>
+        <div class="table-wrap">
+          <table class="data cards">
+            <thead><tr><th scope="col">Référence</th><th scope="col">Titulaire</th><th scope="col">Signé le</th><th scope="col">Officier</th><th scope="col">Délivrance</th></tr></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <div class="empty" id="empty" hidden><p>Aucun acte signé sur cette période.</p></div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script src="assets/phoenix.js"></script>
+<script>
+PX.shell({ counts:{ parapheur:5 } });
+const { $, esc } = PX;
+
+/* Données d'exemple générées — plus tard : GET /api/mayor/signed */
+const names = ['Paul Mohamed','Estelle Fouda','Brice Tchoua','Nadège Eyenga','Hervé Manga','Sandrine Onana','Idriss Abdoulaye','Carine Mvondo','Yannick Bilong','Laure Ateba','Didier Etoundi','Mireille Zambo'];
+const officers = ['Alain Mbarga','Rose Nkolo'];
+const now = Date.now();
+const signed = Array.from({ length:34 }, (_, i) => {
+  const days = Math.floor(i * 2.6 + (i % 3));
+  return { id:`PHX-2026-00${(3900 - i * 7).toString().padStart(4,'0')}`, holder:names[i % names.length],
+    signedAt:new Date(now - days * 86400000 - (i % 5) * 3600000).toISOString(), officer:officers[i % 2], delivered: days > 6 || i % 4 === 0 };
+});
+
+// Graphique : signatures par semaine (8 semaines)
+const weeks = Array.from({ length:8 }, (_, i) => 7 - i);
+PX.barChart($('chart'), {
+  title:'Nombre d\'actes signés par semaine',
+  labels: weeks.map(w => w === 0 ? 'Cette sem.' : `S-${w}`),
+  series:[{ name:'Actes signés', color:'#5B0FB0', values: weeks.map(w => signed.filter(s => Math.floor((now - new Date(s.signedAt)) / (7 * 86400000)) === w).length) }]
+});
+
+function filtered(){
+  const q = PX.norm($('f-q').value), p = $('f-period').value, st = $('f-status').value;
+  return signed
+    .filter(s => !q || PX.norm(s.id).includes(q) || PX.norm(s.holder).includes(q))
+    .filter(s => p === 'all' || (now - new Date(s.signedAt)) / 86400000 <= +p)
+    .filter(s => !st || (st === 'done' ? s.delivered : !s.delivered));
+}
+function render(){
+  const rows = filtered();
+  $('tbody').innerHTML = rows.map(s => `<tr>
+    <td data-label="Référence" class="strong">${esc(s.id)}</td>
+    <td data-label="Titulaire">${esc(s.holder)}<span class="sub">Acte de naissance</span></td>
+    <td data-label="Signé le">${PX.fmtDateTime(s.signedAt)}</td>
+    <td data-label="Officier">${esc(s.officer)}</td>
+    <td data-label="Délivrance">${s.delivered ? '<span class="pill s-completed">Délivrée</span>' : '<span class="pill s-verified">À retirer</span>'}</td></tr>`).join('');
+  $('empty').hidden = rows.length > 0;
+  $('count').textContent = `${rows.length} acte${rows.length > 1 ? 's' : ''}`;
+  $('s-total').textContent = rows.length;
+  $('s-deliv').textContent = rows.filter(r => r.delivered).length;
+}
+['f-q','f-period','f-status'].forEach(id => $(id).addEventListener('input', render));
+$('export').addEventListener('click', () => {
+  PX.downloadCSV('actes-signes.csv', [['Référence','Titulaire','Signé le','Officier','Délivrance'],
+    ...filtered().map(s => [s.id, s.holder, PX.fmtDateTime(s.signedAt), s.officer, s.delivered ? 'Délivrée' : 'À retirer'])]);
+  PX.toast('Export CSV téléchargé.', 'ok');
+});
+render();
+</script>
+</body>
+</html>

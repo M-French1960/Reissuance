@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Demande de réédition d'acte de naissance — PHOENIX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   TOKENS — identiques aux autres pages PHOENIX
+   ========================================================= */
+:root{
+  --violet-900:#2A0A55; --violet-800:#4A148C; --violet-700:#5B0FB0; --violet-500:#7B2FF2;
+  --lilac-200:#E3D6FF; --ink:#1D1530; --ink-soft:#544A6B; --page:#F3F2F9; --white:#FFFFFF;
+  --ok:#1F9D6B; --warn:#B7791F; --danger:#C0392B;
+  --glass-dark:rgba(255,255,255,.10); --glass-dark-border:rgba(255,255,255,.28);
+  --glass-light:rgba(255,255,255,.62); --glass-light-border:rgba(255,255,255,.9);
+  --r-lg:22px; --r-md:14px; --r-sm:10px;
+  --font-display:"Fraunces", Georgia, "Times New Roman", serif;
+  --font-body:"Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --maxw:1120px;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{
+  margin:0;font-family:var(--font-body);line-height:1.6;color:var(--ink);
+  background:
+    radial-gradient(600px 420px at 95% 40%, rgba(123,47,242,.16), transparent 70%),
+    radial-gradient(520px 400px at 0% 100%, rgba(156,39,176,.12), transparent 70%),
+    var(--page);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+a{color:var(--violet-700);font-weight:700}
+img{max-width:100%;display:block}
+:focus-visible{outline:3px solid #FFD166;outline-offset:3px;border-radius:6px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+[hidden]{display:none!important}
+.wrap{width:min(100% - 2rem, var(--maxw));margin-inline:auto}
+
+.glass{
+  background:var(--glass-light);border:1px solid var(--glass-light-border);
+  backdrop-filter:blur(18px) saturate(150%);-webkit-backdrop-filter:blur(18px) saturate(150%);
+  box-shadow:0 20px 50px -30px rgba(74,20,140,.45);
+}
+
+/* ---------- Boutons ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:48px;padding:.75rem 1.4rem;
+  border-radius:999px;border:1px solid transparent;font:600 .98rem/1 var(--font-body);text-decoration:none;cursor:pointer;
+  transition:background-color .2s ease;
+}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.btn-solid{background:var(--violet-700);color:var(--white);box-shadow:0 14px 30px -16px rgba(91,15,176,.8)}
+.btn-solid:hover:not(:disabled){background:var(--violet-800)}
+.btn-line{background:rgba(255,255,255,.6);color:var(--violet-700);border-color:rgba(91,15,176,.3)}
+.btn-line:hover:not(:disabled){background:rgba(91,15,176,.08)}
+.btn-text{background:none;color:var(--ink-soft);padding-inline:.7rem}
+.btn-text:hover{color:var(--violet-800)}
+.btn-white{background:var(--white);color:var(--violet-800)}
+.spinner{width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* =========================================================
+   EN-TÊTE VIOLET + STEPPER
+   ========================================================= */
+.band{
+  position:relative;overflow:hidden;color:var(--white);padding:calc(1rem + env(safe-area-inset-top,0px)) 0 5.5rem;
+  background:
+    radial-gradient(700px 400px at 85% 10%, rgba(123,47,242,.55), transparent 60%),
+    radial-gradient(500px 360px at 5% 100%, rgba(91,15,176,.8), transparent 60%),
+    linear-gradient(160deg,var(--violet-900),var(--violet-800) 55%,var(--violet-700));
+}
+.band .orb{position:absolute;width:260px;height:260px;border-radius:50%;right:6%;top:30%;background:radial-gradient(circle at 30% 30%,#B388FF,#6A1B9A 70%);opacity:.55;filter:blur(8px);pointer-events:none}
+.nav{
+  position:relative;display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  padding:.55rem .6rem .55rem 1.1rem;border-radius:999px;margin-bottom:2.2rem;
+  background:rgba(42,10,85,.4);border:1px solid var(--glass-dark-border);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+}
+.brand{display:flex;align-items:center;gap:.55rem;text-decoration:none;color:var(--white)}
+.brand svg{width:32px;height:32px}
+.brand-name{font:700 1.25rem/1 var(--font-display);letter-spacing:.04em}
+.nav-right{display:flex;align-items:center;gap:.5rem}
+.save-state{font-size:.85rem;color:rgba(255,255,255,.75);padding:0 .6rem}
+.nav .btn{min-height:40px;padding:.5rem 1rem;font-size:.9rem;color:var(--white);background:var(--glass-dark);border-color:var(--glass-dark-border)}
+.nav .btn:hover{background:rgba(255,255,255,.18)}
+
+.band h1{position:relative;font:700 clamp(1.7rem,3.4vw,2.5rem)/1.1 var(--font-display);margin:0 0 .4rem}
+.band p{position:relative;margin:0;color:rgba(255,255,255,.85);max-width:40rem}
+
+.stepper{
+  position:relative;list-style:none;margin:-3.8rem auto 1.5rem;padding:.8rem;border-radius:var(--r-lg);
+  display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;
+}
+.stepper button{
+  width:100%;display:flex;align-items:center;gap:.7rem;padding:.6rem .8rem;border-radius:var(--r-md);border:0;background:none;
+  font:inherit;text-align:left;cursor:pointer;color:var(--ink);
+}
+.stepper button:disabled{cursor:default;opacity:.6}
+.stepper button:hover:not(:disabled){background:rgba(91,15,176,.06)}
+.stepper .num{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;border:2px solid rgba(91,15,176,.25);background:var(--white);color:var(--violet-700)}
+.stepper .lbl{font-weight:700;font-size:.93rem;line-height:1.2}
+.stepper .sub{display:block;font-size:.78rem;font-weight:500;color:var(--ink-soft)}
+.stepper li.done .num{background:var(--violet-700);border-color:var(--violet-700);color:#fff}
+.stepper li.active button{background:var(--white);box-shadow:0 0 0 2px var(--violet-700) inset}
+
+/* =========================================================
+   CONTENU
+   ========================================================= */
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:1.25rem;align-items:start;padding-bottom:3rem}
+.panel{border-radius:var(--r-lg);padding:1.8rem}
+.panel > h2{font:600 1.45rem/1.2 var(--font-display);margin:0 0 .3rem;color:var(--violet-900)}
+.panel > .intro{margin:0 0 1.6rem;color:var(--ink-soft);max-width:44rem}
+.group{margin-top:1.8rem;padding-top:1.5rem;border-top:1px solid rgba(91,15,176,.1)}
+.group:first-of-type{margin-top:0;padding-top:0;border-top:0}
+.group h3{font:600 1.1rem var(--font-display);margin:0 0 .3rem;color:var(--violet-900)}
+.group .gintro{margin:0 0 1rem;color:var(--ink-soft);font-size:.93rem}
+
+.row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.field{margin-bottom:1.1rem;min-width:0}
+.field > label,.field > legend{display:block;font-size:.9rem;font-weight:700;margin:0 0 .4rem .15rem;padding:0}
+.field .opt{font-weight:500;color:var(--ink-soft)}
+fieldset.field{border:0;padding:0;margin:0 0 1.1rem;min-width:0}
+.field input[type=text],.field input[type=email],.field input[type=tel],.field input[type=date],.field input[type=number],.field select{
+  width:100%;min-height:50px;padding:.7rem 1rem;border-radius:var(--r-sm);
+  border:1px solid rgba(91,15,176,.2);background:rgba(255,255,255,.85);font:500 1rem var(--font-body);color:var(--ink);
+}
+.field select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235B0FB0' stroke-width='2.5'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 1rem center;padding-right:2.6rem}
+.field input::placeholder{color:#9A93AE}
+.field input:focus,.field select:focus{outline:none;border-color:var(--violet-700);box-shadow:0 0 0 3px rgba(123,47,242,.2)}
+.field [aria-invalid="true"]{border-color:var(--danger)!important;box-shadow:0 0 0 3px rgba(192,57,43,.14)}
+.help{font-size:.83rem;color:var(--ink-soft);margin:.35rem 0 0 .15rem}
+.err{font-size:.85rem;color:var(--danger);font-weight:600;margin:.35rem 0 0 .15rem}
+.err:empty{display:none}
+.tel{display:flex}
+.tel .prefix{display:flex;align-items:center;padding:0 .9rem;border:1px solid rgba(91,15,176,.2);border-right:0;border-radius:var(--r-sm) 0 0 var(--r-sm);background:rgba(91,15,176,.06);font-weight:700;color:var(--violet-800)}
+.tel input{border-radius:0 var(--r-sm) var(--r-sm) 0!important}
+
+/* Cartes de choix */
+.choices{display:grid;gap:.6rem}
+.choices.c3{grid-template-columns:repeat(3,1fr)}
+.choices.c2{grid-template-columns:repeat(2,1fr)}
+.choice{position:relative}
+.choice input{position:absolute;opacity:0;pointer-events:none}
+.choice label{
+  display:flex;flex-direction:column;gap:.15rem;height:100%;padding:.9rem 1rem;border-radius:var(--r-md);cursor:pointer;
+  background:rgba(255,255,255,.75);border:1.5px solid rgba(91,15,176,.15);font-weight:700;
+}
+.choice label small{font-weight:500;color:var(--ink-soft)}
+.choice label:hover{border-color:rgba(91,15,176,.4)}
+.choice input:focus-visible + label{outline:3px solid #FFD166;outline-offset:2px}
+.choice input:checked + label{border-color:var(--violet-700);background:var(--white);box-shadow:0 0 0 1.5px var(--violet-700) inset}
+fieldset[aria-invalid="true"] .choice label{border-color:rgba(192,57,43,.5)}
+.op{display:inline-flex;align-items:center;gap:.5rem}
+.op i{width:14px;height:14px;border-radius:4px;display:inline-block}
+
+/* Captures photo */
+.captures{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.capture{
+  border-radius:var(--r-md);padding:1rem;background:rgba(255,255,255,.7);border:1.5px dashed rgba(91,15,176,.28);
+  display:flex;flex-direction:column;gap:.8rem;
+}
+.capture.filled{border-style:solid;border-color:rgba(31,157,107,.5)}
+.capture.invalid{border-color:var(--danger)}
+.capture h4{margin:0;font-size:.98rem}
+.capture .frame{aspect-ratio:4/3;border-radius:var(--r-sm);display:grid;place-items:center;overflow:hidden;background:linear-gradient(135deg,#EFE9FB,#E4DAF7);color:var(--violet-700)}
+.capture .frame img{width:100%;height:100%;object-fit:cover}
+.capture .tips{margin:0;padding-left:1.1rem;font-size:.83rem;color:var(--ink-soft)}
+.capture .btns{display:flex;gap:.5rem;flex-wrap:wrap}
+.capture .btns .btn{flex:1;min-height:44px;padding:.6rem 1rem;font-size:.9rem}
+.capture .status{font-size:.85rem;font-weight:700;color:var(--ok)}
+
+/* Récapitulatif */
+.review-block{border-radius:var(--r-md);background:rgba(255,255,255,.65);border:1px solid rgba(91,15,176,.08);padding:1.1rem 1.2rem;margin-bottom:1rem}
+.review-head{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:.6rem}
+.review-head h3{font:600 1.05rem var(--font-display);margin:0;color:var(--violet-900)}
+.review-head button{background:none;border:0;color:var(--violet-700);font:700 .88rem var(--font-body);cursor:pointer;padding:.3rem .5rem;border-radius:6px}
+.review-head button:hover{background:rgba(91,15,176,.08)}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.5rem 1.2rem;margin:0}
+.kv div{min-width:0}
+.kv dt{font-size:.8rem;font-weight:600;color:var(--ink-soft)}
+.kv dd{margin:0;font-weight:600;word-break:break-word}
+.kv dd.empty{color:#9A93AE;font-weight:500}
+.thumbs{display:flex;gap:.6rem;margin-top:.8rem}
+.thumbs img{width:84px;height:64px;object-fit:cover;border-radius:8px;border:1px solid rgba(91,15,176,.15)}
+.certify{display:grid;grid-template-columns:22px 1fr;gap:.7rem;align-items:start;padding:1rem 1.1rem;border-radius:var(--r-md);background:rgba(91,15,176,.07);font-size:.93rem}
+.certify input{width:20px;height:20px;margin:.15rem 0 0;accent-color:var(--violet-700)}
+
+/* Paiement */
+.amount{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:1.1rem 1.3rem;border-radius:var(--r-md);margin-bottom:1.4rem;color:#fff;
+  background:radial-gradient(260px 160px at 100% 0%, rgba(179,136,255,.55), transparent 70%),linear-gradient(135deg,var(--violet-800),var(--violet-700))}
+.amount span{opacity:.85}
+.amount strong{font:700 1.7rem var(--font-display)}
+.pay-wait{display:flex;gap:1rem;align-items:flex-start;padding:1.1rem 1.2rem;border-radius:var(--r-md);background:rgba(183,121,31,.1);color:#7A4F12;margin-top:1rem}
+.pay-wait .spinner{border-color:rgba(183,121,31,.3);border-top-color:var(--warn);flex:none;margin-top:3px}
+
+.actions{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1.8rem;padding-top:1.3rem;border-top:1px solid rgba(91,15,176,.1)}
+.actions .push{margin-left:auto}
+.form-alert{margin:0 0 1.2rem;padding:.8rem 1rem;border-radius:var(--r-md);background:rgba(192,57,43,.1);color:#8E2A1F;font-weight:600;font-size:.93rem}
+
+/* Aide latérale */
+.help-panel{position:sticky;top:1.2rem;border-radius:var(--r-lg);padding:1.3rem;display:grid;gap:1.1rem}
+.help-panel h2{font:600 1.05rem var(--font-display);margin:0 0 .3rem;color:var(--violet-900)}
+.help-panel p,.help-panel li{font-size:.9rem;color:var(--ink-soft);margin:0}
+.help-panel ul{margin:.3rem 0 0;padding-left:1.1rem;display:grid;gap:.3rem}
+.help-panel .sep{border-top:1px solid rgba(91,15,176,.1);padding-top:1rem}
+.fee{display:flex;justify-content:space-between;font-weight:700;color:var(--violet-900)}
+
+/* Succès */
+.done{text-align:center;padding:3rem 1.5rem;border-radius:var(--r-lg);max-width:640px;margin:0 auto 3rem}
+.done .big{width:76px;height:76px;border-radius:50%;display:grid;place-items:center;margin:0 auto 1rem;background:var(--ok);color:#fff;font-size:2rem}
+.done h2{font:700 1.7rem var(--font-display);margin:0 0 .5rem;color:var(--violet-900)}
+.done p{color:var(--ink-soft);margin:0 0 1rem}
+.track-id{display:inline-flex;align-items:center;gap:.8rem;padding:.8rem 1.1rem;border-radius:var(--r-md);background:rgba(91,15,176,.08);font:700 1.3rem var(--font-display);color:var(--violet-900);letter-spacing:.03em;margin-bottom:1.5rem}
+.track-id button{font:700 .85rem var(--font-body);border:0;background:var(--white);color:var(--violet-700);padding:.4rem .7rem;border-radius:8px;cursor:pointer}
+.done .actions{justify-content:center;border:0}
+
+/* Caméra */
+dialog{border:0;padding:0;border-radius:var(--r-lg);width:min(94vw,640px);background:rgba(255,255,255,.96);box-shadow:0 30px 80px -20px rgba(20,0,60,.6)}
+dialog::backdrop{background:rgba(20,5,45,.6);backdrop-filter:blur(4px)}
+.cam{padding:1.3rem}
+.cam h2{font:600 1.25rem var(--font-display);margin:0 0 .3rem;color:var(--violet-900)}
+.cam p{margin:0 0 1rem;color:var(--ink-soft);font-size:.92rem}
+.viewport{position:relative;aspect-ratio:4/3;border-radius:var(--r-md);overflow:hidden;background:#1A1030}
+.viewport video,.viewport img{width:100%;height:100%;object-fit:cover}
+.viewport video.mirror{transform:scaleX(-1)}
+.guide{position:absolute;inset:0;pointer-events:none;display:grid;place-items:center}
+.guide .oval{width:46%;height:74%;border:3px dashed rgba(255,255,255,.8);border-radius:50%}
+.guide .card{width:80%;aspect-ratio:1.586;border:3px dashed rgba(255,255,255,.8);border-radius:14px}
+.cam-error{padding:1rem;border-radius:var(--r-md);background:rgba(192,57,43,.1);color:#8E2A1F;font-weight:600;font-size:.92rem;margin-top:1rem}
+.cam .actions{margin-top:1rem;padding-top:0;border:0}
+
+/* Pied de page */
+.foot{border-top:1px solid rgba(91,15,176,.1);padding:1.5rem 0;font-size:.85rem;color:var(--ink-soft)}
+.foot .wrap{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.foot a{font-weight:600;color:var(--ink-soft);margin-left:1rem}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+@media (max-width:1000px){
+  .layout{grid-template-columns:1fr}
+  .help-panel{position:static}
+  .stepper .sub{display:none}
+}
+@media (max-width:720px){
+  .stepper{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .stepper button{justify-content:center;padding:.5rem .2rem;position:relative}
+  .stepper .lbl{display:none}
+  .stepper li.active .lbl{display:none}
+  .captures,.row,.choices.c3,.choices.c2{grid-template-columns:1fr}
+  .row{gap:0}
+  .panel{padding:1.3rem}
+  .save-state{display:none}
+  .actions .btn{flex:1 1 100%}
+  .actions .push{margin-left:0;order:-1}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .glass{background:rgba(255,255,255,.95)}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= EN-TÊTE ================= -->
+<header class="band">
+  <span class="orb" aria-hidden="true"></span>
+  <div class="wrap">
+    <nav class="nav" aria-label="Navigation">
+      <a class="brand" href="index.html" aria-label="PHOENIX, accueil">
+        <svg viewBox="0 0 40 40" aria-hidden="true">
+          <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#C9A8FF"/></linearGradient></defs>
+          <path d="M20 4c3 6 9 8 13 7-2 5-6 8-9 9 3 1 6 4 7 9-5-1-9-4-11-8-2 4-6 7-11 8 1-5 4-8 7-9-3-1-7-4-9-9 4 1 10-1 13-7z" fill="url(#g1)"/>
+        </svg>
+        <span class="brand-name">PHOENIX</span>
+      </a>
+      <div class="nav-right">
+        <span class="save-state" id="save-state" aria-live="polite"></span>
+        <a class="btn" href="applicant-dashboard.html">Enregistrer et quitter</a>
+      </div>
+    </nav>
+    <h1>Réédition d'un acte de naissance</h1>
+    <p>Quatre étapes, environ dix minutes. Votre saisie est enregistrée sur cet appareil au fur et à mesure.</p>
+  </div>
+</header>
+
+<div class="wrap">
+  <ol class="stepper glass" id="stepper" aria-label="Étapes de la demande"></ol>
+
+  <!-- ================= SUCCÈS ================= -->
+  <section class="done glass" id="done" hidden tabindex="-1" aria-labelledby="done-title">
+    <div class="big" aria-hidden="true">✓</div>
+    <h2 id="done-title">Demande envoyée</h2>
+    <p>Votre paiement est confirmé et votre demande a été transmise au centre d'état civil. Conservez votre numéro de suivi.</p>
+    <div class="track-id"><span id="track-id">PHX-2026-000000</span><button type="button" id="copy-id">Copier</button></div>
+    <p>Vous serez prévenu par SMS et e-mail à chaque étape.</p>
+    <div class="actions">
+      <a class="btn btn-solid" href="applicant-dashboard.html">Suivre ma demande</a>
+      <a class="btn btn-line" href="index.html">Retour à l'accueil</a>
+    </div>
+  </section>
+
+  <div class="layout" id="layout">
+    <form id="app-form" novalidate>
+      <!-- ============ ÉTAPE 1 : DEMANDEUR ============ -->
+      <section class="panel glass step" data-step="1" aria-labelledby="s1">
+        <h2 id="s1" tabindex="-1">Vous et votre identité</h2>
+        <p class="intro">Ces informations servent à vous contacter et à vérifier que vous êtes bien autorisé à demander cet acte.</p>
+        <div class="form-alert" data-alert hidden role="alert"></div>
+
+        <div class="group">
+          <fieldset class="field" id="f-for" aria-describedby="for-error">
+            <legend>Pour qui faites-vous la demande ?</legend>
+            <div class="choices c3">
+              <div class="choice"><input type="radio" name="for" id="for-me" value="self"><label for="for-me">Pour moi<small>Mon propre acte</small></label></div>
+              <div class="choice"><input type="radio" name="for" id="for-child" value="child"><label for="for-child">Mon enfant<small>Enfant mineur</small></label></div>
+              <div class="choice"><input type="radio" name="for" id="for-other" value="other"><label for="for-other">Un proche<small>Avec procuration</small></label></div>
+            </div>
+            <p class="err" id="for-error"></p>
+          </fieldset>
+
+          <div class="field">
+            <label for="applicant-name">Votre nom complet</label>
+            <input type="text" id="applicant-name" autocomplete="name" aria-describedby="applicant-name-error">
+            <p class="err" id="applicant-name-error"></p>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="applicant-phone">Téléphone mobile</label>
+              <div class="tel"><span class="prefix" aria-hidden="true">+237</span>
+                <input type="tel" id="applicant-phone" inputmode="numeric" autocomplete="tel-national" placeholder="6XX XX XX XX" aria-describedby="applicant-phone-error"></div>
+              <p class="err" id="applicant-phone-error"></p>
+            </div>
+            <div class="field">
+              <label for="applicant-email">Adresse e-mail</label>
+              <input type="email" id="applicant-email" autocomplete="email" placeholder="vous@exemple.com" aria-describedby="applicant-email-error">
+              <p class="err" id="applicant-email-error"></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="group">
+          <h3>Photos et pièces justificatives</h3>
+          <p class="gintro">Sur téléphone, la caméra s'ouvre directement. Sur ordinateur, vous pouvez aussi importer une photo.</p>
+          <div class="captures">
+            <div class="capture" id="cap-selfie">
+              <h4>Selfie en direct</h4>
+              <div class="frame" data-frame>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="9" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
+              </div>
+              <ul class="tips"><li>Visage entier, bien éclairé</li><li>Sans lunettes de soleil ni couvre-chef</li></ul>
+              <div class="btns">
+                <button type="button" class="btn btn-solid" data-camera="selfie">Prendre le selfie</button>
+              </div>
+              <p class="err" id="selfie-error"></p>
+            </div>
+
+            <div class="capture" id="cap-id">
+              <h4>Pièce d'identité</h4>
+              <div class="frame" data-frame>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.6-1.5 1.7-2 3-2s2.4.5 3 2M14 10h4M14 13h4"/></svg>
+              </div>
+              <ul class="tips"><li>CNI, passeport ou récépissé</li><li>Les quatre coins visibles, texte lisible</li></ul>
+              <div class="btns">
+                <button type="button" class="btn btn-solid" data-camera="id">Photographier</button>
+                <label class="btn btn-line" for="id-upload">Importer</label>
+              </div>
+              <input type="file" id="id-upload" accept="image/*" class="sr-only" data-upload="id">
+              <p class="err" id="id-error"></p>
+            </div>
+
+            <div class="capture" id="cap-loss" style="grid-column:1 / -1">
+              <h4>Déclaration de perte</h4>
+              <p class="help" style="margin:0">Délivrée par le commissariat ou la gendarmerie. Photo ou PDF.</p>
+              <div class="btns">
+                <label class="btn btn-line" for="loss-upload">Choisir un fichier</label>
+              </div>
+              <input type="file" id="loss-upload" accept="image/*,application/pdf" class="sr-only" data-upload="loss">
+              <span class="status" id="loss-status" hidden></span>
+              <p class="err" id="loss-error"></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <a class="btn btn-text" href="applicant-dashboard.html">Annuler</a>
+          <button type="button" class="btn btn-solid push" data-next="2">Continuer vers l'acte de naissance</button>
+        </div>
+      </section>
+
+      <!-- ============ ÉTAPE 2 : ACTE ============ -->
+      <section class="panel glass step" data-step="2" aria-labelledby="s2" hidden>
+        <h2 id="s2" tabindex="-1">L'acte de naissance à rééditer</h2>
+        <p class="intro">Recopiez les informations telles qu'elles figurent sur l'acte d'origine. Elles permettent à l'officier de le retrouver dans le registre.</p>
+        <div class="form-alert" data-alert hidden role="alert"></div>
+
+        <div class="group">
+          <h3>Titulaire de l'acte</h3>
+          <div class="field">
+            <label for="birth-name">Nom complet à la naissance</label>
+            <input type="text" id="birth-name" aria-describedby="birth-name-help birth-name-error">
+            <p class="help" id="birth-name-help">Tous les noms et prénoms, dans l'ordre de l'acte.</p>
+            <p class="err" id="birth-name-error"></p>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="dob">Date de naissance</label>
+              <input type="date" id="dob" aria-describedby="dob-error">
+              <p class="err" id="dob-error"></p>
+            </div>
+            <div class="field">
+              <label for="place-of-birth">Lieu de naissance</label>
+              <input type="text" id="place-of-birth" placeholder="Ville ou formation sanitaire" aria-describedby="place-of-birth-error">
+              <p class="err" id="place-of-birth-error"></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="group">
+          <h3>Filiation</h3>
+          <p class="gintro">Telle qu'inscrite sur l'acte. Laissez vide une information qui n'y figure pas.</p>
+          <div class="row">
+            <div class="field">
+              <label for="father-name">Nom complet du père <span class="opt">(si mentionné)</span></label>
+              <input type="text" id="father-name">
+            </div>
+            <div class="field">
+              <label for="mother-name">Nom complet de la mère</label>
+              <input type="text" id="mother-name" aria-describedby="mother-name-error">
+              <p class="err" id="mother-name-error"></p>
+            </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="father-nationality">Nationalité du père <span class="opt">(facultatif)</span></label>
+              <input type="text" id="father-nationality" list="nationalities">
+            </div>
+            <div class="field">
+              <label for="mother-nationality">Nationalité de la mère <span class="opt">(facultatif)</span></label>
+              <input type="text" id="mother-nationality" list="nationalities">
+            </div>
+          </div>
+          <datalist id="nationalities"><option value="Camerounaise"><option value="Tchadienne"><option value="Nigériane"><option value="Centrafricaine"><option value="Gabonaise"><option value="Congolaise"><option value="Équato-guinéenne"><option value="Française"></datalist>
+          <div class="field">
+            <label for="parents-address">Domicile des parents à la naissance <span class="opt">(facultatif)</span></label>
+            <input type="text" id="parents-address" placeholder="Quartier, ville">
+          </div>
+        </div>
+
+        <div class="group">
+          <h3>Centre d'état civil</h3>
+          <div class="row">
+            <div class="field">
+              <label for="civil-center">Centre où l'acte a été établi</label>
+              <select id="civil-center" aria-describedby="civil-center-error"><option value="">Choisir un centre</option></select>
+              <p class="err" id="civil-center-error"></p>
+            </div>
+            <div class="field">
+              <label for="year-reg">Année d'enregistrement</label>
+              <input type="text" id="year-reg" inputmode="numeric" maxlength="4" placeholder="AAAA" aria-describedby="year-reg-help year-reg-error">
+              <p class="help" id="year-reg-help">Souvent l'année de naissance, sauf déclaration tardive.</p>
+              <p class="err" id="year-reg-error"></p>
+            </div>
+          </div>
+          <div class="field">
+            <label for="cert-number">Numéro de l'acte d'origine <span class="opt">(facultatif)</span></label>
+            <input type="text" id="cert-number" aria-describedby="cert-number-help">
+            <p class="help" id="cert-number-help">S'il figure sur une ancienne copie ou une photo, il accélère la recherche.</p>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn btn-text" data-go="1">Précédent</button>
+          <button type="button" class="btn btn-solid push" data-next="3">Vérifier ma demande</button>
+        </div>
+      </section>
+
+      <!-- ============ ÉTAPE 3 : VÉRIFICATION ============ -->
+      <section class="panel glass step" data-step="3" aria-labelledby="s3" hidden>
+        <h2 id="s3" tabindex="-1">Vérifiez avant de payer</h2>
+        <p class="intro">Une erreur peut empêcher l'officier de retrouver l'acte. Relisez chaque bloc et corrigez si besoin.</p>
+        <div id="review"></div>
+        <label class="certify" for="certify">
+          <input type="checkbox" id="certify" aria-describedby="certify-error">
+          <span>Je certifie l'exactitude de ces informations et je suis autorisé à demander cet acte.</span>
+        </label>
+        <p class="err" id="certify-error"></p>
+        <div class="actions">
+          <button type="button" class="btn btn-text" data-go="2">Précédent</button>
+          <button type="button" class="btn btn-solid push" data-next="4">Passer au paiement</button>
+        </div>
+      </section>
+
+      <!-- ============ ÉTAPE 4 : PAIEMENT ============ -->
+      <section class="panel glass step" data-step="4" aria-labelledby="s4" hidden>
+        <h2 id="s4" tabindex="-1">Paiement</h2>
+        <p class="intro">Après validation, une demande de confirmation s'affiche sur votre téléphone. Saisissez votre code secret pour valider.</p>
+        <div class="form-alert" data-alert hidden role="alert"></div>
+
+        <div class="amount"><span>Frais de réédition</span><strong data-fee></strong></div>
+
+        <fieldset class="field" id="f-pay" aria-describedby="pay-error">
+          <legend>Moyen de paiement</legend>
+          <div class="choices c2">
+            <div class="choice"><input type="radio" name="pay" id="pay-mtn" value="mtn-momo"><label for="pay-mtn"><span class="op"><i style="background:#FFCB05"></i>MTN Mobile Money</span></label></div>
+            <div class="choice"><input type="radio" name="pay" id="pay-orange" value="orange-money"><label for="pay-orange"><span class="op"><i style="background:#FF7900"></i>Orange Money</span></label></div>
+          </div>
+          <p class="err" id="pay-error"></p>
+        </fieldset>
+
+        <div class="field">
+          <label for="pay-phone">Numéro qui paie</label>
+          <div class="tel"><span class="prefix" aria-hidden="true">+237</span>
+            <input type="tel" id="pay-phone" inputmode="numeric" autocomplete="tel-national" placeholder="6XX XX XX XX" aria-describedby="pay-phone-help pay-phone-error"></div>
+          <p class="help" id="pay-phone-help">Prérempli avec votre numéro. Modifiez-le si un autre numéro paie.</p>
+          <p class="err" id="pay-phone-error"></p>
+        </div>
+
+        <div class="pay-wait" id="pay-wait" hidden aria-live="polite">
+          <span class="spinner" aria-hidden="true"></span>
+          <span><strong>Confirmez le paiement sur votre téléphone.</strong><br>Composez votre code secret sur la notification reçue. Ne fermez pas cette page.</span>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn btn-text" data-go="3" id="pay-back">Précédent</button>
+          <button type="submit" class="btn btn-solid push" id="pay-btn">Payer</button>
+        </div>
+      </section>
+    </form>
+
+    <!-- Aide contextuelle -->
+    <aside class="help-panel glass" aria-label="Aide">
+      <div id="help-content"></div>
+      <div class="sep">
+        <h2>Récapitulatif</h2>
+        <p class="fee"><span>Réédition d'acte</span><span data-fee></span></p>
+      </div>
+      <div class="sep">
+        <p>Une question ? <a href="help.html">Contacter le support</a></p>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<footer class="foot">
+  <div class="wrap">
+    <span>© 2026 PHOENIX</span>
+    <span><a href="privacy.html">Confidentialité</a><a href="accessibility.html">Accessibilité</a><a href="terms.html">Conditions</a></span>
+  </div>
+</footer>
+
+<!-- ================= CAMÉRA ================= -->
+<dialog id="cam-dlg" aria-labelledby="cam-title">
+  <div class="cam">
+    <h2 id="cam-title">Prendre le selfie</h2>
+    <p id="cam-hint">Placez votre visage dans l'ovale.</p>
+    <div class="viewport">
+      <video id="cam-video" playsinline muted autoplay></video>
+      <img id="cam-shot" alt="Aperçu de la photo" hidden>
+      <div class="guide" id="cam-guide"><div class="oval"></div></div>
+    </div>
+    <div class="cam-error" id="cam-error" hidden></div>
+    <div class="actions">
+      <button type="button" class="btn btn-text" id="cam-close">Annuler</button>
+      <button type="button" class="btn btn-line push" id="cam-retake" hidden>Reprendre</button>
+      <button type="button" class="btn btn-solid" id="cam-capture">Capturer</button>
+      <button type="button" class="btn btn-solid" id="cam-use" hidden>Utiliser cette photo</button>
+    </div>
+  </div>
+</dialog>
+<canvas id="cam-canvas" hidden></canvas>
+
+<script>
+/* =========================================================
+   CONFIGURATION
+   ========================================================= */
+const FEE_XAF = 20000; // montant du prototype d'origine — à confirmer avec l'administration
+const CENTERS = {
+  'yaounde-1':'Yaoundé I','yaounde-2':'Yaoundé II','yaounde-3':'Yaoundé III','yaounde-4':'Yaoundé IV',
+  'yaounde-5':'Yaoundé V','yaounde-6':'Yaoundé VI','yaounde-7':'Yaoundé VII'
+};
+const DRAFT_KEY = 'phoenix-draft-birth';
+const STEPS = [
+  { n:1, label:'Demandeur', sub:'Identité et pièces' },
+  { n:2, label:'Acte',      sub:'Informations de l\'acte' },
+  { n:3, label:'Vérification', sub:'Relecture' },
+  { n:4, label:'Paiement',  sub:'Mobile Money' }
+];
+const HELP = {
+  1:`<h2>Pourquoi un selfie ?</h2><p>Il permet à l'officier de vérifier que vous êtes bien la personne de la pièce d'identité. Il n'est visible que par les agents qui traitent votre dossier.</p>`,
+  2:`<h2>Où trouver ces informations ?</h2><ul><li>Sur une ancienne photocopie ou photo de l'acte</li><li>Sur votre carnet de santé ou un bulletin scolaire</li><li>Auprès de vos parents</li></ul>`,
+  3:`<h2>Avant de payer</h2><p>Vérifiez surtout l'orthographe des noms, la date de naissance et le centre : ce sont les clés de recherche dans le registre.</p>`,
+  4:`<h2>Paiement sécurisé</h2><p>Vous validez vous-même le paiement sur votre téléphone avec votre code secret. PHOENIX ne vous demandera jamais ce code.</p>`
+};
+
+/* =========================================================
+   UTILITAIRES
+   ========================================================= */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const digits = s => String(s).replace(/\D/g,'');
+const fmtXAF = n => new Intl.NumberFormat('fr-FR').format(n) + ' FCFA';
+const fmtDate = iso => iso ? new Date(iso + 'T00:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}) : '';
+const fmtPhone = v => { let d = digits(v); if (d.startsWith('237') && d.length > 9) d = d.slice(3); d = d.slice(0,9);
+  return [d.slice(0,3), d.slice(3,5), d.slice(5,7), d.slice(7,9)].filter(Boolean).join(' '); };
+
+document.querySelectorAll('[data-fee]').forEach(el => el.textContent = fmtXAF(FEE_XAF));
+$('pay-btn').textContent = `Payer ${fmtXAF(FEE_XAF)}`;
+Object.entries(CENTERS).forEach(([k,v]) => $('civil-center').add(new Option(v,k)));
+
+/* =========================================================
+   ÉTAT
+   ========================================================= */
+const files = { selfie:null, id:null, loss:null }; // Blob / File
+const state = { step:1, reached:1 };
+
+/* =========================================================
+   BROUILLON (texte uniquement, pas les photos)
+   ========================================================= */
+const DRAFT_FIELDS = ['applicant-name','applicant-phone','applicant-email','birth-name','dob','place-of-birth',
+  'father-name','mother-name','father-nationality','mother-nationality','parents-address','civil-center','year-reg','cert-number'];
+
+function saveDraft(){
+  const data = Object.fromEntries(DRAFT_FIELDS.map(id => [id, $(id).value]));
+  data.for = document.querySelector('[name="for"]:checked')?.value || '';
+  try { localStorage.setItem(DRAFT_KEY, JSON.stringify(data)); $('save-state').textContent = 'Brouillon enregistré'; } catch(e) {}
+}
+function loadDraft(){
+  let data = null;
+  try { data = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch(e) {}
+  if (data){
+    DRAFT_FIELDS.forEach(id => { if (data[id]) $(id).value = data[id]; });
+    if (data.for) { const r = document.querySelector(`[name="for"][value="${data.for}"]`); if (r) r.checked = true; }
+    $('save-state').textContent = 'Brouillon restauré';
+  } else {
+    // Préremplissage depuis le compte (prototype : localStorage)
+    try {
+      if (localStorage.getItem('userName')) $('applicant-name').value = localStorage.getItem('userName');
+      if (localStorage.getItem('userEmail')) $('applicant-email').value = localStorage.getItem('userEmail');
+    } catch(e) {}
+  }
+}
+let saveTimer;
+$('app-form').addEventListener('input', () => { clearTimeout(saveTimer); saveTimer = setTimeout(saveDraft, 500); });
+$('app-form').addEventListener('change', () => { clearTimeout(saveTimer); saveTimer = setTimeout(saveDraft, 300); });
+
+['applicant-phone','pay-phone'].forEach(id => $(id).addEventListener('input', e => e.target.value = fmtPhone(e.target.value)));
+$('year-reg').addEventListener('input', e => e.target.value = digits(e.target.value).slice(0,4));
+
+/* =========================================================
+   VALIDATION
+   ========================================================= */
+const today = new Date().toISOString().slice(0,10);
+$('dob').max = today;
+const req = (v, msg) => v.trim() ? '' : msg;
+const phoneRule = v => { const d = digits(v).replace(/^237(?=\d{9}$)/,'');
+  if (!d) return 'Indiquez un numéro de téléphone.'; return /^6\d{8}$/.test(d) ? '' : '9 chiffres commençant par 6, par exemple 6XX XX XX XX.'; };
+
+const RULES = {
+  1: {
+    'applicant-name': v => req(v,'Indiquez votre nom complet.'),
+    'applicant-phone': phoneRule,
+    'applicant-email': v => !v.trim() ? 'Indiquez votre adresse e-mail.' : /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim()) ? '' : 'Adresse e-mail invalide.'
+  },
+  2: {
+    'birth-name': v => req(v,'Indiquez le nom complet tel qu\'il figure sur l\'acte.'),
+    'dob': v => !v ? 'Indiquez la date de naissance.' : v > today ? 'La date ne peut pas être dans le futur.' : '',
+    'place-of-birth': v => req(v,'Indiquez le lieu de naissance.'),
+    'mother-name': v => req(v,'Indiquez le nom de la mère.'),
+    'civil-center': v => v ? '' : 'Choisissez le centre d\'état civil.',
+    'year-reg': v => {
+      if (!/^\d{4}$/.test(v)) return 'Indiquez une année sur 4 chiffres.';
+      const y = +v, by = $('dob').value ? +$('dob').value.slice(0,4) : null;
+      if (y > new Date().getFullYear()) return 'L\'année ne peut pas être dans le futur.';
+      if (by && y < by) return 'L\'enregistrement ne peut pas précéder la naissance.';
+      return '';
+    }
+  },
+  4: { 'pay-phone': phoneRule }
+};
+
+function setErr(id, msg){
+  const el = $(id), e = $(id + '-error');
+  if (e) e.textContent = msg;
+  if (el) el.setAttribute('aria-invalid', msg ? 'true' : 'false');
+  return !msg;
+}
+function setGroupErr(fsId, errId, msg){
+  $(errId).textContent = msg;
+  if (fsId) msg ? $(fsId).setAttribute('aria-invalid','true') : $(fsId).removeAttribute('aria-invalid');
+}
+
+// Revalidation en direct après une première erreur
+Object.values(RULES).forEach(group => Object.entries(group).forEach(([id, fn]) => {
+  $(id).addEventListener('blur', () => { if ($(id).value) setErr(id, fn($(id).value)); });
+  $(id).addEventListener('input', () => { if ($(id).getAttribute('aria-invalid') === 'true') setErr(id, fn($(id).value)); });
+}));
+document.querySelectorAll('[name="for"]').forEach(r => r.addEventListener('change', () => setGroupErr('f-for','for-error','')));
+document.querySelectorAll('[name="pay"]').forEach(r => r.addEventListener('change', () => setGroupErr('f-pay','pay-error','')));
+
+function validateStep(n){
+  const errors = [];
+  Object.entries(RULES[n] || {}).forEach(([id, fn]) => { if (!setErr(id, fn($(id).value))) errors.push($(id)); });
+
+  if (n === 1){
+    if (!document.querySelector('[name="for"]:checked')){ setGroupErr('f-for','for-error','Indiquez pour qui est la demande.'); errors.unshift(document.querySelector('[name="for"]')); }
+    [['selfie','cap-selfie','Prenez un selfie.'],['id','cap-id','Ajoutez une photo de votre pièce d\'identité.'],['loss','cap-loss','Ajoutez la déclaration de perte.']]
+      .forEach(([k, box, msg]) => {
+        const ok = !!files[k];
+        $(k + '-error').textContent = ok ? '' : msg;
+        $(box).classList.toggle('invalid', !ok);
+        if (!ok) errors.push($(box).querySelector('button') || $(box).querySelector('input[type=file]'));
+      });
+  }
+  if (n === 3 && !$('certify').checked){ $('certify-error').textContent = 'Cochez la case pour confirmer.'; errors.push($('certify')); }
+  if (n === 4 && !document.querySelector('[name="pay"]:checked')){ setGroupErr('f-pay','pay-error','Choisissez un moyen de paiement.'); errors.unshift(document.querySelector('[name="pay"]')); }
+
+  const alert = document.querySelector(`.step[data-step="${n}"] [data-alert]`);
+  if (alert){
+    alert.hidden = !errors.length;
+    alert.textContent = errors.length > 1 ? `${errors.length} éléments sont à compléter ou corriger.` : 'Un élément est à compléter ou corriger.';
+  }
+  if (errors.length) errors[0].focus();
+  return !errors.length;
+}
+$('certify').addEventListener('change', () => { if ($('certify').checked) $('certify-error').textContent = ''; });
+
+/* =========================================================
+   NAVIGATION
+   ========================================================= */
+function renderStepper(){
+  $('stepper').innerHTML = STEPS.map(s => {
+    const done = s.n < state.step || (s.n < state.reached && s.n !== state.step);
+    const active = s.n === state.step;
+    return `<li class="${done ? 'done' : ''} ${active ? 'active' : ''}">
+      <button type="button" data-go="${s.n}" ${s.n <= state.reached ? '' : 'disabled'} ${active ? 'aria-current="step"' : ''}>
+        <span class="num" aria-hidden="true">${done ? '✓' : s.n}</span>
+        <span><span class="lbl">${s.label}</span><span class="sub">${s.sub}</span></span>
+      </button></li>`;
+  }).join('');
+}
+function goTo(n, focus = true){
+  state.step = n; state.reached = Math.max(state.reached, n);
+  document.querySelectorAll('.step').forEach(s => s.hidden = +s.dataset.step !== n);
+  $('help-content').innerHTML = HELP[n];
+  if (n === 3) renderReview();
+  if (n === 4 && !$('pay-phone').value) $('pay-phone').value = $('applicant-phone').value;
+  renderStepper();
+  if (focus){
+    document.querySelector(`.step[data-step="${n}"] h2`).focus({ preventScroll:true });
+    $('stepper').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'start' });
+  }
+}
+document.addEventListener('click', e => {
+  const next = e.target.closest('[data-next]');
+  if (next){ const cur = +next.closest('.step').dataset.step; if (validateStep(cur)) goTo(+next.dataset.next); return; }
+  const go = e.target.closest('[data-go]');
+  if (go && !go.disabled) goTo(+go.dataset.go);
+});
+
+/* =========================================================
+   RÉCAPITULATIF
+   ========================================================= */
+function renderReview(){
+  const v = id => $(id).value.trim();
+  const forLbl = { self:'Pour moi', child:'Mon enfant', other:'Un proche (procuration)' }[document.querySelector('[name="for"]:checked')?.value] || '';
+  const block = (title, step, rows, extra = '') => `
+    <div class="review-block">
+      <div class="review-head"><h3>${title}</h3><button type="button" data-go="${step}">Modifier</button></div>
+      <dl class="kv">${rows.map(([k,val]) => `<div><dt>${esc(k)}</dt><dd class="${val ? '' : 'empty'}">${val ? esc(val) : 'Non renseigné'}</dd></div>`).join('')}</dl>${extra}
+    </div>`;
+  const thumbs = ['selfie','id'].filter(k => files[k]).map(k => `<img src="${URL.createObjectURL(files[k])}" alt="${k === 'selfie' ? 'Selfie' : 'Pièce d\'identité'}">`).join('');
+  $('review').innerHTML =
+    block('Demandeur', 1, [['Demande', forLbl], ['Nom', v('applicant-name')], ['Téléphone', v('applicant-phone') ? '+237 ' + v('applicant-phone') : ''], ['E-mail', v('applicant-email')],
+      ['Déclaration de perte', files.loss ? files.loss.name : '']], `<div class="thumbs">${thumbs}</div>`) +
+    block('Acte de naissance', 2, [['Nom à la naissance', v('birth-name')], ['Date de naissance', fmtDate(v('dob'))], ['Lieu de naissance', v('place-of-birth')],
+      ['Centre', CENTERS[v('civil-center')] || ''], ['Année d\'enregistrement', v('year-reg')], ['N° de l\'acte', v('cert-number')]]) +
+    block('Filiation', 2, [['Père', v('father-name')], ['Nationalité du père', v('father-nationality')], ['Mère', v('mother-name')],
+      ['Nationalité de la mère', v('mother-nationality')], ['Domicile des parents', v('parents-address')]]);
+}
+
+/* =========================================================
+   CAMÉRA
+   ========================================================= */
+let stream = null, camTarget = null, shotBlob = null;
+const CAM = {
+  selfie:{ title:'Prendre le selfie', hint:'Placez votre visage dans l\'ovale, regardez l\'objectif.', facing:'user', guide:'oval', mirror:true },
+  id:    { title:'Photographier la pièce', hint:'Posez la pièce à plat et cadrez-la dans le rectangle.', facing:'environment', guide:'card', mirror:false }
+};
+
+async function openCamera(target){
+  camTarget = target; shotBlob = null;
+  const c = CAM[target];
+  $('cam-title').textContent = c.title; $('cam-hint').textContent = c.hint;
+  $('cam-guide').innerHTML = `<div class="${c.guide}"></div>`;
+  $('cam-video').classList.toggle('mirror', c.mirror);
+  $('cam-video').hidden = false; $('cam-shot').hidden = true; $('cam-guide').hidden = false;
+  $('cam-capture').hidden = false; $('cam-capture').disabled = true; $('cam-retake').hidden = true; $('cam-use').hidden = true;
+  $('cam-error').hidden = true;
+  $('cam-dlg').showModal();
+  try {
+    if (!navigator.mediaDevices?.getUserMedia) throw new Error('unsupported');
+    stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:c.facing, width:{ ideal:1280 } }, audio:false });
+    $('cam-video').srcObject = stream;
+    $('cam-capture').disabled = false;
+  } catch(err){
+    $('cam-error').hidden = false;
+    $('cam-error').textContent = err.name === 'NotAllowedError'
+      ? 'L\'accès à la caméra a été refusé. Autorisez-le dans les réglages du navigateur, puis réessayez.'
+      : 'Aucune caméra disponible sur cet appareil. ' + (target === 'id' ? 'Utilisez le bouton « Importer ».' : 'Réessayez depuis un téléphone.');
+    $('cam-capture').hidden = true;
+  }
+}
+function stopCamera(){ if (stream){ stream.getTracks().forEach(t => t.stop()); stream = null; } $('cam-video').srcObject = null; }
+
+document.querySelectorAll('[data-camera]').forEach(b => b.addEventListener('click', () => openCamera(b.dataset.camera)));
+$('cam-close').addEventListener('click', () => $('cam-dlg').close());
+$('cam-dlg').addEventListener('close', stopCamera);
+
+$('cam-capture').addEventListener('click', () => {
+  const v = $('cam-video'), cv = $('cam-canvas');
+  if (!v.videoWidth) return;
+  cv.width = v.videoWidth; cv.height = v.videoHeight;
+  const ctx = cv.getContext('2d');
+  if (CAM[camTarget].mirror){ ctx.translate(cv.width,0); ctx.scale(-1,1); }
+  ctx.drawImage(v, 0, 0);
+  cv.toBlob(b => {
+    shotBlob = b;
+    $('cam-shot').src = URL.createObjectURL(b);
+    $('cam-shot').hidden = false; $('cam-video').hidden = true; $('cam-guide').hidden = true;
+    $('cam-capture').hidden = true; $('cam-retake').hidden = false; $('cam-use').hidden = false;
+    $('cam-use').focus();
+  }, 'image/jpeg', 0.85); // JPEG : bien plus léger que PNG pour l'envoi
+});
+$('cam-retake').addEventListener('click', () => {
+  shotBlob = null; $('cam-shot').hidden = true; $('cam-video').hidden = false; $('cam-guide').hidden = false;
+  $('cam-capture').hidden = false; $('cam-retake').hidden = true; $('cam-use').hidden = true;
+});
+$('cam-use').addEventListener('click', () => {
+  setFile(camTarget, new File([shotBlob], camTarget + '.jpg', { type:'image/jpeg' }));
+  $('cam-dlg').close();
+});
+
+/* Import de fichiers */
+const MAX_MB = 8;
+document.querySelectorAll('[data-upload]').forEach(inp => inp.addEventListener('change', () => {
+  const f = inp.files[0], k = inp.dataset.upload;
+  if (!f) return;
+  if (f.size > MAX_MB * 1024 * 1024){ $(k + '-error').textContent = `Fichier trop lourd (${MAX_MB} Mo maximum).`; inp.value = ''; return; }
+  setFile(k, f); inp.value = '';
+}));
+
+function setFile(k, file){
+  files[k] = file;
+  const box = { selfie:'cap-selfie', id:'cap-id', loss:'cap-loss' }[k];
+  $(box).classList.add('filled'); $(box).classList.remove('invalid');
+  $(k + '-error').textContent = '';
+  if (k === 'loss'){
+    $('loss-status').hidden = false; $('loss-status').textContent = '✓ ' + file.name;
+    $(box).querySelector('label.btn').textContent = 'Remplacer le fichier';
+    return;
+  }
+  const frame = $(box).querySelector('[data-frame]');
+  frame.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="${k === 'selfie' ? 'Votre selfie' : 'Votre pièce d\'identité'}">`;
+  const btn = $(box).querySelector('[data-camera]');
+  btn.textContent = k === 'selfie' ? 'Reprendre le selfie' : 'Reprendre la photo';
+  btn.classList.replace('btn-solid','btn-line');
+}
+
+/* =========================================================
+   PAIEMENT (simulation) ET ENVOI
+   ========================================================= */
+$('app-form').addEventListener('submit', e => {
+  e.preventDefault();
+  if (state.step !== 4 || !validateStep(4)) return;
+
+  const btn = $('pay-btn');
+  btn.disabled = true; $('pay-back').disabled = true;
+  btn.innerHTML = '<span class="spinner" aria-hidden="true"></span> En attente de confirmation…';
+  $('pay-wait').hidden = false;
+
+  /* TODO production :
+     1. POST /api/requests (multipart : champs + selfie + pièce + déclaration) → id de demande
+     2. POST /api/requests/{id}/payment { method, phone } → initie la demande MTN MoMo / Orange Money
+     3. Attendre la confirmation (webhook côté serveur + interrogation régulière côté client)
+     Le montant doit être fixé côté serveur, jamais lu depuis le navigateur. */
+  setTimeout(() => {
+    const id = 'PHX-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random() * 1e6)).padStart(6,'0');
+    $('track-id').textContent = id;
+    try { localStorage.removeItem(DRAFT_KEY); } catch(e) {}
+    $('layout').hidden = true; $('stepper').hidden = true;
+    $('save-state').textContent = '';
+    $('done').hidden = false; $('done').focus();
+  }, 2500);
+});
+
+$('copy-id').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText($('track-id').textContent); $('copy-id').textContent = 'Copié'; }
+  catch(e) { $('copy-id').textContent = 'Sélectionnez le numéro'; }
+});
+
+/* Avertir avant de quitter si des photos ont été prises (elles ne sont pas enregistrées dans le brouillon) */
+window.addEventListener('beforeunload', e => {
+  if ($('done').hidden && (files.selfie || files.id || files.loss)){ e.preventDefault(); e.returnValue = ''; }
+});
+
+/* Démarrage */
+loadDraft();
+goTo(1, false);
+</script>
+</body>
+</html>

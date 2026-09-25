@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Centres d'état civil — PHOENIX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/phoenix.css">
+<style>
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.25rem}
+.center{border-radius:var(--r-lg);padding:1.4rem;display:flex;flex-direction:column;gap:.9rem}
+.center header{display:flex;justify-content:space-between;align-items:flex-start;gap:.8rem}
+.center h2{font:600 1.2rem var(--font-display);margin:0}
+.center .commune{font-size:.88rem;color:var(--ink-soft)}
+.center .nums{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center}
+.center .nums div{padding:.6rem .3rem;border-radius:var(--r-sm);background:rgba(255,255,255,.7)}
+.center .nums strong{display:block;font:700 1.3rem var(--font-display);color:var(--violet-900)}
+.center .nums span{font-size:.75rem;color:var(--ink-soft)}
+.center .mayor{font-size:.9rem}
+.center .mayor.none{color:var(--danger);font-weight:700}
+.center footer{display:flex;gap:.5rem;margin-top:auto}
+.center footer .btn{flex:1}
+.center.prep{opacity:.85;border-style:dashed}
+</style>
+</head>
+<body data-role="admin" data-active="centers" data-crumb="Centres">
+<div class="layout">
+  <div class="main">
+    <main id="contenu">
+      <section class="banner">
+        <div><h1>Centres d'état civil</h1><p>Les centres raccordés à PHOENIX et ceux en cours de préparation.</p></div>
+        <div class="actions-inline"><button class="btn btn-white" type="button" id="add">Ajouter un centre</button></div>
+      </section>
+
+      <form class="filters glass" role="search" onsubmit="return false">
+        <div class="field"><label for="f-q">Rechercher</label><input type="search" id="f-q" placeholder="Nom ou commune"></div>
+        <div class="field"><label for="f-s">Statut</label><select id="f-s"><option value="">Tous</option><option value="live">Raccordé</option><option value="prep">En préparation</option></select></div>
+      </form>
+
+      <div class="cards-grid" id="grid" aria-live="polite"></div>
+      <div class="panel glass empty" id="empty" hidden><p>Aucun centre ne correspond.</p></div>
+    </main>
+  </div>
+</div>
+
+<dialog id="dlg" aria-labelledby="d-title">
+  <form class="dlg" id="c-form" novalidate>
+    <h2 id="d-title">Ajouter un centre</h2>
+    <div class="field"><label for="c-name">Nom du centre</label><input type="text" id="c-name" placeholder="Centre d'état civil de …" aria-describedby="c-name-error"><p class="err" id="c-name-error"></p></div>
+    <div class="row">
+      <div class="field"><label for="c-commune">Commune</label><input type="text" id="c-commune" aria-describedby="c-commune-error"><p class="err" id="c-commune-error"></p></div>
+      <div class="field"><label for="c-code">Code du registre</label><input type="text" id="c-code" placeholder="ex. YDE8" maxlength="8" aria-describedby="c-code-help c-code-error"><p class="help" id="c-code-help">Préfixe des numéros d'actes.</p><p class="err" id="c-code-error"></p></div>
+    </div>
+    <div class="field"><label for="c-address">Adresse de retrait des copies</label><input type="text" id="c-address"></div>
+    <div class="field"><label for="c-hours">Horaires d'ouverture</label><input type="text" id="c-hours" placeholder="Lun–ven, 8 h – 15 h 30"></div>
+    <label class="switch"><span><strong>Raccordé</strong><small>Le centre reçoit les demandes des citoyens</small></span><input type="checkbox" id="c-live"></label>
+    <div class="actions"><button class="btn btn-text" type="button" id="d-cancel">Annuler</button><button class="btn btn-solid push" type="submit" id="d-save">Ajouter</button></div>
+  </form>
+</dialog>
+
+<script src="assets/phoenix.js"></script>
+<script>
+PX.shell();
+const { $, esc } = PX;
+/* Données d'exemple — plus tard : /api/admin/centers */
+let centers = [
+  { id:1, name:'Yaoundé I', commune:'Yaoundé 1er', code:'YDE1', mayor:'Jeanne Owono', officers:3, pending:14, late:2, live:true },
+  { id:2, name:'Yaoundé II', commune:'Yaoundé 2e', code:'YDE2', mayor:'Luc Ebode', officers:2, pending:9, late:0, live:true },
+  { id:3, name:'Yaoundé III', commune:'Yaoundé 3e', code:'YDE3', mayor:'Paul Essomba', officers:3, pending:22, late:5, live:true },
+  { id:4, name:'Yaoundé IV', commune:'Yaoundé 4e', code:'YDE4', mayor:'Rachel Abega', officers:2, pending:11, late:1, live:true },
+  { id:5, name:'Yaoundé V', commune:'Yaoundé 5e', code:'YDE5', mayor:null, officers:1, pending:6, late:0, live:true },
+  { id:6, name:'Yaoundé VI', commune:'Yaoundé 6e', code:'YDE6', mayor:'Simon Nga', officers:2, pending:17, late:4, live:true },
+  { id:7, name:'Yaoundé VII', commune:'Yaoundé 7e', code:'YDE7', mayor:'Agnès Fouda', officers:1, pending:3, late:0, live:true },
+  { id:8, name:'Douala I', commune:'Douala 1er', code:'DLA1', mayor:null, officers:0, pending:0, late:0, live:false }
+];
+function render(){
+  const q = PX.norm($('f-q').value), s = $('f-s').value;
+  const rows = centers.filter(c => (!q || PX.norm(c.name + ' ' + c.commune).includes(q)) && (!s || (s === 'live') === c.live));
+  $('grid').innerHTML = rows.map(c => `<article class="center glass ${c.live ? '' : 'prep'}">
+    <header><div><h2>${esc(c.name)}</h2><span class="commune">${esc(c.commune)} · ${esc(c.code)}</span></div>
+      ${c.live ? '<span class="pill s-ok">Raccordé</span>' : '<span class="pill s-pending">En préparation</span>'}</header>
+    <div class="mayor ${c.mayor ? '' : 'none'}">${c.mayor ? `Maire : <strong>${esc(c.mayor)}</strong>` : 'Aucun maire rattaché'}</div>
+    <div class="nums"><div><strong>${c.officers}</strong><span>Officiers</span></div><div><strong>${c.pending}</strong><span>En cours</span></div>
+      <div><strong class="${c.late ? 'late' : ''}">${c.late}</strong><span>En retard</span></div></div>
+    <footer><button class="btn btn-line btn-sm" type="button" data-edit="${c.id}">Modifier</button><a class="btn btn-text btn-sm" href="admin-agents.html">Agents</a></footer>
+  </article>`).join('');
+  $('empty').hidden = rows.length > 0;
+}
+['f-q','f-s'].forEach(id => $(id).addEventListener('input', render));
+
+let editing = null;
+function open(c){
+  editing = c || null; $('c-form').reset();
+  document.querySelectorAll('#c-form .err').forEach(e => e.textContent = '');
+  $('d-title').textContent = c ? `Modifier ${c.name}` : 'Ajouter un centre';
+  $('d-save').textContent = c ? 'Enregistrer' : 'Ajouter';
+  if (c){ $('c-name').value = c.name; $('c-commune').value = c.commune; $('c-code').value = c.code; $('c-live').checked = c.live; }
+  $('dlg').showModal(); $('c-name').focus();
+}
+$('add').addEventListener('click', () => open());
+$('d-cancel').addEventListener('click', () => $('dlg').close());
+$('grid').addEventListener('click', e => { const b = e.target.closest('[data-edit]'); if (b) open(centers.find(c => c.id == b.dataset.edit)); });
+$('c-code').addEventListener('input', e => e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,''));
+$('c-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const checks = { 'c-name':v => v.trim() ? '' : 'Nom obligatoire.', 'c-commune':v => v.trim() ? '' : 'Commune obligatoire.',
+    'c-code':v => !/^[A-Z0-9]{3,8}$/.test(v) ? '3 à 8 lettres ou chiffres.' : centers.some(c => c.code === v && c !== editing) ? 'Ce code est déjà utilisé.' : '' };
+  let first = null;
+  Object.entries(checks).forEach(([id,fn]) => { const m = fn($(id).value); $(id + '-error').textContent = m; $(id).setAttribute('aria-invalid', !!m); if (m && !first) first = $(id); });
+  if (first) return first.focus();
+  if ($('c-live').checked && !(editing && editing.mayor)) PX.toast('Pensez à rattacher un maire : sans lui, les actes ne pourront pas être signés.');
+  const data = { name:$('c-name').value.trim(), commune:$('c-commune').value.trim(), code:$('c-code').value, live:$('c-live').checked };
+  // TODO : POST / PATCH /api/admin/centers
+  if (editing) Object.assign(editing, data); else centers.push({ id:Date.now(), ...data, mayor:null, officers:0, pending:0, late:0 });
+  $('dlg').close(); render(); PX.toast(editing ? 'Centre mis à jour.' : 'Centre ajouté.', 'ok');
+});
+render();
+</script>
+</body>
+</html>

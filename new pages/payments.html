@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Paiements — PHOENIX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/phoenix.css">
+<style>
+.op{display:inline-flex;align-items:center;gap:.5rem}
+.op i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.receipt{padding:1.8rem}
+.receipt .head{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;border-bottom:1px dashed rgba(91,15,176,.25);padding-bottom:1rem;margin-bottom:1rem}
+.receipt .brand{color:var(--violet-900);padding:0}
+.receipt .amount{font:700 2rem var(--font-display);color:var(--violet-900);margin:.2rem 0 1rem}
+</style>
+</head>
+<body data-role="applicant" data-active="payments" data-crumb="Paiements">
+<div class="layout">
+  <div class="main">
+    <main id="contenu">
+      <section class="banner">
+        <div><h1>Paiements</h1><p>L'historique de vos paiements Mobile Money et vos reçus.</p></div>
+      </section>
+
+      <div class="stats">
+        <div class="stat glass"><div class="stat-top">Total payé</div><span class="stat-value" id="s-paid">—</span><span class="stat-hint" id="s-paid-n"></span></div>
+        <div class="stat glass"><div class="stat-top">Remboursé</div><span class="stat-value" id="s-ref">—</span><span class="stat-hint">Demandes rejetées</span></div>
+        <div class="stat glass"><div class="stat-top">En attente</div><span class="stat-value" id="s-pend">—</span><span class="stat-hint">Confirmation opérateur</span></div>
+      </div>
+
+      <section class="panel glass" aria-labelledby="t-title">
+        <div class="panel-head"><h2 id="t-title">Historique</h2></div>
+        <div class="table-wrap">
+          <table class="data cards">
+            <thead><tr><th scope="col">Référence</th><th scope="col">Demande</th><th scope="col">Moyen</th><th scope="col">Montant</th><th scope="col">Date</th><th scope="col">Statut</th><th scope="col"><span class="sr-only">Reçu</span></th></tr></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <div class="empty" id="empty" hidden>
+          <p>Aucun paiement pour l'instant. Le paiement vous est demandé à la fin du dépôt d'une demande.</p>
+          <a class="btn btn-solid" href="form.html">Commencer une demande</a>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<dialog id="receipt-dlg" aria-labelledby="rc-title">
+  <div class="receipt" id="receipt"></div>
+  <div class="dlg" style="padding-top:0"><div class="actions" style="margin-top:0">
+    <button class="btn btn-text" type="button" id="rc-close">Fermer</button>
+    <button class="btn btn-solid push" type="button" id="rc-print">Imprimer ou enregistrer en PDF</button>
+  </div></div>
+</dialog>
+
+<script src="assets/phoenix.js"></script>
+<script src="assets/demo-data.js"></script>
+<script>
+PX.shell({ counts:{ requests:1, notifications:2 } });
+const { $, esc } = PX;
+const OP_COLOR = { 'mtn-momo':'#FFCB05', 'orange-money':'#FF7900' };
+const PAY_STATUS = { paid:['s-completed','Payé'], pending:['s-pending','En attente'], refunded:['s-refunded','Remboursé'] };
+
+const pays = DEMO.requests.filter(r => r.payment).map(r => ({ ...r.payment, request:r.id, holder:r.holder, doc:r.doc }))
+  .sort((a,b) => new Date(b.at) - new Date(a.at));
+
+const sum = st => pays.filter(p => p.status === st).reduce((s,p) => s + p.amount, 0);
+$('s-paid').textContent = PX.fmtXAF(sum('paid') + sum('refunded'));
+$('s-paid-n').textContent = `${pays.length} paiement${pays.length > 1 ? 's' : ''}`;
+$('s-ref').textContent = PX.fmtXAF(sum('refunded'));
+$('s-pend').textContent = PX.fmtXAF(sum('pending'));
+
+$('tbody').innerHTML = pays.map(p => `<tr>
+  <td data-label="Référence" class="strong">${esc(p.ref)}</td>
+  <td data-label="Demande"><a href="request-detail.html?id=${encodeURIComponent(p.request)}">${esc(p.request)}</a><span class="sub">${esc(p.holder)}</span></td>
+  <td data-label="Moyen"><span class="op"><i style="background:${OP_COLOR[p.method]}"></i>${esc(DEMO.methods[p.method])}</span></td>
+  <td data-label="Montant">${PX.fmtXAF(p.amount)}</td>
+  <td data-label="Date">${PX.fmtDateTime(p.at)}</td>
+  <td data-label="Statut"><span class="pill ${PAY_STATUS[p.status][0]}">${PAY_STATUS[p.status][1]}</span></td>
+  <td class="act"><button class="btn btn-line btn-sm" type="button" data-receipt="${esc(p.ref)}">Reçu</button></td></tr>`).join('');
+$('empty').hidden = pays.length > 0;
+
+function receiptHTML(p){
+  return `<div class="head"><span class="brand">${PX.LOGO.replace('#FFFFFF','#5B0FB0').replace('#C9A8FF','#7B2FF2')}<span class="brand-name">PHOENIX</span></span>
+      <span class="muted" style="text-align:right;font-size:.85rem">Reçu de paiement<br>${esc(p.ref)}</span></div>
+    <h2 id="rc-title" style="margin:0;font-size:1rem" class="muted">Montant ${p.status === 'refunded' ? 'remboursé' : 'payé'}</h2>
+    <p class="amount">${PX.fmtXAF(p.amount)}</p>
+    <dl class="kv-list">
+      <div><dt>Objet</dt><dd>Réédition — ${esc(p.doc)}</dd></div>
+      <div><dt>Demande</dt><dd>${esc(p.request)}</dd></div>
+      <div><dt>Titulaire</dt><dd>${esc(p.holder)}</dd></div>
+      <div><dt>Moyen de paiement</dt><dd>${esc(DEMO.methods[p.method])}</dd></div>
+      <div><dt>Date</dt><dd>${PX.fmtDateTime(p.at)}</dd></div>
+      ${p.refundedAt ? `<div><dt>Remboursé le</dt><dd>${PX.fmtDateTime(p.refundedAt)}</dd></div>` : ''}
+    </dl>
+    <p class="help" style="margin:1.2rem 0 0">Document généré par PHOENIX. Mentions légales du reçu à définir avec l'administration.</p>`;
+}
+function openReceipt(ref){
+  const p = pays.find(x => x.ref === ref); if (!p) return;
+  $('receipt').innerHTML = receiptHTML(p); $('receipt-dlg').showModal();
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-receipt]'); if (b) openReceipt(b.dataset.receipt); });
+$('rc-close').addEventListener('click', () => $('receipt-dlg').close());
+$('rc-print').addEventListener('click', () => {
+  const w = window.open('', '_blank');
+  if (!w) return PX.toast('Autorisez les fenêtres pour imprimer le reçu.', 'ko');
+  w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Reçu PHOENIX</title><link rel="stylesheet" href="${new URL('assets/phoenix.css', location.href)}">
+    <style>body{background:#fff}.receipt{max-width:560px;margin:2rem auto;padding:2rem;border:1px solid #ddd;border-radius:14px}</style></head>
+    <body><div class="receipt">${$('receipt').innerHTML}</div><script>onload=()=>print()<\/script></body></html>`);
+  w.document.close();
+});
+
+const pre = new URLSearchParams(location.search).get('receipt');
+if (pre) openReceipt(pre);
+</script>
+</body>
+</html>

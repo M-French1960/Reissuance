@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Journal d'audit — PHOENIX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/phoenix.css">
+<style>
+.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.85rem}
+.pager{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-top:1rem;flex-wrap:wrap}
+</style>
+</head>
+<body data-role="admin" data-active="audit" data-crumb="Journal d'audit">
+<div class="layout">
+  <div class="main">
+    <main id="contenu">
+      <section class="banner">
+        <div><h1>Journal d'audit</h1><p>Chaque action sur un dossier ou un compte est horodatée et associée à son auteur.</p></div>
+        <div class="actions-inline"><span class="tag">Journal non modifiable</span><button class="btn btn-white" type="button" id="export">Exporter en CSV</button></div>
+      </section>
+
+      <form class="filters glass" role="search" onsubmit="return false">
+        <div class="field"><label for="f-ref">Dossier</label><input type="search" id="f-ref" placeholder="PHX-2026-…"></div>
+        <div class="field"><label for="f-agent">Auteur</label><select id="f-agent"><option value="">Tous</option></select></div>
+        <div class="field"><label for="f-action">Action</label><select id="f-action"><option value="">Toutes</option></select></div>
+        <div class="field"><label for="f-from">Depuis le</label><input type="date" id="f-from"></div>
+      </form>
+
+      <section class="panel glass" aria-labelledby="t-title">
+        <div class="panel-head"><h2 id="t-title">Événements</h2><span class="muted" id="count" aria-live="polite"></span></div>
+        <div class="table-wrap">
+          <table class="data dense cards">
+            <thead><tr><th scope="col">Date et heure</th><th scope="col">Auteur</th><th scope="col">Rôle</th><th scope="col">Action</th><th scope="col">Dossier / objet</th><th scope="col">Adresse IP</th></tr></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <div class="empty" id="empty" hidden><p>Aucun événement ne correspond.</p></div>
+        <div class="pager"><span class="muted" id="page-info"></span>
+          <div><button class="btn btn-line btn-sm" type="button" id="prev">Précédent</button> <button class="btn btn-line btn-sm" type="button" id="next">Suivant</button></div></div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script src="assets/phoenix.js"></script>
+<script>
+PX.shell();
+const { $, esc } = PX;
+document.querySelector('.banner .tag').textContent = 'Journal non modifiable';
+
+/* Données d'exemple générées — plus tard : GET /api/admin/audit (paginé côté serveur) */
+const ACTORS = [['Alain Mbarga','Officier'],['Rose Nkolo','Officier'],['Paul Essomba','Maire'],['Claire Abena','Administratrice'],['Marie France Ngoa','Demandeur'],['Système','—']];
+const ACTIONS = {
+  'Officier':[['Décision : validée','s-verified'],['Décision : complément demandé','s-complement'],['Décision : rejetée','s-rejected'],['Consultation du dossier','s-off']],
+  'Maire':[['Signature électronique','s-signed'],['Renvoi à l\'officier','s-complement']],
+  'Administratrice':[['Création d\'un agent','s-off'],['Suspension d\'un agent','s-rejected'],['Modification du tarif','s-escalated']],
+  'Demandeur':[['Dépôt de demande','s-off'],['Envoi d\'un complément','s-off'],['Connexion','s-off']],
+  '—':[['Paiement confirmé','s-completed'],['Remboursement émis','s-refunded']]
+};
+let seed = 7; const rnd = n => { seed = (seed * 9301 + 49297) % 233280; return Math.floor(seed / 233280 * n); };
+const events = Array.from({ length:140 }, (_, i) => {
+  const [who, role] = ACTORS[rnd(ACTORS.length)];
+  const [action, cls] = ACTIONS[role][rnd(ACTIONS[role].length)];
+  const obj = role === 'Administratrice' ? (action.includes('tarif') ? 'Configuration' : 'Agent #' + (10 + rnd(20))) : `PHX-2026-00${3800 + rnd(450)}`;
+  return { at:new Date(Date.now() - i * 2.7 * 3600000 - rnd(3600000)).toISOString(), who, role, action, cls, obj,
+    ip: role === '—' ? 'serveur' : `102.244.${rnd(255)}.${rnd(255)}` };
+});
+[...new Set(events.map(e => e.who))].sort().forEach(w => $('f-agent').add(new Option(w,w)));
+[...new Set(events.map(e => e.action))].sort().forEach(a => $('f-action').add(new Option(a,a)));
+
+const PER = 25; let page = 0;
+function filtered(){
+  const r = PX.norm($('f-ref').value), a = $('f-agent').value, ac = $('f-action').value, f = $('f-from').value;
+  return events.filter(e => (!r || PX.norm(e.obj).includes(r)) && (!a || e.who === a) && (!ac || e.action === ac) && (!f || new Date(e.at) >= new Date(f)));
+}
+function render(){
+  const rows = filtered(), pages = Math.max(1, Math.ceil(rows.length / PER));
+  page = Math.min(page, pages - 1);
+  $('tbody').innerHTML = rows.slice(page * PER, page * PER + PER).map(e => `<tr>
+    <td data-label="Date" class="mono">${PX.fmtDate(e.at)} ${new Date(e.at).toLocaleTimeString('fr-FR')}</td>
+    <td data-label="Auteur"><strong>${esc(e.who)}</strong></td>
+    <td data-label="Rôle">${esc(e.role)}</td>
+    <td data-label="Action"><span class="pill ${e.cls}">${esc(e.action)}</span></td>
+    <td data-label="Objet" class="mono">${e.obj.startsWith('PHX') ? `<a href="#" data-ref="${esc(e.obj)}">${esc(e.obj)}</a>` : esc(e.obj)}</td>
+    <td data-label="IP" class="mono">${esc(e.ip)}</td></tr>`).join('');
+  $('empty').hidden = rows.length > 0;
+  $('count').textContent = `${PX.fmtNum(rows.length)} événement${rows.length > 1 ? 's' : ''}`;
+  $('page-info').textContent = `Page ${page + 1} sur ${pages}`;
+  $('prev').disabled = page === 0; $('next').disabled = page >= pages - 1;
+}
+['f-ref','f-agent','f-action','f-from'].forEach(id => $(id).addEventListener('input', () => { page = 0; render(); }));
+$('prev').addEventListener('click', () => { page--; render(); });
+$('next').addEventListener('click', () => { page++; render(); });
+// Clic sur un dossier : filtre l'historique de ce dossier
+$('tbody').addEventListener('click', e => { const a = e.target.closest('[data-ref]'); if (!a) return; e.preventDefault(); $('f-ref').value = a.dataset.ref; page = 0; render(); });
+$('export').addEventListener('click', () => {
+  PX.downloadCSV('journal-audit.csv', [['Date','Auteur','Rôle','Action','Objet','IP'], ...filtered().map(e => [new Date(e.at).toLocaleString('fr-FR'), e.who, e.role, e.action, e.obj, e.ip])]);
+  PX.toast('Export CSV téléchargé.', 'ok');
+});
+render();
+</script>
+</body>
+</html>

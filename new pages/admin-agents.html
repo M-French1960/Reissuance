@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Agents — PHOENIX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/phoenix.css">
+<style>
+.who{display:flex;align-items:center;gap:.7rem}
+.who .init{width:34px;height:34px;font-size:.8rem}
+.drawer .dlg{height:100%;display:flex;flex-direction:column;overflow:auto}
+.drawer .actions{margin-top:auto}
+.r-officer{--c:var(--info)} .r-mayor{--c:var(--violet-700)}
+</style>
+</head>
+<body data-role="admin" data-active="agents" data-crumb="Agents">
+<div class="layout">
+  <div class="main">
+    <main id="contenu">
+      <section class="banner">
+        <div><h1>Agents</h1><p>Comptes des officiers d'état civil et des maires, avec leur centre d'affectation.</p></div>
+        <div class="actions-inline"><button class="btn btn-white" type="button" id="add">Ajouter un agent</button></div>
+      </section>
+
+      <form class="filters glass" role="search" onsubmit="return false">
+        <div class="field"><label for="f-q">Rechercher</label><input type="search" id="f-q" placeholder="Nom, téléphone ou e-mail"></div>
+        <div class="field"><label for="f-role">Rôle</label><select id="f-role"><option value="">Tous</option><option value="officer">Officier</option><option value="mayor">Maire</option></select></div>
+        <div class="field"><label for="f-center">Centre</label><select id="f-center"><option value="">Tous</option></select></div>
+        <div class="field"><label for="f-status">Statut</label><select id="f-status"><option value="">Tous</option><option value="active">Actif</option><option value="suspended">Suspendu</option></select></div>
+      </form>
+
+      <section class="panel glass" aria-labelledby="t-title">
+        <div class="panel-head"><h2 id="t-title">Comptes agents</h2><span class="muted" id="count" aria-live="polite"></span></div>
+        <div class="table-wrap">
+          <table class="data cards">
+            <thead><tr><th scope="col">Agent</th><th scope="col">Rôle</th><th scope="col">Centre</th><th scope="col">Dernière connexion</th><th scope="col">Double authentification</th><th scope="col">Statut</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <div class="empty" id="empty" hidden><p>Aucun agent ne correspond.</p></div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<dialog class="drawer" id="drawer" aria-labelledby="d-title">
+  <form class="dlg" id="agent-form" novalidate>
+    <h2 id="d-title">Ajouter un agent</h2>
+    <p class="muted" id="d-sub">Un lien d'activation sera envoyé par SMS et e-mail.</p>
+    <div class="row">
+      <div class="field"><label for="a-first">Prénom</label><input type="text" id="a-first" aria-describedby="a-first-error"><p class="err" id="a-first-error"></p></div>
+      <div class="field"><label for="a-last">Nom</label><input type="text" id="a-last" aria-describedby="a-last-error"><p class="err" id="a-last-error"></p></div>
+    </div>
+    <div class="field"><label for="a-phone">Téléphone</label><div class="tel"><span class="prefix" aria-hidden="true">+237</span><input type="tel" id="a-phone" inputmode="numeric" aria-describedby="a-phone-error"></div><p class="err" id="a-phone-error"></p></div>
+    <div class="field"><label for="a-email">E-mail professionnel</label><input type="email" id="a-email" aria-describedby="a-email-error"><p class="err" id="a-email-error"></p></div>
+    <fieldset class="field"><legend>Rôle</legend>
+      <div class="choices">
+        <div class="choice"><input type="radio" name="a-role" id="ar-o" value="officer" checked><label for="ar-o">Officier<small>Vérifie les demandes</small></label></div>
+        <div class="choice"><input type="radio" name="a-role" id="ar-m" value="mayor"><label for="ar-m">Maire<small>Signe les actes</small></label></div>
+      </div>
+    </fieldset>
+    <div class="field"><label for="a-center">Centre d'affectation</label><select id="a-center" aria-describedby="a-center-error"><option value="">Choisir</option></select><p class="err" id="a-center-error"></p></div>
+    <label class="switch"><span><strong>Double authentification</strong><small>Code SMS à chaque connexion</small></span><input type="checkbox" id="a-2fa" checked></label>
+    <div class="actions">
+      <button class="btn btn-text" type="button" id="d-cancel">Annuler</button>
+      <button class="btn btn-solid push" type="submit" id="d-save">Créer le compte</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="assets/phoenix.js"></script>
+<script>
+PX.shell();
+const { $, esc } = PX;
+Object.entries(PX.CENTERS).forEach(([k,v]) => { $('f-center').add(new Option(v,k)); $('a-center').add(new Option(v,k)); });
+
+/* Données d'exemple — plus tard : /api/admin/agents */
+const H = h => new Date(Date.now() - h * 3600000).toISOString();
+let agents = [
+  { id:1, first:'Alain', last:'Mbarga', phone:'677 12 42 18', email:'a.mbarga@mairie-yde3.cm', role:'officer', center:'yaounde-3', last_login:H(1), twofa:true, status:'active' },
+  { id:2, first:'Rose', last:'Nkolo', phone:'699 45 10 22', email:'r.nkolo@mairie-yde3.cm', role:'officer', center:'yaounde-3', last_login:H(20), twofa:true, status:'active' },
+  { id:3, first:'Paul', last:'Essomba', phone:'675 88 01 34', email:'maire@mairie-yde3.cm', role:'mayor', center:'yaounde-3', last_login:H(4), twofa:true, status:'active' },
+  { id:4, first:'Hélène', last:'Ondoa', phone:'690 33 21 09', email:'h.ondoa@mairie-yde1.cm', role:'officer', center:'yaounde-1', last_login:H(50), twofa:false, status:'active' },
+  { id:5, first:'Bernard', last:'Tsala', phone:'677 90 12 45', email:'b.tsala@mairie-yde5.cm', role:'mayor', center:'yaounde-5', last_login:H(24 * 40), twofa:true, status:'suspended' },
+  { id:6, first:'Joëlle', last:'Mengue', phone:'655 71 40 03', email:'j.mengue@mairie-yde6.cm', role:'officer', center:'yaounde-6', last_login:H(3), twofa:true, status:'active' }
+];
+const ROLE = { officer:['r-officer','Officier'], mayor:['r-mayor','Maire'] };
+
+function filtered(){
+  const q = PX.norm($('f-q').value), r = $('f-role').value, c = $('f-center').value, s = $('f-status').value;
+  return agents.filter(a => (!q || PX.norm(`${a.first} ${a.last} ${a.phone} ${a.email}`).includes(q)) && (!r || a.role === r) && (!c || a.center === c) && (!s || a.status === s));
+}
+function render(){
+  const rows = filtered();
+  $('tbody').innerHTML = rows.map(a => `<tr>
+    <td data-label="Agent"><span class="who"><span class="init" aria-hidden="true">${esc(PX.initials(a.first + ' ' + a.last))}</span><span><strong>${esc(a.first)} ${esc(a.last)}</strong><span class="sub">${esc(a.email)}</span></span></span></td>
+    <td data-label="Rôle"><span class="pill ${ROLE[a.role][0]}">${ROLE[a.role][1]}</span></td>
+    <td data-label="Centre">${esc(PX.CENTERS[a.center])}</td>
+    <td data-label="Dernière connexion">${!a.last_login ? '<span class="muted">Jamais (activation en attente)</span>' : PX.daysSince(a.last_login) > 30 ? `<span class="late">${PX.fmtDate(a.last_login)}</span>` : PX.fmtDateTime(a.last_login)}</td>
+    <td data-label="Double authentification">${a.twofa ? 'Activée' : '<span class="late">Désactivée</span>'}</td>
+    <td data-label="Statut">${a.status === 'active' ? '<span class="pill s-ok">Actif</span>' : '<span class="pill s-off">Suspendu</span>'}</td>
+    <td class="act"><button class="btn btn-line btn-sm" type="button" data-edit="${a.id}">Modifier</button>
+      <button class="btn btn-text btn-sm" type="button" data-toggle="${a.id}">${a.status === 'active' ? 'Suspendre' : 'Réactiver'}</button></td></tr>`).join('');
+  $('empty').hidden = rows.length > 0;
+  $('count').textContent = `${rows.length} agent${rows.length > 1 ? 's' : ''}`;
+}
+['f-q','f-role','f-center','f-status'].forEach(id => $(id).addEventListener('input', render));
+
+let editing = null;
+function openDrawer(a){
+  editing = a || null;
+  $('agent-form').reset();
+  document.querySelectorAll('#agent-form .err').forEach(e => e.textContent = '');
+  document.querySelectorAll('#agent-form [aria-invalid]').forEach(e => e.removeAttribute('aria-invalid'));
+  $('d-title').textContent = a ? `Modifier ${a.first} ${a.last}` : 'Ajouter un agent';
+  $('d-sub').textContent = a ? 'Les modifications prennent effet à la prochaine connexion de l\'agent.' : 'Un lien d\'activation sera envoyé par SMS et e-mail.';
+  $('d-save').textContent = a ? 'Enregistrer' : 'Créer le compte';
+  if (a){ $('a-first').value = a.first; $('a-last').value = a.last; $('a-phone').value = a.phone; $('a-email').value = a.email;
+    document.querySelector(`[name=a-role][value=${a.role}]`).checked = true; $('a-center').value = a.center; $('a-2fa').checked = a.twofa; }
+  $('drawer').showModal(); $('a-first').focus();
+}
+$('add').addEventListener('click', () => openDrawer());
+$('d-cancel').addEventListener('click', () => $('drawer').close());
+$('a-phone').addEventListener('input', e => e.target.value = PX.fmtPhone(e.target.value));
+
+$('agent-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const checks = {
+    'a-first': v => v.trim() ? '' : 'Prénom obligatoire.', 'a-last': v => v.trim() ? '' : 'Nom obligatoire.',
+    'a-phone': PX.phoneError, 'a-email': v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim()) ? '' : 'E-mail invalide.',
+    'a-center': v => v ? '' : 'Choisissez un centre.'
+  };
+  let first = null;
+  Object.entries(checks).forEach(([id, fn]) => { const m = fn($(id).value); $(id + '-error').textContent = m; $(id).setAttribute('aria-invalid', !!m); if (m && !first) first = $(id); });
+  if (first) return first.focus();
+  const role = document.querySelector('[name=a-role]:checked').value, center = $('a-center').value;
+  const otherMayor = agents.find(a => a.role === 'mayor' && a.center === center && a.status === 'active' && (!editing || a.id !== editing.id));
+  if (role === 'mayor' && otherMayor){ $('a-center-error').textContent = `${otherMayor.first} ${otherMayor.last} est déjà maire actif de ce centre.`; return $('a-center').focus(); }
+  const data = { first:$('a-first').value.trim(), last:$('a-last').value.trim(), phone:$('a-phone').value, email:$('a-email').value.trim(), role, center, twofa:$('a-2fa').checked };
+  // TODO : POST / PATCH /api/admin/agents
+  if (editing) Object.assign(editing, data);
+  else agents.unshift({ id:Date.now(), ...data, last_login:null, status:'active' });
+  $('drawer').close(); render();
+  PX.toast(editing ? 'Agent mis à jour.' : `Compte créé. Lien d'activation envoyé à ${data.first}.`, 'ok');
+});
+
+$('tbody').addEventListener('click', async e => {
+  const ed = e.target.closest('[data-edit]'), tg = e.target.closest('[data-toggle]');
+  if (ed) openDrawer(agents.find(a => a.id == ed.dataset.edit));
+  if (tg){
+    const a = agents.find(x => x.id == tg.dataset.toggle);
+    const suspend = a.status === 'active';
+    if (!await PX.confirmDialog({ title: suspend ? `Suspendre ${a.first} ${a.last}` : `Réactiver ${a.first} ${a.last}`,
+      text: suspend ? 'L\'agent ne pourra plus se connecter. Ses dossiers en cours restent dans la file du centre.' : 'L\'agent pourra de nouveau se connecter.',
+      ok: suspend ? 'Suspendre' : 'Réactiver', danger: suspend })) return;
+    a.status = suspend ? 'suspended' : 'active'; render(); PX.toast(suspend ? 'Compte suspendu.' : 'Compte réactivé.', 'ok');
+  }
+});
+render();
+</script>
+</body>
+</html>

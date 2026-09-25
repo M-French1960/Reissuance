@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Signature d'un acte — PHOENIX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/phoenix.css">
+<style>
+.work{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:1.25rem;align-items:start}
+.side{position:sticky;top:96px}
+/* Aperçu indicatif de la copie — le format officiel reste à obtenir */
+.paper{background:#FFFEFB;border-radius:var(--r-md);padding:2rem 2.2rem;box-shadow:0 20px 50px -25px rgba(42,10,85,.5);border:1px solid #EDE6D6;font-family:Georgia,"Times New Roman",serif;color:#2A2233;position:relative;overflow:hidden}
+.paper::before{content:"COPIE";position:absolute;inset:0;display:grid;place-items:center;font:700 7rem var(--font-display);color:rgba(91,15,176,.04);transform:rotate(-18deg);pointer-events:none}
+.paper .head{display:grid;grid-template-columns:1fr auto 1fr;gap:1rem;text-align:center;font-size:.72rem;line-height:1.4;text-transform:none;border-bottom:1px solid #E4DCC8;padding-bottom:1rem;margin-bottom:1.2rem}
+.paper .head .seal{width:64px;height:64px;border-radius:50%;border:2px solid #C9B98F;display:grid;place-items:center;color:#8C7A4B;font-size:.6rem}
+.paper h2{font:700 1.25rem Georgia,serif;text-align:center;margin:0 0 .2rem;color:#2A2233;letter-spacing:.04em}
+.paper .num{text-align:center;font-size:.85rem;color:#6B5E7E;margin:0 0 1.4rem}
+.paper dl{display:grid;grid-template-columns:200px 1fr;gap:.55rem 1rem;margin:0;font-size:.95rem}
+.paper dt{color:#6B5E7E}
+.paper dd{margin:0;font-weight:700;border-bottom:1px dotted #D7CDB4}
+.paper .sign-zone{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:2rem;font-size:.85rem}
+.paper .sign-box{height:90px;border:1.5px dashed #C9B98F;border-radius:8px;display:grid;place-items:center;color:#9A8C66;text-align:center;padding:.5rem}
+.paper .sign-box.signed{border-style:solid;border-color:var(--ok);color:var(--ok);font-weight:700;background:rgba(31,157,107,.05)}
+.paper .qr{width:72px;height:72px;border:1.5px solid #C9B98F;border-radius:6px;display:grid;place-items:center;color:#8C7A4B}
+.checks{list-style:none;margin:0;padding:0;display:grid;gap:.5rem}
+.checks li{display:flex;gap:.7rem;align-items:center;padding:.65rem .9rem;border-radius:var(--r-md);background:rgba(255,255,255,.7);font-weight:600;font-size:.92rem}
+.checks .ic{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--ok);color:#fff;flex:none}
+.checks .ic svg{width:14px;height:14px}
+.checks li.warn .ic{background:var(--warn)}
+@media (max-width:1150px){ .work{grid-template-columns:1fr} .side{position:static} }
+@media (max-width:640px){ .paper{padding:1.3rem} .paper dl{grid-template-columns:1fr;gap:.1rem} .paper dd{margin-bottom:.6rem} .paper .head{grid-template-columns:1fr} .paper .sign-zone{grid-template-columns:1fr} }
+</style>
+</head>
+<body data-role="mayor" data-active="parapheur" data-crumb="Signature" data-crumb-parent="Parapheur|mayor-dashboard.html">
+<div class="layout">
+  <div class="main">
+    <main id="contenu">
+      <section class="state glass" id="not-found" hidden>
+        <div class="big" style="background:var(--danger)">!</div>
+        <h1>Dossier introuvable</h1>
+        <p>Ce dossier n'est pas dans votre parapheur ou a déjà été signé.</p>
+        <div class="actions"><a class="btn btn-solid" href="mayor-dashboard.html">Retour au parapheur</a><a class="btn btn-line" href="?id=PHX-2026-004218">Ouvrir le dossier d'exemple</a></div>
+      </section>
+
+      <section class="state glass" id="done" hidden tabindex="-1">
+        <div class="big" id="done-icon" style="background:var(--ok)">✓</div>
+        <h1 id="done-title">Acte signé</h1>
+        <p id="done-text"></p>
+        <div class="actions"><a class="btn btn-solid" id="done-next" href="mayor-dashboard.html">Dossier suivant</a><a class="btn btn-line" href="mayor-dashboard.html">Retour au parapheur</a></div>
+      </section>
+
+      <div id="workspace" hidden>
+        <section class="banner">
+          <div><h1 id="title">Signature</h1><p id="subtitle"></p></div>
+          <div class="actions-inline" id="tags"></div>
+        </section>
+
+        <div class="work">
+          <section aria-labelledby="preview-title">
+            <h2 id="preview-title" class="sr-only">Aperçu de la copie</h2>
+            <article class="paper" id="paper"></article>
+            <p class="help" style="margin-top:.7rem">Aperçu indicatif. La mise en page définitive doit suivre le modèle officiel de l'état civil.</p>
+          </section>
+
+          <aside class="side stack">
+            <section class="panel glass" aria-labelledby="c-title">
+              <div class="panel-head"><h2 id="c-title">Contrôles de l'officier</h2></div>
+              <ul class="checks" id="checks"></ul>
+              <dl class="kv-list" style="margin-top:1rem" id="officer-info"></dl>
+              <div class="alert info" style="margin-top:1rem" id="note-box"><span><strong>Note interne</strong><span id="note"></span></span></div>
+            </section>
+            <section class="panel glass" aria-labelledby="d-title">
+              <div class="panel-head"><h2 id="d-title">Votre décision</h2></div>
+              <button class="btn btn-solid" type="button" id="sign-btn" style="width:100%">Signer électroniquement</button>
+              <button class="btn btn-line" type="button" id="back-btn" style="width:100%;margin-top:.6rem">Renvoyer à l'officier</button>
+              <p class="help" style="text-align:center;margin-top:.8rem">Votre signature est horodatée et inscrite au journal d'audit.</p>
+            </section>
+          </aside>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="assets/phoenix.js"></script>
+<script>
+PX.shell({ counts:{ parapheur:5 } });
+const { $, esc } = PX;
+
+/* Données d'exemple — plus tard : GET /api/mayor/queue/{id} */
+const DOSSIERS = {
+  'PHX-2026-004218': { holder:'Marie France Ngoa', dob:'1996-04-12', place:'Yaoundé', sex:'Féminin', father:'Joseph Ngoa', mother:'Thérèse Mballa',
+    actNumber:'YDE3/1996/00874', center:'yaounde-3', officer:'Alain Mbarga', verifiedAt:'2026-09-24T09:40:00',
+    checks:[['ok','Pièce d\'identité reconnue'],['ok','Selfie et pièce concordants'],['ok','Acte trouvé au registre, informations concordantes']],
+    note:'Acte d\'origine en bon état dans le registre 1996.' },
+  'PHX-2026-004102': { holder:'Jean Pheno', dob:'1998-03-15', place:'Yaoundé', sex:'Masculin', father:'Martin Pheno', mother:'Cécile Owona',
+    actNumber:'YDE3/1998/00412', center:'yaounde-3', officer:'Alain Mbarga', verifiedAt:'2026-09-19T15:10:00',
+    checks:[['ok','Pièce d\'identité reconnue'],['warn','Selfie peu lisible, validé après appel du demandeur'],['ok','Acte trouvé au registre']],
+    note:'Demandeur joint par téléphone le 19/09 pour confirmer son identité.' }
+};
+const ORDER = ['PHX-2026-004218','PHX-2026-004102','PHX-2026-004155','PHX-2026-003987','PHX-2026-004240'];
+
+// Dossiers du parapheur sans fiche détaillée : fiche générique pour la démo
+const EXTRA = { 'PHX-2026-004155':['Aïcha Bello','Rose Nkolo','2001-11-02','F'], 'PHX-2026-003987':['Serge Atangana','Rose Nkolo','1989-06-21','M'], 'PHX-2026-004240':['Grace Kamga','Alain Mbarga','2004-01-30','F'] };
+Object.entries(EXTRA).forEach(([k,[h,o,dob,s]]) => DOSSIERS[k] = { holder:h, dob, place:'Yaoundé', sex:s === 'F' ? 'Féminin' : 'Masculin',
+  father:'Non mentionné', mother:'Non communiqué (démo)', actNumber:`YDE3/${dob.slice(0,4)}/0${k.slice(-4)}`, center:'yaounde-3', officer:o,
+  verifiedAt:'2026-09-22T10:00:00', checks:[['ok','Pièce d\'identité reconnue'],['ok','Selfie et pièce concordants'],['ok','Acte trouvé au registre']], note:'Aucune remarque.' });
+
+const id = new URLSearchParams(location.search).get('id') || '';
+const d = DOSSIERS[id];
+if (!d){ $('not-found').hidden = false; }
+else {
+  $('workspace').hidden = false;
+  document.title = `${id} — Signature — PHOENIX`;
+  $('px-crumb').textContent = id;
+  $('title').textContent = `Acte de naissance · ${d.holder}`;
+  $('subtitle').textContent = `Référence ${id}, vérifiée le ${PX.fmtDateLong(d.verifiedAt.slice(0,10))} par ${d.officer}`;
+  $('tags').innerHTML = `<span class="tag">${esc(PX.CENTERS[d.center])}</span><span class="tag">En attente de signature</span>`;
+
+  $('paper').innerHTML = `
+    <div class="head">
+      <div>République du Cameroun<br>Paix – Travail – Patrie</div>
+      <div class="seal" aria-hidden="true">Sceau</div>
+      <div>Republic of Cameroon<br>Peace – Work – Fatherland</div>
+    </div>
+    <h2>Acte de naissance</h2>
+    <p class="num">Centre d'état civil de ${esc(PX.CENTERS[d.center])} · N° ${esc(d.actNumber)}</p>
+    <dl>
+      <dt>Nom et prénoms</dt><dd>${esc(d.holder)}</dd>
+      <dt>Né(e) le</dt><dd>${PX.fmtDateLong(d.dob)}</dd>
+      <dt>À</dt><dd>${esc(d.place)}</dd>
+      <dt>Sexe</dt><dd>${esc(d.sex)}</dd>
+      <dt>Père</dt><dd>${esc(d.father)}</dd>
+      <dt>Mère</dt><dd>${esc(d.mother)}</dd>
+    </dl>
+    <div class="sign-zone">
+      <div><div class="qr" aria-label="QR code de vérification">${PX.ICONS.qr.replace('<svg','<svg width="40" height="40"')}</div><p style="margin:.4rem 0 0">Vérifiable sur phoenix/verify</p></div>
+      <div><p style="margin:0 0 .4rem">Le Maire,</p><div class="sign-box" id="sign-box">Signature électronique<br>en attente</div></div>
+    </div>`;
+
+  $('checks').innerHTML = d.checks.map(([s,t]) => `<li class="${s}"><span class="ic">${s === 'ok' ? PX.ICONS.ok : PX.ICONS.info}</span>${esc(t)}</li>`).join('');
+  $('officer-info').innerHTML = `<div><dt>Officier</dt><dd>${esc(d.officer)}</dd></div><div><dt>Vérifié le</dt><dd>${PX.fmtDateTime(d.verifiedAt)}</dd></div>`;
+  $('note').textContent = ' ' + d.note;
+}
+
+function finish(kind){
+  const next = ORDER.find(x => x !== id && DOSSIERS[x]);
+  $('workspace').hidden = true; $('done').hidden = false;
+  if (kind === 'signed'){
+    $('done-text').textContent = `La copie ${id} est signée. Le demandeur est notifié et peut la récupérer.`;
+  } else {
+    $('done-icon').style.background = 'var(--warn)'; $('done-icon').textContent = '↩';
+    $('done-title').textContent = 'Dossier renvoyé';
+    $('done-text').textContent = `Le dossier ${id} est renvoyé à ${d.officer} avec votre motif.`;
+  }
+  if (next) $('done-next').href = '?id=' + encodeURIComponent(next); else $('done-next').hidden = true;
+  $('done').focus();
+}
+
+$('sign-btn')?.addEventListener('click', async () => {
+  const pin = await PX.confirmDialog({
+    title:'Signer électroniquement', text:`Vous certifiez la conformité de la copie ${id} à l'acte d'origine.`, ok:'Signer',
+    input:{ label:'Code PIN de signature (6 chiffres)', type:'password', attrs:'inputmode="numeric" maxlength="6" autocomplete="one-time-code"',
+      validate:v => /^\d{6}$/.test(v) ? '' : 'Saisissez les 6 chiffres de votre code.' }
+  });
+  if (!pin) return;
+  // TODO production : POST /api/mayor/sign/{id} — la signature est apposée côté serveur avec le certificat du maire.
+  $('sign-box').classList.add('signed'); $('sign-box').innerHTML = `Signé électroniquement<br>${PX.fmtDateTime(new Date())}`;
+  setTimeout(() => finish('signed'), 700);
+});
+
+$('back-btn')?.addEventListener('click', async () => {
+  const reason = await PX.confirmDialog({
+    title:'Renvoyer à l\'officier', text:'Le dossier retourne dans la file de l\'officier. Indiquez ce qui doit être revu.', ok:'Renvoyer',
+    input:{ label:'Motif (obligatoire)', textarea:true, validate:v => v.trim().length >= 5 ? '' : 'Précisez le motif du renvoi.' }
+  });
+  if (reason) finish('back');
+});
+</script>
+</body>
+</html>

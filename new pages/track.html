@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Suivre une demande — PHOENIX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/phoenix.css">
+<style>
+.track-form{display:grid;grid-template-columns:1.6fr 1fr auto;gap:.9rem;align-items:end}
+.track-form .field{margin:0}
+.track-form .btn{min-height:48px}
+.result{margin-top:1.6rem;padding-top:1.4rem;border-top:1px solid rgba(91,15,176,.12)}
+.result h2{font-size:1.2rem;margin:0 0 .2rem}
+@media (max-width:720px){ .track-form{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<a class="skip" href="#contenu">Aller au contenu</a>
+<header class="band">
+  <div class="wrap">
+    <nav class="pub-nav" aria-label="Navigation">
+      <a class="brand" href="index.html" id="brand"><span class="brand-name">PHOENIX</span></a>
+      <div class="links"><a class="btn btn-ghost hide-m" href="login.html">Se connecter</a><a class="btn btn-white" href="form.html">Faire une demande</a></div>
+    </nav>
+    <h1>Suivre une demande</h1>
+    <p class="lead">Consultez l'avancement d'une demande sans vous connecter, avec son numéro de suivi.</p>
+  </div>
+</header>
+
+<main id="contenu" class="pub-main wrap">
+  <section class="pub-card glass" aria-labelledby="form-title">
+    <h2 id="form-title" class="sr-only">Rechercher une demande</h2>
+    <form class="track-form" id="track-form" novalidate>
+      <div class="field">
+        <label for="ref">Numéro de suivi</label>
+        <input type="text" id="ref" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="PHX-2026-004218" aria-describedby="ref-error">
+        <p class="err" id="ref-error"></p>
+      </div>
+      <div class="field">
+        <label for="p4">4 derniers chiffres du téléphone</label>
+        <input type="text" id="p4" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="0000" aria-describedby="p4-error">
+        <p class="err" id="p4-error"></p>
+      </div>
+      <button class="btn btn-solid" type="submit" id="go">Suivre</button>
+    </form>
+    <p class="help" style="margin-top:.8rem">Le numéro figure dans le SMS et l'e-mail de confirmation. Démo : utilisez PHX-2026-004218 et 4218.</p>
+
+    <div class="result" id="result" hidden aria-live="polite"></div>
+  </section>
+</main>
+
+<footer class="foot"><div class="wrap"><span>© 2026 PHOENIX</span><span><a href="help.html">Aide</a><a href="verify.html">Vérifier un acte</a></span></div></footer>
+
+<script src="assets/phoenix.js"></script>
+<script src="assets/demo-data.js"></script>
+<script>
+const { $, esc } = PX;
+$('brand').insertAdjacentHTML('afterbegin', PX.LOGO);
+
+// Étapes publiques : aucune donnée personnelle n'est affichée
+const PUBLIC_STEPS = [['submitted','Demande reçue'],['verified','Vérifiée'],['signed','Signée'],['ready','Copie disponible']];
+const STEP_ORDER = ['submitted','paid','verified','signed','ready'];
+
+$('ref').addEventListener('input', e => e.target.value = e.target.value.toUpperCase());
+$('p4').addEventListener('input', e => e.target.value = PX.digits(e.target.value).slice(0,4));
+
+$('track-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const ref = $('ref').value.trim(), p4 = $('p4').value;
+  const e1 = /^PHX-\d{4}-\d{6}$/.test(ref) ? '' : 'Format attendu : PHX-AAAA-000000.';
+  const e2 = /^\d{4}$/.test(p4) ? '' : 'Saisissez 4 chiffres.';
+  $('ref-error').textContent = e1; $('ref').setAttribute('aria-invalid', !!e1);
+  $('p4-error').textContent = e2; $('p4').setAttribute('aria-invalid', !!e2);
+  if (e1 || e2) return (e1 ? $('ref') : $('p4')).focus();
+
+  const btn = $('go'); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+  // TODO production : GET /api/track?ref=…&p4=… (limité en nombre d'essais côté serveur)
+  setTimeout(() => {
+    btn.disabled = false; btn.textContent = 'Suivre';
+    const r = DEMO.find(ref);
+    const box = $('result'); box.hidden = false;
+    if (!r || r.phone4 !== p4){
+      box.innerHTML = `<div class="alert ko"><span>${PX.ICONS.x.replace('<svg','<svg width="22" height="22"')}</span><div><strong>Aucune demande ne correspond</strong>Vérifiez le numéro de suivi et les 4 derniers chiffres du téléphone utilisé lors de la demande.</div></div>`;
+      return;
+    }
+    const reached = STEP_ORDER.indexOf(r.step);
+    const nextJ = PUBLIC_STEPS.findIndex(s => STEP_ORDER.indexOf(s[0]) > reached);
+    const items = PUBLIC_STEPS.map(([k,l], j) => {
+      const done = STEP_ORDER.indexOf(k) <= reached;
+      const cur = j === nextJ && r.status !== 'rejected';
+      return `<li class="${done ? 'done' : cur ? 'current' : ''}"><span class="dot" aria-hidden="true">${done ? '✓' : j + 1}</span><span>${l}</span></li>`;
+    }).join('');
+    const msg = {
+      complement:['warn','Un complément est attendu du demandeur. Connectez-vous pour l\'envoyer.'],
+      rejected:['ko','Cette demande a été rejetée. Le motif est consultable dans l\'espace demandeur.'],
+      completed:['ok','La copie est disponible. Connectez-vous pour la télécharger ou consulter le lieu de retrait.']
+    }[r.status] || ['info','La demande suit son cours.'];
+    box.innerHTML = `<h2>Demande ${esc(r.id)}</h2><p class="muted" style="margin:0 0 1.2rem">${esc(r.doc)} · déposée le ${PX.fmtDateLong(r.submittedAt.slice(0,10))}</p>
+      <ol class="tracker" style="--n:4">${items}</ol>
+      <div class="alert ${msg[0]}" style="margin-top:1.3rem"><div>${esc(msg[1])}</div></div>
+      <div class="actions"><a class="btn btn-solid push" href="login.html?next=${encodeURIComponent('request-detail.html?id=' + r.id)}">Se connecter pour voir le détail</a></div>`;
+  }, 600);
+});
+
+// Pré-remplissage depuis la page d'accueil (?ref=)
+const pre = new URLSearchParams(location.search).get('ref');
+if (pre){ $('ref').value = pre.toUpperCase(); $('p4').focus(); } else { $('ref').focus(); }
+</script>
+</body>
+</html>

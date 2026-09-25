@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Espace agent — PHOENIX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/phoenix.css">
+</head>
+<body>
+<div class="split">
+  <aside class="split-aside dark">
+    <a class="brand" href="index.html" id="brand"><span><span class="brand-name">PHOENIX</span><span class="brand-sub">Espace agent</span></span></a>
+    <div class="body">
+      <h1>Espace réservé aux agents de l'état civil.</h1>
+      <p>Officiers, maires et administrateurs. Chaque connexion est vérifiée par un code et inscrite au journal d'audit.</p>
+    </div>
+    <p class="foot-note">Vous êtes un citoyen ? <a href="login.html">Espace demandeur</a></p>
+  </aside>
+
+  <main class="split-content" id="contenu">
+    <div class="auth-card glass">
+      <div class="alert info" id="info" hidden style="margin-bottom:1.2rem"></div>
+      <div class="alert ko" id="fail" hidden style="margin-bottom:1.2rem" role="alert" tabindex="-1"></div>
+
+      <section id="step1">
+        <h2>Connexion agent</h2>
+        <p class="sub">Utilisez l'identifiant fourni par votre administrateur.</p>
+        <form id="f1" novalidate>
+          <div class="field">
+            <label for="ident">Identifiant agent</label>
+            <input type="text" id="ident" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="ex. a.mbarga" aria-describedby="ident-error">
+            <p class="err" id="ident-error"></p>
+          </div>
+          <div class="field">
+            <label for="pw">Mot de passe</label>
+            <div class="control"><input type="password" id="pw" class="pw" autocomplete="current-password" aria-describedby="caps pw-error"><button type="button" class="toggle" data-pw-toggle="pw" aria-pressed="false">Afficher</button></div>
+            <p class="err" id="caps" hidden style="color:var(--warn)">Majuscules activées</p>
+            <p class="err" id="pw-error"></p>
+          </div>
+          <button class="btn btn-solid btn-block" type="submit" id="b1">Continuer</button>
+        </form>
+        <p class="help" style="margin-top:1rem">Démo : un identifiant commençant par « maire » ouvre l'espace maire, par « admin » l'administration ; sinon l'espace officier.</p>
+      </section>
+
+      <section id="step2" hidden>
+        <h2 tabindex="-1" id="h2">Vérification</h2>
+        <p class="sub" id="sent"></p>
+        <form id="f2" novalidate>
+          <fieldset style="border:0;padding:0;margin:0"><legend class="sr-only">Code à 6 chiffres</legend><div class="otp" id="otp"></div></fieldset>
+          <p class="err" id="otp-error" role="alert"></p>
+          <label class="switch" style="border:0;padding-top:1rem"><span><strong>Faire confiance à cet appareil</strong><small>Ne pas redemander de code pendant 8 heures</small></span><input type="checkbox" id="trust"></label>
+          <button class="btn btn-solid btn-block" type="submit" id="b2">Se connecter</button>
+        </form>
+        <p style="text-align:center;margin:1rem 0 0"><button class="btn btn-text btn-sm" type="button" id="back">Revenir à l'identifiant</button></p>
+      </section>
+
+      <p class="sub" style="text-align:center;margin:1.6rem 0 0;font-size:.9rem">Problème d'accès ? Contactez l'administrateur de votre centre.</p>
+    </div>
+  </main>
+</div>
+
+<script src="assets/phoenix.js"></script>
+<script>
+const { $ } = PX;
+$('brand').insertAdjacentHTML('afterbegin', PX.LOGO);
+PX.bindPasswordToggles();
+$('otp').innerHTML = Array.from({ length:6 }, (_, i) => `<input type="text" inputmode="numeric" maxlength="1" autocomplete="${i ? 'off' : 'one-time-code'}" aria-label="Chiffre ${i + 1}">`).join('');
+const cells = [...document.querySelectorAll('#otp input')];
+
+const R = { expired:'Votre session a expiré. Reconnectez-vous.', signedout:'Vous êtes déconnecté.' }[new URLSearchParams(location.search).get('reason')];
+if (R){ $('info').hidden = false; $('info').textContent = R; }
+['keydown','keyup'].forEach(ev => $('pw').addEventListener(ev, e => { if (e.getModifierState) $('caps').hidden = !e.getModifierState('CapsLock'); }));
+
+let dest = 'officer-dashboard.html';
+$('f1').addEventListener('submit', e => {
+  e.preventDefault(); $('fail').hidden = true;
+  const id = $('ident').value.trim(), e1 = id ? '' : 'Indiquez votre identifiant.', e2 = $('pw').value ? '' : 'Indiquez votre mot de passe.';
+  $('ident-error').textContent = e1; $('ident').setAttribute('aria-invalid', !!e1);
+  $('pw-error').textContent = e2; $('pw').setAttribute('aria-invalid', !!e2);
+  if (e1 || e2) return (e1 ? $('ident') : $('pw')).focus();
+  $('b1').disabled = true; $('b1').innerHTML = '<span class="spinner"></span>';
+  // TODO : POST /api/agent/login → le serveur renvoie le rôle et déclenche l'envoi du code
+  setTimeout(() => {
+    $('b1').disabled = false; $('b1').textContent = 'Continuer';
+    const low = id.toLowerCase();
+    dest = low.startsWith('maire') ? 'mayor-dashboard.html' : low.startsWith('admin') ? 'admin-dashboard.html' : 'officer-dashboard.html';
+    $('sent').textContent = 'Un code à 6 chiffres a été envoyé par SMS au numéro enregistré pour votre compte (••• •• •• 18).';
+    $('step1').hidden = true; $('step2').hidden = false; cells[0].focus();
+  }, 600);
+});
+cells.forEach((c, i) => {
+  c.addEventListener('input', () => { c.value = PX.digits(c.value).slice(-1); if (c.value && i < 5) cells[i + 1].focus(); $('otp-error').textContent = ''; if (cells.every(x => x.value)) $('f2').requestSubmit(); });
+  c.addEventListener('keydown', e => { if (e.key === 'Backspace' && !c.value && i) cells[i - 1].focus(); });
+  c.addEventListener('paste', e => { const d = PX.digits(e.clipboardData.getData('text')).slice(0,6); if (!d) return; e.preventDefault(); d.split('').forEach((x,j) => cells[j].value = x); if (d.length === 6) $('f2').requestSubmit(); });
+});
+$('f2').addEventListener('submit', e => {
+  e.preventDefault();
+  const code = cells.map(c => c.value).join('');
+  if (code.length < 6){ $('otp-error').textContent = 'Saisissez les 6 chiffres.'; return cells.find(c => !c.value).focus(); }
+  $('b2').disabled = true; $('b2').innerHTML = '<span class="spinner"></span> Connexion…';
+  // TODO : POST /api/agent/verify
+  setTimeout(() => location.href = dest, 600);
+});
+$('back').addEventListener('click', () => { $('step2').hidden = true; $('step1').hidden = false; cells.forEach(c => c.value = ''); $('pw').value = ''; $('pw').focus(); });
+</script>
+</body>
+</html>

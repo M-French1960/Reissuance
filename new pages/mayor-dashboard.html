@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Parapheur — PHOENIX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/phoenix.css">
+</head>
+<body data-role="mayor" data-active="parapheur" data-crumb="Parapheur">
+<div class="layout">
+  <div class="main">
+    <main id="contenu">
+      <section class="banner">
+        <div>
+          <h1>Bonjour, Monsieur le Maire</h1>
+          <p id="banner-sub">Les dossiers ci-dessous ont été vérifiés par les officiers de votre centre et attendent votre signature.</p>
+        </div>
+        <div class="actions-inline">
+          <button class="btn btn-white" type="button" id="sign-selection" disabled>Signer la sélection</button>
+        </div>
+      </section>
+
+      <div class="stats">
+        <div class="stat glass"><div class="stat-top">À signer<span class="stat-ic warn"></span></div><span class="stat-value" id="st-todo">0</span><span class="stat-hint" id="st-late">—</span></div>
+        <div class="stat glass"><div class="stat-top">Signés ce mois<span class="stat-ic ok"></span></div><span class="stat-value" id="st-month">46</span><span class="stat-hint"><span class="trend-up">+12 %</span> par rapport au mois dernier</span></div>
+        <div class="stat glass"><div class="stat-top">Renvoyés à l'officier<span class="stat-ic danger"></span></div><span class="stat-value" id="st-back">2</span><span class="stat-hint">Ce mois-ci</span></div>
+      </div>
+
+      <form class="filters glass" id="filters" role="search" onsubmit="return false">
+        <div class="field"><label for="f-q">Rechercher</label><input type="search" id="f-q" placeholder="Référence ou titulaire"></div>
+        <div class="field"><label for="f-officer">Officier</label><select id="f-officer"><option value="">Tous</option></select></div>
+        <div class="field"><label for="f-from">Vérifiés depuis le</label><input type="date" id="f-from"></div>
+      </form>
+
+      <section class="panel glass" aria-labelledby="t-title">
+        <div class="panel-head">
+          <h2 id="t-title">Dossiers à signer</h2>
+          <span class="muted" id="count" aria-live="polite"></span>
+        </div>
+        <div class="table-wrap">
+          <table class="data cards">
+            <thead><tr>
+              <th scope="col"><input type="checkbox" id="check-all" aria-label="Tout sélectionner"></th>
+              <th scope="col">Référence</th><th scope="col">Titulaire de l'acte</th><th scope="col">Vérifié par</th>
+              <th scope="col">Vérifié le</th><th scope="col">Attente</th><th scope="col"><span class="sr-only">Action</span></th>
+            </tr></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <div class="empty" id="empty" hidden><p>Aucun dossier ne correspond. Les nouveaux dossiers vérifiés apparaîtront ici.</p></div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script src="assets/phoenix.js"></script>
+<script>
+/* Données d'exemple — plus tard : GET /api/mayor/queue */
+const LATE_AFTER = 3; // jours — seuil arbitraire, à fixer avec l'administration
+const queue = [
+  { id:'PHX-2026-004218', holder:'Marie France Ngoa', doc:'Acte de naissance', officer:'Alain Mbarga', verifiedAt:'2026-09-24T09:40:00' },
+  { id:'PHX-2026-004102', holder:'Jean Pheno', doc:'Acte de naissance', officer:'Alain Mbarga', verifiedAt:'2026-09-19T15:10:00' },
+  { id:'PHX-2026-004155', holder:'Aïcha Bello', doc:'Acte de naissance', officer:'Rose Nkolo', verifiedAt:'2026-09-23T11:05:00' },
+  { id:'PHX-2026-003987', holder:'Serge Atangana', doc:'Acte de naissance', officer:'Rose Nkolo', verifiedAt:'2026-09-20T08:30:00' },
+  { id:'PHX-2026-004240', holder:'Grace Kamga', doc:'Acte de naissance', officer:'Alain Mbarga', verifiedAt:'2026-09-25T07:55:00' }
+];
+PX.shell({ counts:{ parapheur: queue.length } });
+const { $, esc } = PX;
+
+// Icônes des cartes statistiques
+const ic = document.querySelectorAll('.stat-ic');
+ic[0].innerHTML = PX.ICONS.clock; ic[1].innerHTML = PX.ICONS.ok; ic[2].innerHTML = PX.ICONS.out;
+ic.forEach(e => e.querySelector('svg').setAttribute('width','20'));
+
+[...new Set(queue.map(q => q.officer))].forEach(o => $('f-officer').add(new Option(o,o)));
+const selected = new Set();
+
+function filtered(){
+  const q = PX.norm($('f-q').value), off = $('f-officer').value, from = $('f-from').value;
+  return queue
+    .filter(r => !q || PX.norm(r.id).includes(q) || PX.norm(r.holder).includes(q))
+    .filter(r => !off || r.officer === off)
+    .filter(r => !from || new Date(r.verifiedAt) >= new Date(from))
+    .sort((a,b) => new Date(a.verifiedAt) - new Date(b.verifiedAt));
+}
+
+function render(){
+  const rows = filtered();
+  $('tbody').innerHTML = rows.map(r => {
+    const d = PX.daysSince(r.verifiedAt), late = d > LATE_AFTER;
+    return `<tr>
+      <td data-label="Sélection"><input type="checkbox" data-id="${esc(r.id)}" ${selected.has(r.id) ? 'checked' : ''} aria-label="Sélectionner ${esc(r.id)}"></td>
+      <td data-label="Référence" class="strong">${esc(r.id)}</td>
+      <td data-label="Titulaire">${esc(r.holder)}<span class="sub">${esc(r.doc)}</span></td>
+      <td data-label="Vérifié par">${esc(r.officer)}</td>
+      <td data-label="Vérifié le">${PX.fmtDateTime(r.verifiedAt)}</td>
+      <td data-label="Attente"><span class="${late ? 'late' : ''}">${d === 0 ? "Aujourd'hui" : d + ' j'}</span></td>
+      <td class="act"><a class="btn btn-solid btn-sm" href="mayor-sign.html?id=${encodeURIComponent(r.id)}">Examiner</a></td>
+    </tr>`;
+  }).join('');
+  $('empty').hidden = rows.length > 0;
+  $('count').textContent = `${rows.length} dossier${rows.length > 1 ? 's' : ''}`;
+  $('st-todo').textContent = queue.length;
+  const lateN = queue.filter(r => PX.daysSince(r.verifiedAt) > LATE_AFTER).length;
+  $('st-late').innerHTML = lateN ? `<span class="late">${lateN} en attente depuis plus de ${LATE_AFTER} jours</span>` : 'Aucun retard';
+  $('banner-sub').textContent = queue.length
+    ? `${queue.length} dossier${queue.length > 1 ? 's' : ''} vérifié${queue.length > 1 ? 's' : ''} par les officiers attend${queue.length > 1 ? 'ent' : ''} votre signature.`
+    : 'Aucun dossier en attente de signature.';
+  syncSelection();
+}
+
+function syncSelection(){
+  const visible = [...document.querySelectorAll('#tbody [data-id]')];
+  $('check-all').checked = visible.length > 0 && visible.every(c => c.checked);
+  $('check-all').indeterminate = visible.some(c => c.checked) && !$('check-all').checked;
+  $('sign-selection').disabled = selected.size === 0;
+  $('sign-selection').textContent = selected.size ? `Signer la sélection (${selected.size})` : 'Signer la sélection';
+}
+
+$('tbody').addEventListener('change', e => {
+  const c = e.target.closest('[data-id]'); if (!c) return;
+  c.checked ? selected.add(c.dataset.id) : selected.delete(c.dataset.id); syncSelection();
+});
+$('check-all').addEventListener('change', e => {
+  document.querySelectorAll('#tbody [data-id]').forEach(c => { c.checked = e.target.checked; e.target.checked ? selected.add(c.dataset.id) : selected.delete(c.dataset.id); });
+  syncSelection();
+});
+['f-q','f-officer','f-from'].forEach(id => $(id).addEventListener('input', render));
+
+/* Signature par lot : PIN à 6 chiffres (simulation) */
+$('sign-selection').addEventListener('click', async () => {
+  const n = selected.size;
+  const pin = await PX.confirmDialog({
+    title:`Signer ${n} acte${n > 1 ? 's' : ''}`,
+    text:`Vous allez apposer votre signature électronique sur ${n} copie${n > 1 ? 's' : ''}. Assurez-vous d'avoir examiné chaque dossier.`,
+    ok:'Signer', input:{ label:'Code PIN de signature (6 chiffres)', type:'password', attrs:'inputmode="numeric" maxlength="6" autocomplete="one-time-code"',
+      validate:v => /^\d{6}$/.test(v) ? '' : 'Saisissez les 6 chiffres de votre code.' }
+  });
+  if (!pin) return;
+  // TODO production : POST /api/mayor/sign { ids:[...] } — la signature réelle se fait côté serveur (certificat du maire).
+  for (const id of selected){ const i = queue.findIndex(q => q.id === id); if (i > -1) queue.splice(i,1); }
+  selected.clear(); render();
+  PX.toast(`${n} acte${n > 1 ? 's signés' : ' signé'}. Les demandeurs sont notifiés.`, 'ok');
+});
+
+render();
+</script>
+</body>
+</html>

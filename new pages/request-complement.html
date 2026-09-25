@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Envoyer un complément — PHOENIX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/phoenix.css">
+<style>
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.2rem 0}
+.shot{border-radius:var(--r-md);padding:.8rem;background:rgba(255,255,255,.7);border:1px solid rgba(91,15,176,.12)}
+.shot h3{font:600 .92rem var(--font-body);margin:0 0 .5rem;color:var(--ink)}
+.shot .frame{aspect-ratio:1.586;border-radius:var(--r-sm);display:grid;place-items:center;overflow:hidden;background:linear-gradient(135deg,#EFE9FB,#E4DAF7);color:var(--violet-700);position:relative}
+.shot .frame img{width:100%;height:100%;object-fit:cover}
+.shot.old .frame{filter:blur(1.5px) grayscale(.4)}
+.shot.old .frame::after{content:"Refusée";position:absolute;inset:auto 0 0 0;padding:.3rem;text-align:center;background:rgba(192,57,43,.85);color:#fff;font-weight:700;font-size:.8rem;filter:none}
+.tips{margin:0;padding-left:1.1rem;color:var(--ink-soft);font-size:.92rem;display:grid;gap:.2rem}
+.quote{margin:.8rem 0 0;padding:.9rem 1.1rem;border-left:3px solid var(--warn);background:rgba(255,255,255,.55);border-radius:0 var(--r-sm) var(--r-sm) 0;font-style:italic;color:var(--ink)}
+@media (max-width:640px){ .compare{grid-template-columns:1fr} }
+</style>
+</head>
+<body data-role="applicant" data-active="requests" data-crumb="Complément" data-crumb-parent="Mes demandes|requests.html">
+<div class="layout">
+  <div class="main">
+    <main id="contenu" style="max-width:860px">
+      <section class="state glass" id="nothing" hidden>
+        <div class="big">✓</div>
+        <h1>Aucun complément attendu</h1>
+        <p>Cette demande ne nécessite aucune action de votre part.</p>
+        <div class="actions"><a class="btn btn-solid" href="requests.html">Mes demandes</a><a class="btn btn-line" href="?id=PHX-2026-004218">Voir l'exemple</a></div>
+      </section>
+
+      <section class="state glass" id="sent" hidden tabindex="-1">
+        <div class="big" style="background:var(--ok)">✓</div>
+        <h1>Complément envoyé</h1>
+        <p>Votre dossier reprend son traitement. L'officier est prévenu et vous recevrez une notification à la prochaine étape.</p>
+        <div class="actions"><a class="btn btn-solid" id="back-detail" href="requests.html">Suivre ma demande</a></div>
+      </section>
+
+      <div id="page" hidden>
+        <div class="alert warn" style="margin-bottom:1.25rem">
+          <span id="warn-ic"></span>
+          <div>
+            <strong id="what"></strong>
+            <span id="deadline"></span>
+            <blockquote class="quote" id="message"></blockquote>
+            <span class="help" id="from" style="display:block;margin-left:0"></span>
+          </div>
+        </div>
+
+        <section class="panel glass" aria-labelledby="up-title">
+          <h2 id="up-title">Nouvelle photo de votre pièce d'identité</h2>
+          <ul class="tips" style="margin-top:.6rem">
+            <li>Posez la pièce à plat sur une surface sombre, à la lumière du jour.</li>
+            <li>Les quatre coins doivent être visibles, sans reflet sur le numéro.</li>
+            <li>Photographiez le recto ; ajoutez le verso si l'officier le demande.</li>
+          </ul>
+
+          <div class="compare">
+            <div class="shot old"><h3>Photo refusée</h3><div class="frame" id="old-frame"></div></div>
+            <div class="shot"><h3>Nouvelle photo</h3><div class="frame" id="new-frame"><span class="muted" style="font-size:.9rem">Aucune photo</span></div></div>
+          </div>
+
+          <div class="dropzone" id="drop">
+            <strong>Glissez votre photo ici</strong>
+            <p>ou choisissez une option. JPEG, PNG ou PDF, 8 Mo maximum.</p>
+            <div class="btns">
+              <label class="btn btn-solid" for="cam-input">Photographier</label>
+              <label class="btn btn-line" for="file-input">Importer un fichier</label>
+            </div>
+            <input type="file" id="cam-input" accept="image/*" capture="environment" class="sr-only">
+            <input type="file" id="file-input" accept="image/*,application/pdf" class="sr-only">
+          </div>
+          <p class="err" id="file-error" style="text-align:center"></p>
+
+          <div class="field" style="margin-top:1.2rem">
+            <label for="comment">Message pour l'officier <span class="opt">(facultatif)</span></label>
+            <textarea id="comment" placeholder="Par exemple : j'ai joint le recto et le verso."></textarea>
+          </div>
+
+          <div class="actions">
+            <a class="btn btn-text" id="cancel" href="requests.html">Annuler</a>
+            <button class="btn btn-solid push" type="button" id="send" disabled>Envoyer le complément</button>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="assets/phoenix.js"></script>
+<script src="assets/demo-data.js"></script>
+<script>
+PX.shell({ counts:{ requests:1, notifications:2 } });
+const { $, esc } = PX;
+const r = DEMO.find(new URLSearchParams(location.search).get('id') || 'PHX-2026-004218');
+let file = null;
+
+if (!r || r.status !== 'complement'){ $('nothing').hidden = false; }
+else {
+  $('page').hidden = false;
+  $('px-crumb').textContent = r.id;
+  $('warn-ic').innerHTML = PX.ICONS.alert.replace('<svg','<svg width="22" height="22"');
+  $('what').textContent = `L'officier a besoin d'une ${r.complement.what.charAt(0).toLowerCase() + r.complement.what.slice(1)}`;
+  const left = Math.ceil((new Date(r.complement.deadline) - Date.now()) / 86400000);
+  $('deadline').textContent = `À envoyer avant le ${PX.fmtDateLong(r.complement.deadline)} (${left > 0 ? `encore ${left} jour${left > 1 ? 's' : ''}` : 'délai dépassé'}). Passé ce délai, la demande pourra être classée.`;
+  $('message').textContent = r.complement.message;
+  $('from').textContent = `${r.complement.officer}, officier d'état civil, le ${PX.fmtDateTime(r.complement.askedAt)}`;
+  $('old-frame').innerHTML = PX.ICONS.card.replace('<svg','<svg width="46" height="46"');
+  $('cancel').href = $('back-detail').href = `request-detail.html?id=${encodeURIComponent(r.id)}`;
+}
+
+function take(f){
+  $('file-error').textContent = '';
+  if (!f) return;
+  if (!/^image\/|application\/pdf/.test(f.type)) return $('file-error').textContent = 'Format non accepté : envoyez une photo ou un PDF.';
+  if (f.size > 8 * 1024 * 1024) return $('file-error').textContent = 'Fichier trop lourd (8 Mo maximum).';
+  file = f;
+  $('new-frame').innerHTML = f.type.startsWith('image/')
+    ? `<img src="${URL.createObjectURL(f)}" alt="Nouvelle photo de la pièce d'identité">`
+    : `<span style="text-align:center;font-weight:700">${PX.ICONS.doc.replace('<svg','<svg width="36" height="36"')}<br>${esc(f.name)}</span>`;
+  $('send').disabled = false;
+  PX.toast('Photo ajoutée. Vérifiez qu\'elle est bien nette avant d\'envoyer.');
+}
+['cam-input','file-input'].forEach(id => $(id)?.addEventListener('change', e => { take(e.target.files[0]); e.target.value = ''; }));
+const drop = $('drop');
+['dragenter','dragover'].forEach(ev => drop?.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('drag'); }));
+['dragleave','drop'].forEach(ev => drop?.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('drag'); }));
+drop?.addEventListener('drop', e => take(e.dataTransfer.files[0]));
+
+$('send')?.addEventListener('click', () => {
+  if (!file) return;
+  const b = $('send'); b.disabled = true; b.innerHTML = '<span class="spinner"></span> Envoi…';
+  // TODO production : POST /api/requests/{id}/complement (multipart : fichier + message)
+  setTimeout(() => { $('page').hidden = true; $('sent').hidden = false; $('sent').focus(); }, 900);
+});
+</script>
+</body>
+</html>
