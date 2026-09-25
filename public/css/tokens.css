@@ -117,6 +117,23 @@
 
   --ui-focus: #ffd166;
 
+  /* --- Couleurs de graphique (D-084) -------------------------------------
+     TROIS TEINTES PASSEES AU VALIDATEUR, et l'ordre compte.
+
+     Les jetons `--tone-*-fg` sont des couleurs de TEXTE, choisies pour leur
+     contraste sur un fond pâle. Employées comme aplats voisins, deux d'entre
+     elles tombent à un écart de 5 en vision normale : indiscernables. Mesuré,
+     pas estimé.
+
+     Ces trois-ci passent les cinq contrôles — bande de clarté, plancher de
+     saturation, séparation en vision déficiente, plancher en vision normale,
+     contraste sur le fond — À CONDITION que l'ambre et le rouge ne soient pas
+     voisins dans une barre empilée. D'où l'ordre rejeté, accepté, escaladé,
+     figé dans le code et gardé par un test. */
+  --chart-rejected: #c0392b;
+  --chart-accepted: #1f9d6b;
+  --chart-escalated: #b7791f;
+
   --shell-side: 264px;   /* largeur de la barre latérale de l'espace connecté */
 
   --ui-r-lg: 22px;

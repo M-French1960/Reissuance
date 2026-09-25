@@ -150,4 +150,26 @@ return [
     ],
 
     'result_recorded' => 'enregistré le :date par :name',
+
+    'reports' => [
+        'title' => 'Rapports',
+        'lede' => 'Votre activité de vérification au :centre.',
+        'scope_note' => 'Ces chiffres comptent les décisions que vous avez enregistrées vous-même, pas celles de vos collègues.',
+        'period' => 'Période',
+        'weeks' => ':count semaines',
+        'apply' => 'Afficher',
+        'since' => 'Depuis le :date',
+        'decisions_title' => 'Décisions par semaine',
+        'decisions_empty' => "Vous n'avez enregistré aucune décision sur cette période.",
+        'week_of' => 'Semaine du :date',
+        'reasons_title' => 'Motifs de rejet les plus fréquents',
+        'reasons_empty' => "Vous n'avez rejeté aucune demande sur cette période.",
+        'other_reason' => 'Autre motif, saisi à la main',
+        'other_note' => 'Les motifs saisis à la main sont comptés ensemble et jamais affichés : ils peuvent nommer une personne ou une pièce.',
+        'table_view' => 'Les mêmes chiffres en tableau',
+        'week_column' => 'Semaine',
+        'total_column' => 'Total',
+        'reason_column' => 'Motif',
+        'count_column' => 'Rejets',
+    ],
 ];

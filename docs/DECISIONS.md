@@ -4148,3 +4148,110 @@ Trois groupes, très inégaux :
    conditions d'utilisation, politique de confidentialité, déclaration
    d'accessibilité. Le README du client les marque lui-même « provisoires ».
    §10 : je n'invente pas un texte juridique.
+
+---
+
+## D-084 — Les rapports de l'officier, et la règle CSP que je croyais connaître
+
+- **Date :** 2026-09-25
+- **Statut :** décidé
+
+Le client a demandé de compléter les interfaces manquantes, puis, devant la
+liste des douze écrans absents, a répondu : **« commence juste par un truc »**.
+J'ai pris le premier du groupe 1 — les écrans construisibles sur les données
+existantes — parce qu'il est le seul qui **n'expose aucune donnée nouvelle et ne
+demande aucun arbitrage au client** : un officier y voit ses propres décisions,
+déjà en base, déjà visibles une par une dans son historique.
+
+Les autres candidats du même groupe demandent une décision avant une ligne de
+code. La liste des paiements de l'administrateur en particulier : le périmètre
+de visibilité de l'administrateur est `whereRaw('1 = 0')` — il ne voit **aucune**
+demande, délibérément. Une liste de paiements lui apprendrait qu'une demande
+existe, pour quel acte et à quelle date. Je l'avais classée « construisible » au
+premier tri ; c'est une erreur de ma part, elle appartient au groupe 2.
+
+### Ce que l'écran compte, et ce qu'il ne montre pas
+
+« Votre activité » ne compte que les décisions **de cet officier**. Un test le
+fige en enregistrant une décision d'un collègue du même centre et en vérifiant
+qu'elle n'apparaît pas. Ce n'est pas une préférence d'affichage : un officier
+n'a pas à évaluer le rendement d'un collègue depuis son propre tableau de bord.
+
+Les motifs de rejet sont du texte libre — signalé au client comme une limite.
+Un motif écrit à la main **peut nommer une personne** (« l'acte de M. X ne
+correspond pas »). L'écran ne nomme donc que les motifs qui correspondent
+**exactement** à la liste préremplie ; tout le reste est agrégé dans « Autres
+motifs », avec son seul total. Un test le vérifie en enregistrant un motif
+manuscrit contenant un nom et en exigeant son absence du rendu.
+
+Le regroupement par semaine est fait **en SQL** (`YEARWEEK(…, 3)`, groupé), pas
+en mémoire : §8.5, aucune collection non bornée. Un officier avec trois ans
+d'historique charge douze lignes, pas trois mille.
+
+### Le défaut que le vert de la suite ne pouvait pas voir
+
+Le premier graphique renvoyait **200**, tous les tests passaient, et l'écran
+affichait douze traits de 3 px. La cause, trouvée dans la console du
+navigateur — `Refused to apply inline style because it violates the following
+Content Security Policy directive` :
+
+> **`style-src 'self'` ne couvre pas l'attribut `style=`.**
+
+`'self'` autorise les *feuilles* de style servies par l'origine. Un attribut
+`style=` sur une balise est un style *en ligne* : il exige `'unsafe-inline'`,
+que la plateforme refuse. Le navigateur **ne casse rien et ne dit rien dans la
+page** — il ignore l'attribut. Une hauteur calculée écrite en `style=` disparaît
+donc silencieusement, et le test qui vérifie que la page répond 200 passe.
+
+Le commentaire de `SecurityHeaders.php` affirmait le contraire. Il est corrigé.
+
+La géométrie est passée dans des **attributs SVG** — `x`, `y`, `width`,
+`height`, `rx` — que la politique ne touche pas, parce que ce ne sont pas des
+styles mais des attributs de présentation propres à SVG. Le `<svg>` est laissé
+**sans `viewBox`** : les pourcentages se résolvent alors contre sa propre boîte,
+ce qui donne des barres proportionnelles à toute largeur sans déformer les
+rayons de coin exprimés en pixels.
+
+Deux fausses pistes avant celle-là, toutes deux réelles mais hors sujet : la
+hauteur en pourcentage dans un conteneur flex (j'ai converti en grid), puis le
+`height: 100%` manquant sur la pile. Ni l'une ni l'autre n'était la cause. La
+console l'a donnée en trois secondes.
+
+Un test fige la leçon : **aucun attribut `style=` sur cet écran**. Il tombe le
+jour où quelqu'un rajoute une hauteur calculée en ligne, et pas six mois plus
+tard devant un graphique plat.
+
+### L'ordre des couleurs est optique, pas logique
+
+Trois décisions, trois couleurs. L'ordre évident — accepté, rejeté, escaladé —
+a été **écarté par le validateur de palette** : l'ambre et le rouge adjacents
+donnent ΔE 14,1 en deutéranopie, sous le seuil. Dans l'ordre **rejeté, accepté,
+escaladé**, le vert les sépare et les cinq contrôles passent.
+
+Le même validateur a **échoué sur les jetons `--tone-*-fg` du projet** :
+`#8a3410` et `#98181a` sont à ΔE 5,0 en vision normale. Ce sont des couleurs de
+texte, jamais adjacentes, donc l'écart n'est pas lu comme une comparaison — mais
+le fait est relevé ici plutôt que tu le découvres.
+
+L'ordre est figé par un test, avec le commentaire qui dit pourquoi :
+`THE ORDER IS OPTICAL, NOT LOGICAL`. Sans lui, quelqu'un le « range » par
+logique métier et casse la lisibilité sans s'en apercevoir.
+
+### Le téléphone
+
+À 320 px, les douze dates se chevauchaient en une bouillie illisible. Une date
+sur deux est masquée en `visibility: hidden` — et non `display: none`, qui
+retirerait la colonne de la grille et désalignerait les barres. Six repères sur
+douze restent lisibles, les douze barres restent en place.
+
+Le tableau des chiffres est dans un `<details>` replié : qui veut le nombre
+exact l'ouvre, personne ne le subit. Mesuré à 1366 px et à 320 px — barres
+proportionnelles (38/75/38/38 px pour 1/2/1/1), aucun débordement horizontal,
+ordre des titres `H1 H2 H2`.
+
+### Ce que cet écran ne fait pas
+
+Il ne compare pas l'officier à ses collègues, il ne note personne, et il ne
+produit aucun export. Un export nominatif de décisions est une donnée
+personnelle qui sort de la plateforme : cela demande un arbitrage, pas un
+bouton.

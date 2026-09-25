@@ -27,9 +27,16 @@ class SecurityHeaders
             // Aucun script tiers, aucun script en ligne. Le peu de JavaScript
             // du projet vit dans des fichiers servis depuis la meme origine.
             "script-src 'self'",
-            // Les styles en ligne des vues (attributs style=) restent
-            // necessaires a la galerie ; ils sont couverts par 'self' pour les
-            // feuilles et n'ouvrent pas l'execution de code.
+            // ATTENTION, ET LE COMMENTAIRE PRECEDENT DISAIT LE CONTRAIRE :
+            // 'self' ne couvre PAS les attributs style=. Sans 'unsafe-inline',
+            // le navigateur les refuse, silencieusement pour la page — seule
+            // la console le dit. Verifie en construisant un graphique dont
+            // les hauteurs etaient ecrites en style= : la page rendait 200 et
+            // toutes les barres mesuraient 3 pixels (D-084).
+            //
+            // Une geometrie se pose donc en attributs SVG (x, y, width,
+            // height, rx), qui ne sont pas des styles et que la politique ne
+            // touche pas. Un test refuse tout style= sur cet ecran.
             "style-src 'self'",
             "img-src 'self' data: blob:",
             // Aucune police distante : la pile systeme est utilisee.

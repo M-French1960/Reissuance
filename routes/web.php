@@ -26,6 +26,7 @@ use App\Http\Controllers\Mayor\ReviewController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Officer\DecisionController;
 use App\Http\Controllers\Officer\QueueController;
+use App\Http\Controllers\Officer\ReportController;
 use App\Http\Controllers\Officer\VerificationController;
 use App\Http\Controllers\RequestMessageController;
 use App\Http\Controllers\SigningDeviceController;
@@ -127,6 +128,7 @@ Route::middleware('auth')->group(function (): void {
          */
         Route::middleware('role:officer')->prefix('verification')->name('officer.')->group(function (): void {
             Route::get('/file', QueueController::class)->name('queue');
+            Route::get('/rapports', ReportController::class)->name('reports');
             Route::post('/demandes/{reissuanceRequest}/prise-en-charge', [VerificationController::class, 'claim'])
                 ->name('verification.claim');
             Route::get('/demandes/{reissuanceRequest}/etape/{step}', [VerificationController::class, 'show'])

@@ -23,7 +23,8 @@
         ],
         UserRole::Officer => [
             ['dashboard', 'dashboard', 'common.dashboard', 'dashboard'],
-            ['officer.queue', 'queue', 'common.processing_queue', 'officer.*'],
+            ['officer.queue', 'queue', 'common.processing_queue', 'officer.queue'],
+            ['officer.reports', 'chart', 'officer.reports.title', 'officer.reports'],
             ['notifications.index', 'bell', 'common.notifications', 'notifications.*'],
             ['two-factor.setup', 'shield', 'common.security', 'two-factor.*'],
         ],

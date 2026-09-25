@@ -150,4 +150,26 @@ return [
     ],
 
     'result_recorded' => 'recorded on :date by :name',
+
+    'reports' => [
+        'title' => 'Reports',
+        'lede' => 'Your own verification activity at :centre.',
+        'scope_note' => 'These figures count the decisions you recorded yourself, not those of your colleagues.',
+        'period' => 'Period',
+        'weeks' => ':count weeks',
+        'apply' => 'Show',
+        'since' => 'Since :date',
+        'decisions_title' => 'Decisions per week',
+        'decisions_empty' => 'You have recorded no decision over this period.',
+        'week_of' => 'Week of :date',
+        'reasons_title' => 'Most frequent rejection reasons',
+        'reasons_empty' => 'You have rejected no request over this period.',
+        'other_reason' => 'Another reason, written by hand',
+        'other_note' => 'Reasons written by hand are counted together and never shown: they may name a person or a document.',
+        'table_view' => 'The same figures as a table',
+        'week_column' => 'Week',
+        'total_column' => 'Total',
+        'reason_column' => 'Reason',
+        'count_column' => 'Rejections',
+    ],
 ];
