@@ -3,6 +3,29 @@
 declare(strict_types=1);
 
 return [
+    'track' => [
+        'title' => 'Suivre une demande',
+        'lede' => "Consultez l'avancement d'une demande sans vous connecter. Il vous faut sa référence et les quatre derniers chiffres du téléphone donné lors de la demande.",
+        'form_title' => 'Rechercher une demande',
+        'reference' => 'Référence',
+        'reference_hint' => 'Elle figure dans le message de confirmation, sous la forme PHX-XXXX-XXXX.',
+        'phone' => 'Les 4 derniers chiffres du téléphone',
+        'phone_hint' => 'Le numéro donné lors de la demande.',
+        'submit' => 'Suivre',
+        'unknown_title' => 'Aucune demande ne correspond',
+        'unknown_body' => 'Vérifiez la référence et les quatre derniers chiffres. Pour votre protection, cette page ne dit pas laquelle des deux est fausse, et une demande sans numéro de téléphone au dossier ne peut pas être suivie ici.',
+        'found_title' => 'Demande :reference',
+        'state_fait' => 'Fait',
+        'state_en_cours' => 'En cours',
+        'state_a_venir' => 'Pas encore atteint',
+        'state_arrete' => "N'aura pas lieu",
+        'in_progress' => 'La demande suit son cours.',
+        'awaiting_complement' => 'Une pièce est attendue du demandeur. Connectez-vous pour l\'envoyer.',
+        'rejected' => "Cette demande a été rejetée. Le motif est consultable dans l'espace demandeur.",
+        'cancelled' => 'Cette demande a été retirée par le demandeur.',
+        'ready' => 'La copie est disponible. Connectez-vous pour la télécharger.',
+        'sign_in_note' => "Cette page montre l'étape atteinte, et rien d'autre. Le dossier lui-même, l'acte et le motif d'une décision sont dans l'espace demandeur, qui exige un compte.",
+    ],
     'verify' => [
         'title' => "Vérifier qu'un acte est authentique",
         'lede' => "Pour les administrations, écoles, employeurs et ambassades : confirmez qu'une copie délivrée par ce service est authentique. Aucun compte n'est nécessaire.",

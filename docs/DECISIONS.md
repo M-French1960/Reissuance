@@ -5483,3 +5483,107 @@ vue, le test tombe.
 Ma garde typographique m'a attrapé au passage : j'avais utilisé des tirets longs
 comme valeur « vide ». Ils sont devenus des libellés traduits.
 
+
+---
+
+## D-096 — Le suivi public, que j'avais refusé deux fois
+
+- **Date :** 2026-09-26
+- **Statut :** décidé
+
+J'ai refusé ce suivi deux fois. Ce qui l'a rendu défendable n'est pas un
+changement d'avis : c'est un **second facteur**, et la constatation que notre
+référence n'est pas celle de la maquette.
+
+### Ce que mon refus visait, exactement
+
+Une porte publique ouverte par une **référence seule**. Celui qui devine une
+référence lit l'avancement du dossier d'un inconnu. Le prototype du client
+propose `PHX-AAAA-000000` — une année et six chiffres, **un million de
+possibilités par an**, qu'un script parcourt en une après-midi. Sur ce format,
+mon refus était juste et le reste.
+
+Mais **notre** référence est `PHX-` suivi de huit caractères tirés au hasard,
+soit environ **2,8 × 10¹²**. La première barrière n'est donc pas celle que la
+maquette supposait, et le second facteur ne porte pas tout le poids.
+
+### Quatre barrières, dont aucune ne suffit seule
+
+1. **La référence**, ~2,8 × 10¹² possibilités.
+2. **Les quatre derniers chiffres du téléphone** du dossier. Dix mille valeurs
+   — rien tout seul, mais cela multiplie par dix mille le coût de la première.
+3. **La limitation de débit**, cinq essais par minute et par adresse — plus
+   serrée que la vérification d'acte (dix), justement parce qu'un facteur à
+   quatre chiffres est petit.
+4. **La réponse d'échec est la même dans tous les cas** : référence inconnue,
+   mal formée, téléphone faux, dossier non suivable. Sans cela la page serait
+   un **oracle à références** — « celle-là existe, il ne me manque que quatre
+   chiffres ».
+
+La comparaison des quatre chiffres se fait avec `hash_equals` : une comparaison
+qui s'arrête au premier chiffre différent se mesure, et quatre chiffres se
+devineraient alors un par un.
+
+### La règle qui compte le plus
+
+`citizen_profiles.phone` est **nullable**. Un dossier sans numéro ne peut pas
+satisfaire le second facteur — et la tentation naturelle serait de « tolérer »
+la référence seule dans ce cas. **Cette tolérance serait exactement la porte
+que j'ai refusée deux fois.** Un tel dossier n'est donc pas suivable
+publiquement, et la réponse ne dit même pas pourquoi. Vérifié par mutation : en
+rendant la tolérance, le test tombe.
+
+Un **brouillon** n'est pas suivable non plus : il n'a pas été envoyé.
+
+### Ce que la page montre, et ce qu'elle tait
+
+Les quatre jalons publics et l'état atteint. Ni nom, ni date de naissance, ni
+filiation, ni **centre**, ni horodatage, ni motif de rejet — on renvoie à
+l'espace du demandeur, qui exige un compte.
+
+La frise **dérive de celle du demandeur** au lieu d'être réécrite. Ce calcul a
+été corrigé deux fois — D-073 sur le temps des verbes, D-087 sur « entrer dans
+une étape n'est pas l'avoir terminée » — et les deux fois parce qu'il
+**annonçait des étapes qui n'avaient pas eu lieu**. Une seconde implémentation
+rouvrirait cette faute à la première divergence, et personne ne la verrait :
+c'est précisément l'écran qu'on regarde quand on n'a plus ses courriels.
+
+### Un lien qui mentait
+
+Le pied de page portait « Suivre une demande » et renvoyait vers **la
+connexion** — soit exactement ce que cette entrée promet de ne pas exiger. Il a
+maintenant une vraie destination. Même famille que D-089 : une porte publique
+que personne ne peut atteindre ne sert à rien, et un lien qui promet autre
+chose que sa destination est pire.
+
+### Le correctif au pixel que la mesure a démenti
+
+Les deux champs sont côte à côte, et leurs aides n'ont pas la même longueur :
+la seconde passait sur deux lignes et poussait sa saisie **22 px** plus bas.
+J'ai d'abord réservé une hauteur d'aide en `em`. Mesure faite : l'écart tombait
+à 3 px **en anglais**, et remontait à **26 px en français**, où les mêmes
+phrases sont plus longues.
+
+C'est un nombre magique calé sur une seule langue, et je ne l'aurais jamais vu
+sans mesurer l'autre. Remplacé par une règle structurelle — les colonnes
+s'étirent, la saisie est poussée en bas de la sienne — qui donne **0 px d'écart
+dans les deux langues**, à toutes les largeurs. Un gabarit bilingue ne se règle
+pas au pixel.
+
+### Ce qui reste ton arbitrage
+
+Je livre la fonction parce que tu l'as demandée, et je maintiens qu'elle est
+défendable telle qu'elle est construite. Mais la question de fond n'est pas
+technique : **la personne qui consulte ne détient aucun document et s'informe
+sur le dossier d'un tiers.** Les quatre barrières rendent l'abus coûteux ; elles
+ne le rendent pas impossible, et aucune mesure technique ne dira jamais si un
+service public accepte ce risque. Si la réponse est non, une ligne suffit à
+retirer la route — et les tests diront ce qui casse.
+
+### Vérifié
+
+1030 tests, 1014 passent, 16 ignorés. Page relue au navigateur en anglais et en
+français, à 1366, 900 et 390 px : aucun débordement, aucune cible sous 44 px,
+aucun refus CSP. La règle « sans téléphone, pas de suivi » vérifiée par
+mutation.
+

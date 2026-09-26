@@ -40,6 +40,10 @@
                 <div class="home-nav__actions">
                     <x-language-switcher />
                     <a class="home-btn home-btn--ghost" href="{{ route('home') }}">{{ __('common.home') }}</a>
+                    {{-- Les deux portes publiques se joignent l'une l'autre :
+                         qui arrive sur la vérification cherche parfois le suivi,
+                         et l'inverse (D-096). --}}
+                    <a class="home-btn home-btn--ghost" href="{{ route(request()->routeIs('track.*') ? 'verify.show' : 'track.show') }}">{{ request()->routeIs('track.*') ? __('home.nav_verify') : __('public.track.title') }}</a>
                     <a class="home-btn home-btn--ghost" href="{{ route('login') }}">{{ __('common.sign_in') }}</a>
                 </div>
             </nav>

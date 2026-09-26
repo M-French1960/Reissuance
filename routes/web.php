@@ -33,6 +33,7 @@ use App\Http\Controllers\Officer\DecisionController;
 use App\Http\Controllers\Officer\QueueController;
 use App\Http\Controllers\Officer\ReportController;
 use App\Http\Controllers\Officer\VerificationController;
+use App\Http\Controllers\PublicTrackingController;
 use App\Http\Controllers\RequestMessageController;
 use App\Http\Controllers\SigningDeviceController;
 use App\Http\Controllers\TwoFactorSetupController;
@@ -60,6 +61,25 @@ Route::get('/verifier', [VerificationCheckController::class, 'show'])->name('ver
 Route::post('/verifier', [VerificationCheckController::class, 'check'])
     ->middleware('throttle:10,1')
     ->name('verify.check');
+
+/*
+ * SUIVRE UNE DEMANDE, SANS COMPTE (D-096).
+ *
+ * J'ai refuse ce suivi deux fois, sur une REFERENCE SEULE. La maquette ajoute
+ * un second facteur — les quatre derniers chiffres du telephone donne lors de
+ * la demande — et le controleur exige les deux, sans tolerance quand le
+ * dossier n'a pas de numero.
+ *
+ * La limitation de debit est plus SERREE qu'a la verification : un second
+ * facteur de quatre chiffres n'a que dix mille valeurs. Cinq essais par minute
+ * et par adresse laissent de quoi se tromper deux fois, et mettent quatorze
+ * jours de martelage continu pour en couvrir la moitie — a supposer que la
+ * reference, elle, soit deja connue.
+ */
+Route::get('/suivi', [PublicTrackingController::class, 'show'])->name('track.show');
+Route::post('/suivi', [PublicTrackingController::class, 'check'])
+    ->middleware('throttle:5,1')
+    ->name('track.check');
 
 /*
  * Switching language, open to visitors as well as to signed-in accounts.

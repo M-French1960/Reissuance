@@ -182,4 +182,35 @@ final class RequestTimeline
 
         return $frise;
     }
+
+    /**
+     * La meme frise, pour un visiteur SANS COMPTE (D-096).
+     *
+     * POURQUOI ELLE DERIVE DE `for()` ET N'EST PAS REECRITE. Le calcul
+     * ci-dessus a ete corrige deux fois — D-073 sur le temps des verbes, D-087
+     * sur « entrer dans une etape n'est pas l'avoir terminee » — et les deux
+     * fois parce qu'il ANNONCAIT AU DEMANDEUR DES ETAPES QUI N'AVAIENT PAS EU
+     * LIEU. Une seconde implementation pour le suivi public rouvrirait cette
+     * faute a la premiere divergence, et personne ne la verrait : c'est
+     * precisement l'ecran que le demandeur regarde quand il n'a plus ses
+     * courriels.
+     *
+     * CE QU'ELLE RETIRE. Le `detail` porte le nom du CENTRE au premier jalon,
+     * et la `date` porte l'horodatage de chaque transition. Ni l'un ni l'autre
+     * n'est necessaire pour savoir ou en est un dossier, et le visiteur public
+     * n'est pas forcement le demandeur. Il reste le nom de l'etape et son
+     * etat : exactement ce que la maquette prevoyait.
+     *
+     * @return list<array{titre: string, etat: string}>
+     */
+    public function publicFor(ReissuanceRequest $demande): array
+    {
+        return array_map(
+            static fn (array $jalon): array => [
+                'titre' => $jalon['titre'],
+                'etat' => $jalon['etat'],
+            ],
+            $this->for($demande),
+        );
+    }
 }

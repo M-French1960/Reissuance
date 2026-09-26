@@ -58,6 +58,23 @@ class ExposedRoutesTest extends TestCase
          * test.
          */
         'verify.show',
+        /*
+         * SUIVRE UNE DEMANDE SANS COMPTE (D-096).
+         *
+         * Publique en connaissance de cause, et apres DEUX REFUS. Mon refus
+         * portait sur une porte ouverte par une REFERENCE SEULE. Ici il en
+         * faut deux : la reference ET les quatre derniers chiffres du
+         * telephone du dossier — sans tolerance quand le dossier n'a pas de
+         * numero, car cette tolerance serait la faille.
+         *
+         * Ce que cette porte n'ouvre pas : ni nom, ni date de naissance, ni
+         * filiation, ni centre, ni horodatage, ni motif de rejet. Les quatre
+         * jalons publics et rien d'autre. La reference fait environ 2,8 x 10^12
+         * possibilites, la route est limitee a cinq essais par minute, et la
+         * reponse d'echec est LA MEME dans tous les cas — sans quoi la page
+         * serait un oracle a references. Chaque barriere a son test.
+         */
+        'track.show',
     ];
 
     #[Test]

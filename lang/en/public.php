@@ -3,6 +3,29 @@
 declare(strict_types=1);
 
 return [
+    'track' => [
+        'title' => 'Track a request',
+        'lede' => 'See how far a request has got, without signing in. You need its reference and the last four digits of the phone number given when it was made.',
+        'form_title' => 'Find a request',
+        'reference' => 'Reference',
+        'reference_hint' => 'It is in the confirmation message, in the form PHX-XXXX-XXXX.',
+        'phone' => 'Last 4 digits of the phone',
+        'phone_hint' => 'The number given when the request was made.',
+        'submit' => 'Track',
+        'unknown_title' => 'No request matches',
+        'unknown_body' => 'Check the reference and the last four digits. For your protection, this page does not say which of the two is wrong, and a request with no phone number on file cannot be tracked here.',
+        'found_title' => 'Request :reference',
+        'state_fait' => 'Done',
+        'state_en_cours' => 'In progress',
+        'state_a_venir' => 'Not yet reached',
+        'state_arrete' => 'Will not happen',
+        'in_progress' => 'The request is following its course.',
+        'awaiting_complement' => 'A document is expected from the applicant. Sign in to send it.',
+        'rejected' => 'This request was rejected. The reason is in the applicant area.',
+        'cancelled' => 'This request was withdrawn by the applicant.',
+        'ready' => 'The certificate is available. Sign in to download it.',
+        'sign_in_note' => 'This page shows the stage reached and nothing else. The file itself, the certificate and the reason for a decision are in the applicant area, which requires an account.',
+    ],
     'verify' => [
         'title' => 'Check that a certificate is genuine',
         'lede' => 'For administrations, schools, employers and embassies: confirm that a copy issued by this service is genuine. No account is needed.',

@@ -400,7 +400,10 @@
                     <h2>{{ __('home.footer_service') }}</h2>
                     <ul>
                         <li><a href="{{ route('register') }}">{{ __('home.footer_birth') }}</a></li>
-                        <li><a href="{{ route('login') }}">{{ __('home.footer_track') }}</a></li>
+                        {{-- « Suivre une demande » renvoyait vers la CONNEXION, ce
+                             qui est exactement ce que cette entrée promet de ne pas
+                             exiger. Depuis D-096 elle a une vraie destination. --}}
+                        <li><a href="{{ route('track.show') }}">{{ __('home.footer_track') }}</a></li>
                         <li><a href="{{ route('verify.show') }}">{{ __('home.footer_verify') }}</a></li>
                         <li><a href="{{ route('login') }}">{{ __('home.footer_signin') }}</a></li>
                     </ul>
