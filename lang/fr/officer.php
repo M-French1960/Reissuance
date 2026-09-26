@@ -172,4 +172,16 @@ return [
         'reason_column' => 'Motif',
         'count_column' => 'Rejets',
     ],
+    'complement' => [
+        'ask_title' => 'Réclamer une pièce au demandeur',
+        'ask_intro' => 'Quand une photo est illisible, réclamez-en une autre plutôt que de rejeter le dossier. Le demandeur est averti et peut répondre depuis son compte.',
+        'which' => 'Quelle pièce',
+        'piece_id_document' => "Photographie de la pièce d'identité",
+        'piece_selfie' => 'Photographie du visage',
+        'message' => 'Ce qui ne va pas',
+        'message_hint' => "C'est le demandeur qui lit ce texte. Dites quoi refaire : « le numéro est masqué par un reflet, reprenez la photo sans flash ».",
+        'ask_action' => 'Réclamer la pièce',
+        'pending_title' => 'Ce dossier attend le demandeur',
+        'pending_body' => 'Vous avez réclamé une :piece le :date. Le dossier repart quand elle arrive.',
+    ],
 ];

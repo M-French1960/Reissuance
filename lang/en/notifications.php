@@ -28,6 +28,8 @@ return [
         'signed' => 'Your certificate is available',
         'rejected' => 'Request rejected',
         'cancelled' => 'Request cancelled',
+        'complement_requested' => 'A document is needed',
+        'complement_provided' => 'The applicant has replied',
     ],
 
     'bodies' => [
@@ -40,6 +42,8 @@ return [
         'signed' => 'Your certificate is ready for request :reference. Sign in to download it.',
         'rejected' => 'Your request :reference has been rejected. The reason is on your request page.',
         'cancelled' => 'Your request :reference has been cancelled. You can submit a new one at any time.',
+        'complement_requested' => 'For request :reference, the officer needs a clearer document. Sign in to send it; the file waits for you.',
+        'complement_provided' => 'For request :reference, the applicant has sent the document you asked for. The identity checks start again from the beginning.',
     ],
 
     'none_title' => 'No notifications',

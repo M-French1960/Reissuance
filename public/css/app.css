@@ -546,3 +546,21 @@ th a:hover { color: var(--color-brand-700); text-decoration: underline; }
   outline: 3px solid var(--color-focus);
   outline-offset: 2px;
 }
+
+/* --- Pièce réclamée après l'envoi (D-087) --------------------------------- */
+
+/*
+   LE MOTIF DE L'OFFICIER EST CITÉ, PAS PARAPHRASÉ. C'est la seule chose qui
+   dit au demandeur ce qu'il doit refaire : la barre à gauche le détache du
+   reste de la page pour qu'on ne le survole pas.
+*/
+.quote {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-left: 3px solid var(--color-brand-700);
+  background: var(--color-brand-050);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  /* Un motif écrit à la main peut contenir un mot très long ou une référence
+     sans espace : sans cela il déborderait de la carte sur un téléphone. */
+  overflow-wrap: anywhere;
+}

@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Citizen\AttachmentController;
 use App\Http\Controllers\Citizen\CancellationController;
+use App\Http\Controllers\Citizen\ComplementController;
 use App\Http\Controllers\Citizen\PaymentController;
 use App\Http\Controllers\Citizen\ProfileController;
 use App\Http\Controllers\Citizen\RequestTrackingController;
@@ -26,6 +27,7 @@ use App\Http\Controllers\Mayor\DecisionController as MayorDecisionController;
 use App\Http\Controllers\Mayor\ReviewController;
 use App\Http\Controllers\Mayor\SignedActsController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\Officer\ComplementController as OfficerComplementController;
 use App\Http\Controllers\Officer\DecisionController;
 use App\Http\Controllers\Officer\QueueController;
 use App\Http\Controllers\Officer\ReportController;
@@ -119,6 +121,19 @@ Route::middleware('auth')->group(function (): void {
                 ->name('requests.payment.reconcile');
             Route::get('/demandes/{reissuanceRequest}/paiement/recu', [PaymentController::class, 'receipt'])
                 ->name('requests.payment.receipt');
+
+            /*
+             * Repondre a une piece reclamee par l'officier (D-087).
+             *
+             * La porte n'existe que si un officier a ouvert une demande encore
+             * en attente : c'est la Policy `provideComplement` qui le verifie,
+             * et c'est ce qui empeche de remplacer apres coup une piece deja
+             * verifiee.
+             */
+            Route::get('/demandes/{reissuanceRequest}/complement', [ComplementController::class, 'show'])
+                ->name('requests.complement');
+            Route::post('/demandes/{reissuanceRequest}/complement', [ComplementController::class, 'store'])
+                ->name('requests.complement.store');
         });
 
         /*
@@ -145,6 +160,14 @@ Route::middleware('auth')->group(function (): void {
                 ->name('verification.registry');
             Route::post('/demandes/{reissuanceRequest}/decision', [DecisionController::class, 'store'])
                 ->name('decision.store');
+
+            /*
+             * Reclamer une piece au demandeur (D-087). L'officier ouvre, le
+             * demandeur repond : il n'existe aucune route par laquelle le
+             * demandeur ouvrirait lui-meme.
+             */
+            Route::post('/demandes/{reissuanceRequest}/complement', [OfficerComplementController::class, 'store'])
+                ->name('complement.store');
         });
 
         /*

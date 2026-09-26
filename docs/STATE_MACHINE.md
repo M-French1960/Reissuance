@@ -203,6 +203,30 @@ en ajouter : la machine à états décrit le parcours du dossier, pas qui le
 tient. Les deux mouvements d'affectation sont tracés séparément —
 `request.assignment_released` et `request.assignment_resumed`.
 
+### Une pièce réclamée n'est pas un état non plus (D-087)
+
+Quand l'officier réclame une photo plus lisible, le dossier **reste**
+`under_review`. C'est la vérité : l'officier le tient toujours, et il attend.
+
+La maquette du client proposait un état « en attente de complément ». Je ne
+l'ai pas ajouté, et voici pourquoi. Un état dit **où en est le dossier dans son
+parcours** ; « on attend une pièce » dit **ce qui manque à l'examen en cours**.
+Ajouter un état aurait touché le déclencheur MySQL, la table des transitions,
+le test de couverture du diagramme et chaque écran qui affiche un statut — pour
+exprimer quelque chose qu'une ligne de `request_complements` exprime mieux, et
+qui garde son historique.
+
+Ce que l'état ne peut pas dire, l'interface le dit : un bandeau en tête du
+suivi annonce la pièce attendue et mène à l'écran d'envoi.
+
+**Ce qui bouge en revanche, c'est le cycle de vérification.** Quand la pièce
+remplacée est une pièce d'identité, `verification_cycle` est incrémenté :
+les étapes franchies sur l'ancienne photo sont conservées — elles disent ce qui
+a été vérifié, et sur quoi — mais elles ne comptent plus. Sans cela, un acte
+pourrait être signé sur la foi de contrôles portant sur un document remplacé
+depuis, ce que le §4.3 du brief interdit. Le mécanisme est celui du retour du
+maire (T8), réutilisé plutôt que réinventé.
+
 ---
 
 `audit_logs` est en ajout seul : ni `UPDATE`, ni `DELETE`, y compris pour un

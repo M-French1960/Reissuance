@@ -299,6 +299,33 @@ l'élargir si vous le décidez.
 
 ---
 
+## 4.x Un cas que le diagramme ne contient pas : réclamer une pièce (D-087)
+
+Le diagramme ne prévoit rien entre « Verify Identity » et « Reject Request ».
+Conséquence dans le produit livré : une photo illisible ne laissait qu'une
+issue, le **rejet d'une personne de bonne foi** — le demandeur ne pouvait plus
+toucher à ses pièces une fois la demande envoyée, la Policy `update` exigeant
+l'état brouillon.
+
+Le client l'a vu lui-même : `request-complement.html` figure dans ses maquettes
+sans figurer dans son diagramme. C'est donc un **ajout assumé**, pas une
+interprétation :
+
+- l'**officier** réclame une pièce, avec un motif d'au moins dix caractères,
+  pendant l'examen et sur le dossier qu'il tient ;
+- le **demandeur** répond depuis son compte, et seulement si une demande est
+  ouverte ;
+- le remplacement d'une pièce d'identité **relance la vérification**.
+
+Le demandeur ne peut pas ouvrir de complément lui-même. Sans cette borne, il
+pourrait remplacer après coup la pièce déjà vérifiée par une autre.
+
+Ce cas n'est **pas** inscrit dans `UseCaseCoverageTest` : ce test fige le
+diagramme du client, et y glisser un cas qui n'y figure pas en brouillerait le
+contrat. Sa couverture est assurée par `tests/Feature/ComplementTest.php`.
+
+---
+
 ## 5. Ordre de travail retenu
 
 1. ~~**Cancel Request**~~ — fait (D-044).

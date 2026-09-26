@@ -28,6 +28,8 @@ return [
         'signed' => 'Votre acte est disponible',
         'rejected' => 'Demande refusée',
         'cancelled' => 'Demande annulée',
+        'complement_requested' => 'Une pièce est nécessaire',
+        'complement_provided' => 'Le demandeur a répondu',
     ],
 
     'bodies' => [
@@ -40,6 +42,8 @@ return [
         'signed' => 'Votre acte est prêt pour la demande :reference. Connectez-vous pour le télécharger.',
         'rejected' => 'Votre demande :reference a été refusée. Le motif figure sur la page de votre demande.',
         'cancelled' => 'Votre demande :reference a été annulée. Vous pouvez en déposer une nouvelle à tout moment.',
+        'complement_requested' => "Pour la demande :reference, l'officier a besoin d'une pièce plus lisible. Connectez-vous pour l'envoyer ; le dossier vous attend.",
+        'complement_provided' => "Pour la demande :reference, le demandeur a envoyé la pièce que vous avez réclamée. Les contrôles d'identité repartent du début.",
     ],
 
     'none_title' => 'Aucune notification',

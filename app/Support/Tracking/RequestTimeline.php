@@ -50,6 +50,9 @@ final class RequestTimeline
             [
                 'titre' => __('citizen.tracking.milestone_submitted'),
                 'statut' => RequestStatus::Pending,
+                // Arriver a cet etat, c'est AVOIR ENVOYE : le jalon est
+                // accompli des qu'il est atteint.
+                'entreeAcheve' => true,
                 /*
                  * THE CENTRE'S NAME SPEAKS FOR ITSELF (D-073/D-075). Centres
                  * are already called "Civil status centre of Yaounde I", so
@@ -63,16 +66,22 @@ final class RequestTimeline
             [
                 'titre' => __('citizen.tracking.milestone_checked'),
                 'statut' => RequestStatus::UnderReview,
+                // Arriver a cet etat, c'est que la verification COMMENCE.
+                'entreeAcheve' => false,
                 'detail' => __('citizen.tracking.milestone_checked_detail'),
             ],
             [
                 'titre' => __('citizen.tracking.milestone_mayor'),
                 'statut' => RequestStatus::AwaitingSignature,
+                // Arriver a cet etat, c'est que le dossier ATTEND le maire.
+                'entreeAcheve' => false,
                 'detail' => __('citizen.tracking.milestone_mayor_detail'),
             ],
             [
                 'titre' => __('citizen.tracking.milestone_available'),
                 'statut' => RequestStatus::Signed,
+                // Arriver a cet etat, c'est que l'acte EXISTE.
+                'entreeAcheve' => true,
                 /*
                  * IN THE RIGHT TENSE (D-073). "You will be able to download
                  * your certificate" was showing under a step marked "done":
@@ -115,10 +124,30 @@ final class RequestTimeline
             $rang = $index + 1;
             $trace = $transitions->get($jalon['statut']->value);
 
+            /*
+             * ENTRER DANS UNE ETAPE N'EST PAS L'AVOIR TERMINEE (D-087).
+             *
+             * La version precedente marquait « fait » des qu'une trace d'audit
+             * existait pour l'etat du jalon. Pour « Demande envoyee », entrer
+             * en `pending` EST l'accomplissement, et c'etait juste. Pour
+             * « Verification par l'officier », entrer en `under_review` veut
+             * dire que le controle COMMENCE — et le demandeur lisait
+             * « Verification par l'officier : terminé » pendant que son
+             * dossier etait encore sur le bureau de l'agent.
+             *
+             * C'est la meme faute que D-075, sous une autre forme : la frise
+             * annoncait au demandeur une etape qui n'avait pas eu lieu. Trouve
+             * en regardant l'ecran, pas en lisant le code — et rendu plus grave
+             * par la piece reclamee : on pouvait annoncer la verification
+             * terminée a quelqu'un a qui l'on demandait justement une photo.
+             *
+             * Chaque jalon dit donc maintenant si son entree vaut son
+             * achevement. Un parcours ARRETE fait exception : le dossier ne
+             * bougera plus, l'etape ou il s'est arrete est bel et bien close.
+             */
             $etat = match (true) {
-                // Une trace d'audit prime sur tout raisonnement de rang :
-                // c'est la preuve que l'etape a eu lieu.
-                $trace !== null => 'fait',
+                $trace !== null && ($jalon['entreeAcheve'] || $rang < $atteint || $statut->isStopped()) => 'fait',
+                $trace !== null => 'en_cours',
                 $statut->isStopped() && $rang > $atteint => 'arrete',
                 $rang < $atteint => 'fait',
                 $rang === $atteint && ! $statut->isStopped() => 'en_cours',

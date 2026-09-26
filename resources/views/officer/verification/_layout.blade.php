@@ -55,6 +55,53 @@
 
     @yield('etape')
 
+    {{--
+        RECLAMER UNE PIECE AU DEMANDEUR (D-087).
+
+        Disponible a toutes les etapes : le defaut se voit a l'etape 2 pour la
+        piece d'identite, a l'etape 3 pour le portrait. Avant, une photo floue
+        ne laissait qu'une issue, le rejet d'une personne de bonne foi.
+    --}}
+    @php $complementEnAttente = $demande->pendingComplement; @endphp
+
+    @if ($complementEnAttente !== null)
+        <x-alert variant="attention" :title="__('officer.complement.pending_title')">
+            <p class="u-flush">{{ __('officer.complement.pending_body', [
+                'piece' => __('officer.complement.piece_'.$complementEnAttente->kind),
+                'date' => $complementEnAttente->created_at->translatedFormat('d F Y'),
+            ]) }}</p>
+            <blockquote class="quote">{{ $complementEnAttente->message }}</blockquote>
+        </x-alert>
+    @elseif ($peutDecider)
+        <x-card :title="__('officer.complement.ask_title')">
+            <p class="u-note">{{ __('officer.complement.ask_intro') }}</p>
+
+            <form method="POST" action="{{ route('officer.complement.store', $demande) }}">
+                @csrf
+
+                <div class="field">
+                    <label class="field__label" for="complement-kind">{{ __('officer.complement.which') }}</label>
+                    <select class="field__control" id="complement-kind" name="kind">
+                        <option value="id_document">{{ __('officer.complement.piece_id_document') }}</option>
+                        <option value="selfie">{{ __('officer.complement.piece_selfie') }}</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label class="field__label" for="complement-message">{{ __('officer.complement.message') }}</label>
+                    {{-- Le motif est ce que le demandeur lira : s'il ne dit pas
+                         QUOI refaire, la meme photo revient. --}}
+                    <span class="field__hint" id="complement-message-hint">{{ __('officer.complement.message_hint') }}</span>
+                    <textarea class="field__control" id="complement-message" name="message" rows="3"
+                              minlength="10" maxlength="1000"
+                              aria-describedby="complement-message-hint">{{ old('message') }}</textarea>
+                </div>
+
+                <x-button type="submit" variant="secondary">{{ __('officer.complement.ask_action') }}</x-button>
+            </form>
+        </x-card>
+    @endif
+
     <p class="u-note">{!! __('verification.shortcuts', [
         'next' => '<kbd>&rarr;</kbd>',
         'previous' => '<kbd>&larr;</kbd>',

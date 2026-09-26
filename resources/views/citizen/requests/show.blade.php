@@ -6,6 +6,23 @@
 
     <x-flash />
 
+    {{--
+        UNE PIECE EST RECLAMEE (D-087).
+
+        Place tout en haut, avant l'historique : c'est la seule chose de cette
+        page qui demande une action, et le dossier n'avance pas sans elle.
+        L'etat affiche reste « en cours d'examen », parce que c'est la verite —
+        l'officier tient le dossier et attend. Le bandeau dit ce que l'etat ne
+        peut pas dire.
+    --}}
+    @if ($demande->pendingComplement !== null)
+        <x-alert variant="attention" :title="__('citizen.complement.banner_title')"
+                 :action="route('citizen.requests.complement', $demande)"
+                 :actionLabel="__('citizen.complement.banner_action')">
+            {{ __('citizen.complement.banner_body') }}
+        </x-alert>
+    @endif
+
     <x-card>
         <p>
             <x-status-badge :status="$demande->status" />

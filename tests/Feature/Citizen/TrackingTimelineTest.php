@@ -168,8 +168,20 @@ class TrackingTimelineTest extends TestCase
     }
 
     /** Un dossier en cours n'annonce pas les étapes à venir comme faites. */
+    /**
+     * ENTRER DANS UNE ETAPE N'EST PAS L'AVOIR TERMINEE (D-087).
+     *
+     * CE TEST ENCODAIT LE DEFAUT. Il attendait `['fait', 'fait', ...]` sur un
+     * dossier ENCORE en cours d'examen : il verifiait que la frise n'anticipe
+     * pas les etapes futures — ce qu'elle ne faisait pas — et acceptait au
+     * passage qu'elle annonce « Vérification par l'officier : terminé » alors
+     * que l'agent avait le dossier sous les yeux.
+     *
+     * Le vert de la suite prouvait donc ce que le test regardait, pas que
+     * l'ecran disait vrai. Trouve en regardant la page, pas en lisant le code.
+     */
     #[Test]
-    public function un_dossier_en_cours_n_anticipe_rien(): void
+    public function une_verification_commencee_n_est_pas_une_verification_terminee(): void
     {
         $demande = $this->demande();
         $service = app(RequestTransitionService::class);
@@ -178,7 +190,24 @@ class TrackingTimelineTest extends TestCase
         $service->transition($demande, RequestStatus::Pending, $this->citoyen);
         $service->transition($demande->refresh(), RequestStatus::UnderReview, $officier);
 
-        $this->assertSame(['fait', 'fait', 'a_venir', 'a_venir'], $this->frise($demande));
+        $this->assertSame(['fait', 'en_cours', 'a_venir', 'a_venir'], $this->frise($demande));
+    }
+
+    /** Le dossier qui attend le maire n'a pas encore SA decision. */
+    #[Test]
+    public function un_dossier_qui_attend_le_maire_n_annonce_pas_sa_decision(): void
+    {
+        $demande = $this->demande();
+        $service = app(RequestTransitionService::class);
+        $officier = User::factory()->officer($this->centre)->create();
+
+        $service->transition($demande, RequestStatus::Pending, $this->citoyen);
+        $service->transition($demande->refresh(), RequestStatus::UnderReview, $officier);
+        $service->transition($demande->refresh(), RequestStatus::AwaitingSignature, $officier);
+
+        // La verification, elle, est bel et bien terminee : le dossier l'a
+        // depassee.
+        $this->assertSame(['fait', 'fait', 'en_cours', 'a_venir'], $this->frise($demande));
     }
 
     /**

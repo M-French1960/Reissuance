@@ -27,6 +27,9 @@ return [
         'next_waiting' => 'Une demande suivante est en attente de prise en charge.',
         'result_required' => 'Indiquez le résultat de votre contrôle avant de continuer.',
         'run_facial_first' => 'Lancez la comparaison faciale avant de conclure sur les photographies.',
+        'complement_requested' => 'La pièce a été réclamée au demandeur, qui en a été averti.',
+        'complement_already_open' => 'Une pièce a déjà été réclamée sur ce dossier, et elle est toujours attendue.',
+        'complement_message_min' => 'Dites ce qui ne va pas sur la pièce : sans cela, le demandeur renvoie la même.',
     ],
 
     'citizen' => [
@@ -43,6 +46,7 @@ return [
         'file_required' => "Aucun fichier n'a été reçu. Reprenez la photo puis réessayez.",
         'selfie_label' => 'votre photo',
         'id_label' => "votre pièce d'identité",
+        'complement_sent' => "Votre pièce a été envoyée. L'officier va la réexaminer.",
     ],
 
     'payment' => [

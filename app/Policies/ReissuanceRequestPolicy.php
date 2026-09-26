@@ -70,6 +70,41 @@ class ReissuanceRequestPolicy
             && $request->status === RequestStatus::Draft;
     }
 
+    /**
+     * Reclamer une piece au demandeur, apres l'envoi (D-087).
+     *
+     * C'EST L'OFFICIER QUI OUVRE, ET LUI SEUL. Si le demandeur pouvait ouvrir
+     * lui-meme un complement, il pourrait remplacer apres coup la piece
+     * d'identite deja verifiee par une autre. L'ouverture est donc reservee a
+     * l'officier QUI TIENT le dossier, pendant l'examen.
+     *
+     * Le maire en est exclu : quand un dossier lui parvient, la verification
+     * est close. S'il a un doute, il le renvoie a l'officier (T8), qui decide
+     * s'il faut reclamer quelque chose.
+     */
+    public function requestComplement(User $user, ReissuanceRequest $request): bool
+    {
+        return $user->role === UserRole::Officer
+            && $request->civil_status_center_id === $user->civil_status_center_id
+            && $request->assigned_officer_id === $user->id
+            && $request->status === RequestStatus::UnderReview;
+    }
+
+    /**
+     * Repondre a une piece reclamee.
+     *
+     * Le demandeur, sur SON dossier, et SEULEMENT si un officier a ouvert une
+     * demande encore en attente. Sans complement ouvert, cette porte n'existe
+     * pas : c'est ce qui empeche de remplacer une piece deja verifiee.
+     */
+    public function provideComplement(User $user, ReissuanceRequest $request): bool
+    {
+        return $user->role === UserRole::Citizen
+            && $request->user_id === $user->id
+            && $request->status === RequestStatus::UnderReview
+            && $request->pendingComplement()->exists();
+    }
+
     /** Seule suppression autorisee de tout le systeme : son propre brouillon. */
     public function delete(User $user, ReissuanceRequest $request): bool
     {

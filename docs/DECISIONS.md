@@ -4480,3 +4480,120 @@ raison : `style-src 'self'` refuserait un `style="height: …"` en silence.
 
 L'écran a été vérifié **après une vraie signature**, faite dans le navigateur
 par le parcours complet du maire — et non sur des lignes posées à la main.
+
+---
+
+## D-087 — Une pièce manquante, réclamée après l'envoi
+
+- **Date :** 2026-09-26
+- **Statut :** décidé
+
+Je t'avais dit que `request-complement.html` demandait « une décision, pas une
+interface ». La décision est prise, et la voici — parce qu'elle n'ouvre **aucune
+surface publique** : elle se joue entièrement entre un officier et un demandeur
+déjà authentifiés. Les deux écrans qui restent, eux, créent un accès anonyme et
+attendent toujours ton arbitrage.
+
+### La limite que cela lève
+
+Une fois la demande envoyée, le demandeur ne pouvait plus toucher à ses photos :
+la Policy `update` exige l'état brouillon. **Une photo floue condamnait donc le
+dossier au rejet d'une personne de bonne foi**, pour un reflet sur une carte.
+Je l'avais signalé deux fois ; le client y répond par un écran, et il a raison.
+
+### Qui ouvre, qui répond
+
+**L'officier réclame, le demandeur fournit.** Jamais l'inverse, et c'est la
+borne de sécurité de toute la fonction : si le demandeur pouvait ouvrir un
+complément lui-même, il pourrait remplacer **après coup** la pièce d'identité
+déjà vérifiée par une autre. Sans demande ouverte, la porte n'existe pas — les
+deux routes répondent 403, et un test l'exerce.
+
+L'officier doit tenir le dossier, pendant l'examen. Le maire en est exclu :
+quand un dossier lui parvient, la vérification est close ; s'il a un doute, il
+le renvoie à l'officier, qui décide s'il faut réclamer quelque chose.
+
+### Le motif fait au moins dix caractères
+
+Imposé par la base, pas seulement par le formulaire. « Photo floue » ne dit pas
+quoi refaire : le demandeur renvoie la même photo, et la boucle recommence à ses
+frais — un trajet, des données mobiles, du temps. Le champ porte un exemple :
+« le numéro est masqué par un reflet, reprenez la photo sans flash ».
+
+### Ce qui se passe quand la pièce arrive
+
+**Un nouveau cycle de vérification est ouvert.** C'est le point le plus
+important de ce jalon. Sans cela, les étapes déjà franchies sur l'**ancienne**
+photo resteraient valides pour la nouvelle : un acte pourrait être signé sur la
+foi d'un contrôle portant sur un document remplacé depuis. C'est exactement ce
+que le §4.3 du brief interdit. Le mécanisme de cycle existait déjà pour le
+retour du maire (T8) ; il est réutilisé plutôt que réinventé, et les étapes du
+cycle précédent sont conservées intactes — elles disent ce qui a été vérifié, et
+sur quoi.
+
+### Pas de nouvel état, et pourquoi
+
+La maquette suppose un état « en attente de complément ». Le dossier **reste**
+`under_review`, ce qui est la vérité : l'officier le tient toujours, et il
+attend. Un état dit *où en est le dossier dans son parcours* ; « on attend une
+pièce » dit *ce qui manque à l'examen en cours*. Ajouter un état aurait touché
+le déclencheur MySQL, la table des transitions, le test de couverture du
+diagramme et chaque écran affichant un statut — pour exprimer ce qu'une ligne de
+`request_complements` exprime mieux, avec son historique.
+
+Une seule demande peut être ouverte à la fois, et c'est **la base** qui
+l'impose : MySQL n'a pas d'index unique partiel, donc une colonne générée qui
+vaut l'identifiant du dossier tant que le complément est ouvert, et NULL une
+fois satisfait, donne le même résultat.
+
+### Le défaut que cet écran a fait apparaître
+
+En regardant la page de suivi après avoir réclamé une pièce, j'ai lu ceci sur un
+dossier **encore en cours d'examen** :
+
+> Vérification par l'officier — **terminé**
+
+C'est faux. La frise marquait un jalon « terminé » dès qu'une trace d'audit
+existait pour l'état correspondant. Pour « Demande envoyée », entrer en
+`pending` **est** l'accomplissement, et c'était juste. Pour « Vérification par
+l'officier », entrer en `under_review` veut dire que le contrôle **commence**.
+
+C'est la même faute que D-075, sous une autre forme : la frise annonce au
+demandeur une étape qui n'a pas eu lieu. Et la pièce réclamée la rendait plus
+grave — on pouvait annoncer la vérification terminée à quelqu'un à qui l'on
+demandait justement une nouvelle photo.
+
+**Le test encodait le défaut.** `un_dossier_en_cours_n_anticipe_rien` attendait
+`['fait', 'fait', 'a_venir', 'a_venir']` : il vérifiait que la frise n'anticipe
+pas les étapes futures — ce qu'elle ne faisait pas — et acceptait au passage
+qu'elle annonce une vérification terminée. Le vert prouvait ce que le test
+regardait, pas que l'écran disait vrai.
+
+Chaque jalon porte maintenant une propriété : son entrée vaut-elle son
+achèvement ? Vrai pour « Demande envoyée » et « Acte disponible », faux pour
+« Vérification par l'officier » et « Décision du maire ». Un parcours **arrêté**
+fait exception : le dossier ne bougera plus, l'étape où il s'est arrêté est bel
+et bien close. Vérifié sur les huit états, un par un.
+
+### Ce que la maquette proposait et que je n'ai pas fait
+
+**La photo refusée à côté de la nouvelle.** Le magasin de pièces remplace la
+pièce du même type et **supprime** la précédente — c'est sa règle depuis le
+départ, et elle est juste : une pièce d'identité refusée n'a pas à être
+conservée pour être montrée. La comparaison côte à côte est donc impossible, et
+l'écran le dit plutôt que de laisser chercher.
+
+**Le délai « à envoyer avant le… passé ce délai, la demande pourra être
+classée ».** Un délai de forclusion est une règle administrative. Je n'en
+invente pas (§10), et c'est de la même famille que la question ouverte D8.
+Aucune date n'est affichée, et rien ne se classe tout seul.
+
+### Vérifié dans un navigateur, des deux côtés
+
+L'officier réclame, le demandeur reçoit son bandeau, ouvre l'écran, envoie une
+photo, et le dossier repart — parcours complet joué dans Chromium, pas simulé.
+En base : le complément est marqué satisfait, l'ancienne pièce a disparu, le
+cycle de vérification est passé de 1 à 2, et le journal porte les deux lignes.
+
+Mesures à 1366, 390 et 320 px : aucun débordement, aucune cible sous 44 px,
+ordre des titres correct, aucun refus CSP.

@@ -124,6 +124,31 @@ class ReissuanceRequest extends Model
         return $this->hasMany(RequestDecision::class, 'request_id');
     }
 
+    /**
+     * Les pieces reclamees au demandeur apres l'envoi (D-087).
+     *
+     * @return HasMany<RequestComplement, $this>
+     */
+    public function complements(): HasMany
+    {
+        return $this->hasMany(RequestComplement::class, 'request_id');
+    }
+
+    /**
+     * La demande de piece encore ouverte, s'il y en a une.
+     *
+     * Il ne peut y en avoir qu'une : une contrainte d'unicite en base
+     * l'impose. `latestOfMany` n'est donc pas un choix arbitraire entre
+     * plusieurs, c'est la seule ligne possible.
+     *
+     * @return HasOne<RequestComplement, $this>
+     */
+    public function pendingComplement(): HasOne
+    {
+        return $this->hasOne(RequestComplement::class, 'request_id')
+            ->whereNull('fulfilled_at');
+    }
+
     public function signature(): HasOne
     {
         return $this->hasOne(DocumentSignature::class, 'request_id');

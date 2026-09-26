@@ -35,6 +35,9 @@ return [
         'next_waiting' => 'Another request is waiting to be taken on.',
         'result_required' => 'Record the result of your check before continuing.',
         'run_facial_first' => 'Run the facial comparison before concluding on the photographs.',
+        'complement_requested' => 'The applicant has been asked for the document, and notified.',
+        'complement_already_open' => 'A document has already been asked for on this file, and is still awaited.',
+        'complement_message_min' => 'Say what is wrong with the document: without that, the applicant sends back the same one.',
     ],
 
     'citizen' => [
@@ -51,6 +54,7 @@ return [
         'file_required' => 'No file was received. Take the photo again, then try once more.',
         'selfie_label' => 'your photo',
         'id_label' => 'your identity document',
+        'complement_sent' => 'Your document has been sent. The officer will look at it again.',
     ],
 
     'payment' => [

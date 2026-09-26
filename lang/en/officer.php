@@ -172,4 +172,16 @@ return [
         'reason_column' => 'Reason',
         'count_column' => 'Rejections',
     ],
+    'complement' => [
+        'ask_title' => 'Ask the applicant for a document',
+        'ask_intro' => 'When a photograph cannot be read, ask for another one instead of rejecting the file. The applicant is notified and can reply from their account.',
+        'which' => 'Which document',
+        'piece_id_document' => 'Photograph of the identity document',
+        'piece_selfie' => 'Photograph of the face',
+        'message' => 'What is wrong with it',
+        'message_hint' => 'The applicant reads this. Say what to do differently: "the number is hidden by glare, photograph it again without flash".',
+        'ask_action' => 'Ask for the document',
+        'pending_title' => 'This file is waiting on the applicant',
+        'pending_body' => 'You asked for a :piece on :date. The file moves on when they send it.',
+    ],
 ];
