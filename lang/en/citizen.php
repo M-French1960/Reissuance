@@ -69,6 +69,8 @@ return [
         'cancelled_paid' => 'A fee was paid for this request. Contact your civil status centre, since what happens next depends on the refund rules in force.',
 
         'back_to_requests' => 'Back to my requests',
+        'verification_note' => 'Your certificate carries a verification code. Any administration, school or employer receiving a copy can use it to confirm the copy is genuine, without an account.',
+        'verification_link' => 'See how a certificate is checked',
     ],
     'complement' => [
         'title' => 'Send the document the officer asked for',

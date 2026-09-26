@@ -96,7 +96,23 @@
                         @foreach ($requests as $demande)
                             <tr>
                                 <td data-label="{{ __('common.reference') }}">{{ $demande->reference }}</td>
-                                <td data-label="{{ __('common.status') }}"><x-status-badge :status="$demande->status" /></td>
+                                <td data-label="{{ __('common.status') }}">
+                                    <x-status-badge :status="$demande->status" />
+                                    {{--
+                                        CE DOSSIER ATTEND LE DEMANDEUR, PAS L'AGENT (D-089).
+
+                                        Depuis D-087, un officier peut reclamer une piece.
+                                        Le dossier reste « en cours d'examen » — c'est la
+                                        verite, l'agent le tient toujours — mais dans la
+                                        file il devenait indiscernable d'un dossier en
+                                        souffrance, et sa duree d'attente continuait de
+                                        courir comme si l'agent tardait. Elle accusait donc
+                                        le mauvais cote.
+                                    --}}
+                                    @if ($demande->pendingComplement !== null)
+                                        <span class="badge badge--waiting">{{ __('officer.queue.awaiting_applicant') }}</span>
+                                    @endif
+                                </td>
                                 <td data-label="{{ __('common.submitted_on') }}">{{ $demande->submitted_at?->translatedFormat('d/m/Y H:i') }}</td>
                                 <td data-label="{{ __('officer.queue.waiting') }}">
                                     {{-- Une demande close n'attend plus rien : y afficher une

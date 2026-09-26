@@ -42,6 +42,12 @@ class QueueController extends Controller
             // aussi, mais la vue ne l'ouvre jamais : c'etait une requete par
             // page pour rien. Le nom affiche vient de full_name_at_birth.
             ->with('assignedOfficer:id,name')
+            /*
+             * Charge en meme temps la piece eventuellement reclamee au
+             * demandeur (D-087) : sans cela, la file poserait une requete par
+             * ligne pour l'afficher, et le budget de requetes tomberait.
+             */
+            ->with('pendingComplement:id,request_id,kind,created_at')
             ->when($request->filled('statut'), fn ($q) => $q->where('status', $request->input('statut')))
             ->when($request->filled('recherche'), function ($q) use ($request): void {
                 $terme = trim((string) $request->input('recherche'));

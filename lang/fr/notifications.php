@@ -30,6 +30,8 @@ return [
         'cancelled' => 'Demande annulée',
         'complement_requested' => 'Une pièce est nécessaire',
         'complement_provided' => 'Le demandeur a répondu',
+        'mayor_awaiting' => 'Un acte attend votre signature',
+        'mayor_escalated' => 'Un dossier vous est transmis pour examen',
     ],
 
     'bodies' => [
@@ -44,6 +46,8 @@ return [
         'cancelled' => 'Votre demande :reference a été annulée. Vous pouvez en déposer une nouvelle à tout moment.',
         'complement_requested' => "Pour la demande :reference, l'officier a besoin d'une pièce plus lisible. Connectez-vous pour l'envoyer ; le dossier vous attend.",
         'complement_provided' => "Pour la demande :reference, le demandeur a envoyé la pièce que vous avez réclamée. Les contrôles d'identité repartent du début.",
+        'mayor_awaiting' => "La demande :reference a été vérifiée par l'officier et attend votre signature. Rien n'avance tant que vous n'avez pas décidé.",
+        'mayor_escalated' => "La demande :reference vous est transmise pour un examen particulier. Rien n'avance tant que vous n'avez pas décidé.",
     ],
 
     'none_title' => 'Aucune notification',

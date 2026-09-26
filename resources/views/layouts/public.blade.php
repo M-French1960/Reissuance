@@ -39,6 +39,7 @@
 
                 <div class="home-nav__actions">
                     <x-language-switcher />
+                    <a class="home-btn home-btn--ghost" href="{{ route('home') }}">{{ __('common.home') }}</a>
                     <a class="home-btn home-btn--ghost" href="{{ route('login') }}">{{ __('common.sign_in') }}</a>
                 </div>
             </nav>

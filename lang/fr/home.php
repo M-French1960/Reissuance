@@ -22,6 +22,7 @@ return [
     'nav_steps' => 'Comment ça marche',
     'nav_checklist' => 'Ce qu\'il faut préparer',
     'nav_faq' => 'Questions',
+    'nav_verify' => 'Vérifier un acte',
     'menu_open' => 'Ouvrir le menu',
     'menu_close' => 'Fermer le menu',
 
@@ -147,6 +148,7 @@ return [
     'footer_birth' => 'Acte de naissance',
     'footer_track' => 'Suivre une demande',
     'footer_signin' => 'Se connecter',
+    'footer_verify' => 'Vérifier un acte',
     'footer_status' => 'État du service',
     'footer_year' => 'PHOENIX, :year',
 ];

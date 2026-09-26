@@ -32,6 +32,16 @@ use Throwable;
  */
 class HealthController extends Controller
 {
+    /**
+     * Au-dela de ce delai, un travail en attente signifie que la file ne
+     * defile plus.
+     *
+     * Quinze minutes : assez pour absorber un pic ou un redemarrage de worker,
+     * assez court pour qu'un demandeur ne reste pas une demi-journee sans
+     * nouvelle de son dossier.
+     */
+    private const QUEUE_STALE_MINUTES = 15;
+
     public function __invoke(Request $request): View|JsonResponse
     {
         $checks = [
@@ -40,6 +50,7 @@ class HealthController extends Controller
             $this->auditLogIsAppendOnly(),
             $this->privateDisk(),
             $this->blindIndexKey(),
+            $this->notificationQueue(),
         ];
 
         $healthy = collect($checks)->every(fn (array $c): bool => $c['ok']);
@@ -169,6 +180,57 @@ class HealthController extends Controller
                     ? __('admin.health.checks.private_storage_ok')
                     : __('admin.health.checks.private_storage_readonly'))
                 : __('admin.health.checks.private_storage_alert'),
+        ];
+    }
+
+    /**
+     * LA FILE DES NOTIFICATIONS AVANCE-T-ELLE ? (D-089)
+     *
+     * POURQUOI CETTE VERIFICATION MANQUAIT, ET CE QU'ELLE COUTE. Toutes les
+     * notifications du service sont mises en file : c'est D-006 qui l'impose,
+     * pour qu'un envoi rate n'annule jamais une decision deja prise. La
+     * contrepartie est qu'AUCUNE n'est envoyee si le worker s'arrete — et rien
+     * ne le disait. Le systeme repondait 200, les ecrans fonctionnaient, les
+     * decisions s'enregistraient, et plus personne n'etait prevenu de rien :
+     * ni le demandeur de l'avancement de son dossier, ni le maire qu'un acte
+     * attend sa signature. Une panne parfaitement silencieuse.
+     *
+     * CE QU'ON REGARDE : l'AGE du plus ancien travail en attente, pas leur
+     * nombre. Une file de deux cents travaux qui defile est saine ; un seul
+     * travail vieux d'une heure veut dire que plus rien ne defile. Compter
+     * aurait donne une alerte a chaque pic d'activite, et aucune le jour ou le
+     * worker meurt sur une file calme.
+     *
+     * Les travaux EN ECHEC sont comptes a part : ils ne bloquent pas la file,
+     * mais chacun est une notification que personne n'a recue.
+     *
+     * @return array{label: string, ok: bool, detail: string}
+     */
+    private function notificationQueue(): array
+    {
+        try {
+            $plusAncien = DB::table('jobs')->min('available_at');
+            $echecs = DB::table('failed_jobs')->count();
+        } catch (Throwable $e) {
+            return [
+                'label' => __('admin.health.checks.queue'),
+                'ok' => false,
+                'detail' => __('admin.health.checks.queue_unreadable'),
+            ];
+        }
+
+        $minutes = $plusAncien === null ? 0 : (int) round((time() - (int) $plusAncien) / 60);
+        $bloquee = $minutes >= self::QUEUE_STALE_MINUTES;
+
+        return [
+            'label' => __('admin.health.checks.queue'),
+            'ok' => ! $bloquee && $echecs === 0,
+            'detail' => match (true) {
+                $bloquee => __('admin.health.checks.queue_stalled', ['minutes' => $minutes]),
+                $echecs > 0 => __('admin.health.checks.queue_failed', ['count' => $echecs]),
+                $plusAncien === null => __('admin.health.checks.queue_empty'),
+                default => __('admin.health.checks.queue_moving', ['minutes' => $minutes]),
+            },
         ];
     }
 

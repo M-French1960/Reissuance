@@ -4729,3 +4729,138 @@ chiffres — n'est **pas** fait. Il est d'une autre nature : celui qui l'utilise
 n'a pas le document sous les yeux, et la réponse le renseigne sur l'avancement
 du dossier d'une personne. Dis-moi si tu veux que je l'ouvre aussi, et je le
 construirai avec les mêmes trois barrières.
+
+---
+
+## D-089 — Ce que le relevé a trouvé, et ce qu'il n'a pas trouvé
+
+- **Date :** 2026-09-26
+- **Statut :** décidé
+
+Tu m'as demandé de corriger ce qui ne marche pas, pour que le front et le back
+soient en harmonie. J'ai commencé par **mesurer**, pas par supposer.
+
+### La méthode
+
+Un parcours automatisé ouvre chaque écran de chaque rôle dans un navigateur,
+suit **tous** les liens qu'il rencontre, et relève : le code HTTP, les erreurs
+de console, les refus de politique de sécurité, les cibles de formulaire et les
+clés de traduction non résolues. Puis un second parcours fait la même chose en
+visiteur anonyme.
+
+**132 pages visitées, 530 formulaires relevés.** Résultat brut :
+
+| Contrôle | Résultat |
+|---|---:|
+| Pages en 4xx ou 5xx | **0** |
+| Cibles de formulaire sans route correspondante | **0** |
+| Formulaires non-GET sans jeton CSRF | **0** |
+| Liens internes cassés | **0** |
+
+Le câblage entre les écrans et le serveur est sain. Ce que j'ai trouvé est plus
+intéressant que des liens morts : **des choses que le serveur fait et que
+personne ne voit**.
+
+### 1. Le maire n'était prévenu de rien
+
+La machine à états pose un dossier en « en attente de signature » ou
+« escaladé », et **le seul à pouvoir le débloquer n'en était pas averti**. Il
+devait rafraîchir son tableau de bord pour découvrir du travail. Un dossier
+pouvait y dormir sans que rien ne le signale, pendant que le demandeur
+attendait.
+
+C'est le manque le plus coûteux des quatre, et il était signalé depuis
+longtemps sans être corrigé.
+
+Une notification **distincte**, et non un destinataire de plus sur celle du
+changement d'état : les textes de celle-ci sont écrits pour le demandeur
+(« **votre** demande a été acceptée »), et les servir au maire lui ferait lire
+« votre demande » à propos du dossier d'un tiers. Un test le vérifie
+explicitement.
+
+Elle part à **tous les maires actifs de la commune**, parce que n'importe lequel
+peut signer : un adjoint doit pouvoir prendre le relais d'un titulaire absent,
+ce qui est précisément le cas où l'absence d'alerte coûte le plus cher. Un maire
+suspendu ne la reçoit pas : le prévenir ne servirait à personne.
+
+**L'officier, lui, n'est toujours pas notifié à l'arrivée d'une demande, et
+c'est voulu** : sa file EST son écran de travail, il la consulte pour
+travailler. Le maire ne signe qu'occasionnellement.
+
+### 2. La page publique de vérification n'était atteignable par aucun lien
+
+Je l'ai livrée en D-088 sans la relier à quoi que ce soit. Une page de
+vérification que personne ne trouve ne vérifie rien : l'administration qui
+reçoit une copie n'a aucune raison de deviner l'adresse.
+
+Elle est maintenant dans l'en-tête et le pied de page de l'accueil. Le test suit
+un **lien** depuis la page d'accueil plutôt que de chercher une chaîne dans un
+gabarit — sinon il prouverait que le texte existe, pas qu'on peut y aller.
+
+Au passage, une classe CSS morte que j'avais écrite (`hide-on-phone`, définie
+nulle part) a été retirée plutôt qu'accompagnée d'une règle inventée après coup.
+
+### 3. Le demandeur ignorait à quoi sert le code imprimé sur son acte
+
+Depuis D-088, l'acte porte un code de vérification. Rien n'expliquait au
+demandeur ce qu'il est ni à quoi il sert : il le découvrait sur son papier sans
+savoir qu'il peut le donner à l'administration qui lui réclame l'acte. Le code
+restait donc inutile, alors que c'est précisément lui qui évite qu'on doute de
+sa copie.
+
+### 4. Un dossier qui attend le demandeur accusait l'agent
+
+Défaut que j'ai introduit en **D-087** sans le refermer. Quand un officier
+réclame une pièce, le dossier reste « en cours d'examen » — c'est la vérité —
+mais dans la file il devenait **indiscernable** d'un dossier en souffrance, et
+sa durée d'attente continuait de courir comme si l'agent tardait.
+
+La file porte maintenant « Attend le demandeur » à côté du statut. Vu à l'écran
+avant d'être figé par un test : les deux pastilles ne se confondent pas.
+
+### 5. Une panne parfaitement silencieuse
+
+Celle-ci est la plus sérieuse, et elle n'était visible nulle part.
+
+Toutes les notifications du service sont **mises en file** — c'est D-006 qui
+l'impose, pour qu'un envoi raté n'annule jamais une décision déjà prise. La
+contrepartie est qu'**aucune n'est envoyée si le worker s'arrête**. Le système
+répond 200, les écrans fonctionnent, les décisions s'enregistrent, et plus
+personne n'est prévenu de rien.
+
+Constaté ici même : **62 travaux en attente, aucun worker**. La page de santé
+n'en disait pas un mot.
+
+Elle le dit maintenant, et sur ce dépôt elle annonce « la file n'a pas bougé
+depuis 15 445 minutes ». Ce qu'on regarde est **l'âge du plus ancien travail**,
+pas leur nombre : une file de deux cents travaux qui défile est saine, un seul
+travail vieux d'une heure veut dire que plus rien ne défile. Compter aurait
+donné une alerte à chaque pic d'activité, et aucune le jour où le worker meurt
+sur une file calme. Seuil : quinze minutes. Les travaux en échec sont comptés à
+part — ils ne bloquent pas la file, mais chacun est une notification que
+personne n'a reçue.
+
+### Deux choses que j'ai regardées et décidé de NE PAS changer
+
+**Le journal d'audit affiche des identifiants bruts** —
+`request.awaiting_signature_to_signed` — identiques en français et en anglais.
+Ma première lecture a été « du vocabulaire de serveur sur un écran humain ».
+C'est en fait une décision documentée (D-077) : ce sont les identifiants
+canoniques qu'un administrateur recoupe avec le code et la base, et les traduire
+rendrait le journal plus difficile à lire contre l'un comme contre l'autre. Le
+filtre travaille d'ailleurs sur cette chaîne exacte. Je n'écrase pas un
+arbitrage motivé.
+
+**Les refus de politique de sécurité sur `/pieces/{id}`.** Ouvrir une pièce
+d'identité dans un onglet fait afficher par Chromium **sa propre** visionneuse
+d'image, dont les styles en ligne sont refusés par notre politique. Ce n'est pas
+un défaut de l'application : l'image s'affiche, et la seule façon de faire
+taire ces messages serait d'**assouplir un en-tête de sécurité** pour embellir
+une page interne du navigateur. Mauvais échange : la sécurité passe avant.
+
+### Deux classes CSS sans règle, laissées telles quelles
+
+`rank__item` et `review-divider` sont posées dans des gabarits sans qu'aucune
+règle ne les définisse. Elles ne cassent rien et ne changent aucun rendu ; les
+retirer serait du remaniement sans bénéfice dans des fichiers que rien d'autre
+n'appelle à rouvrir. Signalées ici plutôt que corrigées en silence.

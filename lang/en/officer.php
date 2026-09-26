@@ -28,6 +28,7 @@ return [
         'take_on' => 'Take on',
         'empty_title' => 'Nothing to process',
         'empty_body' => 'No request in this centre matches these filters.',
+        'awaiting_applicant' => 'Awaiting the applicant',
     ],
 
     'rejection_reasons' => [

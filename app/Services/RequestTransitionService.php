@@ -9,6 +9,7 @@ use App\Enums\UserRole;
 use App\Models\AuditLog;
 use App\Models\ReissuanceRequest;
 use App\Models\User;
+use App\Notifications\RequestAwaitsMayor;
 use App\Notifications\RequestStatusChanged;
 use DomainException;
 use Illuminate\Support\Facades\DB;
@@ -127,6 +128,36 @@ final class RequestTransitionService
                 array_filter($destinataires),
                 RequestStatusChanged::pour($request, $from),
             );
+
+            /*
+             * LE MAIRE EST PREVENU QUAND UN DOSSIER L'ATTEND (D-089).
+             *
+             * Il ne l'etait pas : la machine a etats posait le dossier en
+             * « en attente de signature » ou « escalade », et le SEUL a pouvoir
+             * le debloquer devait rafraichir son tableau de bord pour
+             * l'apprendre. Un dossier pouvait y dormir sans que rien ne le
+             * signale, pendant que le demandeur attendait.
+             *
+             * Envoi SEPARE, et non un destinataire de plus sur la notification
+             * ci-dessus : ses textes sont ecrits pour le demandeur (« votre
+             * demande »), et les servir au maire lui ferait lire « votre
+             * demande » a propos du dossier d'un tiers.
+             *
+             * Tous les maires ACTIFS de la commune, car n'importe lequel peut
+             * signer : un adjoint doit pouvoir prendre le relais d'un titulaire
+             * absent, ce qui est precisement le cas ou l'absence d'alerte coute
+             * le plus cher.
+             */
+            if (in_array($request->status, [RequestStatus::AwaitingSignature, RequestStatus::Escalated], true)) {
+                Notification::send(
+                    User::query()
+                        ->where('role', UserRole::Mayor->value)
+                        ->where('commune_id', $request->commune_id)
+                        ->where('status', 'active')
+                        ->get(),
+                    RequestAwaitsMayor::pour($request),
+                );
+            }
         } catch (Throwable $e) {
             Log::warning('Notification de changement d\'etat non emise.', [
                 'request_id' => $request->id,

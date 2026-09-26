@@ -28,6 +28,7 @@ return [
         'take_on' => 'Prendre en charge',
         'empty_title' => 'Rien à traiter',
         'empty_body' => 'Aucune demande de ce centre ne correspond à ces filtres.',
+        'awaiting_applicant' => 'Attend le demandeur',
     ],
 
     'rejection_reasons' => [

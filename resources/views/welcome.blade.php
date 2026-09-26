@@ -72,6 +72,10 @@
 
                 <div class="home-nav__actions">
                     <x-language-switcher />
+                    {{-- Vérifier un acte est une porte PUBLIQUE, et elle n'était
+                         atteignable par aucun lien : une page de vérification
+                         que personne ne trouve ne vérifie rien (D-089). --}}
+                    <a class="home-btn home-btn--ghost" href="{{ route('verify.show') }}">{{ __('home.nav_verify') }}</a>
                     <a class="home-btn home-btn--ghost" href="{{ route('login') }}">{{ __('common.sign_in') }}</a>
                     <a class="home-btn home-btn--primary" href="{{ route('register') }}">{{ __('common.create_account') }}</a>
 
@@ -397,6 +401,7 @@
                     <ul>
                         <li><a href="{{ route('register') }}">{{ __('home.footer_birth') }}</a></li>
                         <li><a href="{{ route('login') }}">{{ __('home.footer_track') }}</a></li>
+                        <li><a href="{{ route('verify.show') }}">{{ __('home.footer_verify') }}</a></li>
                         <li><a href="{{ route('login') }}">{{ __('home.footer_signin') }}</a></li>
                     </ul>
                 </div>

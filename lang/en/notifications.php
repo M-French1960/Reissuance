@@ -30,6 +30,8 @@ return [
         'cancelled' => 'Request cancelled',
         'complement_requested' => 'A document is needed',
         'complement_provided' => 'The applicant has replied',
+        'mayor_awaiting' => 'A certificate awaits your signature',
+        'mayor_escalated' => 'A file has been escalated to you',
     ],
 
     'bodies' => [
@@ -44,6 +46,8 @@ return [
         'cancelled' => 'Your request :reference has been cancelled. You can submit a new one at any time.',
         'complement_requested' => 'For request :reference, the officer needs a clearer document. Sign in to send it; the file waits for you.',
         'complement_provided' => 'For request :reference, the applicant has sent the document you asked for. The identity checks start again from the beginning.',
+        'mayor_awaiting' => 'Request :reference has been verified by the officer and awaits your signature. Nothing moves until you decide.',
+        'mayor_escalated' => 'Request :reference has been escalated to you for a closer look. Nothing moves until you decide.',
     ],
 
     'none_title' => 'No notifications',

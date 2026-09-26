@@ -112,6 +112,21 @@
                 <x-button href="{{ route('acts.document', $demande->signature) }}" variant="primary">{{ __('citizen.tracking.download') }}</x-button>
                 <x-button href="{{ route('acts.proof', $demande->signature) }}" variant="secondary">{{ __('citizen.tracking.signature_proof') }}</x-button>
             </div>
+
+            {{--
+                CE QUE LE CODE IMPRIMÉ SUR L'ACTE SERT À FAIRE (D-089).
+
+                L'acte porte un code de vérification depuis D-088, et rien
+                n'expliquait au demandeur ni ce qu'il est, ni à quoi il sert.
+                Il le découvrait sur son papier sans savoir qu'il peut le
+                donner à l'administration qui lui réclame l'acte — le rendant
+                inutile, alors que c'est précisément lui qui évite qu'on doute
+                de sa copie.
+            --}}
+            <p class="u-note u-flush">
+                {{ __('citizen.tracking.verification_note') }}
+                <a href="{{ route('verify.show') }}">{{ __('citizen.tracking.verification_link') }}</a>
+            </p>
         </x-card>
     @endif
 

@@ -69,6 +69,8 @@ return [
         'cancelled_paid' => "Des frais ont été réglés pour cette demande. Rapprochez-vous de votre centre d'état civil, la suite dépend des règles de remboursement en vigueur.",
 
         'back_to_requests' => 'Retour à mes demandes',
+        'verification_note' => "Votre acte porte un code de vérification. Toute administration, école ou employeur qui en reçoit une copie peut s'en servir pour confirmer qu'elle est authentique, sans compte.",
+        'verification_link' => 'Voir comment un acte se vérifie',
     ],
     'complement' => [
         'title' => "Envoyer la pièce réclamée par l'officier",

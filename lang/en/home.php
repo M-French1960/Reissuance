@@ -22,6 +22,7 @@ return [
     'nav_steps' => 'How it works',
     'nav_checklist' => 'What to prepare',
     'nav_faq' => 'Questions',
+    'nav_verify' => 'Check a certificate',
     'menu_open' => 'Open the menu',
     'menu_close' => 'Close the menu',
 
@@ -147,6 +148,7 @@ return [
     'footer_birth' => 'Birth certificate',
     'footer_track' => 'Follow an application',
     'footer_signin' => 'Sign in',
+    'footer_verify' => 'Check a certificate',
     'footer_status' => 'Service status',
     'footer_year' => 'PHOENIX, :year',
 ];
