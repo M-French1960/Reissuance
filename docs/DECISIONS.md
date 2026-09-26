@@ -4864,3 +4864,84 @@ une page interne du navigateur. Mauvais échange : la sécurité passe avant.
 règle ne les définisse. Elles ne cassent rien et ne changent aucun rendu ; les
 retirer serait du remaniement sans bénéfice dans des fichiers que rien d'autre
 n'appelle à rouvrir. Signalées ici plutôt que corrigées en silence.
+
+
+---
+
+## D-090 — Le CI était mort depuis la migration MySQL
+
+- **Date :** 2026-09-26
+- **Statut :** décidé
+
+Trouvé en répondant à ta question « qu'est-ce qui n'est pas fait ». Ce n'était
+pas une chose non faite : c'était une chose **cassée**, et depuis longtemps.
+
+### Ce qui n'allait pas
+
+`.github/workflows/ci.yml` démarrait encore un service `postgres:17`,
+installait `pdo_pgsql`, et créait le compte applicatif avec `psql` et
+`GRANT USAGE ON SCHEMA public`. La migration vers MySQL (D-051) avait porté la
+pile locale, les scripts de sauvegarde, `compose.yaml` et `docker/init-roles.sql`
+— **pas le CI**.
+
+Or l'application **refuse de démarrer sur tout autre moteur** : c'est
+`DatabaseEngineGuard`, et c'est délibéré, parce que toutes les barrières
+anti-fraude sont des déclencheurs MySQL et des révocations de droits table par
+table. Le CI ne pouvait donc plus passer, quoi qu'on pousse.
+
+Conséquence, et c'est elle qui compte : **rien ne gardait le dépôt entre deux
+passages à la main.** Les 976 tests ne tournaient que parce que je les lançais
+moi-même.
+
+### Ce que le nouveau CI fait
+
+Il calque exactement la pile locale : `mysql:8.4` comme `compose.yaml`,
+`pdo_mysql`, et le même partage des comptes que `docker/init-roles.sql` —
+l'application ne tourne jamais sous le compte propriétaire du schéma, c'est ce
+qui rend le journal d'audit inaltérable.
+
+**Aucun `GRANT ... ON phoenix_test.*` pour le compte applicatif**, même « pour
+démarrer » : sur MySQL les droits de base et de table s'additionnent, et un
+droit de base ne peut pas être repris par une révocation sur une table. Les
+droits sont posés table par table par les migrations.
+
+Une étape de migration a été ajoutée, qui n'existait pas : la suite utilise
+`DatabaseTransactions` et non `RefreshDatabase`, parce que le compte applicatif
+n'a pas le droit `DROP`. Le schéma doit donc exister **avant** que la suite ne
+parte, migré par le compte propriétaire.
+
+### Ce qui empêche que cela se reproduise
+
+Un test, posé dans `DatabaseEngineGuardTest` — le fichier qui porte déjà la
+règle « MySQL et rien d'autre ». Un CI qui lance la suite sur un autre moteur
+est la même règle enfreinte, un cran plus haut ; les séparer, c'est qu'un jour
+l'une bouge sans l'autre.
+
+Il lit les **lignes actives** du fichier et ignore les commentaires, qui
+doivent pouvoir nommer PostgreSQL pour expliquer pourquoi il n'y est plus.
+**Vérifié en remettant `postgres:17` : le test tombe.** Un garde qu'on n'a pas
+vu échouer ne garde rien.
+
+### Deux écrans que je croyais manquants et qui existaient
+
+En établissant la liste, j'avais annoncé `maintenance` et `session-expired`
+comme absents. C'est faux : ce sont `resources/views/errors/503.blade.php` et
+`419.blade.php`, traduits tous les deux. Ils n'ont pas de route parce qu'une
+page d'erreur n'en a pas — c'était mon relevé qui cherchait au mauvais endroit.
+
+### Un écran que je ne construis pas tel quel
+
+`help.html` promet une FAQ et un **formulaire de contact**. La FAQ existe déjà,
+sur la page d'accueil, et répond aux mêmes questions — en refusant d'annoncer un
+délai (D8) et un tarif (D7), ce qui est la bonne réponse.
+
+Le formulaire, lui, n'a **aucun destinataire** : aucune boîte de réception,
+aucun écran pour la lire, personne pour y répondre. La maquette porte d'ailleurs
+« Réponse sous [délai à définir] », écrit par le client lui-même. Construire un
+formulaire qui n'aboutit nulle part est pire que de ne pas en avoir : il promet
+une réponse que personne n'enverra.
+
+Ce qui existe et qui marche : le fil d'échanges porté par le dossier (D-047),
+pour qui a une demande. Pour les autres, la FAQ renvoie au centre d'état civil.
+Ouvrir un canal de support est une décision — qui le tient, à quelles heures,
+avec quel engagement — pas un formulaire.

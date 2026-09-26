@@ -148,4 +148,59 @@ class DatabaseEngineGuardTest extends TestCase
             Config::get('database.connections.verification.driver'),
         );
     }
+
+    /**
+     * LE CI TOURNE SUR LE MEME MOTEUR QUE LE PRODUIT.
+     *
+     * CE QUE CE TEST A ATTRAPE. Le fichier de CI demarrait encore
+     * `postgres:17` et installait `pdo_pgsql` bien apres la migration vers
+     * MySQL (D-051) : la pile locale, les scripts et la sauvegarde avaient ete
+     * portes, pas lui. Comme l'application refuse de demarrer sur un autre
+     * moteur — c'est precisement ce que teste ce fichier — le CI ne pouvait
+     * plus passer, et plus rien ne gardait le depot entre deux passages a la
+     * main.
+     *
+     * POURQUOI ICI. Ce fichier porte la regle « MySQL et rien d'autre ». Un
+     * CI qui lance la suite sur un autre moteur est la meme regle enfreinte,
+     * un cran plus haut. La mettre ailleurs, c'est qu'un jour l'une bouge sans
+     * l'autre.
+     */
+    #[Test]
+    public function le_ci_lance_la_suite_sur_mysql(): void
+    {
+        $chemin = base_path('.github/workflows/ci.yml');
+
+        $this->assertFileExists($chemin, 'Le dépôt doit garder un CI.');
+
+        $ci = (string) file_get_contents($chemin);
+
+        // On regarde les LIGNES ACTIVES : les commentaires de ce fichier
+        // expliquent justement pourquoi PostgreSQL n'y est plus, et doivent
+        // pouvoir le nommer.
+        $actives = implode("\n", array_filter(
+            explode("\n", $ci),
+            static fn (string $ligne): bool => ! str_starts_with(ltrim($ligne), '#')
+        ));
+
+        $this->assertStringContainsString('mysql:', $actives, 'Le CI doit démarrer un service MySQL.');
+        $this->assertStringContainsString('pdo_mysql', $actives, 'Le CI doit installer pdo_mysql.');
+
+        foreach (['postgres', 'pdo_pgsql', 'psql ', 'PGPASSWORD'] as $trace) {
+            $this->assertStringNotContainsString(
+                $trace,
+                $actives,
+                "Le CI porte encore une trace de PostgreSQL ({$trace}) : il ne peut pas passer, "
+                .'puisque l’application refuse de démarrer sur un autre moteur.'
+            );
+        }
+
+        // La suite utilise DatabaseTransactions, pas RefreshDatabase : le
+        // compte applicatif n'a pas le droit DROP. Le schema doit donc etre
+        // migre par le compte proprietaire AVANT que la suite ne parte.
+        $this->assertStringContainsString(
+            'migrate --database=mysql_owner',
+            $actives,
+            'Le CI doit migrer la base de test avec le compte propriétaire.'
+        );
+    }
 }
