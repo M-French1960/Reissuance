@@ -5057,3 +5057,99 @@ doit publier** et que je n'ai pas trouvé.
 Sur 40 questions, **17 portent désormais un élément de réponse** : 8 lues dans
 un texte officiel, 7 tirées d'analyses à confirmer, 2 explicitement sans
 trouvaille. Les 23 autres attendent toujours.
+
+---
+
+## D-092 — Le cinquième texte, et ce qu'il apprend au squelette qui refuse
+
+- **Date :** 2026-09-26
+- **Statut :** décidé pour le code, ouvert pour les arbitrages
+
+D-091 s'arrêtait sur quatre textes. En reprenant la recherche, j'en ai trouvé
+un cinquième, et c'est celui qui manquait : la **loi n° 2011/011 du 6 mai
+2011**, qui modifie l'ordonnance de 1981 sur dix-neuf articles. L'ordonnance
+seule donnait une image de 1981 ; la loi de 2011 donne celle d'aujourd'hui.
+
+### Ce que le texte dit, mot pour mot
+
+> **Art. 10 (nouveau) (1)** — « Il est institué un **bureau national de l'état
+> civil**, chargé notamment : du contrôle et de la vérification de la tenue
+> régulière des registres d'état civil ; de la **constitution et de la gestion
+> du fichier national de l'état civil**. »
+
+> **Art. 15 (nouveau) (2)** — « Chacune des catégories […] comprend **trois
+> registres à souche**, côtés et paraphés par le président du tribunal de
+> première instance territorialement compétent. »
+
+**Art. 18 (nouveau)** dit où va chaque exemplaire : le premier à la commune
+« pour conservation et **délivrance des copies** », le deuxième au bureau
+national, le troisième classé en souche au greffe du tribunal.
+
+### Trois questions avancent
+
+**C2 avait une question sans destinataire.** « À quelles conditions accéder à
+la base de l'état civil ? » — mais quelle base, tenue par qui ? L'article 10
+répond : le **fichier national de l'état civil**, tenu par le **BUNEC**. Ce
+n'est pas la réponse à C2, c'est ce qui manquait pour aller la chercher : on ne
+négocie pas un accès avec une abstraction.
+
+**A7 est tranchée, et la réponse est plus forte que la question.** « Le papier
+reste-t-il obligatoire ? » Oui — et **en triple**. La conséquence dépasse
+l'archivage : le registre papier est l'original, donc **ce que PHOENIX délivre
+est une copie**. Le produit disait déjà « copie intégrale » ; il le dit
+maintenant avec un texte derrière.
+
+**D3 se confirme.** C'est le centre qui détient le registre qui délivre les
+copies. Le formulaire demande le centre d'enregistrement, ce qui est cohérent.
+Je le laisse en **[TEXTE]** avec la réserve déjà écrite : le texte fonde la
+règle, il ne l'énonce pas comme une règle de compétence.
+
+### Le seul changement de code, et pourquoi il compte
+
+Le squelette du registre réel levait une exception disant « pas implémenté ».
+C'était exact et inutile : la question suivante — *implémenter contre quoi ?* —
+restait entière, et un développeur pressé pouvait croire qu'il ne manquait
+qu'un client HTTP. Le refus nomme désormais son interlocuteur, l'article qui le
+fonde, et ce qui reste ouvert :
+
+> L'interlocuteur est identifié depuis D-091 : le bureau national de l'état
+> civil (BUNEC), chargé par l'article 10 (nouveau) de la loi n° 2011/011 du
+> 6 mai 2011 « de la constitution et de la gestion du fichier national de
+> l'état civil ». Restent ouvertes les conditions d'accès d'un tiers à ce
+> fichier, qui ne se lisent dans aucun texte public et se négocient.
+
+Le comportement ne change pas d'un iota : **il lève toujours**. Un squelette
+qui renverrait « correspondance trouvée » serait exactement le chemin par
+lequel un acte frauduleux sort du système.
+
+### Le test ne tenait pas ce qu'il devait tenir
+
+Le test existant n'assertait que `n'est pas implémenté`. Ma réécriture passait
+donc du premier coup — et c'est précisément le problème : la trouvaille
+juridique n'était retenue par rien, une prochaine réécriture l'aurait perdue en
+silence, avec une suite verte.
+
+J'ai ajouté `le_refus_du_registre_nomme_le_bunec_et_son_fondement`, qui tient le
+nom, le texte, l'article, et la phrase disant ce qui reste ouvert. Puis je l'ai
+**vérifié par mutation** plutôt que de le croire sur parole : en remplaçant
+« BUNEC » par « service national » dans le message, le test échoue. Il mord.
+
+C'est le même geste qu'en D-091 avec le fournisseur Docusign, et c'est devenu
+une règle : **quand un message d'erreur porte une trouvaille, un test la
+tient**. Un commentaire se périme sans bruit ; un test non.
+
+### Décompte, et ce que ce décompte ne dit pas
+
+24 questions sur 40 portent un élément de réponse : 11 lues dans un texte
+officiel, 8 tirées d'analyses à confirmer, 5 où la recherche a explicitement
+échoué. Ce dernier chiffre est un résultat : il dit qu'il ne sert à rien de
+continuer à chercher en ligne sur A5, A11, D5, D8 et E3.
+
+Je maintiens la réserve de D-091, qui vaut pour tout ce bloc de travail :
+**aucune de ces trouvailles n'est un arbitrage**. Elles documentent des
+décisions, elles ne les prennent pas. Le renommage du rôle « officier » en
+particulier — l'article 7 (1) fait du maire l'officier d'état civil, donc ce que
+PHOENIX appelle officier est le secrétaire du centre — reste en attente : il
+touche l'énumération des rôles, les politiques, la base, les traductions et une
+centaine de tests. Ce n'est pas un détour que je prends sans ton accord.
+

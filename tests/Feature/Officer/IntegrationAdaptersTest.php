@@ -73,6 +73,33 @@ class IntegrationAdaptersTest extends TestCase
         (new NationalCivilRegistryProvider)->search(['full_name' => 'Personne DE TEST']);
     }
 
+    /**
+     * Le refus nomme son interlocuteur. Tant que ce squelette ne disait que
+     * « pas implémenté », la question « implémenter contre quoi ? » restait
+     * entière. L'article 10 (nouveau) de la loi n° 2011/011 du 6 mai 2011 y
+     * répond : le fichier national est tenu par le BUNEC. Ce test garde cette
+     * réponse dans le message, pour qu'une réécriture ne la reperde pas.
+     */
+    #[Test]
+    public function le_refus_du_registre_nomme_le_bunec_et_son_fondement(): void
+    {
+        try {
+            (new NationalCivilRegistryProvider)->search(['full_name' => 'Personne DE TEST']);
+            $this->fail('Le squelette du registre aurait dû lever.');
+        } catch (RuntimeException $e) {
+            $message = $e->getMessage();
+        }
+
+        $this->assertStringContainsString('BUNEC', $message);
+        $this->assertStringContainsString('2011/011', $message);
+        $this->assertStringContainsString('article 10', $message);
+
+        // Ce qui reste ouvert doit rester dit : sans cette phrase, le lecteur
+        // croirait qu'il suffit d'écrire le client HTTP.
+        $this->assertStringContainsString("conditions d'accès", $message);
+        $this->assertStringContainsString('PHOENIX_REGISTRY_PROVIDER=fake', $message);
+    }
+
     /** Jeux de test de l'adaptateur police (docs/INTEGRATIONS.md 2). */
     #[Test]
     #[DataProvider('casPolice')]

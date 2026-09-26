@@ -27,13 +27,14 @@
 
 ## 0. Ce que la recherche documentaire a établi
 
-### 0.1 Les quatre textes trouvés
+### 0.1 Les cinq textes trouvés
 
 | Texte | Objet | Source consultée |
 |---|---|---|
 | **Loi n° 2010/012 du 21 décembre 2010** relative à la cybersécurité et à la cybercriminalité | signature électronique, certification, certificats étrangers | [MINPOSTEL](https://www.minpostel.gov.cm/images/Les_textes/Lois/Loi_2010-012_cybersecurite_cybercriminalite.pdf), [copie AFAPDP](https://www.afapdp.org/wp-content/uploads/2018/05/Cameroun-Loi-relative-a-la-cybersecurite-et-a-la-cybercriminalite-du-21-decembre-2010.pdf) |
 | **Loi n° 2024/017 du 23 décembre 2024** relative à la protection des données à caractère personnel | données personnelles, biométrie, transferts | [Présidence de la République](https://prc.cm/fr/multimedia/documents/10258-loi-n-2024-017-du-23-12-2024-web) |
 | **Ordonnance n° 81/002 du 29 juin 1981** portant organisation de l'état civil | compétence, signature des actes, délivrance des copies | [MINAT via CVUC](https://www.cvuc-uccc.com/minat/textes/34.pdf) |
+| **Loi n° 2011/011 du 6 mai 2011** modifiant l'ordonnance n° 81/002 | création du BUNEC, registres en trois exemplaires | [Citizenship Rights Africa](http://citizenshiprightsafrica.org/wp-content/uploads/2018/06/Cameroun-Loi-no-2011-011-du-6-mai-2011-modifiant-et-completant-lordonnance-no-81-02-du-29-juin-1981.pdf) |
 | **Loi n° 2019/019 du 24 décembre 2019** portant promotion des langues officielles | bilinguisme des administrations et des communes | [Présidence de la République](https://www.prc.cm/fr/actualites/actes/lois/4040-loi-n-2019-019-du-24-decembre-2019-portant-promotion-cameroun) |
 
 ### 0.2 Une échéance déjà passée
@@ -115,15 +116,64 @@ L'article 17 (1) précise au passage que **l'inscription** d'un acte est
 gratuite : c'est la délivrance d'une copie qui est payante, ce qui est
 exactement notre cas.
 
-### 0.5 Ce que la recherche n'a pas tranché
+### 0.5 La loi de 2011 change la donne : le registre est en TROIS exemplaires, et le troisième part au BUNEC
 
-Les blocs C (accès aux bases de la police et de l'état civil) et une grande
-partie du bloc B restent **[OUVERT]**. Le droit d'accès d'une plateforme tierce
-aux bases de la DGSN ne se lit pas dans un texte public ; il se négocie. Et les
-durées de conservation dépendent d'un **référentiel que l'Autorité doit
-publier** et que je n'ai pas trouvé. **[SECONDAIRE]**
+**[TEXTE]** La **loi n° 2011/011 du 6 mai 2011** modifie l'ordonnance de 1981
+sur dix-neuf articles. Deux comptent pour nous.
 
----
+> **Art. 10 (nouveau) (1)** — « Il est institué un **bureau national de l'état
+> civil**, chargé notamment : du contrôle et de la vérification de la tenue
+> régulière des registres d'état civil ; de la **constitution et de la gestion
+> du fichier national de l'état civil**. »
+
+> **Art. 15 (nouveau) (2)** — « Chacune des catégories […] comprend **trois
+> registres à souche**, côtés et paraphés par le président du tribunal de
+> première instance territorialement compétent. »
+
+Et l'article 18 (nouveau) dit où va chacun : un exemplaire à la commune « pour
+conservation et **délivrance des copies** », le deuxième **au bureau national
+de l'état civil**, le troisième classé en souche au greffe du tribunal.
+
+Trois conséquences pour le produit :
+
+1. **C2 a un interlocuteur nommé.** Le « fichier national de l'état civil »
+   n'est pas une abstraction : c'est celui du **BUNEC**. L'accès se négocie
+   avec lui, et `NationalCivilRegistryProvider` sait désormais à qui il
+   s'adresserait.
+2. **A7 est tranchée : oui, le papier reste, et il est en triple.** Ce que
+   PHOENIX produit n'est donc pas un acte original — c'est une **copie** d'un
+   acte inscrit sur un registre papier. Le vocabulaire du produit est juste sur
+   ce point.
+3. **D3 se confirme.** C'est la commune qui détient le registre qui délivre les
+   copies. Le formulaire demande bien le centre où l'acte a été enregistré.
+
+Au passage, **art. 30 (nouveau)** : la naissance se déclare dans les
+**soixante** jours (contre trente en 1981), et l'article 31 donne un délai
+supplémentaire aux parents quand l'établissement hospitalier n'a pas déclaré.
+Sans effet sur notre produit, qui délivre des copies d'actes existants, mais
+cela situe la réédition par rapport à la déclaration.
+
+### 0.6 Ce que la recherche n'a pas tranché
+
+Le bloc C et une grande partie du bloc B restent **[OUVERT]**. La recherche y a
+gagné **un nom, pas une procédure** : depuis §0.5, C2 sait à qui s'adresser — le
+BUNEC — mais à quelles conditions un tiers interroge le fichier national ne se
+lit dans aucun texte public. Côté DGSN (C1), même le nom de l'interlocuteur
+reste à établir. Ces accès ne se lisent pas, ils se négocient.
+
+Les durées de conservation, elles, dépendent d'un **référentiel que l'Autorité
+doit publier** et que je n'ai pas trouvé. **[SECONDAIRE]**
+
+### 0.7 Où en est le décompte
+
+Sur les **40 questions**, **24 portent un élément de réponse** au terme de cette
+recherche : **11 [TEXTE]** lues dans un texte officiel, **8 [SECONDAIRE]** à
+confirmer, **5 [OUVERT]** où la recherche a explicitement échoué — ce qui est un
+résultat, pas un vide : cela dit qu'il ne sert à rien de chercher davantage en
+ligne. **16 attendent toujours.**
+
+Aucune de ces trouvailles n'est un arbitrage. Un texte lu sur internet documente
+une décision ; il ne la prend pas à ta place.
 
 ---
 
