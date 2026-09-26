@@ -290,4 +290,42 @@ class ActDocumentTest extends TestCase
             $this->assertStringNotContainsString('DE TEST', $chemin);
         }
     }
+
+    /**
+     * L'ACTE PORTE LES DEUX SIGNATURES QUE LA LOI EXIGE (D-091).
+     *
+     * Article 14 de l'ordonnance n 81/002 du 29 juin 1981 : « Les actes de
+     * naissance et de deces sont CONJOINTEMENT SIGNES par l'officier d'etat
+     * civil et par le secretaire du centre. »
+     *
+     * L'acte ne portait que le nom du maire. Celui de l'agent qui a etabli le
+     * projet existait en base depuis D-064 : il manquait sur le document, ce
+     * qui est exactement le genre de defaut qu'aucune suite verte ne montre.
+     */
+    #[Test]
+    public function l_acte_porte_le_signataire_et_le_redacteur(): void
+    {
+        $signature = $this->issue();
+        $texte = $this->extractText(
+            (string) Storage::disk('private')->get($signature->document_path)
+        );
+
+        $this->assertStringContainsString(
+            $this->maire->name,
+            $texte,
+            "L'acte doit porter le nom du maire qui l'a signé."
+        );
+
+        $this->assertStringContainsString(
+            $this->officier->name,
+            $texte,
+            "L'acte doit porter le nom de l'agent qui l'a établi (article 14)."
+        );
+
+        $this->assertStringContainsString(
+            __('documents.act.drawn_up_by'),
+            $texte,
+            'Le document doit dire à quel titre ce second nom y figure.'
+        );
+    }
 }

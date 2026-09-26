@@ -99,11 +99,19 @@ final class DocumentBuilder
      *                                         (D-088). Nul quand l'acte est
      *                                         construit hors delivrance.
      */
+    /**
+     * @param  string|null  $redacteur  L'agent qui a etabli le projet d'acte.
+     *                                  Imprime a cote du signataire : l'article
+     *                                  14 de l'ordonnance n 81/002 exige DEUX
+     *                                  signatures sur un acte de naissance
+     *                                  (D-091).
+     */
     public function build(
         ReissuanceRequest $request,
         User $mayor,
         bool $legallyBinding,
         ?string $codeVerification = null,
+        ?string $redacteur = null,
     ): string {
         $langue = ActLanguage::forRequest($request);
 
@@ -115,6 +123,7 @@ final class DocumentBuilder
             'delivreLe' => now()->locale($langue)->translatedFormat('d F Y'),
             'codeVerification' => $codeVerification,
             'adresseVerification' => route('verify.show'),
+            'redacteur' => $redacteur,
         ], $langue);
     }
 

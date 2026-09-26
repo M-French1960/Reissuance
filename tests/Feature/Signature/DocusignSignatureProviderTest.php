@@ -51,6 +51,21 @@ class DocusignSignatureProviderTest extends TestCase
             $this->assertStringContainsString('compte signataire', $message);
             // Et il dit quoi faire en attendant.
             $this->assertStringContainsString('PHOENIX_SIGNATURE_PROVIDER=fake', $message);
+
+            /*
+             * DEPUIS D-091, LE REFUS CITE LES ARTICLES.
+             *
+             * « La valeur juridique est incertaine » n'aide personne. La
+             * recherche documentaire a trouvé les trois articles qui la
+             * conditionnent : le niveau de signature exigé (art. 17 et 18 de
+             * la loi n° 2010/012) et la reconnaissance d'un certificat émis
+             * hors du territoire (art. 20). Celui qui lit ce message sait
+             * désormais quoi aller chercher.
+             */
+            $this->assertStringContainsString('art. 17', $message);
+            $this->assertStringContainsString('art. 18', $message);
+            $this->assertStringContainsString('art. 20', $message);
+            $this->assertStringContainsString('certificat qualifié', $message);
         }
     }
 

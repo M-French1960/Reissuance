@@ -27,9 +27,21 @@
 
     <hr>
     <h2>{{ __('documents.act.signed_by') }}</h2>
+    {{--
+        DEUX SIGNATURES, PAS UNE (D-091).
+
+        L'article 14 de l'ordonnance n 81/002 du 29 juin 1981 : « Les actes de
+        naissance et de deces sont CONJOINTEMENT SIGNES par l'officier d'etat
+        civil et par le secretaire du centre ». L'acte ne portait que le nom du
+        maire. Celui de l'agent qui a etabli le projet existait en base depuis
+        D-064 ; il manquait seulement sur le document.
+    --}}
     <table class="champs">
         <tr><th>{{ __('documents.act.signing_authority') }}</th><td>{{ $signataire }}</td></tr>
         <tr><th>{{ __('documents.act.capacity') }}</th><td>{{ __('documents.act.mayor_of', ['commune' => $demande->commune?->name]) }}</td></tr>
+        @if ($redacteur !== null)
+            <tr><th>{{ __('documents.act.drawn_up_by') }}</th><td>{{ $redacteur }}</td></tr>
+        @endif
     </table>
 
     {{--

@@ -99,7 +99,13 @@ final class ActIssuanceService
             $codeVerification = DocumentSignature::generateVerificationCode();
 
             $document = $this->builder->build(
-                $request, $mayor, legallyBinding: false, codeVerification: $codeVerification
+                $request,
+                $mayor,
+                legallyBinding: false,
+                codeVerification: $codeVerification,
+                // L'agent qui a etabli le projet : l'acte porte les DEUX noms
+                // que l'article 14 de l'ordonnance n 81/002 exige (D-091).
+                redacteur: $projet->officer?->name,
             );
 
             $resultat = $this->signature->sign($document, [

@@ -4945,3 +4945,115 @@ Ce qui existe et qui marche : le fil d'échanges porté par le dossier (D-047),
 pour qui a une demande. Pour les autres, la FAQ renvoie au centre d'état civil.
 Ouvrir un canal de support est une décision — qui le tient, à quelles heures,
 avec quel engagement — pas un formulaire.
+
+---
+
+## D-091 — Ce que la recherche a trouvé, et les deux choses qu'elle a changées
+
+- **Date :** 2026-09-26
+- **Statut :** décidé pour le code, ouvert pour les arbitrages
+
+Tu m'as demandé de me documenter sur internet et de faire ce qui est logique.
+J'ai cherché, j'ai trouvé quatre textes, et **je n'ai codé que ce que j'ai pu
+lire dans un texte officiel**. Ce qui vient d'une analyse de cabinet est marqué
+comme tel et reste à confirmer. Un texte lu sur internet n'est pas un arbitrage
+du client.
+
+### Les quatre textes
+
+- **Loi n° 2010/012 du 21 décembre 2010**, cybersécurité et cybercriminalité :
+  signature électronique, certification, certificats étrangers.
+- **Loi n° 2024/017 du 23 décembre 2024**, protection des données à caractère
+  personnel.
+- **Ordonnance n° 81/002 du 29 juin 1981**, organisation de l'état civil.
+- **Loi n° 2019/019 du 24 décembre 2019**, promotion des langues officielles.
+
+Le détail, article par article et avec les sources, est dans
+`docs/COMPLIANCE_OPEN_QUESTIONS.md` §0, qui a changé de nature : il ne
+contenait que des questions, il porte désormais aussi ce qui a été établi, avec
+trois niveaux de fiabilité.
+
+### Ce que j'ai changé dans le code, et pourquoi c'était justifié
+
+**1. L'acte portait une signature. La loi en exige deux.**
+
+> **Art. 14** de l'ordonnance n° 81/002 : « Les actes de naissance et de décès
+> sont **conjointement signés par l'officier d'état civil et par le secrétaire
+> du centre**. »
+
+L'acte ne portait que le nom du maire. Le nom de l'agent qui a établi le projet
+existait en base depuis D-064 : il manquait seulement **sur le document**.
+C'est le genre de défaut qu'aucune suite verte ne montre, parce que rien ne le
+cherchait. L'acte porte désormais les deux noms, et un test le fige.
+
+Le bloc tient en une ligne de plus : l'acte reste sur **une page**, ce que
+D-067 avait durement gagné et que le test vérifie toujours.
+
+**2. Le refus de Docusign citait des incertitudes. Il cite maintenant des
+articles.**
+
+« La valeur juridique est incertaine » n'aide personne. Le message nomme
+désormais ce qui la conditionne :
+
+- seule la signature **avancée** vaut la manuscrite (**art. 17**), et elle
+  exige un **certificat qualifié**, donc émis par une autorité **agréée**
+  (**art. 18**) ;
+- un certificat émis hors du territoire ne produit les mêmes effets qu'à la
+  condition qu'existe **un acte de reconnaissance de l'autorité émettrice signé
+  par le ministre chargé des Télécommunications** (**art. 20**).
+
+Docusign n'est donc pas inutilisable en droit : il est utilisable **si et
+seulement si** cet acte existe. C'est une condition vérifiable, pas un doute.
+
+**Le test m'a rattrapé au passage**, et il avait raison : ma première
+réécriture avait **perdu un obstacle**, l'identité du compte signataire
+(question A4). Je l'ai rétabli plutôt que d'assouplir le test, et j'ai ajouté
+aux assertions les numéros d'article, pour que la précision gagnée ne se reperde
+pas.
+
+### Ce que j'ai trouvé et volontairement PAS codé
+
+**Le tarif.** L'**art. 17 (2)** de l'ordonnance dit que le droit perçu pour la
+délivrance d'une copie est « fixé conformément au **code de l'enregistrement,
+du timbre et de la curatelle** ». Cela confirme le refus de D-003 d'inscrire
+les 20 000 CFA du prototype, et cela dit **où** chercher. Mais je n'ai pas
+trouvé le montant en vigueur, et je ne le devine pas : la plateforme continue
+de refuser de servir sans montant configuré.
+
+**Le vocabulaire des rôles.** C'est la découverte la plus gênante.
+
+> **Art. 7 (1)** : « Le délégué du gouvernement auprès de la commune, **le
+> maire**, l'administrateur municipal ainsi que leurs adjoints […] **sont
+> officiers d'état civil**. »
+
+Dans la loi, l'**officier d'état civil est le maire**. Ce que PHOENIX appelle
+« officier » correspond au **secrétaire du centre** de l'article 14. Le
+vocabulaire du produit est donc inversé par rapport au texte.
+
+Renommer un rôle touche l'énumération, les politiques d'accès, la base, les
+traductions et une centaine de tests. Et il est possible que l'usage municipal
+courant appelle ces agents « officiers », auquel cas renommer rendrait le
+produit moins lisible pour ses utilisateurs réels. **Je ne renomme rien sans
+ton arbitrage** : la question est posée en D2.
+
+La bonne nouvelle du même article : la double intervention de PHOENIX n'est pas
+qu'un choix anti-fraude, elle **correspond** à l'article 14.
+
+### Une échéance déjà dépassée
+
+La loi n° 2024/017 ouvrait dix-huit mois de transition, fermés le **23 juin
+2026**. Nous sommes en septembre. La mise en conformité n'est pas un chantier à
+planifier, elle est **en retard**. À confirmer sur le texte : la version
+officielle en ligne est un scan sans couche texte, et je me suis appuyé sur des
+analyses de cabinet pour les numéros d'article du bloc B.
+
+### Ce que la recherche n'a pas tranché
+
+Le bloc C entier — l'accès d'une plateforme tierce aux bases de la police et de
+l'état civil — reste ouvert. Cela ne se lit pas dans un texte public, cela se
+négocie. Les durées de conservation dépendent d'un **référentiel que l'Autorité
+doit publier** et que je n'ai pas trouvé.
+
+Sur 40 questions, **17 portent désormais un élément de réponse** : 8 lues dans
+un texte officiel, 7 tirées d'analyses à confirmer, 2 explicitement sans
+trouvaille. Les 23 autres attendent toujours.

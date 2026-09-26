@@ -31,6 +31,7 @@ return [
         'final_notice' => "Ce document a été produit par un adaptateur de signature de démonstration. Il ne résulte d'aucune signature électronique agréée. La valeur légale d'un acte d'état civil signé électroniquement au Cameroun, ainsi que les exigences d'agrément du prestataire de signature, restent à confirmer : voir le bloc A de docs/COMPLIANCE_OPEN_QUESTIONS.md.",
         'verification_title' => 'Vérifier cette copie',
         'verification_body' => "Toute administration, école, employeur ou ambassade qui reçoit cette copie peut vérifier qu'elle est authentique sur :adresse, à l'aide du code ci-dessous. Aucun compte n'est nécessaire.",
+        'drawn_up_by' => 'Établi par',
     ],
 
     'draft' => [

@@ -1,18 +1,129 @@
 # Questions juridiques ouvertes
 
-> **Avertissement.** Je ne suis pas juriste et je n'ai aucune source vérifiable
-> sur le droit camerounais applicable à ces sujets. Ce document ne contient
-> **aucune citation de texte de loi**, aucune référence à un article, aucune
-> affirmation sur l'état du droit. Il contient uniquement des **questions à
-> poser** à un conseil juridique et aux autorités compétentes.
+> **Avertissement.** Je ne suis pas juriste. Ce document a changé de nature le
+> 2026-09-26 : il ne contenait que des questions, il contient désormais aussi
+> **ce qu'une recherche documentaire a pu établir**, avec les articles et les
+> sources. Cela ne transforme aucune question en réponse arbitrée.
 >
-> Conformément au §10 du brief : aucune hypothèse juridique n'est codée. Là où
-> une réponse manque, le code s'arrête ou passe par un adaptateur factice
-> explicitement marqué comme sans valeur juridique.
+> Trois niveaux, marqués partout où ils apparaissent :
+>
+> - **[TEXTE]** — lu dans le texte officiel, cité avec son article. Vérifiable.
+> - **[SECONDAIRE]** — tiré d'une analyse de cabinet ou de presse spécialisée,
+>   parce que le texte officiel n'était pas exploitable (scan sans couche
+>   texte). **À confirmer sur le texte.**
+> - **[OUVERT]** — rien trouvé, ou la réponse dépend d'un texte d'application
+>   qui n'existe pas encore.
+>
+> Conformément au §10 du brief : **aucune hypothèse juridique n'est codée sur
+> la foi de cette recherche.** Là où une réponse manque, le code s'arrête ou
+> passe par un adaptateur factice explicitement marqué comme sans valeur
+> juridique. Un texte lu sur internet n'est pas un arbitrage du client.
 
-- **Date :** 2026-09-06
+- **Date :** 2026-09-06, recherche documentaire ajoutée le 2026-09-26
 - **À adresser à :** un conseil juridique, l'autorité d'état civil, l'autorité
   de protection des données, l'autorité de police
+
+---
+
+## 0. Ce que la recherche documentaire a établi
+
+### 0.1 Les quatre textes trouvés
+
+| Texte | Objet | Source consultée |
+|---|---|---|
+| **Loi n° 2010/012 du 21 décembre 2010** relative à la cybersécurité et à la cybercriminalité | signature électronique, certification, certificats étrangers | [MINPOSTEL](https://www.minpostel.gov.cm/images/Les_textes/Lois/Loi_2010-012_cybersecurite_cybercriminalite.pdf), [copie AFAPDP](https://www.afapdp.org/wp-content/uploads/2018/05/Cameroun-Loi-relative-a-la-cybersecurite-et-a-la-cybercriminalite-du-21-decembre-2010.pdf) |
+| **Loi n° 2024/017 du 23 décembre 2024** relative à la protection des données à caractère personnel | données personnelles, biométrie, transferts | [Présidence de la République](https://prc.cm/fr/multimedia/documents/10258-loi-n-2024-017-du-23-12-2024-web) |
+| **Ordonnance n° 81/002 du 29 juin 1981** portant organisation de l'état civil | compétence, signature des actes, délivrance des copies | [MINAT via CVUC](https://www.cvuc-uccc.com/minat/textes/34.pdf) |
+| **Loi n° 2019/019 du 24 décembre 2019** portant promotion des langues officielles | bilinguisme des administrations et des communes | [Présidence de la République](https://www.prc.cm/fr/actualites/actes/lois/4040-loi-n-2019-019-du-24-decembre-2019-portant-promotion-cameroun) |
+
+### 0.2 Une échéance déjà passée
+
+La loi n° 2024/017 ouvrait une période de transition de dix-huit mois. Elle
+s'est **fermée le 23 juin 2026**, soit il y a trois mois. **[SECONDAIRE]**
+La mise en conformité n'est donc plus un chantier à planifier ; elle est en
+retard. À confirmer sur le texte, dont la version officielle en ligne est un
+scan sans couche texte.
+
+### 0.3 Les trois découvertes qui changent quelque chose au produit
+
+**1. Le niveau de signature est fixé, et il est exigeant.** **[TEXTE]**
+
+> **Art. 17** — « La signature électronique avancée a la même valeur juridique
+> que la signature manuscrite et produit les mêmes effets que cette dernière. »
+
+Seule la signature **avancée** vaut la manuscrite. Et l'article 18 en donne les
+quatre conditions cumulatives, dont la dernière décide de tout :
+
+> **Art. 18** — « […] le certificat utilisé pour la génération de la signature
+> est un certificat qualifié. »
+
+Or un **certificat qualifié** est, par la définition de l'article 4 de la même
+loi, un certificat « émis par une autorité de certification **agréée** ».
+
+**2. Un certificat étranger ne vaut qu'à une condition nommée.** **[TEXTE]**
+
+> **Art. 20 (1)** — « Un certificat électronique émis hors du territoire
+> national produit les mêmes effets juridiques qu'un certificat qualifié émis
+> au Cameroun **à condition qu'il existe un acte de reconnaissance de
+> l'autorité émettrice signé par le ministre chargé des Télécommunications**. »
+
+C'est la réponse à A10, et elle est opérationnelle : Docusign n'est pas
+inutilisable en droit, il est utilisable **si et seulement si** cet acte
+existe. S'y ajoute, depuis la loi de 2024, l'autorisation préalable de
+l'Autorité pour le transfert transfrontalier des données. **[SECONDAIRE]**
+
+**3. Un acte de naissance porte DEUX signatures.** **[TEXTE]**
+
+> **Art. 14** — « Les actes de naissance et de décès sont **conjointement
+> signés par l'officier d'état civil et par le secrétaire du centre** […] »
+
+> **Art. 7 (1)** — « Le délégué du gouvernement auprès de la commune, **le
+> maire**, l'administrateur municipal ainsi que leurs adjoints […] **sont
+> officiers d'état civil**. »
+
+Deux conséquences, de portée très inégale.
+
+La première est **bonne** : la double intervention de PHOENIX (un agent
+instruit, le maire signe) n'est pas seulement un choix anti-fraude, elle
+correspond à l'article 14. L'acte ne portait pourtant **qu'un seul nom**. Il
+porte désormais les deux — le signataire et celui qui a établi le projet —
+et un test le fige (D-091).
+
+La seconde demande un arbitrage : **le vocabulaire du produit est inversé par
+rapport à la loi.** Dans l'ordonnance, l'« officier d'état civil » est **le
+maire**. Ce que PHOENIX appelle « officier » correspond au **secrétaire du
+centre**. Renommer un rôle touche l'énumération, les politiques d'accès, les
+traductions et les tests ; et l'usage municipal courant appelle peut-être ces
+agents « officiers ». **Je ne renomme rien sans ta décision** — voir D2.
+
+### 0.4 Le tarif a une source, et ce n'est pas nous
+
+**[TEXTE]** Ordonnance n° 81/002 :
+
+> **Art. 17 (2)** — « La délivrance par les services publics compétents d'une
+> copie, d'un extrait ou d'une fiche donne lieu à la perception d'un droit
+> **fixé conformément au code de l'enregistrement, du timbre et de la
+> curatelle**. »
+
+Le montant n'est donc **ni libre, ni le nôtre**. Cela confirme le refus de
+D-003 d'inscrire les 20 000 CFA du prototype, et cela dit où chercher : le code
+de l'enregistrement, du timbre et de la curatelle, tel que modifié par les lois
+de finances successives. **Je n'ai pas trouvé le montant en vigueur** et je ne
+le devine pas.
+
+L'article 17 (1) précise au passage que **l'inscription** d'un acte est
+gratuite : c'est la délivrance d'une copie qui est payante, ce qui est
+exactement notre cas.
+
+### 0.5 Ce que la recherche n'a pas tranché
+
+Les blocs C (accès aux bases de la police et de l'état civil) et une grande
+partie du bloc B restent **[OUVERT]**. Le droit d'accès d'une plateforme tierce
+aux bases de la DGSN ne se lit pas dans un texte public ; il se négocie. Et les
+durées de conservation dépendent d'un **référentiel que l'Autorité doit
+publier** et que je n'ai pas trouvé. **[SECONDAIRE]**
+
+---
 
 ---
 

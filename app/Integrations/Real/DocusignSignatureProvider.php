@@ -76,15 +76,31 @@ final class DocusignSignatureProvider implements SignatureProvider
     {
         throw new RuntimeException(
             "La signature par Docusign n'est pas active. Le client est construit et vérifié "
-            .'contre un serveur simulé, mais quatre obstacles subsistent. Le premier est '
-            .'technique : Docusign signe de façon asynchrone — on crée une enveloppe, la '
-            ."plateforme la traite, puis on récupère l'acte — alors que ce contrat exige un "
-            ."document signé dans le même appel, appel lui-même effectué à l'intérieur d'une "
-            .'transaction de base de données. Y attendre un service étranger tiendrait des '
-            .'verrous ouverts pendant tout le délai. Les trois autres ne sont pas techniques : '
-            ."la valeur juridique d'un acte d'état civil signé électroniquement au Cameroun "
-            .'(question A1), le lieu de traitement des données d’identité, et l’identité du '
-            .'compte signataire. Voir docs/COMPLIANCE_OPEN_QUESTIONS.md et D-066. '
+            .'contre un serveur simulé. Un obstacle est technique, trois sont juridiques, et '
+            ."depuis D-091 les trois derniers portent un numéro d'article (voir "
+            .'docs/COMPLIANCE_OPEN_QUESTIONS.md, questions A1 à A11). '
+            .'TECHNIQUE : Docusign signe de façon asynchrone (on crée une enveloppe, la '
+            ."plateforme la traite, puis on récupère l'acte), alors que ce contrat exige un "
+            ."document signé dans le même appel, lui-même effectué à l'intérieur d'une "
+            .'transaction de base de données ; y attendre un service étranger tiendrait des '
+            .'verrous ouverts pendant tout le délai. '
+            .'JURIDIQUE 1, le niveau de signature : seule la signature électronique AVANCÉE '
+            .'a la valeur de la signature manuscrite (art. 17 de la loi n° 2010/012), et '
+            .'elle exige un certificat qualifié, donc émis par une autorité de certification '
+            .'agréée (art. 18). '
+            .'JURIDIQUE 2, le certificat étranger : un certificat émis hors du territoire ne '
+            .'produit les mêmes effets qu’à la condition qu’il existe un acte de '
+            .'reconnaissance de l’autorité émettrice signé par le ministre chargé des '
+            .'Télécommunications (art. 20). Tant que cet acte n’est pas produit, un acte '
+            .'signé par cette voie n’a pas la valeur recherchée. '
+            .'JURIDIQUE 3, le lieu de traitement : héberger la signature hors du Cameroun '
+            .'est un transfert transfrontalier de données à caractère personnel, soumis à '
+            ."l'autorisation préalable de l'Autorité de protection des données (loi "
+            .'n° 2024/017). '
+            ."JURIDIQUE 3 bis, l'identité du compte signataire : l'art. 7 (1) de l'ordonnance "
+            ."n° 81/002 fait du maire un officier d'état civil, mais qui du maire ou de la "
+            .'commune est juridiquement le signataire reste ouvert (question A4), et cette '
+            .'réponse décide si le certificat est nominatif. '
             .'En attendant : PHOENIX_SIGNATURE_PROVIDER=fake.'
         );
     }
