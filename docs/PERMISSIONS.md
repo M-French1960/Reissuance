@@ -87,6 +87,24 @@ Légende — ✅ autorisé · ❌ refusé · 🔶 partiel, voir note
 concrète : sa file ne peut pas être une simple liste filtrable côté interface,
 c'est une portée appliquée en base.
 
+**Élargissement du 2026-09-26 (D-086) :** s'y ajoute l'état `signed`, **et
+seulement pour les demandes dont la signature est enregistrée à son nom**. Un
+signataire doit pouvoir relire l'acte qui porte sa signature. L'ouverture est
+bornée par trois conditions cumulatives — état signé, commune du maire,
+signature à son nom — et un adjoint de la même commune ne voit pas l'acte signé
+par son collègue.
+
+Ce que l'élargissement **n'ouvre pas** :
+
+- **aucune action** : `sign` et `returnToOfficer` exigent toujours
+  `awaiting_signature` ou `escalated`. Une tentative de resignature est
+  refusée par la Policy (403, et non plus 404 : le dossier existe bel et bien
+  pour lui, le nier serait un mensonge qui n'apprend rien à personne) ;
+- **aucune pièce d'identité** : `viewIdentityDocuments` exclut explicitement
+  le cas `signed` pour le maire. Une pièce d'identité se consulte **pour**
+  décider, pas après. Sans cette exclusion, l'ouverture de `view()` aurait été
+  héritée et la photo du citoyen serait restée consultable indéfiniment.
+
 ### 3.2 Données d'identité — selfies, pièces, numéro de pièce
 
 C'est la section la plus restrictive du système.
@@ -178,7 +196,7 @@ minimum :
 | R15 | `DROP TRIGGER` sur une garde de machine à états avec le compte applicatif | erreur MySQL 1142 — le droit `TRIGGER` n'est pas accordé (D-052) |
 | R16 | `GRANT` à l'échelle de la base pour le compte applicatif | détecté par `DatabasePrivilegesTest` |
 | R13 | Requête Eloquent sans `where` explicite sur les demandes, exécutée en tant qu'officier | ne retourne **que** son centre (portée globale) |
-| R13quater | Idem en tant que maire | **que** sa commune, et **que** `awaiting_signature` / `escalated` |
+| R13quater | Idem en tant que maire | **que** sa commune, et **que** `awaiting_signature` / `escalated` — plus les `signed` **qu'il a lui-même signés** (D-086) |
 | R17 | Démarrage de l'application avec la portée globale absente du modèle | refus de démarrer (D-053) |
 | R18 | Contournement de la portée ailleurs que dans `loadForAuthorization()` | détecté par `ScopeBypassTest` (D-053) |
 | R19 | Démarrage avec `DB_CONNECTION` pointant sur un autre moteur | refus de démarrer (D-054) |

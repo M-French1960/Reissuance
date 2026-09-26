@@ -257,6 +257,11 @@ class AuthorizationTest extends TestCase
         // Competence correcte, mais une autre commune.
         $ailleurs = $this->requestIn($this->centerB, RequestStatus::AwaitingSignature);
 
+        // Signee dans sa commune, mais PAS par lui : aucune ligne de signature
+        // ne porte son nom. L'ouverture de D-086 est limitee a ce qu'il a
+        // lui-meme signe, et ce cas la borne.
+        $this->requestIn($this->centerA, RequestStatus::Signed);
+
         Auth::login(User::factory()->mayor($this->centerA->commune)->create());
 
         $visibles = ReissuanceRequest::all();

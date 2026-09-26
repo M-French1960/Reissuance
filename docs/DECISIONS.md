@@ -4380,3 +4380,103 @@ La maquette demandait une adresse de retrait des copies et des horaires
 d'ouverture. Ils ne sont pas conservés : ils ne vaudraient d'être stockés
 qu'une fois **affichés au citoyen**, ce qui est une décision à part et une
 autre interface. L'écran le dit plutôt que de laisser croire à un oubli.
+
+---
+
+## D-086 — Le maire ne pouvait plus voir ce qu'il avait signé
+
+- **Date :** 2026-09-26
+- **Statut :** décidé
+
+Dernier écran du groupe 1 : l'historique des signatures du maire
+(`mayor-signed.html`). Contrairement aux deux précédents, celui-ci a demandé
+**d'ouvrir une portée de visibilité** — l'opération la plus risquée de ce
+projet.
+
+### Le problème que la maquette a révélé
+
+Une fois signée, une demande passe à l'état `signed`. La portée du maire ne
+couvrait que `awaiting_signature` et `escalated` : **la demande sortait donc
+entièrement de sa vue au moment précis où il la signait.**
+
+Conséquence concrète : le signataire ne pouvait plus savoir ce qu'il avait
+signé, ni relire l'acte qui porte sa signature, ni en récupérer la preuve.
+C'est intenable pour la personne qui en répond. Ce n'est pas la maquette qui a
+créé le besoin ; elle l'a rendu visible.
+
+### L'ouverture, et ses trois bornes
+
+La portée s'ouvre à l'état `signed`, sous **trois conditions cumulatives** :
+
+1. la demande est à l'état signé ;
+2. elle est dans la commune du maire ;
+3. une ligne de signature est enregistrée **à son nom**.
+
+La troisième est la plus importante. Un adjoint, ou un successeur, de la même
+commune **ne voit pas** l'acte signé par son collègue. C'est ce qu'impose la
+sous-requête sur `document_signatures`, et c'est le test le plus important du
+fichier : s'il tombe, l'ouverture a débordé d'un maire à toute une commune.
+
+### Ce que l'ouverture n'ouvre pas
+
+**Aucune action.** `sign` et `returnToOfficer` exigent toujours
+`awaiting_signature` ou `escalated`. La Policy décide des actions, la portée
+décide de la visibilité : ce sont deux barrières distinctes, et seule la
+seconde a bougé.
+
+Un test existant s'en est trouvé changé, et c'est la bonne réponse : la
+tentative de resignature renvoyait **404**, elle renvoie maintenant **403**.
+Tant que la signature faisait disparaître le dossier, le nier était exact.
+Maintenant qu'il le voit, le nier serait un mensonge — et n'apprendrait rien à
+personne, puisque c'est lui qui l'a signé.
+
+**Aucune pièce d'identité.** `viewIdentityDocuments` déléguait entièrement à
+`view()`. Sans précaution, l'ouverture aurait été héritée et la photo
+d'identité du citoyen serait restée consultable par le maire **indéfiniment**,
+longtemps après sa décision. Le cas `signed` est donc explicitement exclu, avec
+un test dédié : une pièce d'identité se consulte **pour** décider, pas après.
+
+### Trois choses que la maquette demandait et que j'ai refusées
+
+**Une colonne « Délivrance : à retirer / délivrée ».** Cette notion n'existe
+pas : rien dans le modèle de données ne suit le retrait d'une copie, et le
+service délivre un acte électronique. L'inventer aurait affiché un état faux à
+côté d'un acte signé — le pire endroit possible pour une approximation. Un test
+vérifie que ces deux mots n'apparaissent pas.
+
+**Un export CSV.** La liste porte le nom de naissance des titulaires. Un export
+nominatif est une donnée personnelle qui **sort** de la plateforme, sans trace
+de son destinataire ni de son usage. C'est le même refus qu'en D-084 pour
+l'officier, et pour la même raison : cela demande une décision, pas un bouton.
+
+**Un délai moyen présenté comme un indicateur.** Le délai entre la mise en
+attente et la signature est calculé et affiché — c'est un fait mesuré. Mais
+aucune cible ne lui est opposée, parce qu'aucun délai de traitement n'est
+arbitré (question ouverte **D8**). L'écran l'écrit noir sur blanc : « une
+mesure, pas une cible ».
+
+### Ce que le nom de naissance fait là
+
+Il est affiché dans l'historique. Ce n'est pas une exposition nouvelle : le
+maire a lu ce nom au moment de signer, puisque c'est lui qu'il a certifié.
+C'est aussi la seule manière de retrouver un acte quand on ne se souvient plus
+de sa référence.
+
+### Deux détails mesurés au navigateur
+
+Le séparateur décimal du délai moyen suivait le PHP et non la langue lue :
+« 9.9 jours » en français. Il suit maintenant la langue — « 9,9 jours »,
+« 9.9 days ».
+
+En mode carte, les deux liens d'une même cellule se séparaient : le premier
+restait accroché à l'intitulé, le second tombait seul à la ligne suivante, sans
+qu'on voie qu'ils forment un groupe. Ils passent maintenant en bloc sous
+l'intitulé, chacun avec sa hauteur de cible.
+
+Mesures : 1366, 390 et 320 px — aucun débordement, aucune cible sous 44 px,
+ordre des titres `H1 H2 H2 H2`, aucun refus CSP. Le graphique réutilise la
+technique de D-084 (SVG sans `viewBox`, géométrie en attributs), pour la même
+raison : `style-src 'self'` refuserait un `style="height: …"` en silence.
+
+L'écran a été vérifié **après une vraie signature**, faite dans le navigateur
+par le parcours complet du maire — et non sur des lignes posées à la main.

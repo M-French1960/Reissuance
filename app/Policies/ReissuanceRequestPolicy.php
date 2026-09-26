@@ -38,11 +38,20 @@ class ReissuanceRequestPolicy
             UserRole::Officer => $request->civil_status_center_id === $user->civil_status_center_id
                 && $request->status !== RequestStatus::Draft,
 
+            /*
+             * Le maire : les deux etats ou il decide, plus CE QU'IL A SIGNE
+             * (D-086). Un signataire doit pouvoir relire l'acte qui porte sa
+             * signature — sinon il repond d'un document qu'il ne peut plus
+             * consulter.
+             *
+             * La signature doit etre LA SIENNE : un adjoint de la meme commune
+             * ne relit pas l'acte signe par son collegue.
+             */
             UserRole::Mayor => $request->commune_id === $user->commune_id
-                && in_array($request->status, [
+                && (in_array($request->status, [
                     RequestStatus::AwaitingSignature,
                     RequestStatus::Escalated,
-                ], true),
+                ], true) || self::aSigneLuiMeme($user, $request)),
 
             UserRole::Admin => false,
         };
@@ -164,7 +173,32 @@ class ReissuanceRequestPolicy
      */
     public function viewIdentityDocuments(User $user, ReissuanceRequest $request): bool
     {
+        /*
+         * LA SIGNATURE FERME LA PIECE D'IDENTITE, ET C'EST VOULU (D-086).
+         *
+         * `view()` s'ouvre desormais a ce que le maire a signe, pour qu'il
+         * puisse relire son propre acte. Sans cette ligne, cette ouverture
+         * serait heritee ici et la photo d'identite du citoyen resterait
+         * consultable par le maire indefiniment, longtemps apres la decision.
+         * Une piece d'identite se consulte POUR decider, pas apres.
+         */
+        if ($user->role === UserRole::Mayor && $request->status === RequestStatus::Signed) {
+            return false;
+        }
+
         return $user->role !== UserRole::Admin && $this->view($user, $request);
+    }
+
+    /**
+     * Cette demande porte-t-elle la signature de ce maire ?
+     *
+     * La relation est chargee au besoin : la Policy est appelee sur un modele
+     * deja en memoire, et une demande signee en porte exactement une.
+     */
+    private static function aSigneLuiMeme(User $user, ReissuanceRequest $request): bool
+    {
+        return $request->status === RequestStatus::Signed
+            && $request->signature()->where('mayor_id', $user->id)->exists();
     }
 
     /**

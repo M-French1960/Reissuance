@@ -49,6 +49,7 @@ return [
     'signatures' => 'Signatures',
     'accounts' => 'Accounts',
     'centers' => 'Centres',
+    'signed_acts' => 'Signed acts',
     'assignments' => 'Assignments',
     'audit_log' => 'Audit log',
     'settings' => 'Settings',

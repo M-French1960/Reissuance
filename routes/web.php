@@ -24,6 +24,7 @@ use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\Mayor\DashboardController as MayorDashboardController;
 use App\Http\Controllers\Mayor\DecisionController as MayorDecisionController;
 use App\Http\Controllers\Mayor\ReviewController;
+use App\Http\Controllers\Mayor\SignedActsController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Officer\DecisionController;
 use App\Http\Controllers\Officer\QueueController;
@@ -149,12 +150,14 @@ Route::middleware('auth')->group(function (): void {
         /*
          * Parcours maire.
          *
-         * La portee globale restreint deja a sa commune ET aux deux etats ou
-         * il a competence : une demande de sa commune en pending ou
-         * under_review lui reste invisible (4.2 du brief).
+         * La portee globale restreint deja a sa commune ET aux etats ou il a
+         * competence : une demande de sa commune en pending ou under_review lui
+         * reste invisible (4.2 du brief). S'y ajoute ce qu'il a LUI-MEME signe
+         * (D-086), sans qu'aucune action ne s'ouvre pour autant.
          */
         Route::middleware('role:mayor')->prefix('signature')->name('mayor.')->group(function (): void {
             Route::get('/tableau-de-bord', MayorDashboardController::class)->name('dashboard');
+            Route::get('/actes-signes', SignedActsController::class)->name('signed');
             Route::get('/dossiers/{reissuanceRequest}', ReviewController::class)->name('review');
             // Le defi a presenter a l'appareil, lie a CE dossier (D-070).
             Route::get('/dossiers/{reissuanceRequest}/defi', [SigningDeviceController::class, 'challenge'])

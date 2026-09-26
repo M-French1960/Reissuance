@@ -49,6 +49,7 @@ return [
     'signatures' => 'Signatures',
     'accounts' => 'Comptes',
     'centers' => 'Centres',
+    'signed_acts' => 'Actes signés',
     'assignments' => 'Affectations',
     'audit_log' => "Journal d'audit",
     'settings' => 'Réglages',

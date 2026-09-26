@@ -276,10 +276,17 @@ class SignatureTest extends TestCase
     /**
      * Un état terminal ne se resigne pas.
      *
-     * Une fois signée, la demande sort de la portée du maire — qui ne voit
-     * que `awaiting_signature` et `escalated`. Le refus est donc un 404 : le
-     * dossier n'existe plus pour lui. Le déclencheur MySQL refuserait de
-     * toute façon toute sortie d'un état terminal.
+     * LE REFUS EST PASSÉ DE 404 À 403, ET C'EST LA BONNE RÉPONSE (D-086).
+     * Tant que la signature faisait sortir la demande de la portée du maire,
+     * le dossier n'existait plus pour lui : 404. Depuis qu'il voit ce qu'il a
+     * lui-même signé, le dossier existe bel et bien pour lui — le nier serait
+     * un mensonge, et n'apprendrait rien à personne : il sait que cet acte
+     * existe, puisque c'est lui qui l'a signé. La Policy `sign` refuse donc
+     * l'action, et c'est un 403.
+     *
+     * Ce qui compte n'a pas bougé, et les deux assertions du bas le figent :
+     * aucune seconde signature, et l'état reste « signé ». Le déclencheur
+     * MySQL refuserait de toute façon toute sortie d'un état terminal.
      */
     #[Test]
     public function un_acte_deja_signe_ne_peut_pas_etre_resigne(): void
@@ -291,7 +298,7 @@ class SignatureTest extends TestCase
 
         $this->actingAs($this->maire)
             ->post(route('mayor.sign', $this->demande->refresh()))
-            ->assertNotFound();
+            ->assertForbidden();
 
         $this->assertSame(1, DocumentSignature::count());
         $this->assertSame(RequestStatus::Signed, $this->demande->refresh()->status);

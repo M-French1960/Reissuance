@@ -30,7 +30,8 @@
         ],
         UserRole::Mayor => [
             ['dashboard', 'dashboard', 'common.dashboard', 'dashboard'],
-            ['mayor.dashboard', 'pen', 'common.signatures', 'mayor.*'],
+            ['mayor.dashboard', 'pen', 'common.signatures', ['mayor.dashboard', 'mayor.review', 'mayor.device-challenge']],
+            ['mayor.signed', 'check', 'common.signed_acts', 'mayor.signed'],
             ['notifications.index', 'bell', 'common.notifications', 'notifications.*'],
             ['two-factor.setup', 'shield', 'common.security', 'two-factor.*'],
         ],
@@ -51,7 +52,10 @@
 <ul class="shell__nav">
     @foreach ($liens as [$route, $icone, $cle, $motif])
         <li>
-            <a href="{{ route($route) }}" @if (request()->routeIs($motif)) aria-current="page" @endif>
+            {{-- Le motif peut etre une liste : « Signatures » reste l'entree
+                 courante sur la revue d'un dossier, sans pour autant s'allumer
+                 sur l'historique des actes signes, qui a la sienne. --}}
+            <a href="{{ route($route) }}" @if (request()->routeIs(...(array) $motif)) aria-current="page" @endif>
                 <x-icon :name="$icone" />
                 {{ __($cle) }}
                 @if ($route === 'notifications.index' && $nonLues > 0)

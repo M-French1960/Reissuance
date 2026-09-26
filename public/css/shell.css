@@ -791,3 +791,73 @@
   .center-card__nums > div { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-2); }
   .center-card__nums dd { margin: 0; }
 }
+
+/* --- Actes signes du maire (D-086) ---------------------------------------- */
+
+/*
+   UNE SEULE SERIE, DONC PAS DE PROBLEME D'ADJACENCE. Le graphique de D-084
+   empile trois couleurs et a demande un validateur de palette ; ici une seule
+   teinte est posee, celle de la marque, dont le contraste sur la surface de la
+   carte est deja verifie par les jetons.
+*/
+.chart__rect--signed { fill: var(--color-brand-700); }
+
+/*
+   Trois mesures cote a cote sur un ecran large, empilees sur un telephone.
+   `auto-fit` avec un minimum en `rem` le fait sans media query : sous
+   3 x 11 rem, la grille passe d'elle-meme a moins de colonnes.
+*/
+.kv {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: var(--space-3);
+  margin: var(--space-4) 0 var(--space-2);
+}
+
+.kv > div {
+  min-width: 0;
+  padding: var(--space-3);
+  background: var(--color-brand-050);
+  border-radius: var(--radius-md);
+}
+
+.kv dt {
+  font-size: var(--text-sm);
+  color: var(--color-ink-500);
+  overflow-wrap: anywhere;
+}
+
+.kv dd {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+/*
+   DEUX LIENS DANS UNE MEME CELLULE.
+
+   Sur un ecran large ils se suivent sur la ligne, simplement espaces : deux
+   cibles tactiles collees se confondent au pouce.
+
+   En mode carte (sous 720 px), la cellule affiche l'intitule a gauche et la
+   valeur a droite. Deux liens n'y tiennent pas : le premier restait accroche a
+   l'intitule et le second tombait seul a la ligne suivante, sans qu'on voie
+   qu'ils forment un groupe. Ils passent donc EN BLOC sous l'intitule, alignes
+   a gauche, chacun avec sa hauteur de cible.
+*/
+.cell-actions { display: flex; flex-wrap: wrap; gap: var(--space-4); }
+
+@media (max-width: 720px) {
+  .table-wrap td .cell-actions {
+    flex-basis: 100%;
+    gap: var(--space-2) var(--space-4);
+    margin-top: var(--space-1);
+  }
+
+  .table-wrap td .cell-actions a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--tap-target);
+  }
+}
