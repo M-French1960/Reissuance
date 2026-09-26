@@ -52,6 +52,7 @@ return [
     'signed_acts' => 'Actes signés',
     'assignments' => 'Affectations',
     'audit_log' => "Journal d'audit",
+    'payments' => 'Encaissements',
     'settings' => 'Réglages',
     'service_status' => 'État du service',
     'component_gallery' => 'Galerie de composants',

@@ -7,6 +7,7 @@ use App\Http\Controllers\ActDraftController;
 use App\Http\Controllers\Admin\AssignmentController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\CenterController;
+use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Citizen\AttachmentController;
@@ -323,6 +324,17 @@ Route::middleware('auth')->group(function (): void {
             Route::get('/reglages', [SettingController::class, 'index'])->name('settings.index');
 
             Route::get('/journal', [AuditLogController::class, 'index'])->name('audit.index');
+
+            /*
+             * Encaissements (D-095) : CONSULTATION ET EXPORT, rien d'autre.
+             *
+             * Aucune route de remboursement, et ce n'est pas un oubli : le
+             * prestataire de paiement est un adaptateur factice, donc une
+             * route de remboursement annoncerait qu'un virement est parti
+             * alors que rien ne partirait. L'ecran dit ce qui manque.
+             */
+            Route::get('/encaissements', [AdminPaymentController::class, 'index'])->name('payments.index');
+            Route::get('/encaissements/export', [AdminPaymentController::class, 'export'])->name('payments.export');
         });
     });
 });

@@ -52,6 +52,7 @@ return [
     'signed_acts' => 'Signed acts',
     'assignments' => 'Assignments',
     'audit_log' => 'Audit log',
+    'payments' => 'Payments',
     'settings' => 'Settings',
     'service_status' => 'Service status',
     'component_gallery' => 'Component gallery',

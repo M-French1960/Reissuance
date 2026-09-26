@@ -5388,3 +5388,98 @@ variable long se coupe en fin de ligne (`..._DAY` / `S`). C'est le traitement
 existant de tous les noms longs de cet écran, pas un défaut introduit ici, et
 il n'y a aucun débordement. Le signaler vaut mieux que le corriger au passage.
 
+
+---
+
+## D-095 — Les encaissements, et les trois choses que cet écran refuse de faire
+
+- **Date :** 2026-09-26
+- **Statut :** décidé
+
+`admin-payments.html` était la dernière maquette du groupe « constructible sur
+les données existantes » de mon relevé D-083. Les trois autres ont été faites
+(D-084, D-085, D-086) ; celle-ci était restée, sans raison valable.
+
+Elle est faite. Mais la maquette prévoyait trois choses que je n'ai pas
+reproduites, et c'est le fond de la conception.
+
+### 1. Aucun numéro de payeur
+
+La maquette portait une colonne « Numéro » : le numéro Mobile Money du citoyen.
+C'est une donnée personnelle, et **le rapprochement financier n'en dépend pas** —
+la référence rendue par l'opérateur identifie la transaction sans identifier
+personne. `payer_reference` et `provider_payload` sont donc hors de la liste
+blanche de colonnes, sur le modèle du journal d'audit qui ferme la sienne.
+
+### 2. Aucune référence de dossier
+
+`RequestVisibilityScope` décrit la cécité de l'administrateur comme **« le
+point le plus contre-intuitif de la matrice, et le plus important »**. Rattacher
+ici la référence du dossier aurait demandé un **quatrième contournement de
+portée** — pour un simple confort de lecture. L'unité de cet écran est donc le
+**paiement**, pas le dossier payé.
+
+C'est un arbitrage que je te signale : si un rapprochement comptable exige de
+relier un encaissement à un dossier, la réponse n'est pas d'élargir cette
+cécité au détour d'un écran, c'est de la rouvrir explicitement.
+
+### 3. Aucun bouton « rembourser »
+
+La maquette portait un bouton et un `TODO : POST /api/admin/refunds`. Le
+prestataire de paiement est un adaptateur **factice** : ce bouton annoncerait
+qu'un virement est parti alors que rien ne serait parti. C'est exactement le
+défaut que j'ai refusé sur le formulaire de contact de `help.html`.
+
+L'écran dit donc ce qui manque, et ce n'est pas du code : la **règle** (qui est
+remboursé, dans quels cas, sous quel délai, sur quel fondement — question D9) et
+un **vrai prestataire**. Les remboursements déjà enregistrés sont listés : c'est
+un fait. Un test refuse l'apparition de toute route contenant `refund` ou
+`rembours`, pour que ce choix ne se défasse pas en silence.
+
+### L'export, et le détail qui compte
+
+Un export sort la donnée du système : ce qui part dans un fichier n'est plus
+protégé par aucune Policy. Il est donc **journalisé**, comme la consultation
+des réglages en D-060.
+
+Deux détails qui ne se voient pas :
+
+- **L'injection de formule.** `provider_reference` vient de l'opérateur, donc
+  de l'extérieur. Une cellule commençant par `=`, `+`, `-` ou `@` est exécutée
+  comme une **formule** à l'ouverture dans un tableur, et certaines joignent un
+  serveur distant. Les valeurs sont préfixées d'une apostrophe. Un test le fige.
+- **Le montant.** `Money::format()` s'adresse à un lecteur et suit sa langue :
+  dans un CSV, « 1 500 » n'est plus un nombre pour un tableur, et une virgule
+  décimale française **coupe la cellule en deux au milieu du montant**. J'ai
+  ajouté `toMachineString()`, qui rend un point et rien d'autre.
+
+Les totaux refusent d'additionner des devises différentes : additionner 1000
+XAF et 5,00 EUR donnerait un nombre faux, donc on n'affiche aucun total plutôt
+qu'un total faux.
+
+### Ce que le montage de test m'a appris
+
+Deux barrières se sont manifestées, et j'en ignorais une :
+
+- **`status` n'est pas dans `$fillable` de `Payment`.** `Payment::create(['status' => Settled])`
+  l'ignore **en silence** : mon premier montage créait des paiements `pending`
+  en croyant les créer acquittés, sans le moindre avertissement.
+- **Un déclencheur refuse toute transition de paiement sans ligne d'audit**,
+  exactement comme sur les demandes. `forceFill` échoue en base. Je suis donc
+  passé par `PaymentService::apply()`, le seul chemin qui laisse une trace —
+  et qui m'a rappelé au passage qu'un paiement passe par « autorisé » avant
+  d'être « acquitté ».
+
+Dans les deux cas la bonne réponse était d'emprunter le chemin réel, pas de le
+contourner pour faire passer un test.
+
+### Vérifié
+
+1019 tests, 1002 passent, 16 ignorés. Écran relu au navigateur à 1366 et
+390 px : aucun débordement, aucun refus CSP. Les deux tests d'absence vérifiés
+par mutation — en remettant `payer_reference` dans la liste blanche et dans la
+vue, le test tombe.
+
+Ma garde typographique m'a attrapé au passage : j'avais utilisé des tirets longs
+comme valeur « vide ». Ils sont devenus des libellés traduits.
+

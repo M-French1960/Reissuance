@@ -109,6 +109,28 @@ final readonly class Money
         ).' '.$this->currency;
     }
 
+    /**
+     * Rendu MACHINE : ni separateur de milliers, ni virgule decimale (D-095).
+     *
+     * `format()` s'adresse a un lecteur et suit sa langue. Dans un fichier CSV
+     * cela produit deux defauts : « 1 500 » n'est plus un nombre pour un
+     * tableur, et une virgule decimale francaise coupe la cellule en deux au
+     * milieu du montant. Un export se relit par un programme ; il lui faut un
+     * point et rien d'autre.
+     *
+     * Le montant ne bouge pas, seule son ecriture change.
+     */
+    public function toMachineString(): string
+    {
+        if ($this->minorUnit === 0) {
+            return (string) $this->minorAmount;
+        }
+
+        $diviseur = 10 ** $this->minorUnit;
+
+        return number_format($this->minorAmount / $diviseur, $this->minorUnit, '.', '');
+    }
+
     public function __toString(): string
     {
         return $this->format();

@@ -89,4 +89,16 @@ class UserPolicy
     {
         return $actor->role === UserRole::Admin;
     }
+
+    /**
+     * Consulter les encaissements (D-095).
+     *
+     * Meme logique que le journal d'audit : c'est une capacite de la CONSOLE
+     * d'administration, pas un droit sur un dossier. L'ecran qu'elle ouvre ne
+     * rend aucune colonne de demande et aucun numero de payeur.
+     */
+    public function viewPayments(User $actor): bool
+    {
+        return $actor->role === UserRole::Admin;
+    }
 }
