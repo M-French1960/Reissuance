@@ -248,8 +248,12 @@ ignore s'il vaut quelque chose.
   biométrique** au sens du droit applicable ? Si oui, quel régime particulier
   s'y attache ?
 - B3. Quelle est la **durée de conservation autorisée** du selfie et de la photo
-  de pièce d'identité ? *Cette réponse est directement paramétrable dans le
-  système (`request_attachments.purge_after`) — je ne peux pas la deviner.*
+  de pièce d'identité ? *Le mécanisme attend la réponse depuis D-094 : pose
+  `PHOENIX_ATTACHMENT_RETENTION_DAYS` et chaque nouvelle pièce porte une
+  échéance. Tant que la variable est vide, les pièces sont conservées **sans
+  date de purge**, ce que le contrôle de santé dit en avertissement. Je ne peux
+  pas deviner ce nombre : la loi n° 2024/017 ne le chiffre pas, elle renvoie à
+  un référentiel que l'Autorité doit publier (§0.3).*
 - B4. La conservation reste-t-elle autorisée après délivrance de l'acte, et
   pour quelle finalité — preuve, contrôle, contentieux ?
 - B5. Quelles mentions d'information doivent figurer avant la collecte ? Quel
@@ -337,7 +341,7 @@ d'avancer sans réponse.**
 | Sujet | Comportement actuel |
 |---|---|
 | Signature | `FakeSignatureProvider`, document **portant en clair la mention qu'il est sans valeur juridique** |
-| Rétention des images | Champ `purge_after` présent, **aucune durée par défaut codée** ; la purge est écrite mais non planifiée tant que B3 n'a pas de réponse |
+| Rétention des images | Mécanisme **effectif depuis D-094** : `purge_after` écrite au dépôt, purge par `php artisan phoenix:purge-attachments --apply`. **Aucune durée par défaut** (B3), donc sans `PHOENIX_ATTACHMENT_RETENTION_DAYS` rien n'est purgé — et l'exposition est **signalée** par le contrôle de santé et l'écran des réglages, jamais masquée. Non planifiée : planifier supposerait la durée que B3 n'a pas. *Cette ligne affirmait « la purge est écrite » avant qu'elle ne le soit ; c'est ainsi qu'un trou survit — le document rassure et personne ne vérifie.* |
 | Tarif | Aucun montant nulle part |
 | Délai indicatif au citoyen | Aucun chiffre affiché |
 | Bases externes | Adaptateurs factices, aucune forme d'API présupposée |

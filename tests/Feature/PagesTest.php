@@ -33,9 +33,31 @@ class PagesTest extends TestCase
         $this->assertTrue($labels->contains('State machine trigger'));
         $this->assertTrue($labels->contains('Audit log is append only'));
 
-        foreach ($response->json('checks') as $check) {
+        /*
+         * Les sondes CONSULTATIVES sont exclues, et la nuance compte (D-094).
+         *
+         * Une sonde consultative signale une exposition sans declarer la panne.
+         * La conservation des pieces en est une : la duree legale est la
+         * question ouverte B3, et sans ce partage l'instance se dirait
+         * degradee pour toujours. Exiger le vert sur ces sondes reviendrait a
+         * exiger qu'un arbitrage juridique soit rendu pour que la suite passe.
+         *
+         * Ce qui reste exige, et n'est pas negociable : toute sonde qui n'est
+         * PAS consultative doit etre verte. Aucune barriere de securite n'a le
+         * droit de se declarer consultative pour se taire.
+         */
+        $bloquantes = collect($response->json('checks'))
+            ->reject(fn (array $check): bool => $check['advisory'] ?? false);
+
+        $this->assertGreaterThan(0, $bloquantes->count(), 'Toutes les sondes se sont declarees consultatives.');
+
+        foreach ($bloquantes as $check) {
             $this->assertTrue($check['ok'], "Check failing: {$check['label']}, {$check['detail']}");
         }
+
+        // Et la sonde consultative existe bien : sans cela ce test se
+        // contenterait de ne rien verifier le jour ou elle disparait.
+        $this->assertTrue($labels->contains('Identity document retention'));
     }
 
     /**

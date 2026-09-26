@@ -50,6 +50,11 @@ return [
             'queue_stalled' => 'The queue has not moved for :minutes minutes. Nobody is being notified of anything: check that the worker is running.',
             'queue_failed' => ':count notification(s) failed and were never delivered.',
             'queue_unreadable' => 'The queue cannot be read.',
+            'retention' => 'Identity document retention',
+            'retention_ok' => 'Bounded: every document expires :days days after capture.',
+            'retention_unset' => 'No retention period is configured, so :count document(s) are kept with no expiry date. The legal period is open question B3; until it is answered, set PHOENIX_ATTACHMENT_RETENTION_DAYS or accept indefinite retention knowingly.',
+            'retention_legacy' => 'New documents expire after :days days, but :count document(s) captured earlier carry no expiry date and will never be purged.',
+            'retention_unreadable' => 'Document retention cannot be read.',
         ],
         'checks_aria' => 'Health checks',
         'check' => 'Check',
@@ -57,6 +62,7 @@ return [
         'detail' => 'Detail',
         'ok' => 'OK',
         'failing' => 'Failing',
+        'advisory' => 'Advisory',
     ],
 
     'users' => [
@@ -171,10 +177,12 @@ return [
             'max_upload_size' => 'Maximum accepted size',
             'compression_target' => 'Target after compression',
             'accepted_formats' => 'Accepted formats',
+            'attachment_retention' => 'Identity document retention',
         ],
         'warnings' => [
             'no_amount' => 'Payments are switched on with no fee set: the platform will refuse to serve.',
             'no_legal_basis' => 'No citable legal basis: question 1 of docs/INTEGRATIONS.md section 5.',
+            'no_retention' => 'Not set: identity documents and selfies are kept indefinitely. The legal period is open question B3.',
             'sandbox' => 'Payments are not real.',
             'compromised_check' => 'This check queries a remote service and LETS THROUGH if that service is unreachable (D-015).',
         ],
@@ -182,6 +190,7 @@ return [
             'minutes' => ':count minutes',
             'seconds' => ':count seconds',
             'kilobytes' => ':count KB',
+            'days' => '{0} none|{1} :count day|[2,*] :count days',
         ],
 
         'title' => 'Settings',

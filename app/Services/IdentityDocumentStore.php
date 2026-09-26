@@ -8,6 +8,7 @@ use App\Models\AuditLog;
 use App\Models\ReissuanceRequest;
 use App\Models\RequestAttachment;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -66,8 +67,9 @@ final class IdentityDocumentStore
 
         $path = RequestAttachment::generatePath($kind);
         $checksum = hash_file('sha256', $file->getRealPath());
+        $capture = CarbonImmutable::now();
 
-        return DB::transaction(function () use ($request, $file, $kind, $actor, $path, $mime, $checksum): RequestAttachment {
+        return DB::transaction(function () use ($request, $file, $kind, $actor, $path, $mime, $checksum, $capture): RequestAttachment {
             // Une nouvelle piece du meme type remplace la precedente : le
             // citoyen peut reprendre une photo ratee (5.2 du brief).
             $previous = $request->attachments()->where('kind', $kind)->get();
@@ -85,7 +87,12 @@ final class IdentityDocumentStore
                 'mime_type' => $mime,
                 'size_bytes' => Storage::disk('private')->size($path),
                 'checksum_sha256' => $checksum,
-                'captured_at' => now(),
+                'captured_at' => $capture,
+                // L'echeance est ecrite UNE FOIS, au depot (D-094). La purge la
+                // lit et ne la recalcule pas : sinon un changement de reglage
+                // avancerait l'echeance de pieces deja deposees, et la colonne
+                // redeviendrait ce qu'elle etait — decorative.
+                'purge_after' => AttachmentRetention::dueDateFor($capture),
             ]);
 
             foreach ($previous as $old) {

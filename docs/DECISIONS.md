@@ -5248,3 +5248,143 @@ et en lisant ce qu'il produisait**.
 
 993 tests, 977 passent, 16 ignorés, aucun échec.
 
+
+---
+
+## D-094 — Une colonne indexée qui ne promettait rien à personne
+
+- **Date :** 2026-09-26
+- **Statut :** décidé pour le mécanisme, ouvert pour la durée
+
+`request_attachments.purge_after` existait **depuis la première migration**.
+Déclarée. Castée en date. **Indexée** — et un index ne se pose que pour servir
+une requête. Cette requête n'a jamais été écrite, et la colonne n'a jamais été
+renseignée.
+
+Autrement dit : **chaque pièce d'identité et chaque selfie était conservé
+indéfiniment**, derrière une colonne qui affirmait le contraire. C'est la
+donnée la plus sensible du système, et c'était la seule dont rien ne bornait la
+durée.
+
+### Comment cela a tenu si longtemps
+
+Le dossier de conformité disait, noir sur blanc, dans le tableau « ce que je
+fais en attendant les réponses » :
+
+> Rétention des images | Champ `purge_after` présent, aucune durée par défaut
+> codée ; **la purge est écrite** mais non planifiée tant que B3 n'a pas de
+> réponse
+
+La purge n'était pas écrite. Cette ligne était fausse, et c'est exactement
+ainsi qu'un trou survit : **le document rassure, donc personne ne vérifie**.
+J'ai déjà rencontré ce mécanisme ce jour même, avec une garde de test qui
+existait et que je ne nourrissais pas (D-093). C'est la même maladie sous une
+autre forme.
+
+### Ce que je n'ai pas fait : choisir la durée
+
+La question B3 n'a pas de réponse. La loi n° 2024/017 ne chiffre pas de délai :
+elle renvoie à un référentiel que l'Autorité doit publier, et que je n'ai pas
+trouvé. Le §10 interdit de coder une hypothèse juridique. Écrire 30, 90 ou 365
+dans une configuration, c'est inventer la réponse, puis l'oublier, puis la
+retrouver un jour sous la forme « le système supprime après 90 jours, sur
+quelle base ? ».
+
+`PHOENIX_ATTACHMENT_RETENTION_DAYS` n'a donc **aucune valeur par défaut**.
+Non posée, rien n'est purgé — et cette exposition est **dite**, en
+avertissement, à deux endroits : le contrôle de santé et l'écran des réglages.
+Un exploitant ne doit pas découvrir dans un audit que les pièces d'identité
+sont gardées pour toujours.
+
+### Les deux règles de sûreté comptent plus que le mécanisme
+
+Un mécanisme de suppression qui se trompe ne perd pas des données : il détruit
+une vérification en cours. Et une pièce d'identité supprimée à tort ne se
+redemande pas — elle se **rephotographie**, donc le demandeur recommence.
+
+1. **Une pièce sans échéance n'est jamais purgée.** Les pièces déposées avant
+   ce mécanisme ont `purge_after` à NULL. Deviner leur terme depuis
+   `captured_at` reviendrait à supprimer des données sur une règle que
+   personne n'a posée. Elles sont signalées, jamais supprimées — y compris
+   quand une durée est posée après coup.
+2. **Une pièce n'est purgée que si la demande est terminée.** Une échéance
+   courte ne doit pas désarmer une vérification en cours : l'officier a besoin
+   de la pièce pour vérifier, le maire pour décider. Une pièce échue sur un
+   dossier vivant est conservée **et comptée à part**, pas passée sous silence.
+
+Les deux sont vérifiées par mutation : en retirant le filtre sur l'état
+terminal, le test voit immédiatement une pièce disparaître sous un dossier en
+cours.
+
+### La commande ne supprime rien sans qu'on le lui demande
+
+`phoenix:purge-attachments` **recense** et n'agit que sur `--apply`. Une entrée
+d'ordonnanceur porte alors le drapeau, ce qui rend l'intention lisible dans la
+configuration de déploiement au lieu d'être implicite dans le nom de la
+commande. Le coût est un mot écrit une fois ; le gain est qu'un lancement à la
+main ne détruit rien par surprise.
+
+Elle n'est **pas planifiée**, et le projet n'a toujours aucune tâche planifiée.
+Planifier supposerait la durée que B3 n'a pas donnée.
+
+La purge laisse une trace au journal en ajout seul, **sans acteur** — personne
+n'a décidé cette suppression, elle applique un réglage, et imputer un
+administrateur serait une fausse imputation. La tension de la question B6,
+droit à l'effacement contre journal inaltérable, se résout ainsi : on efface le
+**document**, on garde le **fait**.
+
+### Deux gardes se sont retournées contre moi, et les deux avaient raison
+
+**La portée de visibilité.** La purge doit voir tous les dossiers.
+`RequestVisibilityScope` ne s'applique pas hors authentification, ce qui rend
+la console sûre — mais sous un utilisateur, la portée **restreindrait
+silencieusement le balayage** : la purge tournerait, annoncerait un succès, et
+laisserait des pièces derrière elle. Le §16 ne tolère le contournement que dans
+trois méthodes auditées ; en ajouter une quatrième élargirait une surface
+sensible. J'ai donc **exigé le contexte** plutôt que de le contourner, avec un
+échec bruyant. Le test de la commande s'est fait attraper par cette garde, et
+elle avait raison : en test, `artisan()` hérite de la session ouverte, ce qu'un
+vrai `php artisan` n'a pas. J'ai reproduit le contexte réel, je ne l'ai pas
+assoupli.
+
+**`ScopeBypassTest`, pour la troisième fois du projet** — et cette fois sur un
+simple **commentaire**, parce qu'il cherche l'idiome par recherche de texte.
+Je ne l'ai pas rendu plus fin. Une garde qui se met à distinguer le code des
+commentaires acquiert une surface de bug, et sa raison d'être est qu'un `grep`
+sur `app/` reste un audit fiable. La sur-détection m'a coûté une phrase
+reformulée ; l'assouplir aurait coûté la propriété.
+
+### Un troisième état pour le contrôle de santé
+
+Ma sonde faisait répondre **503** à `/sante`, ce qui veut dire « sortez cette
+instance du service, réveillez quelqu'un ». Une question juridique que personne
+ne peut trancher n'est pas une panne de disponibilité : l'instance se serait
+déclarée en panne **pour toujours**, en attendant un arbitrage qui peut ne
+jamais venir.
+
+Et une sonde rouge en permanence est une sonde qu'on cesse de lire — le jour où
+la base tombe, le rouge ne se distinguerait plus du bruit. **C'est pire pour la
+sécurité qu'un avertissement clair.**
+
+La page de santé a donc trois états au lieu de deux : vert, **à signaler**,
+rouge. Les sondes consultatives s'affichent sans faire basculer l'état global.
+Le test qui exigeait le vert partout connaît maintenant la nuance — et exige en
+retour que **toute sonde non consultative** soit verte, pour qu'aucune barrière
+de sécurité ne puisse se déclarer consultative afin de se taire.
+
+Je n'ai pas corrigé les deux tests en les alignant sur mon code : le défaut
+était dans la conception de la page, qui n'avait que deux états pour trois
+situations.
+
+### Vérifié
+
+1005 tests, 989 passent, 16 ignorés. Les deux écrans relus dans un navigateur à
+1366 et 390 px : aucun débordement, aucun refus CSP, et les deux disent la même
+chose que le code. Le contrôle de santé a immédiatement signalé la réalité de
+la base de développement — une pièce conservée sans échéance.
+
+*Observation, sans correction :* sur l'écran des réglages en 390 px, un nom de
+variable long se coupe en fin de ligne (`..._DAY` / `S`). C'est le traitement
+existant de tous les noms longs de cet écran, pas un défaut introduit ici, et
+il n'y a aucun débordement. Le signaler vaut mieux que le corriger au passage.
+

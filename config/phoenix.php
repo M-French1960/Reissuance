@@ -223,5 +223,22 @@ return [
         'target_bytes' => 250 * 1024,
         'max_dimension' => 1600,
         'accepted_mime' => ['image/jpeg', 'image/png', 'image/webp'],
+
+        /*
+         * Duree de conservation d'une piece d'identite ou d'un selfie, en
+         * jours.
+         *
+         * AUCUNE VALEUR PAR DEFAUT, ET C'EST DELIBERE (D-094). La question B3
+         * de docs/COMPLIANCE_OPEN_QUESTIONS.md demande cette duree ; la loi
+         * n 2024/017 ne la chiffre pas, elle renvoie a un referentiel que
+         * l'Autorite doit publier et que nous n'avons pas trouve. Le 10 du
+         * brief interdit de coder une hypothese juridique : ecrire 30, 90 ou
+         * 365 ici serait inventer la reponse.
+         *
+         * Non renseignee, les pieces sont conservees SANS DATE DE PURGE. Ce
+         * n'est pas un defaut silencieux : le controle de sante et l'ecran des
+         * reglages le disent tous les deux, en avertissement.
+         */
+        'retention_days' => env('PHOENIX_ATTACHMENT_RETENTION_DAYS'),
     ],
 ];

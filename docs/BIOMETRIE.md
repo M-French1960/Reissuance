@@ -102,6 +102,11 @@ fonctionne — mais **elles bloquent une mise en service réelle** :
    utilisée.
 4. **Quelle conservation** pour les photographies elles-mêmes, qui deviennent
    des données biométriques dès lors qu'elles servent à une comparaison ?
+   *Le mécanisme existe depuis D-094 — `purge_after`, écrite au dépôt, et
+   `php artisan phoenix:purge-attachments --apply` — mais **la durée reste
+   cette question**. Non posée, rien n'est purgé, et l'exposition est signalée
+   plutôt que masquée. Avoir le mécanisme ne répond pas à la question ; cela
+   rend seulement la réponse applicable le jour où elle arrive.*
 5. **Qui répond d'une erreur** — l'officier qui a suivi l'avis, le prestataire
    qui l'a rendu, ou la commune ?
 

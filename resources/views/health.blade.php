@@ -35,10 +35,27 @@
                         @foreach ($checks as $check)
                             <tr>
                                 <td data-label="{{ __('admin.health.check') }}">{{ $check['label'] }}</td>
+                                {{--
+                                    Trois etats depuis D-094 : une sonde
+                                    consultative signale sans declarer la
+                                    panne. Le rouge doit rester rare pour
+                                    rester lu.
+                                --}}
+                                @php
+                                    $consultative = ($check['advisory'] ?? false) && ! $check['ok'];
+                                    $ton = match (true) {
+                                        $check['ok'] => 'success',
+                                        $consultative => 'attention',
+                                        default => 'danger',
+                                    };
+                                    $etat = match (true) {
+                                        $check['ok'] => __('admin.health.ok'),
+                                        $consultative => __('admin.health.advisory'),
+                                        default => __('admin.health.failing'),
+                                    };
+                                @endphp
                                 <td data-label="{{ __('admin.health.state') }}">
-                                    <span class="badge badge--{{ $check['ok'] ? 'success' : 'danger' }}">
-                                        {{ $check['ok'] ? __('admin.health.ok') : __('admin.health.failing') }}
-                                    </span>
+                                    <span class="badge badge--{{ $ton }}">{{ $etat }}</span>
                                 </td>
                                 <td data-label="{{ __('admin.health.detail') }}">{{ $check['detail'] }}</td>
                             </tr>

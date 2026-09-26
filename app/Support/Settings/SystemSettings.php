@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Support\Settings;
 
+use App\Services\AttachmentRetention;
+
 /**
  * La configuration du systeme, telle que l'administration peut la consulter.
  *
@@ -185,6 +187,27 @@ final class SystemSettings
                 __('admin.settings.labels.accepted_formats'),
                 implode(', ', (array) config('phoenix.uploads.accepted_mime')),
                 '',
+            ),
+            /*
+             * LA DUREE DE CONSERVATION, ET L'AVERTISSEMENT QUAND ELLE MANQUE
+             * (D-094). Non posee, les pieces d'identite et les selfies sont
+             * conserves indefiniment. C'est la donnee la plus sensible du
+             * systeme ; l'exploitant doit le lire ici, et pas l'apprendre d'un
+             * audit. Meme idiome que le tarif : une valeur absente qui compte
+             * porte un avertissement.
+             */
+            SystemSetting::ordinaire(
+                __('admin.settings.labels.attachment_retention'),
+                AttachmentRetention::retentionDays() === null
+                    ? null
+                    // trans_choice, et non __() : « 1 days » sur un ecran
+                    // d'exploitation est le genre de detail qui fait douter du
+                    // reste.
+                    : trans_choice('admin.settings.units.days', (int) AttachmentRetention::retentionDays(), ['count' => AttachmentRetention::retentionDays()]),
+                'PHOENIX_ATTACHMENT_RETENTION_DAYS',
+                AttachmentRetention::retentionDays() === null
+                    ? __('admin.settings.warnings.no_retention')
+                    : null,
             ),
         ];
     }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\UserRole;
+use App\Services\AttachmentRetention;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -51,9 +52,28 @@ class HealthController extends Controller
             $this->privateDisk(),
             $this->blindIndexKey(),
             $this->notificationQueue(),
+            $this->attachmentRetention(),
         ];
 
-        $healthy = collect($checks)->every(fn (array $c): bool => $c['ok']);
+        /*
+         * UN TROISIEME ETAT : SIGNALE, NON BLOQUANT (D-094).
+         *
+         * `/sante` renvoie 503 quand l'instance est degradee, ce qui veut dire
+         * « sortez-la du service, reveillez quelqu'un ». Toutes les sondes ne
+         * disent pas cela. La conservation des pieces depend d'une duree que
+         * personne n'a pu fixer — la question B3 est ouverte — donc sans ce
+         * troisieme etat l'instance se declarerait en panne POUR TOUJOURS, en
+         * attendant un arbitrage qui peut ne jamais venir.
+         *
+         * Une sonde rouge en permanence est une sonde qu'on cesse de lire, et
+         * c'est pire pour la securite qu'un avertissement clair : le jour ou la
+         * base tombe, le rouge ne se distinguerait plus du bruit. Les sondes
+         * consultatives s'affichent donc en avertissement, et ne font pas
+         * basculer l'etat global.
+         */
+        $healthy = collect($checks)
+            ->reject(fn (array $c): bool => $c['advisory'] ?? false)
+            ->every(fn (array $c): bool => $c['ok']);
         $detaille = $request->user()?->role === UserRole::Admin;
 
         if ($request->wantsJson()) {
@@ -230,6 +250,54 @@ class HealthController extends Controller
                 $echecs > 0 => __('admin.health.checks.queue_failed', ['count' => $echecs]),
                 $plusAncien === null => __('admin.health.checks.queue_empty'),
                 default => __('admin.health.checks.queue_moving', ['minutes' => $minutes]),
+            },
+        ];
+    }
+
+    /**
+     * LA DONNEE LA PLUS SENSIBLE EST-ELLE BORNEE DANS LE TEMPS ? (D-094)
+     *
+     * `purge_after` existait depuis la premiere migration, indexee, et n'etait
+     * jamais renseignee : chaque piece d'identite et chaque selfie etait
+     * conserve indefiniment derriere une colonne qui promettait le contraire.
+     * Le mecanisme existe maintenant, mais la duree elle-meme est une question
+     * ouverte (B3), donc cette sonde ne peut pas exiger qu'elle soit posee.
+     *
+     * Elle exige l'inverse, qui est verifiable : que l'exposition soit DITE.
+     * Sans duree configuree, la sonde est en avertissement et annonce le
+     * nombre de pieces conservees sans echeance. Un exploitant ne doit pas
+     * decouvrir cela dans un audit.
+     *
+     * @return array{label: string, ok: bool, advisory: bool, detail: string}
+     */
+    private function attachmentRetention(): array
+    {
+        try {
+            $jours = AttachmentRetention::retentionDays();
+            $sansEcheance = AttachmentRetention::unboundedCount();
+        } catch (Throwable $e) {
+            return [
+                'label' => __('admin.health.checks.retention'),
+                'ok' => false,
+                'advisory' => true,
+                'detail' => __('admin.health.checks.retention_unreadable'),
+            ];
+        }
+
+        return [
+            'label' => __('admin.health.checks.retention'),
+            // Bornee des lors qu'une duree est posee ET qu'aucune piece ne
+            // traine sans echeance. Les deux conditions comptent : une duree
+            // posee apres coup laisse derriere elle des pieces que rien ne
+            // purgera jamais.
+            'ok' => $jours !== null && $sansEcheance === 0,
+            // Consultative : une question juridique ouverte n'est pas une
+            // panne de disponibilite. Elle doit etre VUE, pas paginer.
+            'advisory' => true,
+            'detail' => match (true) {
+                $jours === null => __('admin.health.checks.retention_unset', ['count' => $sansEcheance]),
+                $sansEcheance > 0 => __('admin.health.checks.retention_legacy', ['count' => $sansEcheance, 'days' => $jours]),
+                default => __('admin.health.checks.retention_ok', ['days' => $jours]),
             },
         ];
     }

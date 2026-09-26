@@ -143,6 +143,26 @@ du nom ou du numéro de pièce), `mime_type`, `size_bytes`, `checksum_sha256`,
 > binaire vit sur disque, hors de `public/`, servi uniquement par un contrôleur
 > qui vérifie la Policy et journalise (D-011).
 
+> **`purge_after` est effective depuis D-094**, et ne l'était pas avant. La
+> colonne existait dès la première migration, castée et **indexée**, mais rien
+> ne l'écrivait et rien ne la lisait : chaque pièce d'identité et chaque selfie
+> était conservé indéfiniment derrière une colonne qui promettait l'inverse.
+>
+> Elle est désormais écrite **une fois, au dépôt**, à partir de
+> `PHOENIX_ATTACHMENT_RETENTION_DAYS`. La purge la **lit** et ne la recalcule
+> pas : sinon un changement de réglage avancerait l'échéance de pièces déjà
+> déposées, et la colonne redeviendrait décorative.
+>
+> Deux règles de sûreté tiennent le mécanisme, et comptent plus que lui :
+> une pièce **sans échéance n'est jamais purgée** (deviner son terme depuis
+> `captured_at` reviendrait à supprimer sur une règle que personne n'a posée),
+> et une pièce n'est purgée que si **la demande est terminée** (`isTerminal()`)
+> — une échéance courte ne doit pas désarmer une vérification en cours.
+>
+> La durée elle-même reste **non posée par défaut** : c'est la question
+> ouverte B3. Sans elle, rien n'est purgé, et le contrôle de santé comme
+> l'écran des réglages le disent en avertissement.
+
 ### 2.4 Traçabilité du travail — entités absentes du brief, déduites des parcours
 
 **`verification_steps`** — les vérifications du §5.3, persistées

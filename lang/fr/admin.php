@@ -50,6 +50,11 @@ return [
             'queue_stalled' => "La file n'a pas bougé depuis :minutes minutes. Plus personne n'est prévenu de rien : vérifiez que le worker tourne.",
             'queue_failed' => ':count notification(s) en échec, jamais délivrées.',
             'queue_unreadable' => 'La file ne peut pas être lue.',
+            'retention' => "Conservation des pièces d'identité",
+            'retention_ok' => 'Bornée : chaque pièce expire :days jours après sa capture.',
+            'retention_unset' => "Aucune durée de conservation n'est configurée, donc :count pièce(s) sont conservées sans date d'expiration. La durée légale est la question ouverte B3 ; en attendant, posez PHOENIX_ATTACHMENT_RETENTION_DAYS ou assumez sciemment une conservation indéfinie.",
+            'retention_legacy' => "Les nouvelles pièces expirent après :days jours, mais :count pièce(s) capturées avant ne portent aucune date d'expiration et ne seront jamais purgées.",
+            'retention_unreadable' => 'La conservation des pièces ne peut pas être lue.',
         ],
         'checks_aria' => 'Vérifications de santé',
         'check' => 'Vérification',
@@ -57,6 +62,7 @@ return [
         'detail' => 'Détail',
         'ok' => 'OK',
         'failing' => 'En échec',
+        'advisory' => 'À signaler',
     ],
 
     'users' => [
@@ -171,10 +177,12 @@ return [
             'max_upload_size' => 'Taille maximale acceptée',
             'compression_target' => 'Cible après compression',
             'accepted_formats' => 'Formats acceptés',
+            'attachment_retention' => "Conservation des pièces d'identité",
         ],
         'warnings' => [
             'no_amount' => "L'encaissement est activé sans tarif : la plateforme refusera de servir.",
             'no_legal_basis' => 'Aucune base légale citable : question 1 de docs/INTEGRATIONS.md section 5.',
+            'no_retention' => "Non posée : les pièces d'identité et les selfies sont conservés indéfiniment. La durée légale est la question ouverte B3.",
             'sandbox' => 'Les paiements ne sont pas réels.',
             'compromised_check' => "Cette vérification interroge un service distant et LAISSE PASSER s'il est injoignable (D-015).",
         ],
@@ -182,6 +190,7 @@ return [
             'minutes' => ':count minutes',
             'seconds' => ':count secondes',
             'kilobytes' => ':count Ko',
+            'days' => '{0} aucun|{1} :count jour|[2,*] :count jours',
         ],
 
         'title' => 'Réglages',
