@@ -42,6 +42,22 @@ class ExposedRoutesTest extends TestCase
         'password.reset',
         'two-factor.login',
         'dev.ui',
+        /*
+         * VERIFIER L'AUTHENTICITE D'UN ACTE (D-088).
+         *
+         * Publique en connaissance de cause. Celui qui verifie n'est pas le
+         * demandeur : c'est l'administration, l'ecole ou l'ambassade qui
+         * RECOIT une copie et l'a sous les yeux. Lui demander un compte
+         * rendrait la verification impossible, donc laisserait circuler des
+         * faux.
+         *
+         * Ce que cette porte n'ouvre pas : la reponse ne porte ni nom complet,
+         * ni date de naissance, ni filiation — des initiales et une annee, de
+         * quoi COMPARER un papier. Le code fait 60 bits, et la route qui
+         * l'interroge est limitee en debit. Trois barrieres, chacune avec son
+         * test.
+         */
+        'verify.show',
     ];
 
     #[Test]

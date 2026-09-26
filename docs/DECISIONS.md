@@ -4597,3 +4597,135 @@ cycle de vérification est passé de 1 à 2, et le journal porte les deux lignes
 
 Mesures à 1366, 390 et 320 px : aucun débordement, aucune cible sous 44 px,
 ordre des titres correct, aucun refus CSP.
+
+---
+
+## D-088 — Vérifier un acte sans compte, et ce que la réponse refuse de dire
+
+- **Date :** 2026-09-26
+- **Statut :** décidé, sur ton feu vert
+
+Tu m'as dit d'y aller. Je commence par la vérification publique d'authenticité
+plutôt que par le suivi public, parce que c'est celle dont la surface d'attaque
+est la plus petite — et je te dis pourquoi avant de dire comment.
+
+### Pourquoi cette porte-là est publique alors que j'ai refusé le suivi
+
+**Celui qui vérifie n'est pas le demandeur.** C'est l'administration, l'école,
+l'employeur ou l'ambassade qui **reçoit** une copie et veut savoir si elle est
+vraie. Lui demander un compte reviendrait à rendre la vérification impossible,
+donc à laisser circuler des faux — l'inverse exact de ce que ce service
+protège.
+
+Et surtout : **cette personne a déjà le document sous les yeux.** Elle
+n'apprend rien qu'elle ne lise déjà sur le papier. C'est ce qui distingue cette
+porte du suivi public, où l'on renseignerait quelqu'un sur le dossier d'un
+tiers.
+
+### Ce que la réponse montre, et ce qu'elle cache
+
+Le but est de **comparer**, pas de renseigner. La réponse donne la référence,
+la date de délivrance, le centre, les **initiales** du titulaire et son **année**
+de naissance.
+
+Quelqu'un qui tient la copie peut tout comparer ligne à ligne. Quelqu'un qui
+aurait seulement un code n'apprend **ni un nom, ni une date de naissance, ni une
+filiation**. C'est ce qui sépare une vérification d'un annuaire, et c'est le
+test le plus important du fichier : il cherche le nom complet, celui du père,
+celui de la mère et la date de naissance, et exige leur absence.
+
+### Trois barrières, et non une seule
+
+1. **Le code fait 60 bits** — douze caractères sur un alphabet de trente-deux.
+   Une recherche exhaustive est hors de portée, limitation de débit ou non.
+2. **La limitation de débit** est posée sur la route, pas dans le contrôleur :
+   elle doit mordre avant qu'une ligne de code métier ne s'exécute. Dix essais
+   par minute et par adresse. Un test structurel vérifie qu'elle est là, un
+   test de comportement vérifie qu'elle **mord** au onzième essai — le premier
+   seul serait satisfait par un quota absurde.
+3. **Le refus n'apprend rien** : même réponse pour un code inconnu et pour un
+   code mal formé. Sinon la page dirait si un code « existe presque », ce qui
+   guiderait une recherche.
+
+L'alphabet exclut **O, 0, I et 1**. Ce code est lu sur un papier et retapé à la
+main, souvent à un guichet : deux caractères qui se ressemblent transformeraient
+un acte authentique en « introuvable ». La saisie est normalisée — espaces,
+tirets, minuscules passent — parce que refuser « v7k2 94xa qm3d » serait refuser
+un acte authentique pour une question de typographie.
+
+### Ce que cet écran refuse de dire
+
+**Qu'un acte est « valide ».** La maquette prévoit un état « révoqué ». Aucune
+révocation n'existe dans ce système. Afficher « valide » face à un état qui
+n'est jamais calculé serait pire que de se taire : la page dit que l'acte **a
+été délivré, et par qui**, non qu'il est toujours valable aujourd'hui. Elle
+l'écrit.
+
+**Qu'un acte de démonstration vaut quelque chose.** Tant que le prestataire de
+signature est l'adaptateur de démonstration, le verdict porte la mention : cet
+acte est authentique au sens où ce service l'a délivré, et il n'est pas un acte
+juridique.
+
+### Ce qui a été ajouté à l'acte, et ce que cela a cassé
+
+Le code est tiré **avant** le rendu du PDF, puisqu'il y est imprimé — il entre
+donc dans l'empreinte du document signé, ce qui est exactement ce qu'on veut :
+le code fait partie de ce que le maire signe.
+
+Ma première version posait un `<hr>`, un `<h2>` et deux paragraphes. **L'acte
+est passé à deux pages**, et `l_acte_tient_sur_une_seule_page` est tombé.
+D-067 avait déjà livré cette bataille : un acte d'état civil accompagné d'une
+page blanche n'est pas un acte qu'une mairie remet à un citoyen. Le bloc tient
+maintenant en un paragraphe.
+
+**Pas de QR code** : le produire demanderait une bibliothèque de plus, et rien
+ne garantit qu'un guichet dispose d'un lecteur. Le code écrit fonctionne sur
+tout papier et sur tout téléphone.
+
+**Les actes déjà signés reçoivent un code, mais leur PDF ne le porte pas** : il
+a été généré et stocké au moment de la signature, et rien ne le régénère. Seuls
+les actes signés à partir de maintenant sont vérifiables par une administration
+qui les reçoit. C'est écrit sur la page plutôt que découvert au guichet.
+
+### Deux gardes du dépôt se sont déclenchés, et ils avaient raison
+
+`ExposedRoutesTest` refuse toute route GET publique qui n'est pas **inscrite**
+dans une liste. Ma route est donc déclarée là, avec sa justification : le garde
+ne m'a pas empêché d'ouvrir la porte, il m'a obligé à écrire pourquoi je
+l'ouvrais. C'est exactement ce qu'on attend de lui.
+
+`TypographyTest` a attrapé un tiret long que j'avais écrit dans le gabarit de
+l'acte. Mon propre garde, contre moi, sur un document officiel.
+
+### Trois défauts d'accessibilité sur la page que tout citoyen voit en premier
+
+La coquille publique réutilise la charte de la page d'accueil. En la mesurant :
+
+- le **titre passait sous la barre de navigation**. L'en-tête est
+  `position: fixed` : la page d'accueil le sait et son héros porte le retrait
+  qui le dégage, une page ordinaire ne l'avait pas. Bas de l'en-tête à 79 px,
+  haut du titre à 40 ;
+- le **lien de marque** mesurait **34 × 44 px** sous 560 px, sur la page
+  d'accueil **aussi** : son nom y est masqué par choix de mise en page, et il ne
+  restait que le pictogramme ;
+- les **six liens du pied de page** mesuraient **20 px de haut**.
+
+Les deux derniers sont antérieurs à ce jalon et vivaient sur la page d'accueil
+depuis le début. C'est la troisième variante du même piège, après les cellules
+de tableau (D-083) et le bouton de menu (D-085) : à chaque fois **un seul côté
+de la cible était garanti**, et `min-height` ne disait rien de la largeur.
+
+J'ai d'abord attribué le défaut du lien de marque à `flex-shrink`, par analogie
+avec D-085. C'était faux, et la mesure l'a montré : la cause est le nom masqué
+sous 560 px. Le commentaire du code porte la vraie raison, pas la première.
+
+Mesure après correction, page d'accueil et page de vérification, six largeurs de
+320 à 1366 px : **zéro cible sous 44 px, zéro débordement, zéro refus CSP.**
+
+### Ce qui reste de ton arbitrage
+
+`track.html` — le suivi public d'un dossier par référence et code à quatre
+chiffres — n'est **pas** fait. Il est d'une autre nature : celui qui l'utilise
+n'a pas le document sous les yeux, et la réponse le renseigne sur l'avancement
+du dossier d'une personne. Dis-moi si tu veux que je l'ouvre aussi, et je le
+construirai avec les mêmes trois barrières.

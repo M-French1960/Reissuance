@@ -49,6 +49,25 @@ conformité.**
 > neuf écrans de l'administrateur et neuf largeurs de 320 à 1920 px : zéro
 > débordement, zéro cible sous 44 px, zéro refus CSP.
 
+> **Révision du 2026-09-26 (D-088), sur les pages PUBLIQUES.** L'audit d'origine
+> portait sur 17 écrans **connectés**. En construisant la vérification publique
+> d'un acte, la même mesure appliquée à la page d'accueil a trouvé deux
+> manquements qui y étaient depuis le début, sur la page que tout citoyen voit
+> en premier :
+>
+> - le **lien de marque** mesurait **34 × 44 px** sous 560 px. Son nom y est
+>   masqué par choix de mise en page, et il ne restait que le pictogramme.
+>   `min-width: var(--tap-target)` le rétablit sans ramener le nom ;
+> - les **six liens du pied de page** mesuraient **20 px de haut**. Un lien de
+>   pied de page se frappe au pouce comme les autres.
+>
+> C'est la troisième variante du même piège, après les cellules de tableau
+> (D-083) et le bouton de menu (D-085) : à chaque fois, **un seul côté de la
+> cible était garanti**, et `min-height` ne disait rien de la largeur.
+>
+> Mesure après correction, page d'accueil et page de vérification, six largeurs
+> de 320 à 1366 px : **zéro cible sous 44 px, zéro débordement**.
+
 ---
 
 ## 3. Ce que l'audit a trouvé, et qui est corrigé

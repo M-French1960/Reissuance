@@ -29,6 +29,8 @@ return [
         'capacity' => 'Capacity',
         'mayor_of' => 'Mayor of :commune',
         'final_notice' => 'This document was produced by a demonstration signature adapter. It results from no approved electronic signature. Whether a civil status certificate signed electronically has legal force in Cameroon, and what approval a signature provider needs, are still to be confirmed: see block A of docs/COMPLIANCE_OPEN_QUESTIONS.md.',
+        'verification_title' => 'Checking this copy',
+        'verification_body' => 'Any administration, school, employer or embassy receiving this copy may check that it is genuine at :adresse, using the code below. No account is needed.',
     ],
 
     'draft' => [

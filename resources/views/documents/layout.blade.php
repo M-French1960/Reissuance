@@ -85,6 +85,14 @@
         h2 { page-break-after: avoid; }
         table.champs { page-break-inside: avoid; }
 
+        /* Le bloc de verification tient en un paragraphe discret : l'acte
+           doit rester sur UNE page (D-067, D-088). */
+        .verification {
+            font-size: 8.5pt;
+            margin-top: 10pt;
+            page-break-inside: avoid;
+        }
+
         .empreinte {
             font-family: 'DejaVu Sans Mono', monospace;
             font-size: 8pt;

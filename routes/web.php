@@ -35,11 +35,30 @@ use App\Http\Controllers\Officer\VerificationController;
 use App\Http\Controllers\RequestMessageController;
 use App\Http\Controllers\SigningDeviceController;
 use App\Http\Controllers\TwoFactorSetupController;
+use App\Http\Controllers\VerificationCheckController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
 
 Route::get('/sante', HealthController::class)->name('health');
+
+/*
+ * VERIFIER L'AUTHENTICITE D'UN ACTE, SANS COMPTE (D-088).
+ *
+ * Publique a dessein : celui qui verifie n'est pas le demandeur, c'est
+ * l'administration, l'ecole ou l'ambassade qui RECOIT une copie. Lui demander
+ * un compte rendrait la verification impossible, donc laisserait circuler des
+ * faux.
+ *
+ * La limitation de debit est posee ICI, sur la route, et non dans le
+ * controleur : elle doit s'appliquer avant qu'une seule ligne de code metier
+ * ne s'execute. Dix essais par minute et par adresse — largement de quoi
+ * retaper un code mal recopie, beaucoup trop peu pour balayer 60 bits.
+ */
+Route::get('/verifier', [VerificationCheckController::class, 'show'])->name('verify.show');
+Route::post('/verifier', [VerificationCheckController::class, 'check'])
+    ->middleware('throttle:10,1')
+    ->name('verify.check');
 
 /*
  * Switching language, open to visitors as well as to signed-in accounts.

@@ -91,8 +91,20 @@ final class DocumentBuilder
         'center', 'commune', 'reference', 'copies_requested',
     ];
 
-    public function build(ReissuanceRequest $request, User $mayor, bool $legallyBinding): string
-    {
+    /**
+     * @param  string|null  $codeVerification  Le code imprime sur l'acte, qui
+     *                                         permet a une administration qui
+     *                                         le recoit d'en verifier
+     *                                         l'authenticite sans compte
+     *                                         (D-088). Nul quand l'acte est
+     *                                         construit hors delivrance.
+     */
+    public function build(
+        ReissuanceRequest $request,
+        User $mayor,
+        bool $legallyBinding,
+        ?string $codeVerification = null,
+    ): string {
         $langue = ActLanguage::forRequest($request);
 
         return $this->pdf->render('documents.act', [
@@ -101,6 +113,8 @@ final class DocumentBuilder
             'valeurJuridique' => $legallyBinding,
             'mentionDemo' => self::demoNoticeIn($langue),
             'delivreLe' => now()->locale($langue)->translatedFormat('d F Y'),
+            'codeVerification' => $codeVerification,
+            'adresseVerification' => route('verify.show'),
         ], $langue);
     }
 

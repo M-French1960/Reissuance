@@ -108,7 +108,10 @@
   color: #fff;
 }
 
-.home-brand { color: inherit; display: flex; align-items: center; gap: 0.6rem; min-height: var(--tap-target); text-decoration: none; }
+/* `flex: 0 0 auto` : le lien de marque ne cede pas sa largeur au reste de la
+   barre. Voir aussi la regle sous 560 px, qui lui garde une cible de 44 px
+   quand son nom est masque. */
+.home-brand { color: inherit; display: flex; align-items: center; gap: 0.6rem; min-height: var(--tap-target); flex: 0 0 auto; text-decoration: none; }
 .home-brand__mark { width: 34px; height: 34px; }
 .home-brand__name { font: 700 1.3rem/1 var(--ui-font-display); letter-spacing: 0.04em; }
 
@@ -325,8 +328,24 @@
 .home-footer { background: var(--ui-violet-900); color: rgb(255 255 255 / 0.8); padding: 3.5rem 0 2rem; font-size: 0.93rem; }
 .home-footer__grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: 2rem; margin-bottom: 2.5rem; }
 .home-footer h2 { color: #fff; font: 600 1rem var(--ui-font-body); margin: 0 0 0.9rem; }
-.home-footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
-.home-footer a { color: inherit; text-decoration: none; }
+.home-footer ul { list-style: none; margin: 0; padding: 0; display: grid; }
+
+/*
+   LES LIENS DU PIED DE PAGE MESURAIENT 20 PX DE HAUT.
+
+   Six liens, sur la page que tout citoyen voit en premier, a moitie du seuil
+   de 44 px que le projet s'est donne. Un lien de pied de page se frappe au
+   pouce comme les autres, et il est souvent frappe en marchant.
+
+   `inline-flex` avec une hauteur minimale suffit : la grille perd son `gap`,
+   remplace par la hauteur des liens eux-memes, donc le bloc ne grandit
+   presque pas.
+*/
+.home-footer a {
+  color: inherit; text-decoration: none;
+  display: inline-flex; align-items: center;
+  min-height: var(--tap-target);
+}
 .home-footer a:hover { color: #fff; text-decoration: underline; }
 .home-footer__brand { color: #fff; }
 .home-footer__tag { max-width: 28ch; margin: 0.8rem 0 0; }
@@ -370,6 +389,21 @@
 
 @media (max-width: 560px) {
   .home-wrap { width: min(100% - 1.5rem, 1180px); }
+  /*
+     LE NOM DISPARAIT, LA CIBLE TACTILE NON.
+
+     Masquer « PHOENIX » sous 560 px est un choix de mise en page : la barre en
+     pilule n'a pas la place. Mais il ne restait alors que le pictogramme, et
+     le lien mesurait 34 x 44 px — sous le seuil que le projet s'est donne.
+     Mesure au navigateur sur la page d'accueil ET sur les pages publiques,
+     pas deduite de la feuille de style : `min-height` etait bien pose, et ne
+     disait rien de la largeur.
+
+     Troisieme variante du meme piege, apres les cellules de tableau (D-083) et
+     le bouton de menu (D-085). A chaque fois, un seul cote de la cible etait
+     garanti.
+  */
+  .home-brand { min-width: var(--tap-target); justify-content: center; }
   .home-brand__name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .home-footer .home-brand__name { position: static; width: auto; height: auto; clip: auto; }
   .home-hero { padding-bottom: 90px; }
@@ -447,3 +481,106 @@
   background: var(--ui-glass-dark); color: #fff;
   font: 600 0.9rem/1 var(--ui-font-body); cursor: pointer;
 }
+
+/* --- Pages publiques : vérification d'un acte (D-088) --------------------- */
+
+/*
+   Ces règles vivent dans home.css parce que les pages publiques partagent sa
+   façade. Elles n'utilisent AUCUNE classe de app.css : un visiteur sans compte
+   ne charge pas la feuille des écrans de travail.
+*/
+.public-main {
+  /*
+     L'EN-TETE EST `position: fixed` ET FLOTTE AU-DESSUS DE LA PAGE.
+
+     La page d'accueil le sait : son heros porte le retrait qui le degage. Une
+     page publique ordinaire ne l'a pas, et le <h1> passait SOUS la barre — vu a
+     l'ecran, mesure ensuite : bas de l'en-tete a 79 px, haut du titre a 40.
+
+     Le retrait est donc pose ici, une fois, pour toutes les pages qui
+     utiliseront cette coquille.
+  */
+  padding-block-start: 7rem;
+  padding-block-end: clamp(2rem, 6vw, 4rem);
+  /* Une colonne de lecture : un formulaire à un seul champ étalé sur 1180 px
+     serait illisible, et le verdict encore plus. */
+  max-width: 44rem;
+}
+
+.public-main h1 {
+  font-family: var(--ui-font-display);
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  margin: 0 0 var(--space-3);
+  /* Une référence ou un code n'a pas d'espace : sans cela il déborde à 320 px. */
+  overflow-wrap: anywhere;
+}
+
+.public-main .lede { font-size: var(--text-lg); margin: 0 0 var(--space-5); }
+
+.public-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+  padding: clamp(1.25rem, 4vw, 2rem);
+  margin-bottom: var(--space-5);
+}
+
+.public-card .field { margin-bottom: var(--space-4); }
+.public-card .field__label { display: block; font-weight: 600; margin-bottom: var(--space-1); }
+.public-card .field__hint { display: block; font-size: var(--text-sm); color: var(--color-ink-500); margin-bottom: var(--space-2); }
+
+.public-card .field__control {
+  width: 100%;
+  min-height: var(--tap-target);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-ink-900);
+  font: inherit;
+}
+
+/*
+   Le code se lit caractère par caractère quand on le recopie d'un papier :
+   une chasse fixe et un interlettrage large évitent de confondre deux
+   caractères voisins. C'est la même raison qui a fait retirer O, 0, I et 1 de
+   l'alphabet du code.
+*/
+#code {
+  font-family: ui-monospace, 'DejaVu Sans Mono', monospace;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.verify-form .home-btn { width: 100%; justify-content: center; }
+
+.verdict { border-width: 1.5px; }
+.verdict--ok { border-color: var(--tone-success-fg); background: var(--tone-success-bg); }
+.verdict--ko { border-color: var(--tone-danger-fg); background: var(--tone-danger-bg); }
+
+/* Le verdict ne repose pas sur la couleur seule : le titre le dit en toutes
+   lettres, et la bordure le double (WCAG 1.4.1). */
+.verdict h2 { margin: 0 0 var(--space-2); font-family: var(--ui-font-display); }
+
+.verdict__facts {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-4) 0 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-line);
+}
+
+.verdict__facts > div { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); justify-content: space-between; }
+.verdict__facts dt { color: var(--color-ink-700); min-width: 0; }
+.verdict__facts dd { margin: 0; font-weight: 700; min-width: 0; overflow-wrap: anywhere; }
+
+.verdict__warning {
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  border-left: 3px solid var(--tone-attention-fg);
+  background: var(--color-surface);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+.public-notes { font-size: var(--text-sm); color: var(--color-ink-700); }
+.public-notes p { margin: 0 0 var(--space-3); }

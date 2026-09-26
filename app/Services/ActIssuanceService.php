@@ -88,7 +88,19 @@ final class ActIssuanceService
                 );
             }
 
-            $document = $this->builder->build($request, $mayor, legallyBinding: false);
+            /*
+             * LE CODE DE VERIFICATION EST TIRE AVANT LE RENDU (D-088).
+             *
+             * Il est imprime SUR l'acte, donc il doit exister avant que le PDF
+             * soit compose — et il entre ainsi dans l'empreinte du document
+             * signe, ce qui est exactement ce qu'on veut : le code fait partie
+             * de ce que le maire signe.
+             */
+            $codeVerification = DocumentSignature::generateVerificationCode();
+
+            $document = $this->builder->build(
+                $request, $mayor, legallyBinding: false, codeVerification: $codeVerification
+            );
 
             $resultat = $this->signature->sign($document, [
                 'signatory' => $mayor->name,
@@ -116,6 +128,7 @@ final class ActIssuanceService
                 // contenu remonte nominativement a l'officier qui l'a redige.
                 'draft_id' => $projet->id,
                 'document_hash' => $resultat->documentHash,
+                'verification_code' => $codeVerification,
                 'document_path' => $documentPath,
                 'proof_path' => $proofPath,
                 'provider' => $resultat->provider,
