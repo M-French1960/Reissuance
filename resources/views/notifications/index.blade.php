@@ -61,6 +61,13 @@
                     @case (\App\Enums\UserRole::Officer)
                         {{ __('notifications.none_officer') }}
                         @break
+                    {{-- D-093 : depuis D-089 le maire EST prevenu. Le laisser
+                         tomber dans « rien ne vous a encore ete signale » lui
+                         donnait une raison de ne plus revenir, ce qui annule
+                         l'interet de la notification. --}}
+                    @case (\App\Enums\UserRole::Mayor)
+                        {{ __('notifications.none_mayor') }}
+                        @break
                     @default
                         {{ __('notifications.none_other') }}
                 @endswitch

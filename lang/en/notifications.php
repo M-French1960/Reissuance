@@ -53,5 +53,6 @@ return [
     'none_title' => 'No notifications',
     'none_citizen' => 'You will be told here at every step of your requests.',
     'none_officer' => 'You will be told here when the mayor returns a file to you. Requests waiting to be processed are in the processing queue.',
+    'none_mayor' => 'You will be told here when a file awaits your signature, or is escalated to you. Files already waiting are on your dashboard.',
     'none_other' => 'Nothing has been reported to you yet.',
 ];

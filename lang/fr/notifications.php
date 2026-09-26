@@ -53,5 +53,6 @@ return [
     'none_title' => 'Aucune notification',
     'none_citizen' => 'Vous serez prévenu ici à chaque étape de vos demandes.',
     'none_officer' => 'Vous serez prévenu ici lorsque le maire vous retournera un dossier. Les demandes à traiter se suivent depuis la file de traitement.',
+    'none_mayor' => "Vous serez prévenu ici lorsqu'un dossier attendra votre signature, ou vous sera transmis pour examen. Les dossiers déjà en attente sont sur votre tableau de bord.",
     'none_other' => 'Rien ne vous a encore été signalé ici.',
 ];

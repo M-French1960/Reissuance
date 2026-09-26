@@ -5153,3 +5153,98 @@ PHOENIX appelle officier est le secrétaire du centre — reste en attente : il
 touche l'énumération des rôles, les politiques, la base, les traductions et une
 centaine de tests. Ce n'est pas un détour que je prends sans ton accord.
 
+
+---
+
+## D-093 — La garde existait, et personne ne la nourrissait
+
+- **Date :** 2026-09-26
+- **Statut :** décidé
+
+J'ai vidé la file d'attente pour de vrai. C'est tout ce que j'ai fait, et cela
+a suffi à trouver deux choses.
+
+### Pourquoi vider la file plutôt que lancer la suite
+
+Le contrôle de santé de D-089 signalait 62 tâches en attente et aucun ouvrier.
+J'ai d'abord cru à un artefact de mon conteneur, et c'en était un : le worker
+est documenté (`ARCHITECTURE_LOCAL.md`), il n'est simplement jamais lancé ici.
+Mais cela voulait dire autre chose : **aucune notification n'avait jamais été
+fabriquée pour de bon dans ce projet**. Le rendu d'un courriel se produit dans
+l'ouvrier, hors de toute requête HTTP, et les tests utilisent
+`Notification::fake()`, qui intercepte l'envoi **avant** le rendu.
+
+J'ai donc sauvegardé la table, lancé un vrai `queue:work --stop-when-empty`
+avec le transport en journal, et lu ce qui en sortait. Les 62 tâches sont
+passées, zéro échec, et les courriels se lisent correctement dans les deux
+langues, avec un lien profond qui tombe sur la bonne page.
+
+### Ce que la file ne contenait pas
+
+`RequestStatusChanged` ×58, `ComplementRequested` ×2, `ComplementProvided` ×2.
+Et **zéro `RequestAwaitsMayor`** — la notification ajoutée en D-089. Pas parce
+qu'elle est cassée : parce qu'aucune transition vers la signature n'a eu lieu
+dans ce conteneur depuis. Elle n'avait donc **jamais été rendue par quoi que ce
+soit**, ni en test, ni en exécution.
+
+### Le vrai défaut n'était pas dans le code, il était dans la garde
+
+`tests/Feature/NotificationRenderingTest.php` existe précisément pour cela. Son
+en-tête raconte le bogue qui l'a fait naître : l'état `cancelled` sans entrée
+dans un `match`, qui faisait échouer l'ouvrier en silence pendant que la
+demande, elle, était bien annulée.
+
+Ce fichier ne couvrait **qu'une notification sur quatre**. Les trois autres
+sont arrivées après lui — D-087 pour les compléments, D-089 pour le maire — et
+je ne les y ai pas ajoutées. C'est ma faute, et c'est le pire cas de figure :
+**une garde qui existe et qu'on ne nourrit pas rassure sans protéger**. Une
+garde absente, au moins, ne ment pas.
+
+Je n'ai donc pas simplement ajouté trois cas. J'ai rendu l'oubli impossible :
+`aucune_notification_n_echappe_au_rendu` lit le répertoire `app/Notifications`
+et refuse toute classe absente du fournisseur de cas. Vérifié par mutation —
+un fichier de sonde déposé dans le répertoire fait échouer le test, **en
+nommant la classe oubliée**. C'est la même mécanique que `ScopeBypassTest` et
+`ExposedRoutesTest` : la liste n'est pas une convention, c'est une contrainte.
+
+S'y ajoutent deux tests qui tiennent ce qui n'était tenu par rien :
+
+- **les deux langues.** Une clé absente d'un seul fichier de langue se rend
+  comme sa propre clé — `notifications.bodies.mayor_awaiting` — et part ainsi
+  chez l'usager sans que rien ne lève. Les deux locales sont désormais rendues
+  pour chaque notification, et une clé brute fait échouer.
+- **le garde-fou n°6.** Un courriel part en clair vers une boîte dont nous ne
+  maîtrisons rien. Il ne doit donc porter qu'une référence et un état. La règle
+  était respectée partout ; elle reposait sur ma relecture. Elle repose
+  maintenant sur un test qui refuse un nom ou une adresse dans le corps.
+
+### Le second défaut : on avait cessé de parler au maire
+
+Depuis D-089 le maire **est** prévenu. Mais l'écran vide des notifications ne
+traitait que deux rôles, et le maire tombait dans le cas par défaut :
+
+> Rien ne vous a encore été signalé ici.
+
+D-074 avait posé la règle « l'état vide ne promet pas ce qu'il ne tiendra
+pas ». Le défaut d'aujourd'hui en est l'exact **symétrique** : l'état vide
+**cachait une promesse que le système tient désormais**. Le citoyen et
+l'officier lisent ce qu'ils vont recevoir ; le maire — le seul dont l'inaction
+bloque un dossier — lisait un haussement d'épaules, donc aucune raison de
+revenir. Cela annulait l'intérêt même de la notification de D-089, dont le but
+était de lui éviter de surveiller son tableau de bord.
+
+Le maire lit maintenant ce qu'il recevra, et où sont les dossiers déjà en
+attente. Le test correspondant vérifiait `assertDontSee('your requests')`, ce
+qui laissait passer l'inverse ; il vérifie désormais aussi que la promesse est
+là.
+
+### Ce que cela confirme, une fois de plus
+
+Une suite verte prouve ce qu'elle teste, pas que l'application fonctionne. Ici
+elle ne prouvait même pas ce qu'elle prétendait tester : le fichier s'appelle
+« rendu des notifications » et en rendait une sur quatre. Aucun défaut de ce
+tour n'a été trouvé en lançant les tests — ils l'ont été en **lançant l'ouvrier
+et en lisant ce qu'il produisait**.
+
+993 tests, 977 passent, 16 ignorés, aucun échec.
+
