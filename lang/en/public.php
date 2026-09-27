@@ -3,6 +3,18 @@
 declare(strict_types=1);
 
 return [
+    'help' => [
+        'title' => 'Help',
+        'lede' => 'Answers to the questions that come up most often. No account is needed to read this page.',
+        'filter' => 'Search the questions',
+        'no_match' => 'No question matches what you typed. The ways to reach a person are below.',
+        'contact_title' => 'Reaching a person',
+        'contact_intro' => 'There is no contact form on this page, and that is deliberate: a form that reaches nobody promises an answer nobody will send. Here is what actually exists.',
+        'contact_thread' => 'If you already have a request: write to the officer handling it, from the request itself. :lien',
+        'contact_track' => 'If you only want to know how far your request has got: :lien, without an account.',
+        'contact_centre' => 'For anything else: go to the civil status centre where your certificate was drawn up. It holds the register and it is the only one that can act on it.',
+        'contact_no_form' => 'A support channel is a decision, not a form: who answers, at what hours, with what commitment. Until that is settled, this page says what exists rather than pretending.',
+    ],
     'track' => [
         'title' => 'Track a request',
         'lede' => 'See how far a request has got, without signing in. You need its reference and the last four digits of the phone number given when it was made.',

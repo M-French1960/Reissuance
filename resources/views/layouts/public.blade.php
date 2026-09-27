@@ -22,6 +22,8 @@
     <link rel="stylesheet" href="{{ asset('css/tokens.css') }}">
     <link rel="stylesheet" href="{{ asset('css/home.css') }}">
     <script src="{{ asset('js/language-switch.js') }}" defer></script>
+    {{-- Le filtre de l'aide : enrichissement, jamais une condition (D-097). --}}
+    <script src="{{ asset('js/help-filter.js') }}" defer></script>
 </head>
 <body class="home">
     <a class="skip-link" href="#contenu">{{ __('common.skip_to_content') }}</a>

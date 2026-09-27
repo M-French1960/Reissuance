@@ -412,6 +412,9 @@
                 <div>
                     <h2>{{ __('home.footer_help') }}</h2>
                     <ul>
+                        {{-- Depuis D-097 les questions ont leur propre page,
+                             filtrable et atteignable sans parcourir l'accueil. --}}
+                        <li><a href="{{ route('help') }}">{{ __('home.footer_help') }}</a></li>
                         <li><a href="#questions">{{ __('home.nav_faq') }}</a></li>
                         <li><a href="#preparer">{{ __('home.nav_checklist') }}</a></li>
                         <li><a href="{{ route('health') }}">{{ __('home.footer_status') }}</a></li>

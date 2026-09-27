@@ -131,7 +131,11 @@ return [
     'faq_a3' => 'The list of connected centres is shown at the third step of the form. If yours is not in it, the application cannot be made here yet, and the platform will not let you choose another centre in its place.',
 
     'faq_q4' => 'What happens if a document is missing?',
-    'faq_a4' => 'The officer writes to you from your file. You are notified, and you read and answer the message in your account. One limit to know about: once an application has been sent, its photos can no longer be replaced from your account, so take the time to check that yours can be read before you send.',
+    // Cette reponse annoncait une limite que D-087 a levee : « une fois
+    // la demande envoyee, ses photos ne peuvent plus etre remplacees ». Le
+    // complement existe depuis, et la FAQ disait donc le contraire du
+    // produit a la personne qui la lisait pour se rassurer (D-097).
+    'faq_a4' => 'The officer writes to you from your file. You are notified, and you read and answer the message in your account. If a photograph is unreadable, the officer asks you for it again and you send a new one from your file, without starting the application over.',
 
     'faq_q5' => 'Are you a civil status officer, a mayor or an administrator?',
     'faq_a5' => 'Your account is created by the administration and cannot be opened from this page. Sign in with the address you were given.',

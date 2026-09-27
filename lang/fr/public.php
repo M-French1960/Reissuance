@@ -3,6 +3,18 @@
 declare(strict_types=1);
 
 return [
+    'help' => [
+        'title' => 'Aide',
+        'lede' => "Les réponses aux questions qui reviennent le plus souvent. Aucun compte n'est nécessaire pour lire cette page.",
+        'filter' => 'Rechercher dans les questions',
+        'no_match' => 'Aucune question ne correspond à ce que vous avez tapé. Les moyens de joindre une personne sont plus bas.',
+        'contact_title' => 'Joindre une personne',
+        'contact_intro' => "Il n'y a pas de formulaire de contact sur cette page, et c'est délibéré : un formulaire qui n'aboutit nulle part promet une réponse que personne n'enverra. Voici ce qui existe réellement.",
+        'contact_thread' => "Si vous avez déjà une demande : écrivez à l'officier qui la traite, depuis la demande elle-même. :lien",
+        'contact_track' => 'Si vous voulez seulement savoir où en est votre demande : :lien, sans compte.',
+        'contact_centre' => "Pour tout le reste : rendez-vous au centre d'état civil où votre acte a été établi. C'est lui qui détient le registre, et le seul qui puisse agir dessus.",
+        'contact_no_form' => "Ouvrir un canal de support est une décision, pas un formulaire : qui le tient, à quelles heures, avec quel engagement. Tant que ce n'est pas arrêté, cette page dit ce qui existe plutôt que de faire semblant.",
+    ],
     'track' => [
         'title' => 'Suivre une demande',
         'lede' => "Consultez l'avancement d'une demande sans vous connecter. Il vous faut sa référence et les quatre derniers chiffres du téléphone donné lors de la demande.",

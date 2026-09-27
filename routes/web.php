@@ -20,6 +20,7 @@ use App\Http\Controllers\Citizen\RequestWizardController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DevUiController;
 use App\Http\Controllers\HealthController;
+use App\Http\Controllers\HelpController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\HrSkillsWebhookController;
 use App\Http\Controllers\LocaleController;
@@ -76,6 +77,12 @@ Route::post('/verifier', [VerificationCheckController::class, 'check'])
  * jours de martelage continu pour en couvrir la moitie — a supposer que la
  * reference, elle, soit deja connue.
  */
+/*
+ * L'AIDE (D-097). Publique sans reserve : des questions frequentes et les
+ * canaux qui existent reellement. Aucune donnee, aucun formulaire.
+ */
+Route::get('/aide', HelpController::class)->name('help');
+
 Route::get('/suivi', [PublicTrackingController::class, 'show'])->name('track.show');
 Route::post('/suivi', [PublicTrackingController::class, 'check'])
     ->middleware('throttle:5,1')

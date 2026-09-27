@@ -75,6 +75,12 @@ class ExposedRoutesTest extends TestCase
          * serait un oracle a references. Chaque barriere a son test.
          */
         'track.show',
+        /*
+         * L'AIDE (D-097). Des questions frequentes et les canaux qui existent
+         * reellement. Aucune donnee de dossier, aucun formulaire, aucune
+         * ecriture : cette page ne lit que des fichiers de langue.
+         */
+        'help',
     ];
 
     #[Test]

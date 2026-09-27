@@ -5587,3 +5587,77 @@ français, à 1366, 900 et 390 px : aucun débordement, aucune cible sous 44 px,
 aucun refus CSP. La règle « sans téléphone, pas de suivi » vérifiée par
 mutation.
 
+
+---
+
+## D-097 — L'aide, sans le formulaire qui n'aboutit nulle part
+
+- **Date :** 2026-09-26
+- **Statut :** décidé
+
+`help.html` prévoyait trois choses : une recherche, une FAQ, et un formulaire
+de contact. J'en construis deux.
+
+### Le formulaire n'a toujours aucun destinataire
+
+Ni boîte de réception, ni écran pour la lire, ni personne pour répondre. La
+maquette porte elle-même « **Réponse sous [délai à définir]** », écrit par le
+client. Un formulaire qui n'aboutit nulle part est pire que son absence : il
+promet une réponse que personne n'enverra, à quelqu'un qui attend son acte.
+
+La page dit donc quels canaux **existent réellement** : le fil d'échanges porté
+par le dossier (D-047) pour qui a une demande, le suivi public (D-096) pour qui
+veut seulement savoir où il en est, et le centre d'état civil pour le reste —
+c'est lui qui détient le registre, et le seul qui puisse agir dessus.
+
+Un test refuse l'apparition de tout formulaire postant ailleurs que vers le
+sélecteur de langue, pour que celui-ci ne revienne pas par inadvertance.
+
+### Pourquoi une page alors que l'accueil porte déjà la FAQ
+
+Il faut parcourir toute la page d'accueil pour l'atteindre. Un lien « Aide »
+qui renvoie vers une ancre au milieu d'une page de présentation ne rend pas
+service à quelqu'un qui cherche une réponse précise — et c'est précisément le
+public que le §8.2 du brief demande de servir.
+
+**Le contenu n'est pas recopié.** Les questions vivent dans les fichiers de
+langue de l'accueil et les deux écrans les lisent. Une copie aurait divergé à
+la première correction.
+
+### Et ce jour était déjà arrivé
+
+En reprenant la FAQ, j'ai trouvé que la réponse 4 annonçait au citoyen :
+
+> Une limite à connaître : une fois la demande envoyée, **ses photos ne peuvent
+> plus être remplacées** depuis votre espace.
+
+**D-087 a levé cette limite** — c'est exactement ce que fait le complément. Ma
+propre FAQ disait donc le contraire du produit, dans les deux langues, à la
+personne qui la lisait pour se rassurer. Corrigée, et un test la fige.
+
+C'est la troisième fois aujourd'hui que je trouve le même défaut sous une autre
+forme : D-093, une garde de test que je ne nourrissais pas ; D-094, une
+documentation qui affirmait une purge qui n'existait pas ; ici, une FAQ restée
+sur l'état du produit d'avant-hier. **Ce qui explique quelque chose ne se met
+pas à jour tout seul quand le code change.**
+
+### Le filtre est un enrichissement, jamais une condition
+
+Le champ de recherche est **livré masqué** et n'apparaît que si le script
+s'exécute : un champ inerte ferait taper l'utilisateur dans le vide, ce qui est
+pire que pas de champ du tout. Les cinq questions restent lisibles quoi qu'il
+arrive — vérifié dans un navigateur **avec JavaScript désactivé**.
+
+Aucun style en ligne : `style-src 'self'` les refuserait en silence (D-084). On
+bascule l'attribut `hidden`, que le navigateur comprend seul.
+
+La recherche ignore la casse **et les accents** : quelqu'un qui tape depuis un
+téléphone n'accentue pas toujours. Mesuré au navigateur dans les deux langues —
+« delai » trouve « délai ».
+
+### Vérifié
+
+1038 tests, 1022 passent, 16 ignorés. Page relue au navigateur à 1366 et
+390 px, avec et sans JavaScript : aucun débordement, aucun refus CSP, et les
+cinq questions servies dans le HTML dans les deux cas.
+

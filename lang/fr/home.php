@@ -131,7 +131,11 @@ return [
     'faq_a3' => "La liste des centres raccordés s'affiche à la troisième étape du formulaire. Si le vôtre n'y figure pas, la demande ne peut pas encore se faire ici, et la plateforme ne vous laissera pas choisir un autre centre à sa place.",
 
     'faq_q4' => "Que se passe-t-il s'il manque une pièce ?",
-    'faq_a4' => "L'officier vous écrit depuis votre dossier. Vous êtes prévenu, vous lisez et vous répondez au message dans votre espace. Une limite à connaître : une fois la demande envoyée, ses photos ne peuvent plus être remplacées depuis votre espace, prenez donc le temps de vérifier que les vôtres sont lisibles avant d'envoyer.",
+    // Cette reponse annoncait une limite que D-087 a levee : « une fois
+    // la demande envoyee, ses photos ne peuvent plus etre remplacees ». Le
+    // complement existe depuis, et la FAQ disait donc le contraire du
+    // produit a la personne qui la lisait pour se rassurer (D-097).
+    'faq_a4' => "L'officier vous écrit depuis votre dossier. Vous êtes prévenu, vous lisez et vous répondez au message dans votre espace. Si une photo est illisible, l'officier vous la redemande et vous en envoyez une nouvelle depuis votre dossier, sans recommencer la demande.",
 
     'faq_q5' => "Vous êtes officier d'état civil, maire ou administrateur ?",
     'faq_a5' => "Votre compte est créé par l'administration et ne s'ouvre pas depuis cette page. Connectez-vous avec l'adresse qui vous a été communiquée.",
