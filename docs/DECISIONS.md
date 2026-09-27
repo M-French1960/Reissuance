@@ -5731,3 +5731,41 @@ atteindre ne sert à rien.
 1366 et 390 px : 200, aucun débordement, aucune cible sous 44 px, aucun refus
 CSP.
 
+
+---
+
+## D-099 — La couverture des maquettes devient une question mécanique
+
+- **Date :** 2026-09-27
+- **Statut :** décidé
+
+Tu m'as demandé si toutes les interfaces du dossier cible avaient été
+utilisées. J'ai répondu en relisant un relevé et une entrée de journal. Les
+deux se périment : **une maquette construite ne se raye pas toute seule.**
+
+Et je me suis déjà trompé deux fois sur cette même question. En D-089, j'ai
+annoncé `maintenance` et `session-expired` comme absents alors qu'ils existent
+en pages d'erreur — mon relevé cherchait au mauvais endroit. En D-098, j'ai
+décrit un conflit avec le §10 sur les trois pages juridiques **sans avoir
+ouvert les fichiers**, qui étaient eux-mêmes vides.
+
+`TargetScreensCoverageTest` ferme cela. Chaque fichier `.html` du dossier doit
+être **servi** par une route nommée, ou figurer dans `ECARTEES` **avec sa
+raison**. Une maquette ajoutée demain, une route retirée, un motif qui ne tient
+plus : le test tombe, et il nomme le fichier.
+
+Vérifié par mutation dans les deux sens — en retirant une maquette de la liste,
+et en pointant une route qui n'existe pas.
+
+### L'état, mesuré et non affirmé
+
+**31 maquettes servies par une route. 3 écartées avec leur raison** — les trois
+pages d'erreur, qui n'ont pas de route parce qu'elles sont rendues par le
+gestionnaire d'exceptions. **34 sur 34.**
+
+Une seule mérite un mot : `officer-login.html`. Il n'y a qu'un formulaire de
+connexion pour tous les rôles, parce que le rôle se lit sur le compte et non
+sur l'URL — une porte « agents » distincte n'ajouterait aucune sécurité et
+dirait à un inconnu où frapper. Ce choix n'avait jamais été écrit nulle part ;
+il l'est maintenant, dans le test qui le porte.
+
