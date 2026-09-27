@@ -640,3 +640,9 @@
   .track-form__row .field { display: flex; flex-direction: column; margin-bottom: 0; }
   .track-form__row .field__control { margin-top: auto; }
 }
+
+/* Les liens juridiques du pied (D-098). Ils s'alignent avec le reste du pied
+   sur un ecran large, et s'empilent sur un telephone plutot que de se serrer
+   au point d'etre intouchables : le minimum de 44 px vaut aussi pour eux. */
+.home-footer__legal { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); }
+.home-footer__legal a { display: inline-flex; align-items: center; min-height: 44px; }

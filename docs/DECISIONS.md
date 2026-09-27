@@ -5661,3 +5661,73 @@ téléphone n'accentue pas toujours. Mesuré au navigateur dans les deux langues
 390 px, avec et sans JavaScript : aucun débordement, aucun refus CSP, et les
 cinq questions servies dans le HTML dans les deux cas.
 
+
+---
+
+## D-098 — Trois pages juridiques, sans écrire une ligne de droit
+
+- **Date :** 2026-09-27
+- **Statut :** décidé
+
+### La tension que je redoutais n'existait pas
+
+J'avais annoncé que `terms.html`, `privacy.html` et `accessibility.html`
+entraient en conflit avec le §10 : je n'invente pas un texte juridique. En
+ouvrant les maquettes, j'ai trouvé qu'elles sont elles-mêmes **vides** :
+
+> Page en cours de rédaction. La politique de confidentialité de PHOENIX doit
+> être **rédigée et validée par un juriste** avant la mise en service.
+
+Le client ne me demande donc pas d'écrire du droit — il dit lui-même qui doit
+l'écrire. J'aurais dû ouvrir les fichiers avant d'annoncer un conflit. La leçon
+est petite mais réelle : **j'ai décrit un obstacle sans l'avoir regardé.**
+
+### Ce que je fais de mieux qu'un substitut vide
+
+Un « page en cours de rédaction » n'apprend rien à personne et ne fait pas
+avancer la rédaction. Ces pages portent donc **ce qui est vérifiable dans le
+code** : quelles données sont collectées, qui voit quoi, ce qui est chiffré, ce
+que le journal retient, ce que l'acte vaut aujourd'hui.
+
+Ce sont des **faits, pas du droit**. Un lecteur y apprend quelque chose de vrai
+— par exemple qu'aucune durée de conservation n'est configurée, donc que sa
+photo d'identité est gardée sans date d'expiration (D-094) — et le juriste qui
+rédigera dispose d'une base factuelle au lieu d'une page blanche.
+
+C'est le précédent de D-075, où l'écran d'inscription dit ce qui est vérifiable
+et **annonce** ce qui reste à arrêter, plutôt que de présenter une phrase comme
+si elle était la notice.
+
+### L'avertissement est la condition d'existence de ces pages
+
+Chaque page dit en haut, en rouge, qu'elle **n'est pas le document juridique**,
+qu'elle n'engage pas l'administration, et qu'un juriste doit rédiger.
+
+Le risque n'est pas que ces pages restent incomplètes : c'est qu'un jour
+quelqu'un retire cet avertissement en croyant « finir » la page. Un test l'exige
+donc sur les trois.
+
+### Deux faits annoncés sont vérifiés par le test lui-même
+
+Ces pages promettent que chaque point est tenu par un test. Deux d'entre eux se
+vérifient dans le fichier de test des pages : que la conservation n'est
+effectivement pas configurée, et que le prestataire de signature est bien
+l'adaptateur de démonstration. Si l'un devient faux, la page **ment à quelqu'un
+qui la lit pour décider s'il confie sa pièce d'identité.**
+
+### Un lien qui n'existait pas
+
+Les trois pages n'étaient atteignables par **aucun lien**. Une politique de
+confidentialité se lit *avant* de créer un compte : elle figure désormais au
+pied de l'accueil et de toutes les pages publiques, avec des cibles d'au moins
+44 px qui s'empilent sur téléphone plutôt que de se serrer.
+
+Même famille que D-089 et D-096 : une page publique que personne ne peut
+atteindre ne sert à rien.
+
+### Vérifié
+
+1054 tests, 1038 passent, 16 ignorés. Les trois pages relues au navigateur à
+1366 et 390 px : 200, aucun débordement, aucune cible sous 44 px, aucun refus
+CSP.
+

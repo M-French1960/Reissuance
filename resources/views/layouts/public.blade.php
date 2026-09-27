@@ -65,6 +65,16 @@
                 <span>{{ __('home.footer_year', ['year' => now()->year]) }}</span>
                 <span>{{ __('common.footer') }}</span>
             </div>
+            <div class="home-footer__bottom">
+                {{-- Les trois pages juridiques sont atteignables depuis
+                     n'importe quelle page publique (D-098). --}}
+                <span class="home-footer__legal">
+                    <a href="{{ route('legal.terms') }}">{{ __('public.legal.terms.title') }}</a>
+                    <a href="{{ route('legal.privacy') }}">{{ __('public.legal.privacy.title') }}</a>
+                    <a href="{{ route('legal.accessibility') }}">{{ __('public.legal.accessibility.title') }}</a>
+                    <a href="{{ route('help') }}">{{ __('public.help.title') }}</a>
+                </span>
+            </div>
         </div>
     </footer>
 </body>

@@ -3,6 +3,58 @@
 declare(strict_types=1);
 
 return [
+    'legal' => [
+        'notice_title' => 'This page is not the legal document',
+        'notice_body' => 'The terms of use, the privacy notice and the accessibility statement must be drafted and approved by a lawyer before this service goes live. None of what follows commits the administration. What is below is what can be checked in the code today, stated so that this page teaches something true rather than staying blank.',
+        'facts_title' => 'What can be checked in the code today',
+        'facts_note' => 'Each of these points is enforced by a test. They describe the software, not the law.',
+        'open_title' => 'What is still open',
+
+        'terms' => [
+            'title' => 'Terms of use',
+            'facts_intro' => 'What this service does, and what it does not do yet:',
+            'fact_1' => 'It takes a request for a further copy of a birth certificate, has it checked by an officer of the civil status centre, and submits it to the mayor for signature. Nothing is issued without both.',
+            'fact_2' => 'On this installation the signature provider is a demonstration adapter, so every document produced carries, in plain words, that it is not a certificate and has no legal value.',
+            'fact_3' => 'No fee is displayed and no payment is taken unless an amount has been configured from a regulatory text. Without one, the platform refuses to serve rather than inventing a figure.',
+            'fact_4' => 'No processing time is announced anywhere, because none has been established. The service shows the stage a request has reached, never a promise about when it will move.',
+            'fact_5' => 'A request can be withdrawn by the applicant as long as it has not been decided. A rejection is a decision of the administration and is recorded separately.',
+            'open_intro' => 'These are questions for the administration running this installation, not for the software:',
+            'open_1' => 'The fee, its regulatory basis, and who collects it. Article 17 (2) of ordinance 81/002 says a copy gives rise to a duty set by the registration code; the amount in force has not been found.',
+            'open_2' => 'Whether any processing time is enforceable.',
+            'open_3' => 'What remedies exist against a rejection, and whether they must appear in the interface.',
+            'open_4' => 'Whether a third party may request a certificate on behalf of someone else. The text is silent, so this is settled by practice or by an implementing text that has not been found.',
+        ],
+
+        'privacy' => [
+            'title' => 'Privacy',
+            'facts_intro' => 'What this service collects, and who can see it:',
+            'fact_1' => 'An applicant sees only their own requests. An officer sees the requests of their own centre and never a draft. A mayor sees his own commune, only at the stages where he has authority, plus what he has himself signed. An administrator sees no request at all: they manage accounts, not files.',
+            'fact_2' => 'That restriction is applied by the database query itself, not by each screen remembering to ask, so a forgotten condition cannot leak a file.',
+            'fact_3' => 'Identity document numbers are encrypted at rest. Searching by number works through a separate fingerprint, so the number itself is never stored in the clear.',
+            'fact_4' => 'Photographs of identity documents and selfies are stored outside the web root and are never reachable by a URL. Each viewing is recorded, with who looked and when.',
+            'fact_5' => 'The audit log can neither be edited nor deleted, by anyone, including the application account. An administrator reads its metadata, never the contents of a file.',
+            'fact_6' => 'No retention period is configured on this installation, so identity photographs are kept with no expiry date. The mechanism to purge them exists and waits for that period to be set.',
+            'open_intro' => 'These depend on the 2024 data protection law and on a reference framework the Authority must publish:',
+            'open_1' => 'How long a selfie and an identity document photograph may be kept. The law sets no figure; it defers to a framework that has not been found.',
+            'open_2' => 'Whether a live facial photograph is biometric data in the applicable law, and what regime attaches to it.',
+            'open_3' => 'The information notice to display before collection, and the form of consent to record.',
+            'open_4' => 'How the right to erasure is reconciled with an append-only audit log that by construction cannot be altered.',
+        ],
+
+        'accessibility' => [
+            'title' => 'Accessibility',
+            'facts_intro' => 'What has actually been measured, and on what:',
+            'fact_1' => 'The target is WCAG 2.1 AA, chosen by default because no standard is known to be imposed on public digital services here.',
+            'fact_2' => 'Seventeen screens were audited with axe-core at 390 x 844 px, the most constrained format of the intended device range, reached with the accounts that really see them.',
+            'fact_3' => 'Beyond the automated tool: keyboard-only journeys, focus visibility, horizontal overflow, and every tap target measured against a 44 px minimum.',
+            'fact_4' => 'Three tap targets that were too small, two tables not scrollable by keyboard and one screen returning an error were found and fixed. Tests now refuse their return.',
+            'fact_5' => 'Every page works without JavaScript. Scripts only add convenience, never a condition for using the service.',
+            'open_intro' => 'What this does not prove, stated plainly:',
+            'open_1' => 'No trial with a real screen reader has been carried out. An automated tool finds roughly a third of accessibility problems, so this is not proof of conformity.',
+            'open_2' => 'No trial with people of low digital literacy, who are the intended audience. No tool replaces that.',
+            'open_3' => 'Whether a standard is legally imposed on public digital services, and which one.',
+        ],
+    ],
     'help' => [
         'title' => 'Help',
         'lede' => 'Answers to the questions that come up most often. No account is needed to read this page.',

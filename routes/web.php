@@ -23,6 +23,7 @@ use App\Http\Controllers\HealthController;
 use App\Http\Controllers\HelpController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\HrSkillsWebhookController;
+use App\Http\Controllers\LegalPageController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\Mayor\DashboardController as MayorDashboardController;
 use App\Http\Controllers\Mayor\DecisionController as MayorDecisionController;
@@ -82,6 +83,19 @@ Route::post('/verifier', [VerificationCheckController::class, 'check'])
  * canaux qui existent reellement. Aucune donnee, aucun formulaire.
  */
 Route::get('/aide', HelpController::class)->name('help');
+
+/*
+ * LES TROIS PAGES JURIDIQUES (D-098).
+ *
+ * Les maquettes du dossier cible sont elles-memes VIDES et renvoient la
+ * redaction a un juriste. Ces pages le disent en haut, en avertissement, et
+ * portent ensuite ce qui est VERIFIABLE DANS LE CODE — des faits, pas du
+ * droit. Le 10 du brief interdit d'inventer un texte juridique ; il n'interdit
+ * pas de dire ce que le logiciel fait.
+ */
+Route::get('/conditions', LegalPageController::class)->defaults('page', 'terms')->name('legal.terms');
+Route::get('/confidentialite', LegalPageController::class)->defaults('page', 'privacy')->name('legal.privacy');
+Route::get('/accessibilite', LegalPageController::class)->defaults('page', 'accessibility')->name('legal.accessibility');
 
 Route::get('/suivi', [PublicTrackingController::class, 'show'])->name('track.show');
 Route::post('/suivi', [PublicTrackingController::class, 'check'])

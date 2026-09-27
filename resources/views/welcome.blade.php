@@ -422,8 +422,17 @@
                 </div>
             </div>
 
+            {{-- Les trois pages juridiques (D-098). Une politique de
+                 confidentialité se lit AVANT de créer un compte : elle doit
+                 donc être atteignable depuis l'accueil, et elle ne l'était
+                 par aucun lien. --}}
             <div class="home-footer__bottom">
                 <span>{{ __('home.footer_year', ['year' => now()->year]) }}</span>
+                <span class="home-footer__legal">
+                    <a href="{{ route('legal.terms') }}">{{ __('public.legal.terms.title') }}</a>
+                    <a href="{{ route('legal.privacy') }}">{{ __('public.legal.privacy.title') }}</a>
+                    <a href="{{ route('legal.accessibility') }}">{{ __('public.legal.accessibility.title') }}</a>
+                </span>
                 <span>{{ __('common.footer') }}</span>
             </div>
         </div>

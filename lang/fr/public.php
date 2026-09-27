@@ -3,6 +3,58 @@
 declare(strict_types=1);
 
 return [
+    'legal' => [
+        'notice_title' => "Cette page n'est pas le document juridique",
+        'notice_body' => "Les conditions d'utilisation, la politique de confidentialité et la déclaration d'accessibilité doivent être rédigées et validées par un juriste avant la mise en service. Rien de ce qui suit n'engage l'administration. Ce qui figure ci-dessous est ce qui peut être vérifié dans le code aujourd'hui, écrit pour que cette page apprenne quelque chose de vrai plutôt que de rester blanche.",
+        'facts_title' => "Ce qui est vérifiable dans le code aujourd'hui",
+        'facts_note' => 'Chacun de ces points est tenu par un test. Ils décrivent le logiciel, pas le droit.',
+        'open_title' => 'Ce qui reste ouvert',
+
+        'terms' => [
+            'title' => "Conditions d'utilisation",
+            'facts_intro' => 'Ce que ce service fait, et ce qu\'il ne fait pas encore :',
+            'fact_1' => "Il reçoit une demande de copie d'un acte de naissance, la fait vérifier par un officier du centre d'état civil, et la soumet au maire pour signature. Rien n'est délivré sans les deux.",
+            'fact_2' => "Sur cette installation, le prestataire de signature est un adaptateur de démonstration : chaque document produit porte donc en toutes lettres qu'il n'est pas un acte et qu'il n'a aucune valeur juridique.",
+            'fact_3' => "Aucun tarif n'est affiché et aucun paiement n'est encaissé tant qu'un montant issu d'un texte réglementaire n'a pas été configuré. À défaut, la plateforme refuse de servir plutôt que d'inventer un chiffre.",
+            'fact_4' => "Aucun délai de traitement n'est annoncé nulle part, parce qu'aucun n'a été établi. Le service montre l'étape atteinte par une demande, jamais une promesse sur le moment où elle avancera.",
+            'fact_5' => "Une demande peut être retirée par le demandeur tant qu'elle n'a pas été décidée. Un rejet est une décision de l'administration, et il est enregistré séparément.",
+            'open_intro' => "Ce sont des questions pour l'administration qui exploite cette installation, pas pour le logiciel :",
+            'open_1' => "Le tarif, son fondement réglementaire et qui l'encaisse. L'article 17 (2) de l'ordonnance n° 81/002 dit que la délivrance d'une copie donne lieu à un droit fixé par le code de l'enregistrement ; le montant en vigueur n'a pas été trouvé.",
+            'open_2' => 'Si un délai de traitement est opposable.',
+            'open_3' => "Quelles voies de recours existent contre un rejet, et si elles doivent figurer dans l'interface.",
+            'open_4' => "Si un tiers peut demander un acte pour autrui. Le texte est muet : cela se règle par la pratique ou par un texte d'application qui n'a pas été trouvé.",
+        ],
+
+        'privacy' => [
+            'title' => 'Politique de confidentialité',
+            'facts_intro' => 'Ce que ce service collecte, et qui peut le voir :',
+            'fact_1' => "Un demandeur ne voit que ses propres demandes. Un officier voit les demandes de son centre, jamais un brouillon. Un maire voit sa commune, uniquement aux étapes où il a compétence, plus ce qu'il a lui-même signé. Un administrateur ne voit aucune demande : il gère les comptes, pas les dossiers.",
+            'fact_2' => 'Cette restriction est appliquée par la requête à la base elle-même, et non par chaque écran qui penserait à la poser : une condition oubliée ne peut donc pas faire fuir un dossier.',
+            'fact_3' => "Les numéros de pièce d'identité sont chiffrés au repos. La recherche par numéro passe par une empreinte distincte, de sorte que le numéro lui-même n'est jamais stocké en clair.",
+            'fact_4' => "Les photographies de pièces d'identité et les selfies sont stockés hors de la racine web et ne sont jamais atteignables par une URL. Chaque consultation est enregistrée, avec qui a regardé et quand.",
+            'fact_5' => "Le journal d'audit ne peut être ni modifié ni supprimé, par personne, y compris par le compte applicatif. Un administrateur en lit les métadonnées, jamais le contenu d'un dossier.",
+            'fact_6' => "Aucune durée de conservation n'est configurée sur cette installation : les photographies d'identité sont donc conservées sans date d'expiration. Le mécanisme de purge existe et attend que cette durée soit fixée.",
+            'open_intro' => "Ces points dépendent de la loi de 2024 sur la protection des données et d'un référentiel que l'Autorité doit publier :",
+            'open_1' => "Combien de temps un selfie et une photo de pièce d'identité peuvent être conservés. La loi ne chiffre aucun délai ; elle renvoie à un référentiel qui n'a pas été trouvé.",
+            'open_2' => "Si une photographie de visage prise en direct constitue une donnée biométrique au sens du droit applicable, et quel régime s'y attache.",
+            'open_3' => "Les mentions d'information à afficher avant la collecte, et la forme du consentement à recueillir.",
+            'open_4' => "Comment concilier le droit à l'effacement avec un journal d'audit en ajout seul, qui par construction ne peut pas être modifié.",
+        ],
+
+        'accessibility' => [
+            'title' => 'Accessibilité',
+            'facts_intro' => 'Ce qui a réellement été mesuré, et sur quoi :',
+            'fact_1' => "La cible est WCAG 2.1 AA, choisie par défaut parce qu'aucune norme n'est connue comme imposée aux services publics numériques ici.",
+            'fact_2' => 'Dix-sept écrans ont été audités avec axe-core en 390 x 844 px, le format le plus contraignant du parc visé, atteints avec les comptes qui les voient réellement.',
+            'fact_3' => "En plus de l'outil automatique : parcours au clavier seul, visibilité du focus, débordement horizontal, et mesure de chaque cible tactile contre un minimum de 44 px.",
+            'fact_4' => 'Trois cibles tactiles trop petites, deux tableaux non défilables au clavier et un écran qui renvoyait une erreur ont été trouvés et corrigés. Des tests en refusent désormais le retour.',
+            'fact_5' => "Chaque page fonctionne sans JavaScript. Les scripts n'ajoutent que du confort, jamais une condition pour utiliser le service.",
+            'open_intro' => 'Ce que cela ne prouve pas, dit franchement :',
+            'open_1' => "Aucun essai avec un lecteur d'écran réel n'a été mené. Un outil automatique détecte de l'ordre du tiers des problèmes d'accessibilité : ce n'est donc pas une preuve de conformité.",
+            'open_2' => 'Aucun essai avec des personnes à faible littératie numérique, qui sont pourtant le public visé. Aucun outil ne le remplace.',
+            'open_3' => "Si une norme d'accessibilité est légalement imposée aux services publics numériques, et laquelle.",
+        ],
+    ],
     'help' => [
         'title' => 'Aide',
         'lede' => "Les réponses aux questions qui reviennent le plus souvent. Aucun compte n'est nécessaire pour lire cette page.",

@@ -81,6 +81,15 @@ class ExposedRoutesTest extends TestCase
          * ecriture : cette page ne lit que des fichiers de langue.
          */
         'help',
+        /*
+         * LES TROIS PAGES JURIDIQUES (D-098). Elles ne lisent que des fichiers
+         * de langue : aucune donnee, aucun parametre, aucune ecriture. Les
+         * cacher derriere un compte serait absurde — une politique de
+         * confidentialite se lit AVANT de creer un compte.
+         */
+        'legal.terms',
+        'legal.privacy',
+        'legal.accessibility',
     ];
 
     #[Test]
