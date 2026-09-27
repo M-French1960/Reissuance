@@ -147,6 +147,38 @@ lui-même est à refaire au navigateur à chaque jalon — la commande est dans
 
 ---
 
+## 5 bis. Relevé du 27 septembre 2026, et un défaut trouvé DANS L'OUTIL
+
+Refait après la refonte des écrans du demandeur (D-100), sur **18 écrans** :
+**0 violation axe, 0 cible sous 44 px, 0 débordement horizontal** à 390 px.
+
+**Le script d'audit ne franchissait pas la double authentification.** Les
+comptes officier, maire et administrateur en sont pourvus ; sans elle, chaque
+« écran » de ces trois rôles mesuré par le script était en réalité la page de
+connexion. Le relevé rendait donc douze fois le même zéro rassurant, sur une
+page qui n'était pas celle qu'on croyait auditer.
+
+Je ne sais pas si le relevé d'origine souffrait du même défaut — le script a
+évolué depuis — et je ne l'affirme donc pas. Ce qui est établi : le script
+**franchit maintenant la 2FA**, et surtout il **échoue bruyamment** si la
+session atterrit encore sur `/login`. Un outil de mesure qui mesure la mauvaise
+page en silence est pire qu'un outil absent.
+
+Deux cibles tactiles corrigées à cette occasion, toutes deux sous 44 px **d'un
+seul côté** — le piège répété de ce projet :
+
+| Cible | Avant | Après |
+|---|---|---|
+| Liens du pied de l'accueil (`Aide`) | 28 × 44 px | 44 × 44 px |
+| Liens secondaires des cartes d'authentification | 170 × 22 px | 170 × 44 px |
+
+Le premier était de mon fait (D-097) : la règle ne garantissait que la hauteur,
+et tous les autres liens passaient les 44 px **par accident**, parce que leurs
+libellés sont longs. Le jour où j'en ai ajouté un court, le défaut est devenu
+visible. Il était dans la règle depuis le début.
+
+---
+
 ## 6. Ce qui reste à faire
 
 - **Essai avec un lecteur d'écran réel** (NVDA, VoiceOver, TalkBack). Non fait.

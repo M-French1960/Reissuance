@@ -122,6 +122,12 @@
 
 /* --- Liens de bas de carte ------------------------------------------------- */
 .auth__links { margin: var(--space-5) 0 0; font-size: var(--text-sm); display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); align-items: center; }
+
+/* « Creer un compte citoyen » et « J'ai deja un compte » faisaient 22 px de
+   haut (D-100). Ce sont les deux seuls liens de l'ecran d'entree du service,
+   et le 8.1 du brief vise un telephone tenu a une main : sous 44 px, on les
+   rate. Mesure : 170 x 22 avant, 170 x 44 apres. */
+.auth__links a { display: inline-flex; align-items: center; min-height: var(--tap-target); min-width: var(--tap-target); }
 .auth__label-row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
 /* « Mot de passe oublié ? » mesurait 22 px de haut. C'est la porte de sortie
    de quelqu'un qui ne peut pas entrer : elle doit se viser facilement. */

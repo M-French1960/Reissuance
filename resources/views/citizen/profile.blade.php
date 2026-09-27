@@ -2,8 +2,7 @@
 @section('title', __('citizen.profile.title'))
 
 @section('content')
-    <h1>{{ __('citizen.profile.title') }}</h1>
-    <p>{{ __('citizen.profile.intro') }}</p>
+    <x-page-hero :title="__('citizen.profile.title')" :lede="__('citizen.profile.intro')" />
 
     <x-flash />
 

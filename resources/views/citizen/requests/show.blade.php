@@ -2,7 +2,19 @@
 @section('title', __('citizen.tracking.title'))
 
 @section('content')
-    <h1>{{ __('citizen.tracking.heading', ['reference' => $demande->reference]) }}</h1>
+    {{--
+        LA BANNIERE PORTE CE QUE LE DEMANDEUR VIENT CHERCHER (D-100).
+
+        Le titre, l'etat et la date d'envoi etaient repartis entre un `<h1>` nu
+        et une carte de resume juste dessous. En les reunissant, la premiere
+        chose que lit quelqu'un qui ouvre son dossier est la reponse a sa
+        question : ou en est ma demande.
+    --}}
+    <x-page-hero :title="__('citizen.tracking.heading', ['reference' => $demande->reference])"
+                 :lede="__('citizen.tracking.issued_by', ['centre' => $demande->center?->situation() ?? __('common.none')])"
+                 :note="$demande->submitted_at ? __('common.submitted_on').' '.$demande->submitted_at->translatedFormat('d F Y') : __('citizen.card_not_sent')">
+        <x-status-badge :status="$demande->status" class="page-hero__badge" />
+    </x-page-hero>
 
     <x-flash />
 
@@ -22,20 +34,6 @@
             {{ __('citizen.complement.banner_body') }}
         </x-alert>
     @endif
-
-    <x-card>
-        <p>
-            <x-status-badge :status="$demande->status" />
-            @if ($demande->submitted_at)
-                <span class="field__hint">{{ __('common.submitted_on') }} {{ $demande->submitted_at->translatedFormat('d F Y') }}</span>
-            @endif
-        </p>
-        <p class="field__hint">
-            {{-- The centre's name already carries "Civil status centre of ..."
-                 and, most of the time, the name of the commune (D-075). --}}
-            {{ __('citizen.tracking.issued_by', ['centre' => $demande->center?->situation() ?? __('common.none')]) }}
-        </p>
-    </x-card>
 
     @if ($refus !== null)
         {{-- THE REASON FOR THE REJECTION, SAID (D-075).

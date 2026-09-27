@@ -38,35 +38,26 @@
     @endunless
 
     @php $prenom = auth()->user()->profile?->first_name; @endphp
-    <section class="dash-welcome" aria-labelledby="bienvenue">
-        <span class="dash-welcome__orb" aria-hidden="true"></span>
-        <div class="dash-welcome__text">
-            <h2 id="bienvenue">
-                {{ $prenom ? __('dashboard.citizen.welcome_named', ['name' => $prenom]) : __('dashboard.citizen.welcome_anonymous') }}
-            </h2>
-            <p>{{ __('dashboard.citizen.welcome_lede') }}</p>
-        </div>
-        <div class="dash-welcome__actions">
-            {{--
-                LE LIBELLE DIT CE QUE LE BOUTON FAIT.
+    <x-page-hero level="h2"
+                 :title="$prenom ? __('dashboard.citizen.welcome_named', ['name' => $prenom]) : __('dashboard.citizen.welcome_anonymous')"
+                 :lede="__('dashboard.citizen.welcome_lede')">
+        {{--
+            LE LIBELLE DIT CE QUE LE BOUTON FAIT.
 
-                `citizen.requests.start` REPREND le brouillon en cours quand il
-                y en a un, et n'en cree un que sinon. Annoncer « Faire une
-                demande » a quelqu'un qui a deja une demande a mi-chemin lui
-                ferait croire qu'il en ouvre une deuxieme, et il hesiterait a
-                cliquer. Les deux appels a l'action de cet ecran portent donc
-                le meme libelle, et c'est le brouillon qui le decide.
+            `citizen.requests.start` REPREND le brouillon en cours quand il y
+            en a un, et n'en cree un que sinon. Annoncer « Faire une demande »
+            a quelqu'un qui a deja une demande a mi-chemin lui ferait croire
+            qu'il en ouvre une deuxieme, et il hesiterait a cliquer.
 
-                Un POST, jamais un lien : il ecrit en base.
-            --}}
-            <form method="POST" action="{{ route('citizen.requests.start') }}">
-                @csrf
-                <x-button type="submit" variant="primary">
-                    {{ $brouillon ? __('dashboard.citizen.resume_draft') : __('dashboard.citizen.apply') }}
-                </x-button>
-            </form>
-        </div>
-    </section>
+            Un POST, jamais un lien : il ecrit en base.
+        --}}
+        <form method="POST" action="{{ route('citizen.requests.start') }}">
+            @csrf
+            <x-button type="submit" variant="primary">
+                {{ $brouillon ? __('dashboard.citizen.resume_draft') : __('dashboard.citizen.apply') }}
+            </x-button>
+        </form>
+    </x-page-hero>
 
     <div class="shell-grid">
         <div class="panel span-4 dash-stat">

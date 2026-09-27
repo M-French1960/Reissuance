@@ -40,7 +40,7 @@
         <h2 id="contact-titre">{{ __('public.help.contact_title') }}</h2>
         <p>{{ __('public.help.contact_intro') }}</p>
 
-        <ul>
+        <ul class="help-channels">
             <li>{!! __('public.help.contact_thread', ['lien' => '<a href="'.e(route('login')).'">'.e(__('common.sign_in')).'</a>']) !!}</li>
             <li>{!! __('public.help.contact_track', ['lien' => '<a href="'.e(route('track.show')).'">'.e(__('public.track.title')).'</a>']) !!}</li>
             <li>{{ __('public.help.contact_centre') }}</li>

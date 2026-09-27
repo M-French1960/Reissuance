@@ -2,19 +2,26 @@
 @section('title', __('notifications.title'))
 
 @section('content')
-    <h1>{{ __('notifications.title') }}</h1>
+    {{--
+        LE BOUTON « TOUT MARQUER COMME LU » MONTE DANS LA BANNIERE (D-100).
+
+        Il etait sous un titre nu, au-dessus d'une liste qui peut compter des
+        dizaines de cartes. C'est la seule action de l'ecran : elle appartient
+        a l'en-tete, au meme endroit que sur tous les autres ecrans du
+        demandeur.
+    --}}
+    <x-page-hero :title="__('notifications.title')" :lede="__('notifications.detail_note')">
+        @if ($nonLues > 0)
+            <form method="POST" action="{{ route('notifications.read') }}">
+                @csrf
+                <x-button type="submit" variant="primary">
+                    {{ trans_choice('notifications.mark_all_read', $nonLues, ['count' => $nonLues]) }}
+                </x-button>
+            </form>
+        @endif
+    </x-page-hero>
 
     <x-flash />
-    <p class="u-note">{{ __('notifications.detail_note') }}</p>
-
-    @if ($nonLues > 0)
-        <form method="POST" action="{{ route('notifications.read') }}">
-            @csrf
-            <x-button type="submit" variant="secondary">
-                {{ trans_choice('notifications.mark_all_read', $nonLues, ['count' => $nonLues]) }}
-            </x-button>
-        </form>
-    @endif
 
     @forelse ($notifications as $notification)
         @php $d = $notification->data; @endphp

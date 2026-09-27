@@ -26,20 +26,15 @@
 
     <x-flash />
 
-    <section class="dash-welcome" aria-labelledby="accueil-officier">
-        <span class="dash-welcome__orb" aria-hidden="true"></span>
-        <div class="dash-welcome__text">
-            <h2 id="accueil-officier">{{ __('dashboard.officer.welcome', ['name' => auth()->user()->name]) }}</h2>
-            <p>{{ __('dashboard.officer.welcome_lede') }}</p>
-            <p class="u-note">{{ __('dashboard.officer.centre_line', ['centre' => auth()->user()->center?->name ?? __('common.none')]) }}</p>
-        </div>
-        <div class="dash-welcome__actions">
-            <x-button variant="primary"
-                      href="{{ route('officer.queue', ['statut' => \App\Enums\RequestStatus::Pending->value, 'tri' => 'submitted_at', 'sens' => 'asc']) }}">
-                {{ __('dashboard.officer.oldest') }}
-            </x-button>
-        </div>
-    </section>
+    <x-page-hero level="h2"
+                 :title="__('dashboard.officer.welcome', ['name' => auth()->user()->name])"
+                 :lede="__('dashboard.officer.welcome_lede')"
+                 :note="__('dashboard.officer.centre_line', ['centre' => auth()->user()->center?->name ?? __('common.none')])">
+        <x-button variant="primary"
+                  href="{{ route('officer.queue', ['statut' => \App\Enums\RequestStatus::Pending->value, 'tri' => 'submitted_at', 'sens' => 'asc']) }}">
+            {{ __('dashboard.officer.oldest') }}
+        </x-button>
+    </x-page-hero>
 
     <section aria-labelledby="compteurs">
         <h2 id="compteurs" class="visually-hidden">{{ __('dashboard.officer.counters_title') }}</h2>

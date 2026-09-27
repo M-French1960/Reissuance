@@ -289,8 +289,12 @@
    TABLEAU DE BORD DU DEMANDEUR (D-079)
    ========================================================================== */
 
-/* --- Bandeau de bienvenue -------------------------------------------------- */
-.dash-welcome {
+/* --- Banniere de tete d'ecran ----------------------------------------------
+   Nee sur le tableau de bord en D-079, generalisee a tous les ecrans du
+   demandeur en D-100 : la maquette la porte partout, et la recopier aurait
+   fait diverger quatre versions. Le nom ne dit donc plus « tableau de bord ».
+   ------------------------------------------------------------------------- */
+.page-hero {
   position: relative; overflow: hidden;
   border-radius: 26px; padding: var(--space-6);
   color: #fff;
@@ -300,24 +304,24 @@
     linear-gradient(135deg, var(--color-brand-700), var(--ui-violet-700));
 }
 
-.dash-welcome__orb {
+.page-hero__orb {
   position: absolute; width: 220px; height: 220px; border-radius: 50%;
   right: -60px; bottom: -90px; opacity: 0.45; filter: blur(6px); pointer-events: none;
   background: radial-gradient(circle at 30% 30%, #ffc2e2, #9c27b0 70%);
 }
 
-.dash-welcome__text { position: relative; }
-.dash-welcome__text h2 { font: 700 var(--text-2xl)/1.15 var(--ui-font-display); margin: 0 0 var(--space-2); color: #fff; }
-.dash-welcome__text p { margin: 0; max-width: 40rem; color: rgb(255 255 255 / 0.9); }
-.dash-welcome__actions { position: relative; display: flex; gap: var(--space-2); flex-wrap: wrap; }
+.page-hero__text { position: relative; }
+.page-hero__title { font: 700 var(--text-2xl)/1.15 var(--ui-font-display); margin: 0 0 var(--space-2); color: #fff; }
+.page-hero__text p { margin: 0; max-width: 40rem; color: rgb(255 255 255 / 0.9); }
+.page-hero__actions { position: relative; display: flex; gap: var(--space-2); flex-wrap: wrap; }
 
 /* Sur fond violet, le bouton primaire s'inverse : blanc, texte de marque. */
-.dash-welcome__actions .btn--primary,
+.page-hero__actions .btn--primary,
 .dash-action .btn--primary {
   background: #fff; color: var(--color-brand-700); border-color: #fff;
 }
 
-.dash-welcome__actions .btn--primary:hover,
+.page-hero__actions .btn--primary:hover,
 .dash-action .btn--primary:hover { background: var(--ui-lilac-200); }
 
 /* --- Compteurs ------------------------------------------------------------- */
@@ -406,12 +410,12 @@
 .dash-activity time { font-size: var(--text-xs); color: var(--color-ink-500); white-space: nowrap; }
 
 @media (max-width: 860px) {
-  .dash-welcome { grid-template-columns: 1fr; }
+  .page-hero { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 640px) {
-  .dash-welcome { padding: var(--space-5); }
-  .dash-welcome__actions .btn { width: 100%; }
+  .page-hero { padding: var(--space-5); }
+  .page-hero__actions .btn { width: 100%; }
 
   /* En colonne, le trait de liaison devient vertical. */
   .dash-tracker { grid-template-columns: 1fr; gap: 0; }
@@ -861,3 +865,115 @@
     min-height: var(--tap-target);
   }
 }
+
+/* La ligne secondaire d'une banniere : le centre de rattachement de
+   l'officier, par exemple. Moins contrastee que le chapo, jamais au point
+   d'etre illisible sur le fond violet. */
+.page-hero__note { margin: var(--space-2) 0 0; font-size: var(--text-sm); color: rgb(255 255 255 / 0.78); }
+
+/* =============================================================================
+   LISTE DES DEMANDES DU DEMANDEUR (D-100)
+   ========================================================================== */
+
+/* --- Onglets de filtre ------------------------------------------------------
+   Des liens, pas des boutons : chacun mene a une URL qu'on peut partager,
+   mettre en favori et recharger. Un onglet en JavaScript perdrait le filtre a
+   chaque retour en arriere. */
+.filter-tabs {
+  display: flex; flex-wrap: wrap; gap: var(--space-2);
+  margin: var(--space-5) 0 var(--space-4);
+}
+
+.filter-tabs__tab {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  /* 44 px garantis des DEUX cotes : le piege repete de ce projet est de ne
+     garantir qu'une moitie de la cible (D-083, D-085, D-088). */
+  min-height: 44px; padding: 0 var(--space-4);
+  border-radius: 999px; border: 1px solid var(--color-line);
+  background: var(--color-surface); color: var(--color-ink-700);
+  font-weight: 600; text-decoration: none;
+}
+
+.filter-tabs__tab:hover { border-color: var(--color-brand-500); }
+
+.filter-tabs__tab.is-current {
+  background: var(--color-brand-700); border-color: var(--color-brand-700); color: #fff;
+}
+
+.filter-tabs__count {
+  display: inline-grid; place-items: center; min-width: 1.5rem;
+  padding: 0 0.35rem; border-radius: 999px;
+  background: var(--ui-lilac-200); color: var(--color-brand-700);
+  font-size: var(--text-xs); font-weight: 700;
+}
+
+.filter-tabs__tab.is-current .filter-tabs__count { background: rgb(255 255 255 / 0.22); color: #fff; }
+
+/* --- Cartes de demande ----------------------------------------------------- */
+.request-cards { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
+
+.request-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line); border-radius: var(--ui-r-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Une demande qui attend le demandeur porte un liseré : il donne le groupe
+   d'un coup d'oeil, mais il ne PORTE PAS l'information — la pastille d'etat et
+   le lien d'action la disent en toutes lettres. */
+.request-card--attention { border-left: 4px solid var(--tone-attention-fg); }
+
+.request-card__head {
+  display: flex; flex-wrap: wrap; gap: var(--space-4);
+  justify-content: space-between; align-items: flex-start;
+}
+
+.request-card__title {
+  font: 700 var(--text-lg)/1.25 var(--ui-font-display);
+  margin: 0 0 var(--space-1); color: var(--color-ink-900);
+}
+
+.request-card__meta {
+  margin: 0; display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4);
+  font-size: var(--text-sm); color: var(--color-ink-500);
+}
+
+.request-card__aside {
+  display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-2);
+  text-align: right;
+}
+
+.request-card__aside a { min-height: 44px; display: inline-flex; align-items: center; font-weight: 600; }
+
+/* --- Avancement -------------------------------------------------------------
+   La largeur vient d'un ATTRIBUT, pas d'un `style=` : `style-src 'self'`
+   refuse les styles en ligne, en silence (D-084). Les quatre paliers sont les
+   quatre jalons de la frise ; un parcours arrete n'en affiche aucun. */
+.request-card__progress {
+  margin-top: var(--space-4); height: 6px; border-radius: 999px;
+  background: var(--ui-lilac-200); overflow: hidden;
+}
+
+.request-card__bar { display: block; height: 100%; border-radius: 999px; background: var(--color-brand-700); }
+.request-card__bar[data-step="0"] { width: 4%; }
+.request-card__bar[data-step="1"] { width: 25%; }
+.request-card__bar[data-step="2"] { width: 50%; }
+.request-card__bar[data-step="3"] { width: 75%; }
+.request-card__bar[data-step="4"] { width: 100%; }
+
+.request-card__stopped {
+  margin: var(--space-4) 0 0; font-size: var(--text-sm); color: var(--color-ink-500);
+}
+
+@media (max-width: 640px) {
+  /* Sur un telephone, l'etat et l'action passent a gauche comme le reste :
+     un bloc aligne a droite sous un titre aligne a gauche se lit mal. */
+  .request-card__aside { align-items: flex-start; text-align: left; width: 100%; }
+  .request-card__head { gap: var(--space-3); }
+}
+
+/* La pastille d'etat dans une banniere : sur fond violet, ses tons clairs
+   perdent leur contraste. On la pose sur un fond blanc opaque, ce qui rend au
+   texte le contraste que le jeton lui garantissait. */
+.page-hero__badge { background: #fff; }

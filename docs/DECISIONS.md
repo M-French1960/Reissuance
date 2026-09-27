@@ -5769,3 +5769,114 @@ sur l'URL — une porte « agents » distincte n'ajouterait aucune sécurité et
 dirait à un inconnu où frapper. Ce choix n'avait jamais été écrit nulle part ;
 il l'est maintenant, dans le test qui le porte.
 
+
+---
+
+## D-100 — Les écrans du demandeur, et l'outil qui mesurait la mauvaise page
+
+- **Date :** 2026-09-27
+- **Statut :** décidé
+
+### Le relevé d'abord
+
+Tu as demandé un contrôle des pages du demandeur avant toute refonte. Il a
+montré une refonte **à moitié faite** :
+
+| Écran | État avant |
+|---|---|
+| Tableau de bord | Déjà au nouveau style : bannière dégradée, cartes de compteurs |
+| Mes demandes | Ancien : `<h1>` nu, tableau à cinq colonnes |
+| Détail d'une demande | Partiel : cartes oui, en-tête non |
+| Mon profil | Ancien : `<h1>` nu |
+| Notifications | Ancien : `<h1>` nu, action noyée au-dessus d'une longue liste |
+
+La maquette du dossier cible porte la bannière sur **tous** les écrans du
+demandeur, et des cartes là où nous avions un tableau.
+
+### La bannière devient un composant, et change de nom
+
+Elle existait depuis D-079 sous le nom `.dash-welcome`, sur les tableaux de
+bord seulement. La recopier sur quatre écrans aurait créé quatre versions qui
+divergeraient à la première retouche. Elle est donc un composant `<x-page-hero>`,
+et son nom ne dit plus « tableau de bord ».
+
+Le composant prend un `level` : le tableau de bord porte déjà un `<h1>` propre
+et met ici un `<h2>`. Le niveau de titre suit la **structure du document**, pas
+l'apparence — une page qui saute du h1 au h3 est illisible au lecteur d'écran,
+et aucune couleur ne rattrape cela.
+
+### Le tableau devient des cartes, et la barre ne ment pas
+
+Sur un téléphone, un tableau se lit en empilant des paires intitulé/valeur :
+cinq lignes pour dire une demande. La carte dit la même chose en trois lignes,
+et met l'action au même endroit à chaque fois.
+
+Deux points où j'ai refusé la facilité :
+
+**La barre d'avancement.** `rejected`, `cancelled` et `signed` partagent le
+rang 4 de la frise : s'en servir afficherait une **barre pleine sous
+« Rejetée »**. C'est la faute exacte corrigée en D-029 puis D-087. Où un
+dossier arrêté s'est exactement arrêté ne se lit que dans le journal d'audit,
+donc pas ici sans une requête par carte. Un parcours arrêté n'affiche donc
+**aucune barre**, et le dit en toutes lettres.
+
+**Le compte des compléments.** La carte doit savoir si une pièce est attendue.
+Un accesseur qui retomberait silencieusement sur zéro quand le compte n'est pas
+chargé aurait été pire qu'un N+1 : il aurait **menti au demandeur sur ce qu'on
+attend de lui**. Le compte est donc chargé explicitement par le contrôleur, et
+la vue le lit tel quel.
+
+**Une incohérence que j'ai introduite puis corrigée :** l'onglet « à vous de
+jouer » compte les brouillons, mais le liseré ne marquait que les compléments.
+Un brouillon était compté sans être signalé. Deux définitions du même mot, une
+de trop.
+
+### Le défaut le plus intéressant n'était pas dans les écrans
+
+En lançant l'audit d'accessibilité, j'ai remarqué que tous les écrans **sauf
+ceux du demandeur** signalaient une cible trop petite, identique. En cherchant
+laquelle, j'ai trouvé que le navigateur était resté sur `/login` : **le script
+d'audit ne franchit pas la double authentification**, dont les comptes
+officier, maire et administrateur sont pourvus.
+
+Douze « écrans » mesurés étaient donc la page de connexion. Le relevé rendait
+douze fois le même zéro rassurant, sur une page qui n'était pas celle qu'on
+croyait auditer. **Un outil qui mesure la mauvaise page en silence est pire
+qu'un outil absent** — c'est la même maladie que D-093 (une garde qu'on ne
+nourrit pas) et D-094 (une documentation qui affirme ce qui n'existe pas), sous
+une troisième forme.
+
+Le script franchit maintenant la 2FA et, surtout, **échoue bruyamment** si la
+session atterrit encore sur `/login`.
+
+Je ne sais pas si le relevé d'origine souffrait du même défaut — le script a
+évolué depuis — et je ne l'affirme donc pas. `docs/ACCESSIBILITE.md` porte un
+relevé daté de ce qui est établi aujourd'hui.
+
+### Deux cibles tactiles, toutes deux trop petites d'un seul côté
+
+| Cible | Avant | Après |
+|---|---|---|
+| Liens du pied de l'accueil (« Aide ») | 28 × 44 px | 44 × 44 px |
+| Liens secondaires des cartes d'authentification | 170 × 22 px | 170 × 44 px |
+
+Le premier est **de mon fait**, en D-097 : la règle ne garantissait que la
+hauteur, et tous les autres liens du pied passaient les 44 px **par accident**,
+leurs libellés étant longs. Le jour où j'en ai ajouté un court — « Aide » — le
+défaut est devenu visible. Il était dans la règle depuis le début, et c'est
+pour la quatrième fois dans ce projet le même piège : ne garantir qu'un seul
+côté de la cible (D-083, D-085, D-088).
+
+Le second ne l'est pas, mais il est sur les deux écrans que **tout demandeur
+traverse**, et le §8.1 vise un téléphone tenu à une main.
+
+### Vérifié
+
+1058 tests, 1042 passent, 16 ignorés.
+
+Audit au navigateur à 390 px, comptes réellement connectés cette fois :
+**18 écrans, 0 violation axe, 0 cible sous 44 px, 0 débordement horizontal.**
+Les cinq écrans du demandeur relus à 1366 et 390 px, sans aucun refus CSP — la
+largeur des barres d'avancement passe par un attribut `data-step`, jamais par
+un `style=`, que `style-src 'self'` refuserait en silence.
+
